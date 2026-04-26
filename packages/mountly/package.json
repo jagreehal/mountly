@@ -2,6 +2,15 @@
   "name": "mountly",
   "version": "0.1.0",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jagreehal/mountly",
+    "directory": "packages/mountly"
+  },
+  "bugs": {
+    "url": "https://github.com/jagreehal/mountly/issues"
+  },
+  "homepage": "https://github.com/jagreehal/mountly/tree/main/packages/mountly#readme",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
