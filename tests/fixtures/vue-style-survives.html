@@ -1,0 +1,27 @@
+<!doctype html>
+<html><body>
+  <div id="c"></div>
+  <script type="importmap">
+    {"imports":{"vue":"https://esm.sh/vue@3","mountly":"/packages/mountly/dist/index.js"}}
+  </script>
+  <script type="module">
+    import { h } from "vue";
+    import { createWidget } from "/packages/adapters/mountly-vue/dist/index.js";
+    const Counter = {
+      props: ["n"],
+      render() {
+        return h("span", String(this.n));
+      },
+    };
+    const w = createWidget(Counter, { styles: ".x{ color: red }" });
+    const c = document.getElementById("c");
+    w.mount(c, { n: 1 });
+    w.mount(c, { n: 2 });
+    const root = c.shadowRoot;
+    window.__result = {
+      styleStillPresent:
+        !!root.querySelector("style") ||
+        (root.adoptedStyleSheets && root.adoptedStyleSheets.length > 0),
+    };
+  </script>
+</body></html>

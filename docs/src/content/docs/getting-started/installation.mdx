@@ -1,0 +1,87 @@
+---
+title: Installation
+description: Install the mountly runtime and a framework adapter.
+---
+
+mountly is a runtime plus an adapter for your framework of choice. The runtime is required; pick the adapter that matches your component code.
+
+## Runtime
+
+```bash
+pnpm add mountly
+# or
+npm install mountly
+# or
+yarn add mountly
+```
+
+## Adapter
+
+| Framework | Package | Notes |
+|---|---|---|
+| React | `mountly-react` | React 18 or 19. |
+| Vue | `mountly-vue` | Vue 3. |
+| Svelte | `mountly-svelte` | Auto-detects v4 (class) vs v5 (functional) component shape. |
+
+```bash
+pnpm add mountly-react   # or mountly-vue, mountly-svelte
+```
+
+The adapter declares the framework as a peer dependency — install it yourself if it isn't already in the project:
+
+```bash
+pnpm add react react-dom         # for mountly-react
+pnpm add vue                     # for mountly-vue
+pnpm add svelte                  # for mountly-svelte
+```
+
+## Optional: Tailwind preset
+
+`mountly-tailwind` is a Tailwind v4 preset that ships design tokens you can opt into. It is not required.
+
+```bash
+pnpm add mountly-tailwind
+```
+
+See [Tailwind integration](/mountly/frameworks/tailwind/).
+
+## CDN (no bundler)
+
+For prototyping or static hosts, you can load mountly directly:
+
+```html
+<script type="module">
+  import { createOnDemandFeature } from "https://cdn.jsdelivr.net/npm/mountly@0.1/dist/index.js";
+  // …
+</script>
+```
+
+For multi-widget pages, set up an import map so several widgets share one runtime — see [`installRuntime`](/mountly/api/install-runtime/).
+
+## Via the CLI
+
+The fastest path is the scaffolder, which lays down the runtime, the React adapter, the build pipeline, and a working host page:
+
+```bash
+npx mountly init my-widget
+```
+
+See [Quick start](/mountly/getting-started/quick-start/) for what it produces.
+
+## Verify the install
+
+```ts
+import { createOnDemandFeature } from "mountly";
+import { createWidget } from "mountly-react";
+
+console.log(typeof createOnDemandFeature, typeof createWidget);
+// "function" "function"
+```
+
+If both log `"function"`, you're set.
+
+## Next
+
+- [**Quick start**](/mountly/getting-started/quick-start/) — scaffold your first widget.
+- [**React adapter**](/mountly/frameworks/react/) — `createWidget` patterns.
+- [**API reference**](/mountly/api/create-on-demand-feature/) — every exported symbol.

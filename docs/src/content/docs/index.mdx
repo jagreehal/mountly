@@ -1,0 +1,362 @@
+---
+title: mountly
+description: Load rich UI only when the user actually needs it. Use your existing framework components and modernize legacy pages incrementally without rewriting the host app.
+template: splash
+hero:
+  title: mountly
+tableOfContents: false
+pagefind: false
+---
+
+<div class="landing">
+
+{/* ─── Hero ─── */}
+<section class="hero">
+  <div class="hero-copy">
+    <span class="eyebrow">v0.1 · 9 KB gzipped runtime</span>
+    <h1 class="hero-title">
+      Load rich UI <em>only</em> when the user actually needs it.
+    </h1>
+    <p class="hero-lead">
+      A small frontend runtime that splits code at the <strong>feature</strong> level
+      and activates widgets on intent — hover, click, focus, viewport, or idle.
+      No microfrontend orchestrator. No new component model. No host-app rewrite.
+    </p>
+    <div class="hero-actions">
+      <a class="action primary" href="/mountly/getting-started/quick-start/">
+        Quick start <span class="arrow">→</span>
+      </a>
+      <a class="action ghost" href="/mountly/getting-started/how-it-works/">
+        How it works
+      </a>
+    </div>
+    <div class="hero-stats sl-markdown-no-margin">
+      <div class="hero-stat">
+        <span class="value">~9KB</span>
+        <span>core gzipped</span>
+      </div>
+      <div class="hero-stat">
+        <span class="value">5</span>
+        <span>trigger types</span>
+      </div>
+      <div class="hero-stat">
+        <span class="value">3</span>
+        <span>frameworks supported</span>
+      </div>
+      <div class="hero-stat">
+        <span class="value">0</span>
+        <span>SPA required</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-demo" aria-hidden="true">
+    <div class="demo-bar">
+      <span class="dot"></span>
+      <span class="dot active"></span>
+      <span class="dot"></span>
+      <span style="margin-left: auto;">payment-breakdown · feature</span>
+    </div>
+    <div class="demo-states sl-markdown-no-margin">
+      <div class="row r1">
+        <span class="num">01</span>
+        <span class="state"><em>idle</em> — nothing loaded, waiting on intent</span>
+        <span class="timing">0ms</span>
+      </div>
+      <div class="row r2">
+        <span class="num">02</span>
+        <span class="state"><em>preload</em> — user hovered, fetching module</span>
+        <span class="timing">+128ms</span>
+      </div>
+      <div class="row r3">
+        <span class="num">03</span>
+        <span class="state"><em>activate</em> — clicked, finalising data</span>
+        <span class="timing">+34ms</span>
+      </div>
+      <div class="row r4">
+        <span class="num">04</span>
+        <span class="state"><em>mount</em> — widget rendered into shadow DOM</span>
+        <span class="timing">+12ms</span>
+      </div>
+    </div>
+    <div class="demo-progress">
+      <span class="marker done">idle</span>
+      <span class="marker done">preload</span>
+      <span class="marker done">activate</span>
+      <span class="marker done">mount</span>
+      <span class="marker">unmount</span>
+    </div>
+  </div>
+</section>
+
+{/* ─── The problem ─── */}
+<section class="section">
+  <div class="section-head">
+    <span class="eyebrow">01 · The problem</span>
+    <h2 class="section-title">
+      Modern web apps ship too much JavaScript upfront.
+    </h2>
+  </div>
+  <p class="section-lead" style="max-width: 70ch;">
+    Component libraries load everything at once. Microfrontends are operationally heavy.
+    Framework lazy-loading lacks standardised interaction patterns. There's no unified system for
+    <em style="color: var(--text-strong); font-style: normal;"> "load rich UI only when the user actually needs it"</em>.
+  </p>
+
+  <div class="before-after sl-markdown-no-margin">
+    <div class="before">
+      <h3>Before mountly</h3>
+      <ul>
+        <li>Payment widget</li>
+        <li>Video player</li>
+        <li>Image lightbox</li>
+        <li>Analytics panel</li>
+        <li>Chat widget</li>
+      </ul>
+      <p class="result">All shipped on first paint. Slow TTI, heavy bundle.</p>
+    </div>
+    <div class="after">
+      <h3>After mountly</h3>
+      <ul>
+        <li>Page shell (light)</li>
+        <li>User hovers → load module</li>
+        <li>→ fetch data in parallel</li>
+        <li>→ mount into shadow DOM</li>
+      </ul>
+      <p class="result">Fast TTI. Each widget pays only on intent.</p>
+    </div>
+  </div>
+</section>
+
+{/* ─── Triggers ─── */}
+<section class="section">
+  <div class="section-head">
+    <span class="eyebrow">02 · Triggers</span>
+    <h2 class="section-title">
+      Six ways to say <em style="font-style: italic; color: var(--accent);">"now"</em>.
+    </h2>
+  </div>
+  <p class="section-lead">
+    A trigger is the signal that moves a feature from <code>idle</code> to <code>preload</code> to
+    <code>mount</code>. Pick the one that matches user intent — or compose your own with a plugin.
+  </p>
+
+  <div class="trigger-grid sl-markdown-no-margin">
+    <div class="trigger-cell">
+      <span class="index">01</span>
+      <span class="label">on intent</span>
+      <span class="name">hover</span>
+      <span class="desc">Preload on mouseenter, mount on click. The default for discoverable controls.</span>
+    </div>
+    <div class="trigger-cell">
+      <span class="index">02</span>
+      <span class="label">explicit</span>
+      <span class="name">click</span>
+      <span class="desc">Mount on click without preloading. Use when intent is committed, not exploratory.</span>
+    </div>
+    <div class="trigger-cell">
+      <span class="index">03</span>
+      <span class="label">accessibility</span>
+      <span class="name">focus</span>
+      <span class="desc">Preload on focus, mount on commit. Keyboard parity with hover.</span>
+    </div>
+    <div class="trigger-cell">
+      <span class="index">04</span>
+      <span class="label">below the fold</span>
+      <span class="name">viewport</span>
+      <span class="desc">Mount when the element scrolls into view. Configurable threshold.</span>
+    </div>
+    <div class="trigger-cell">
+      <span class="index">05</span>
+      <span class="label">predictive</span>
+      <span class="name">idle</span>
+      <span class="desc">Use <code>requestIdleCallback</code> to preload during quiet moments.</span>
+    </div>
+    <div class="trigger-cell">
+      <span class="index">06</span>
+      <span class="label">routing</span>
+      <span class="name">url-change</span>
+      <span class="desc">Mount when the URL matches a pattern. Pairs with client-side navigation.</span>
+    </div>
+  </div>
+</section>
+
+{/* ─── Lifecycle ─── */}
+<section class="section">
+  <div class="section-head">
+    <span class="eyebrow">03 · Lifecycle</span>
+    <h2 class="section-title">
+      One state machine, five states. The same shape on every framework.
+    </h2>
+  </div>
+  <p class="section-lead">
+    Every feature moves through the same sequence regardless of trigger or framework. You can hook into any phase, abort in flight, and unmount cleanly.
+  </p>
+
+  <div class="lifecycle sl-markdown-no-margin">
+    <div class="lifecycle-step">
+      <span class="step-num">01</span>
+      <span class="step-name">idle</span>
+      <span class="step-desc">Nothing loaded. Waiting for the trigger.</span>
+    </div>
+    <div class="lifecycle-step">
+      <span class="step-num">02</span>
+      <span class="step-name">preload</span>
+      <span class="step-desc">Module fetched, data fetch may begin in parallel.</span>
+    </div>
+    <div class="lifecycle-step">
+      <span class="step-num">03</span>
+      <span class="step-name">activate</span>
+      <span class="step-desc">Commitment signal. Finalise data, prepare to mount.</span>
+    </div>
+    <div class="lifecycle-step">
+      <span class="step-num">04</span>
+      <span class="step-name">mount</span>
+      <span class="step-desc">Widget rendered into the container's shadow root.</span>
+    </div>
+    <div class="lifecycle-step">
+      <span class="step-num">05</span>
+      <span class="step-name">unmount</span>
+      <span class="step-desc">Removed from DOM. Caches retained for re-mount.</span>
+    </div>
+  </div>
+</section>
+
+{/* ─── Code ─── */}
+<section class="section">
+  <div class="section-head">
+    <span class="eyebrow">04 · The whole API</span>
+    <h2 class="section-title">
+      A widget. A feature. A trigger. Three lines you'll write.
+    </h2>
+  </div>
+  <p class="section-lead">
+    Components stay components. The adapter wraps them as widgets. <code>createOnDemandFeature</code> adds the on-demand lifecycle. <code>attach</code> wires it to a DOM element.
+  </p>
+
+```ts title="signup-card.ts"
+import { createWidget } from "mountly-react";
+import SignupCard from "./SignupCard.tsx";
+import styles from "./SignupCard.css?inline";
+
+// 1. Wrap a component as a framework-agnostic widget
+export default createWidget(SignupCard, { styles });
+```
+
+```ts title="page.ts"
+import { createOnDemandFeature } from "mountly";
+
+// 2. Add the on-demand lifecycle around a widget
+const signup = createOnDemandFeature({
+  moduleId: "signup-card",
+  loadModule: () => import("./signup-card.js"),
+  render: ({ mod, container, props }) => mod.mount(container, props),
+});
+
+// 3. Attach it to a DOM trigger — preload on hover, mount on click
+signup.attach({
+  trigger: document.querySelector("#cta")!,
+  preloadOn: "hover",
+  activateOn: "click",
+});
+```
+
+</section>
+
+{/* ─── Comparison ─── */}
+<section class="section">
+  <div class="section-head">
+    <span class="eyebrow">05 · How it compares</span>
+    <h2 class="section-title">
+      Performance benefits of microfrontends. None of the orchestration.
+    </h2>
+  </div>
+
+  <div class="compare">
+    <table>
+      <thead>
+        <tr>
+          <th>Approach</th>
+          <th>Initial bundle</th>
+          <th>User experience</th>
+          <th>Complexity</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Traditional SPA</td>
+          <td>Large</td>
+          <td>Slow first paint, fast after</td>
+          <td>Low</td>
+        </tr>
+        <tr>
+          <td>Framework code-splitting</td>
+          <td>Medium</td>
+          <td>Better, but route-bound</td>
+          <td>Medium</td>
+        </tr>
+        <tr>
+          <td>Microfrontend orchestrators</td>
+          <td>Variable</td>
+          <td>Good, runtime-coordinated</td>
+          <td>High</td>
+        </tr>
+        <tr class="highlight">
+          <td>mountly</td>
+          <td>~9 KB core</td>
+          <td>Instant shell, features on intent</td>
+          <td>Low</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+{/* ─── Packages ─── */}
+<section class="section">
+  <div class="section-head">
+    <span class="eyebrow">06 · Packages</span>
+    <h2 class="section-title">
+      One runtime, three adapters, one design preset.
+    </h2>
+  </div>
+
+  <div class="packages">
+    <a class="package" href="/mountly/api/create-on-demand-feature/">
+      <span class="pkg-name">mountly</span>
+      <span class="pkg-desc">Core runtime, on-demand loader, lifecycle, custom element, CLI.</span>
+      <span class="pkg-meta">~9 KB gz</span>
+    </a>
+    <a class="package" href="/mountly/frameworks/react/">
+      <span class="pkg-name">mountly-react</span>
+      <span class="pkg-desc">React adapter — <code>createWidget(Component, &#123; styles &#125;)</code>.</span>
+      <span class="pkg-meta">React 18+</span>
+    </a>
+    <a class="package" href="/mountly/frameworks/vue/">
+      <span class="pkg-name">mountly-vue</span>
+      <span class="pkg-desc">Vue adapter — same surface, <code>createApp</code> under the hood.</span>
+      <span class="pkg-meta">Vue 3</span>
+    </a>
+    <a class="package" href="/mountly/frameworks/svelte/">
+      <span class="pkg-name">mountly-svelte</span>
+      <span class="pkg-desc">Svelte adapter — auto-detects v4 class API and v5 functional API.</span>
+      <span class="pkg-meta">Svelte 4 / 5</span>
+    </a>
+    <a class="package" href="/mountly/frameworks/tailwind/">
+      <span class="pkg-name">mountly-tailwind</span>
+      <span class="pkg-desc">Optional Tailwind v4 design preset. Tokens shared with the runtime.</span>
+      <span class="pkg-meta">Optional</span>
+    </a>
+  </div>
+</section>
+
+{/* ─── Footer ─── */}
+<div class="landing-foot">
+  <span>mountly · MIT · pre-1.0</span>
+  <span>
+    <a href="https://github.com/jagreehal/mountly">github.com/jagreehal/mountly</a>
+  </span>
+  <span>see <code>./examples</code> in the repo</span>
+</div>
+
+</div>

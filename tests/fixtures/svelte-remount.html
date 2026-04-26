@@ -1,0 +1,33 @@
+<!doctype html>
+<html><body>
+  <div id="c"></div>
+  <script type="importmap">{"imports":{"mountly":"/packages/mountly/dist/index.js"}}</script>
+  <script type="module">
+    import { createWidget } from "/packages/adapters/mountly-svelte/dist/index.js";
+
+    class TComponent {
+      constructor({ target, props }) {
+        this.el = document.createElement("div");
+        this.el.textContent = String(props?.msg ?? "");
+        target.appendChild(this.el);
+      }
+      $destroy() {
+        this.el?.remove();
+      }
+    }
+
+    const w = createWidget(TComponent, { styles: ".x{}" });
+    const c = document.getElementById("c");
+    w.mount(c, { msg: "first" });
+    w.mount(c, { msg: "second" });
+
+    const root = c.shadowRoot;
+    window.__result = {
+      mountNodes: root.querySelectorAll("[data-mountly-root]").length,
+      stylePresent:
+        !!root.querySelector("style") ||
+        (root.adoptedStyleSheets && root.adoptedStyleSheets.length > 0),
+      text: root.querySelector("[data-mountly-root]")?.textContent ?? "",
+    };
+  </script>
+</body></html>

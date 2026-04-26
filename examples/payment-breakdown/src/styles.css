@@ -1,0 +1,17 @@
+@import "mountly-tailwind";
+@source "./";
+
+/*
+ * Design tokens come from mountly-tailwind (--color-ui-*, --ui-*, etc.).
+ * Override at the host: <div data-mountly-mount style="--ui-accent: oklch(0.55 0.20 260);">
+ *
+ * Local additions only — variables for widget-specific aesthetics that
+ * the preset doesn't supply.
+ */
+:host {
+  --ui-font-numeric: ui-monospace, "SF Mono", "JetBrains Mono", Menlo,
+    Monaco, "Cascadia Mono", monospace;
+
+  display: block;
+  /* tailwind v4 will populate the rest of the surface */
+}

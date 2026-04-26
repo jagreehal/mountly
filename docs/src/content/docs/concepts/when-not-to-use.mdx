@@ -1,0 +1,58 @@
+---
+title: When not to use mountly
+description: Three situations where the framework's native primitives are a better fit than mountly.
+---
+
+Pre-1.0 software earns trust by saying no. mountly is a small, opinionated runtime — not the answer to every code-splitting problem.
+
+## You have a single SPA where the bundler owns every surface
+
+If your project is one React, Next, or Svelte app and every component lives inside the same bundle, **framework-native lazy routes are simpler**:
+
+```tsx
+// React example — already has on-demand loading via React.lazy + Suspense
+const PaymentBreakdown = lazy(() => import("./PaymentBreakdown"));
+```
+
+You'd be adding a second runtime to solve a problem the framework already solves. mountly's value is **on-intent activation across heterogeneous hosts** — static HTML, CMS pages, plain modules — and that value compounds when the host doesn't own a bundler.
+
+If your situation is "I want a button that lazy-loads a modal in my Next app", use `next/dynamic` or `React.lazy`.
+
+## You need SSR plus hydration
+
+mountly mounts widget modules **on demand into a shadow root**. It is not a hydration runtime.
+
+If you need:
+
+- Server-rendered HTML to be sent on first paint, then made interactive.
+- The same component tree to work on the server and client.
+- Astro / Next / Remix island patterns.
+
+…use those frameworks' islands. mountly mounts widgets *after* the page is interactive; it doesn't take over server-rendered HTML.
+
+The two layers can coexist — Astro renders the shell, mountly handles a single deeply-interactive widget on a marketing page — but mountly is not replacing your hydration story.
+
+## You want a microfrontend control plane
+
+mountly is **a runtime + integration patterns**. It is not:
+
+- A team-routing layer.
+- A versioning / deployment coordinator across teams.
+- A central runtime configuration plane.
+- A module-federation host.
+
+If you need *"team A ships the checkout, team B ships the catalogue, both deploy independently and runtime-route by URL"*, use Module Federation, single-spa, or a vendor MFE platform. mountly will not protect you from runtime version skew or coordinate deployments.
+
+mountly *is* useful **inside** an MFE: a single team's MFE bundle can use mountly internally to lazy-load its own widgets without ballooning its part of the page. But mountly is the inner tool, not the outer one.
+
+## When mountly is the right call
+
+The shape of a good fit:
+
+- You ship widgets that drop into hosts you don't fully control.
+- You want one runtime + one cache story across all of them.
+- You want intent-based loading without writing a new lazy-loader for every button.
+- You want to run multiple widgets on one page sharing one React copy.
+- You want declarative HTML usage (`<mountly-feature>`) for non-developers to drop into pages.
+
+If three or more of those bullets describe your situation, mountly is probably the right tool.

@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>mountly — quickstart host</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        max-width: 42rem;
+        margin: 2rem auto;
+        padding: 0 1rem;
+      }
+      button {
+        padding: 0.5rem 1rem;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      #mount {
+        margin-top: 1rem;
+        min-width: 320px;
+        min-height: 240px;
+        border: 1px dashed #94a3b8;
+        border-radius: 8px;
+      }
+    </style>
+    <!--
+      Serve the REPOSITORY ROOT (not this file alone), e.g.:
+        cd examples/plain-html && pnpm dev
+      then open:
+        http://localhost:5175/examples/quickstart/host.html
+
+      1) Import map — bare specifiers → built files on disk.
+      2) mountly — core runtime (createOnDemandFeature, etc.).
+      3) payment-breakdown — example widget (self-contained build includes React).
+      4) Script — attach hover-preload + click-mount to a trigger + mount slot.
+    -->
+    <script type="importmap">
+      {
+        "imports": {
+          "mountly": "/packages/mountly/dist/index.js",
+          "payment-breakdown": "/examples/payment-breakdown/dist/index.js"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <h1>mountly quickstart</h1>
+    <p>Hover the button to preload; click to mount. Click again to unmount.</p>
+    <button type="button" id="trigger">View payment</button>
+    <div id="mount"></div>
+
+    <script type="module">
+      import { paymentBreakdown } from "payment-breakdown";
+
+      paymentBreakdown.attach({
+        trigger: document.getElementById("trigger"),
+        mount: document.getElementById("mount"),
+        props: {
+          data: {
+            total: 99,
+            currency: "USD",
+            items: [
+              { description: "Pro plan", amount: 99, currency: "USD" },
+            ],
+          },
+        },
+      });
+    </script>
+  </body>
+</html>

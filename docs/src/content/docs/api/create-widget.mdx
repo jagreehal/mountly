@@ -1,0 +1,119 @@
+---
+title: createWidget
+description: Wrap a framework component as a mountly widget. Same surface across React, Vue, and Svelte adapters.
+---
+
+```ts
+import { createWidget } from "mountly-react";   // or "mountly-vue" / "mountly-svelte"
+```
+
+Turns a component into a framework-agnostic **widget** — an object with `mount(container, props)` and `unmount(container)` that mountly's runtime can drive.
+
+## Signature
+
+The signature is intentionally identical across adapters.
+
+```ts
+function createWidget<P>(
+  Component: ComponentType<P>,
+  options?: AdapterOptions
+): WidgetModule;
+```
+
+### `AdapterOptions` (shared)
+
+| Field | Type | Notes |
+|---|---|---|
+| `styles` | `string` | CSS to inject into the widget's shadow root. |
+| `mode` | `"open"` · `"closed"` | Shadow root mode. Default `"open"`. |
+| `delegatesFocus` | `boolean` | Forward to `attachShadow`. |
+
+### Adapter-specific extensions
+
+#### `mountly-svelte`
+
+Required when the component is Svelte 5:
+
+| Field | Type | Notes |
+|---|---|---|
+| `mount` | `<P>(C, opts) => Record<string, unknown>` | Pass `mount` from `"svelte"`. |
+| `unmount` | `(handle) => void \| Promise<void>` | Pass `unmount` from `"svelte"`. |
+
+Svelte 4 components need neither — the adapter detects the legacy class and uses `new Component({ target, props })`.
+
+## Returned `WidgetModule`
+
+```ts
+interface WidgetModule {
+  mount(container: HTMLElement, props: Record<string, unknown>): void;
+  unmount(container: HTMLElement): void;
+  // React adapter also exposes:
+  // update?(container, props): void;
+}
+```
+
+## React example
+
+```ts
+import { createWidget } from "mountly-react";
+import SignupCard from "./SignupCard.tsx";
+import styles from "./SignupCard.css?inline";
+
+export default createWidget(SignupCard, { styles });
+```
+
+The React adapter exposes `update()` automatically — `feature.update(container, props)` reuses the same React root, preserving hooks state.
+
+## Vue example
+
+```ts
+import { createWidget } from "mountly-vue";
+import SignupCard from "./SignupCard.vue";
+import styles from "./SignupCard.css?inline";
+
+export default createWidget(SignupCard, { styles });
+```
+
+One Vue app per container. Two widget mounts = two Vue apps; providers don't cross.
+
+## Svelte 4 example
+
+```ts
+import { createWidget } from "mountly-svelte";
+import SignupCard from "./SignupCard.svelte";   // Svelte 4 class component
+import styles from "./SignupCard.css?inline";
+
+export default createWidget(SignupCard, { styles });
+```
+
+## Svelte 5 example
+
+```ts
+import { createWidget } from "mountly-svelte";
+import { mount, unmount } from "svelte";
+import SignupCard from "./SignupCard.svelte";   // Svelte 5 functional component
+import styles from "./SignupCard.css?inline";
+
+export default createWidget(SignupCard, { styles, mount, unmount });
+```
+
+If you forget `mount` / `unmount` on a v5 component, you'll see:
+
+```
+[mountly-svelte] Svelte 5 component detected but `mount`/`unmount` options were not provided.
+```
+
+## Shadow DOM
+
+All adapters call `attachShadow(container, options)` internally. This means:
+
+- Styles in `options.styles` are injected into the shadow root and don't leak out.
+- The host's CSS doesn't bleed in (modulo CSS custom properties, which inherit through shadow roots intentionally).
+- The `container` itself stays as the shadow host; the widget renders into the shadow tree.
+
+If you want to mount into a non-shadow element (advanced, breaks isolation), implement your own widget shape — `WidgetModule` is just an interface.
+
+## Related
+
+- [`createOnDemandFeature`](/mountly/api/create-on-demand-feature/) — wrap the widget with on-demand lifecycle.
+- [React](/mountly/frameworks/react/), [Vue](/mountly/frameworks/vue/), [Svelte](/mountly/frameworks/svelte/) — adapter-specific notes.

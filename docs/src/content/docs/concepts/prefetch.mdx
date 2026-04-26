@@ -1,0 +1,85 @@
+---
+title: Predictive prefetch
+description: Idle-time prefetching scored against interaction history — the smarter cousin of the idle trigger.
+---
+
+The `idle` trigger preloads everything during quiet moments. **Predictive prefetch** is the opinionated version: it watches what the user actually does, scores each feature, and only prefetches the ones likely to matter.
+
+It's optional. Most apps don't need it. When you do, it's three calls.
+
+## The basic pattern
+
+```ts
+import { createPredictivePrefetcher, recordInteraction } from "mountly";
+
+const prefetcher = createPredictivePrefetcher({
+  features: [signupFeature, paymentFeature, lightboxFeature],
+  threshold: 0.4,        // score 0..1 above which we prefetch
+  maxConcurrent: 2,      // never preload more than two in parallel
+});
+
+// Tell the prefetcher when the user shows interest in a feature.
+document.querySelector("#cta")?.addEventListener("mouseenter", () => {
+  recordInteraction("signup-card", "hover");
+});
+```
+
+The prefetcher runs `feature.preload()` on its own clock, weighted by what `recordInteraction` has seen.
+
+## Built-in heuristics
+
+Two opinionated prefetchers are included:
+
+### Scroll-based
+
+Scores features by proximity to the viewport. Features just below the fold preload before the user scrolls to them.
+
+```ts
+import { createScrollPrefetcher } from "mountly";
+
+createScrollPrefetcher({
+  features: [embedFeature, panelFeature],
+  rootMargin: "200px",    // preload 200px before they enter viewport
+});
+```
+
+### Mouse-trail
+
+Uses cursor velocity and direction to predict which trigger is about to be hovered. Useful for dense interfaces (toolbars, menu bars) where the user's path implies intent.
+
+```ts
+import { createMouseTrailPrefetcher } from "mountly";
+
+createMouseTrailPrefetcher({
+  features: toolbarFeatures,
+  lookahead: 120,         // ms of trajectory to project forward
+});
+```
+
+## Interaction history
+
+`recordInteraction(moduleId, kind)` accumulates per-session data. `getInteractionHistory()` exposes it; `resetInteractionHistory()` clears.
+
+```ts
+import {
+  recordInteraction,
+  getInteractionHistory,
+  resetInteractionHistory,
+} from "mountly";
+
+recordInteraction("signup-card", "hover");
+recordInteraction("signup-card", "mount");
+
+console.log(getInteractionHistory());
+// → { "signup-card": { hovers: 1, mounts: 1, lastSeen: 1714..., score: 0.62 } }
+```
+
+The history is in-memory only. Persist it across sessions yourself if you want — `localStorage`, your analytics pipeline, whatever you already have.
+
+## When to skip predictive prefetch
+
+- Your app has fewer than ~3 features per page. The win is too small to justify the complexity.
+- You're on a metered or 3G-first audience. Bytes the user doesn't ask for are bytes you should not be sending.
+- You're already at < 100 KB total page weight. There's nothing to optimise.
+
+When in doubt: don't ship it. The default `attach({ preloadOn: "hover" })` is already very good.

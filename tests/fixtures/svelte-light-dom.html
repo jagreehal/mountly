@@ -1,0 +1,32 @@
+<!doctype html>
+<html><body>
+  <img id="c" alt="" />
+  <script type="importmap">
+    {"imports":{"mountly":"/packages/mountly/dist/index.js"}}
+  </script>
+  <script type="module">
+    import { createWidget } from "/packages/adapters/mountly-svelte/dist/index.js";
+
+    class HelloComponent {
+      constructor({ target, props }) {
+        const el = document.createElement("span");
+        el.textContent = String(props?.msg ?? "");
+        target.appendChild(el);
+        this.el = el;
+      }
+      $destroy() { this.el?.remove(); }
+    }
+
+    const w = createWidget(HelloComponent, { styles: ".svelte-light{}" });
+    const img = document.getElementById("c");
+    w.mount(img, { msg: "fallback" });
+
+    const sibling = img.nextElementSibling;
+    window.__result = {
+      mountIsSibling: sibling?.getAttribute("data-mountly-root") === "",
+      mountText: sibling?.textContent ?? "",
+      hasShadowOnImg: !!img.shadowRoot,
+      hasFallbackStyle: !!document.head.querySelector('style[data-mountly-fallback]'),
+    };
+  </script>
+</body></html>

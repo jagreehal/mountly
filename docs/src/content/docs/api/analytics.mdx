@@ -1,0 +1,123 @@
+---
+title: Analytics
+description: Subscribe to lifecycle timing events for performance tracking and monitoring.
+---
+
+Every feature emits **timing events** at each phase of its lifecycle. Subscribe to them to track performance, send to your analytics pipeline, or feed the [devtools panel](/mountly/concepts/devtools/).
+
+```ts
+import {
+  onAnalyticsEvent,
+  emitAnalyticsEvent,
+  getAnalyticsLog,
+  clearAnalyticsLog,
+  getModuleTimings,
+  getAllModuleTimings,
+  createFeatureTimingTracker,
+} from "mountly";
+```
+
+## `onAnalyticsEvent(callback)`
+
+Subscribe to all events for all features. Returns an unsubscribe function.
+
+```ts
+const off = onAnalyticsEvent((event) => {
+  if (event.phase === "mount_end") {
+    analytics.track("feature_mounted", {
+      moduleId: event.moduleId,
+      duration: event.duration,
+    });
+  }
+});
+
+// Later:
+off();
+```
+
+## `TimingEvent` shape
+
+```ts
+interface TimingEvent {
+  moduleId: string;
+  phase:
+    | "preload_start" | "preload_end"
+    | "activate_start" | "activate_end"
+    | "mount_start" | "mount_end"
+    | "unmount";
+  timestamp: number;     // performance.now()
+  duration?: number;     // present on _end phases
+  error?: string;        // present on errored _end phases
+}
+```
+
+The `_start` events fire when the phase begins; `_end` events fire when it resolves (or errors). `unmount` fires once per container unmount.
+
+## Filtering by feature
+
+```ts
+onAnalyticsEvent((event) => {
+  if (event.moduleId !== "signup-card") return;
+  // …
+});
+```
+
+There is no built-in per-feature filter — keep it simple, filter in your callback.
+
+## `getModuleTimings(moduleId)` / `getAllModuleTimings()`
+
+Aggregated timings, computed from the event log.
+
+```ts
+getModuleTimings("signup-card");
+// → {
+//     preload: { count: 4, p50: 124, p95: 280, mean: 152 },
+//     activate: { count: 4, p50: 8, p95: 40, mean: 18 },
+//     mount: { count: 4, p50: 12, p95: 28, mean: 17 },
+//   }
+```
+
+`getAllModuleTimings()` returns the same shape keyed by `moduleId`.
+
+## The log
+
+`getAnalyticsLog()` returns a snapshot array of all events recorded so far. `clearAnalyticsLog()` empties it. The log is a **rolling buffer** with a default cap (1000 entries); older events are dropped.
+
+```ts
+const events = getAnalyticsLog();
+fetch("/analytics", { method: "POST", body: JSON.stringify(events) });
+clearAnalyticsLog();
+```
+
+## Emitting custom events
+
+For widgets that want to log their own milestones (e.g. "form_submitted") through the same pipeline:
+
+```ts
+emitAnalyticsEvent({
+  moduleId: "signup-card",
+  phase: "mount_end",            // reuse a phase name, or invent your own
+  timestamp: performance.now(),
+  duration: 0,
+});
+```
+
+Subscribers see all events emitted via `emitAnalyticsEvent` — there's no schema validation, so use sparingly.
+
+## `createFeatureTimingTracker(moduleId)`
+
+The internal helper used by `createOnDemandFeature`. Exposed for advanced use — building a custom feature shape that participates in the same analytics pipeline.
+
+```ts
+const tracker = createFeatureTimingTracker("custom-thing");
+tracker.recordPhase("preload_start");
+// … do work …
+tracker.recordPhase("preload_end");
+```
+
+Most users never call this directly.
+
+## Related
+
+- [Lifecycle](/mountly/concepts/lifecycle/) — what each phase means.
+- [Devtools panel](/mountly/concepts/devtools/) — visual frontend for the same events.

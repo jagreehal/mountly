@@ -1,0 +1,12 @@
+{
+  "name": "marketing-site-example",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "serve -l 5176 ../.."
+  },
+  "devDependencies": {
+    "serve": "^14.2.6"
+  }
+}

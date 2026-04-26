@@ -1,0 +1,40 @@
+{
+  "name": "mountly-react",
+  "version": "0.1.0",
+  "description": "React adapter for mountly widgets",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": ["dist"],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "dev": "tsup --watch",
+    "prepack": "rm -f LICENSE && cp ../../../LICENSE LICENSE",
+    "postpack": "rm -f LICENSE && ln -s ../../../LICENSE LICENSE"
+  },
+  "peerDependencies": {
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "mountly": "^0.1.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "tsup": "^8.5.1",
+    "typescript": "^6.0.3",
+    "mountly": "^0.1.0"
+  }
+}

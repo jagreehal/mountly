@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>mountly Demo</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: system-ui, -apple-system, sans-serif;
+        background: #f8fafc;
+        color: #0f172a;
+        padding: 40px 20px;
+      }
+
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+      }
+
+      h1 {
+        font-size: 32px;
+        font-weight: 700;
+        margin-bottom: 8px;
+      }
+
+      .subtitle {
+        color: #64748b;
+        font-size: 16px;
+        margin-bottom: 40px;
+      }
+
+      .demo-section {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 24px;
+        margin-bottom: 24px;
+      }
+
+      .demo-section h2 {
+        font-size: 20px;
+        font-weight: 600;
+        margin-bottom: 8px;
+      }
+
+      .demo-section .section-desc {
+        color: #64748b;
+        font-size: 14px;
+        margin-bottom: 16px;
+      }
+
+      .demo-section p {
+        color: #475569;
+        margin-bottom: 16px;
+        line-height: 1.6;
+      }
+
+      .payment-trigger {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: #3b82f6;
+        color: #fff;
+        padding: 12px 20px;
+        border-radius: 8px;
+        font-size: 15px;
+        font-weight: 500;
+        cursor: pointer;
+        border: none;
+        transition: background 0.15s;
+      }
+
+      .payment-trigger:hover {
+        background: #2563eb;
+      }
+
+      .popover-container {
+        position: absolute;
+        z-index: 1000;
+        margin-top: 8px;
+      }
+
+      .status-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .status-idle {
+        background: #f1f5f9;
+        color: #64748b;
+      }
+
+      .status-preloading {
+        background: #fef3c7;
+        color: #d97706;
+      }
+
+      .status-preloaded {
+        background: #dbeafe;
+        color: #2563eb;
+      }
+
+      .status-mounted {
+        background: #dcfce7;
+        color: #16a34a;
+      }
+
+      .trigger-wrapper {
+        position: relative;
+        display: inline-block;
+      }
+
+      .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-top: 16px;
+      }
+
+      .feature-card {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 16px;
+        text-align: center;
+        cursor: pointer;
+        transition: border-color 0.15s, box-shadow 0.15s;
+        user-select: none;
+      }
+
+      .feature-card:hover {
+        border-color: #3b82f6;
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+      }
+
+      .feature-card .icon {
+        font-size: 28px;
+        margin-bottom: 8px;
+      }
+
+      .feature-card .label {
+        font-size: 13px;
+        font-weight: 500;
+        color: #334155;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 10px 16px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        border: 1px solid #e2e8f0;
+        background: #fff;
+        color: #0f172a;
+        transition: background 0.15s;
+      }
+
+      .btn:hover {
+        background: #f1f5f9;
+      }
+
+      .btn-primary {
+        background: #3b82f6;
+        color: #fff;
+        border-color: #3b82f6;
+      }
+
+      .btn-primary:hover {
+        background: #2563eb;
+      }
+
+      .analytics-panel {
+        background: #0f172a;
+        color: #e2e8f0;
+        border-radius: 8px;
+        padding: 16px;
+        max-height: 200px;
+        overflow-y: auto;
+        font-family: "SF Mono", Monaco, monospace;
+        font-size: 12px;
+        margin-top: 12px;
+      }
+
+      .analytics-entry {
+        padding: 4px 0;
+        border-bottom: 1px solid #1e293b;
+      }
+
+      .analytics-entry:last-child {
+        border-bottom: none;
+      }
+
+      .analytics-time {
+        color: #64748b;
+      }
+
+      .analytics-module {
+        color: #38bdf8;
+      }
+
+      .analytics-phase {
+        color: #a78bfa;
+      }
+
+      .analytics-duration {
+        color: #4ade80;
+      }
+
+      .scroll-spacer {
+        height: 150px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #94a3b8;
+        font-style: italic;
+        font-size: 14px;
+      }
+
+      .scroll-target {
+        background: #f1f5f9;
+        border: 2px dashed #cbd5e1;
+        border-radius: 8px;
+        padding: 24px;
+        text-align: center;
+        color: #64748b;
+      }
+
+      .modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 10000;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .modal-content {
+        background: #fff;
+        border-radius: 12px;
+        padding: 24px;
+        max-width: 600px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+      }
+
+      .modal-content h3 {
+        margin-bottom: 16px;
+      }
+
+      .log-entry {
+        padding: 6px 0;
+        border-bottom: 1px solid #e2e8f0;
+        font-size: 13px;
+        font-family: "SF Mono", Monaco, monospace;
+      }
+
+      .log-entry:last-child {
+        border-bottom: none;
+      }
+
+      .log-entry em {
+        color: #16a34a;
+      }
+
+      .feature-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 12px;
+      }
+
+      .feature-row .status-badge {
+        min-width: 80px;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>mountly</h1>
+      <p class="subtitle">On-Demand Interactive UI Platform</p>
+
+      <div class="demo-section">
+        <h2>1. Core Feature — Payment Breakdown</h2>
+        <p class="section-desc">Hover to preload, click to activate and mount. Click again to dismiss.</p>
+
+        <div class="trigger-wrapper" id="payment-trigger-wrapper">
+          <button class="payment-trigger" id="payment-trigger" data-testid="payment-trigger">
+            View Payment Details
+          </button>
+          <div class="popover-container" id="payment-popover" data-testid="payment-popover"></div>
+        </div>
+
+        <div class="feature-row">
+          <span>State:</span>
+          <span class="status-badge status-idle" id="feature-state" data-testid="feature-state">idle</span>
+        </div>
+      </div>
+
+      <div class="demo-section">
+        <h2>1b. Multi-instance — same feature, different data</h2>
+        <p class="section-desc">Two triggers wired to the same feature with different <code>paymentId</code> contexts. Each loads its own data; the module is loaded once.</p>
+
+        <div class="feature-row" style="gap: 24px; flex-wrap: wrap;">
+          <div class="trigger-wrapper" id="multi-trigger-1-wrapper">
+            <button class="payment-trigger" data-testid="multi-trigger-1">
+              Payment pay_123
+            </button>
+            <div class="popover-container" data-testid="multi-popover-1"></div>
+          </div>
+          <div class="trigger-wrapper" id="multi-trigger-2-wrapper">
+            <button class="payment-trigger" data-testid="multi-trigger-2" style="background:#10b981;">
+              Payment pay_456
+            </button>
+            <div class="popover-container" data-testid="multi-popover-2"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="demo-section">
+        <h2>1d. Live props update</h2>
+        <p class="section-desc">Click <em>Mount</em>, then <em>Update props</em>. The widget re-renders in place via <code>feature.update()</code> — no remount, no re-fetch.</p>
+
+        <div class="feature-row" style="gap: 12px; flex-wrap: wrap;">
+          <button class="btn btn-primary" data-testid="update-mount-btn">Mount</button>
+          <button class="btn" data-testid="update-change-btn">Update props</button>
+          <button class="btn" data-testid="update-unmount-btn">Unmount</button>
+        </div>
+        <div
+          data-testid="update-popover"
+          style="min-width: 320px; min-height: 240px; display: inline-block; margin-top: 12px;"
+        ></div>
+      </div>
+
+      <div class="demo-section">
+        <h2>1c. Reserved space + host skeleton</h2>
+        <p class="section-desc">The mount div has <code>min-width</code>/<code>min-height</code> and a host-authored skeleton inside. mountly clears the skeleton on mount; reserved space prevents layout shift.</p>
+
+        <div id="skeleton-trigger-wrapper">
+          <button class="payment-trigger" data-testid="skeleton-trigger" style="margin-bottom: 12px;">
+            Open with skeleton
+          </button>
+          <div
+            data-testid="skeleton-popover"
+            style="min-width: 320px; min-height: 240px; display: inline-block;"
+          >
+            <div
+              data-testid="skeleton-placeholder"
+              style="min-width: 320px; min-height: 240px; border: 1px dashed #cbd5e1; border-radius: 12px; padding: 20px; background: #f8fafc; color: #94a3b8; display: flex; align-items: center; justify-content: center; font-size: 14px;"
+            >
+              Loading payment…
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="demo-section">
+        <h2>2. Custom Element</h2>
+        <p class="section-desc">Declarative usage via <code>&lt;mountly-feature&gt;</code> web component.</p>
+
+        <mountly-feature
+          id="custom-element-feature"
+          module-id="payment-breakdown"
+          trigger="hover"
+          trigger-delay="200"
+          props='{"data":{"total":99,"currency":"USD","items":[{"description":"Hosted plan","amount":99,"currency":"USD"}]}}'
+        >
+          <button class="btn" data-testid="custom-element-trigger">Hover me (custom element)</button>
+          <div data-mountly-mount data-testid="custom-element-mount"></div>
+        </mountly-feature>
+
+        <div class="feature-row" style="margin-top: 16px;">
+          <button class="btn" data-testid="ce-change-props-btn">Change its props</button>
+        </div>
+      </div>
+
+      <div class="demo-section">
+        <h2>3. Predictive Prefetch</h2>
+        <p class="section-desc">Staggered prefetching during browser idle time, scored by interaction history.</p>
+
+        <div class="feature-row">
+          <button class="btn btn-primary" id="start-prefetch">Start Prefetch</button>
+          <span class="status-badge status-idle" id="prefetch-status">Idle</span>
+        </div>
+      </div>
+
+      <div class="demo-section">
+        <h2>4. Scroll-Based Prefetch</h2>
+        <p class="section-desc">Preloads when the target enters the viewport (with margin).</p>
+
+        <div class="scroll-spacer">Scroll down ↓</div>
+        <div class="scroll-target" id="scroll-prefetch-target">
+          Scroll target — prefetch triggers when visible
+          <div class="feature-row" style="justify-content: center; margin-top: 8px;">
+            <span>Status:</span>
+            <span class="status-badge status-idle" id="scroll-prefetch-status">Waiting</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="demo-section">
+        <h2>5. Trigger Plugins</h2>
+        <p class="section-desc">Swipe, long-press, and keyboard triggers via the plugin system.</p>
+
+        <div class="feature-grid">
+          <div class="feature-card" id="swipe-trigger">
+            <div class="icon">👆</div>
+            <div class="label">Swipe Right</div>
+            <div class="feature-row" style="justify-content: center; margin-top: 8px;">
+              <span class="status-badge status-idle" id="swipe-status">Ready</span>
+            </div>
+          </div>
+          <div class="feature-card" id="longpress-trigger">
+            <div class="icon">👇</div>
+            <div class="label">Long Press</div>
+            <div class="feature-row" style="justify-content: center; margin-top: 8px;">
+              <span class="status-badge status-idle" id="longpress-status">Ready</span>
+            </div>
+          </div>
+          <div class="feature-card" id="keyboard-trigger" tabindex="0">
+            <div class="icon">⌨️</div>
+            <div class="label">Press Enter</div>
+            <div class="feature-row" style="justify-content: center; margin-top: 8px;">
+              <span class="status-badge status-idle" id="keyboard-status">Ready</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="demo-section">
+        <h2>5b. Second widget — Image Lightbox</h2>
+        <p class="section-desc">A widget with a completely different aesthetic (dark / cinematic) and its own CSS-variable theme, proving the distribution pattern scales beyond the bootstrap widget.</p>
+
+        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+          <button
+            class="btn"
+            data-testid="lightbox-trigger"
+            style="padding: 0; overflow: hidden; background: #0f172a; border-color: #1e293b; color: #fff; width: 140px; height: 90px;"
+          >
+            <span style="font-size: 11px; letter-spacing: 0.2em; opacity: 0.8;">VIEW IMAGE</span>
+          </button>
+        </div>
+        <div data-testid="lightbox-mount" data-mountly-mount></div>
+      </div>
+
+      <div class="demo-section">
+        <h2>6. Analytics</h2>
+        <p class="section-desc">Real-time interaction timing tracking.</p>
+
+        <div class="feature-row">
+          <span>Events captured:</span>
+          <span class="status-badge status-preloaded" id="analytics-count">0</span>
+          <button class="btn" id="view-log">View Full Log</button>
+        </div>
+
+        <div class="analytics-panel" id="analytics-log">
+          <div style="color: #64748b; text-align: center; padding: 20px;">
+            Interact with features to see analytics...
+          </div>
+        </div>
+      </div>
+
+      <div class="demo-section">
+        <h2>7. Devtools Panel</h2>
+        <p class="section-desc">Floating debug panel showing feature states, cache stats, and recent events.</p>
+        <p>Open by default in the bottom-right — click its header to collapse, click again to expand. As you interact with the demo above, watch the <strong>cache hits</strong> and <strong>lifecycle events</strong> update live.</p>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="log-modal">
+      <div class="modal-content">
+        <h3>Analytics Log</h3>
+        <div id="log-content"></div>
+        <div style="margin-top: 16px; text-align: right;">
+          <button class="btn" id="close-log">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

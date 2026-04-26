@@ -1,0 +1,12 @@
+import { defineConfig } from "tsup";
+
+export default defineConfig({
+  entry: ["src/index.ts"],
+  format: ["esm"],
+  dts: true,
+  clean: true,
+  // CSS is imported as a string and handed to createWidget for shadow-root
+  // injection — bundle it as text, not as a side-effect stylesheet.
+  loader: { ".css": "text" },
+  external: ["react", "react-dom", "react-dom/client", "mountly", "mountly-react"],
+});

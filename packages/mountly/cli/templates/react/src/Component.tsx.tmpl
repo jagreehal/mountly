@@ -1,0 +1,7 @@
+export interface Props {
+  message?: string;
+}
+
+export default function Component({ message = "Hello from {{name}}" }: Props) {
+  return <div className="ui-card">{message}</div>;
+}

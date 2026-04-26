@@ -1,0 +1,94 @@
+---
+title: Quick start
+description: Scaffold a mountly widget and mount it on a page in 60 seconds.
+---
+
+The fastest path is the CLI. It scaffolds a React widget pre-wired with the build pipeline, both bundle outputs, and a working host page.
+
+## 1. Scaffold a widget
+
+```bash
+npx mountly init my-widget
+cd my-widget
+```
+
+You get:
+
+- `src/Component.tsx` — a React component (you can swap in Vue or Svelte later).
+- A widget factory using `mountly-react`'s `createWidget`.
+- A `tsup` build that produces both `dist/index.js` (self-contained) and `dist/peer.js` (shared React).
+- An example host page.
+
+## 2. Install and build
+
+```bash
+pnpm install
+pnpm build
+```
+
+Two artifacts land in `dist/`:
+
+- **`index.js`** — self-contained bundle. Includes React. Drop into any page.
+- **`peer.js`** — peer build. Excludes React. Use when the host already maps React via an import map.
+
+See [Distribution](/mountly/concepts/distribution/) for which one to ship.
+
+## 3. Mount it
+
+```html title="host.html"
+<div id="mount"></div>
+<script type="module">
+  import widget from "./my-widget/dist/index.js";
+  widget.mount(document.getElementById("mount"));
+</script>
+```
+
+The widget mounts inside its own shadow root. Styles are bundled and scoped — the host can't bleed into the widget and the widget can't bleed out.
+
+## 4. Add the on-demand lifecycle
+
+`mount()` is the bare minimum. To get **on-intent loading**, wrap the widget in a feature:
+
+```ts title="page.ts"
+import { createOnDemandFeature } from "mountly";
+
+const signup = createOnDemandFeature({
+  moduleId: "signup-card",
+  loadModule: () => import("./my-widget/dist/index.js"),
+  render: ({ mod, container, props }) => mod.mount(container, props),
+});
+
+signup.attach({
+  trigger: document.querySelector("#cta")!,
+  preloadOn: "hover",
+  activateOn: "click",
+});
+```
+
+Now the widget code is fetched on first hover and mounted on click. Open DevTools → Network and watch.
+
+## 5. See the full demo
+
+The repo ships several runnable examples. The richest is the marketing site:
+
+```bash
+git clone https://github.com/jagreehal/mountly
+cd mountly
+pnpm install && pnpm -r build
+cd examples/marketing-site && pnpm dev
+```
+
+Open [http://localhost:5176/examples/marketing-site/](http://localhost:5176/examples/marketing-site/). You'll see:
+
+- A hero "Join the newsletter" button — preloads on hover, mounts on click.
+- An inline embed — mounts on viewport entry.
+- Zero framework JavaScript on the host before interaction.
+
+The shortest copy-paste host lives at [http://localhost:5175/examples/quickstart/host.html](http://localhost:5175/examples/quickstart/host.html) after running `cd examples/plain-html && pnpm dev`.
+
+## Where to next
+
+- [**How it works**](/mountly/getting-started/how-it-works/) — the architecture in one page.
+- [**Triggers**](/mountly/concepts/triggers/) — the six ways to say "now".
+- [**React** / **Vue** / **Svelte**](/mountly/frameworks/react/) — adapter-specific patterns.
+- [**API: `createOnDemandFeature`**](/mountly/api/create-on-demand-feature/) — the core primitive.

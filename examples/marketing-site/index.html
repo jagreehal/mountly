@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Acme — marketing site (mountly consumer)</title>
+    <style>
+      :root {
+        --ink: oklch(0.18 0.01 260);
+        --paper: oklch(0.98 0.003 80);
+        --muted: oklch(0.55 0.01 260);
+        --rule: oklch(0.88 0.005 80);
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; }
+      body {
+        font-family: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+        background: var(--paper);
+        color: var(--ink);
+        line-height: 1.55;
+      }
+      .wrap { max-width: 960px; margin: 0 auto; padding: 64px 24px 96px; }
+      nav { display: flex; gap: 24px; align-items: center; margin-bottom: 64px; }
+      nav .logo {
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        font-size: 20px;
+      }
+      nav a { color: var(--muted); text-decoration: none; font-size: 14px; }
+      nav a:hover { color: var(--ink); }
+      h1 {
+        font-size: clamp(40px, 6vw, 64px);
+        letter-spacing: -0.03em;
+        line-height: 1.05;
+        margin: 0 0 20px;
+        max-width: 18ch;
+      }
+      .lede {
+        font-size: 18px;
+        color: var(--muted);
+        max-width: 56ch;
+        margin: 0 0 40px;
+      }
+      .cta-row { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--ink);
+        color: var(--paper);
+        padding: 12px 20px;
+        border-radius: 999px;
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none;
+        border: 0;
+        cursor: pointer;
+      }
+      .btn-ghost {
+        background: transparent;
+        color: var(--ink);
+        border: 1px solid var(--rule);
+      }
+      hr { border: 0; border-top: 1px solid var(--rule); margin: 80px 0; }
+      h2 {
+        font-size: 28px;
+        letter-spacing: -0.02em;
+        margin: 0 0 12px;
+      }
+      section p { color: var(--muted); max-width: 56ch; }
+      .inline-embed {
+        margin-top: 32px;
+        padding: 32px;
+        background: #fff;
+        border: 1px solid var(--rule);
+        border-radius: 16px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 32px;
+        align-items: center;
+      }
+      @media (max-width: 640px) {
+        .inline-embed { grid-template-columns: 1fr; }
+      }
+      .annotation {
+        font-size: 13px;
+        color: var(--muted);
+      }
+      code {
+        background: oklch(0.94 0.005 80);
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 0.9em;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+      footer {
+        color: var(--muted);
+        font-size: 13px;
+        margin-top: 96px;
+        padding-top: 32px;
+        border-top: 1px solid var(--rule);
+      }
+    </style>
+
+    <!--
+      The host page is plain HTML. No bundler, no framework. The import map
+      tells the browser where to find each module. Swap /dist/peer.js back
+      to /dist/index.js to ship the widget with its own React (self-contained).
+    -->
+    <script type="importmap">
+      {
+        "imports": {
+          "react": "https://esm.sh/react@18.3.1",
+          "react/jsx-runtime": "https://esm.sh/react@18.3.1/jsx-runtime",
+          "react-dom/client": "https://esm.sh/react-dom@18.3.1/client",
+          "mountly": "/packages/mountly/dist/index.js",
+          "mountly-react": "/packages/adapters/mountly-react/dist/index.js",
+          "signup-card": "/examples/signup-card/dist/peer.js"
+        }
+      }
+    </script>
+  </head>
+
+  <body>
+    <div class="wrap">
+      <nav>
+        <span class="logo">Acme</span>
+        <a href="#">Product</a>
+        <a href="#">Pricing</a>
+        <a href="#">Changelog</a>
+      </nav>
+
+      <h1>Ship better, ship quieter.</h1>
+      <p class="lede">
+        Acme is a fictional SaaS. This page is plain static HTML — no
+        framework, no build step, no React on the host. The signup widget
+        loads <em>only</em> when the user reaches for it.
+      </p>
+
+      <div class="cta-row">
+        <!-- This button is our widget trigger. Hover preloads, click mounts. -->
+        <button class="btn" id="subscribe">Join the newsletter</button>
+        <a href="#features" class="btn btn-ghost">Learn more</a>
+      </div>
+
+      <!-- The mount slot — sized ahead of time to prevent layout shift. -->
+      <div
+        id="subscribe-mount"
+        style="margin-top: 16px; min-width: 360px; min-height: 220px;"
+      ></div>
+
+      <hr />
+
+      <section id="features">
+        <h2>Widget, but on a marketing page</h2>
+        <p>
+          The signup card above is a real React component — composed from
+          shadcn-style primitives (<code>Card</code>, <code>Input</code>,
+          <code>Button</code>) — bundled by the dev team with
+          <code>mountly init signup-card</code> and dropped on this page
+          using <code>&lt;mountly-feature&gt;</code>. Marketing didn't touch
+          React; developers didn't touch the marketing page.
+        </p>
+
+        <div class="inline-embed">
+          <div>
+            <h3 style="margin: 0 0 8px; font-size: 20px;">Try it inline</h3>
+            <p class="annotation">
+              This is the same widget, but with theme tokens overridden on
+              the mount element — try resizing your browser; the widget
+              adapts to its own container, not the viewport.
+            </p>
+          </div>
+          <div>
+            <mountly-feature module-id="signup-card" trigger="viewport">
+              <div data-mountly-mount
+                   style="min-width: 340px; min-height: 220px;
+                          --primary: 262 83% 58%;
+                          --ring: 262 83% 58%;"></div>
+            </mountly-feature>
+          </div>
+        </div>
+      </section>
+
+      <footer>
+        <p>
+          This is <code>examples/marketing-site/index.html</code> — a plain
+          HTML page consuming widgets bundled elsewhere in this monorepo.
+          Inspect the Network tab: no React, no widget code downloads until
+          you interact with the subscribe button or scroll the inline embed
+          into view.
+        </p>
+      </footer>
+    </div>
+
+    <script type="module">
+      import {
+        defineMountlyFeature,
+        registerCustomElement,
+      } from "mountly";
+      import { signupCard } from "signup-card";
+
+      // Register the widget + define the <mountly-feature> element. Both
+      // required before the viewport-triggered widget below can upgrade.
+      registerCustomElement("signup-card", () => signupCard);
+      defineMountlyFeature();
+
+      // Hero subscribe button — imperative attach so we can pass an onSubmit
+      // callback that does a real network call (mocked here).
+      signupCard.attach({
+        trigger: document.getElementById("subscribe"),
+        mount: document.getElementById("subscribe-mount"),
+        preloadOn: "hover",
+        activateOn: "click",
+        props: {
+          data: {
+            headline: "Get the monthly digest",
+            subline: "One email per month, the week's shipping roundup.",
+            onSubmit: async (email) => {
+              // Pretend to POST to your backend.
+              await new Promise((r) => setTimeout(r, 700));
+              console.log("[acme] subscribed:", email);
+            },
+          },
+        },
+      });
+    </script>
+  </body>
+</html>

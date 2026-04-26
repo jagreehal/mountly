@@ -1,0 +1,20 @@
+@import "tailwindcss";
+@import "./tokens.css";
+
+:host {
+  --ui-surface: var(--color-ui-surface);
+  --ui-surface-elevated: var(--color-ui-surface-elevated);
+  --ui-text: var(--color-ui-text);
+  --ui-text-subtle: var(--color-ui-text-subtle);
+  --ui-muted: var(--color-ui-muted);
+  --ui-border: var(--color-ui-border);
+  --ui-rule: var(--color-ui-rule);
+  --ui-accent: var(--color-ui-accent);
+  --ui-accent-soft: var(--color-ui-accent-soft);
+  --ui-positive: var(--color-ui-positive);
+  --ui-radius: var(--radius-ui);
+  --ui-shadow: var(--shadow-ui);
+
+  color: var(--ui-text);
+  font-family: var(--font-ui-body);
+}

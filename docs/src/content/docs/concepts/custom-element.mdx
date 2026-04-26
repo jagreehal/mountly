@@ -1,0 +1,110 @@
+---
+title: Custom element
+description: The <mountly-feature> custom element — declarative usage for hosts that drop in HTML rather than write JS.
+---
+
+For hosts that drop in HTML — CMS pages, marketing sites, partner integrations — declarative is easier to maintain than imperative. mountly ships a custom element for that.
+
+## In one example
+
+```html
+<mountly-feature
+  module-id="signup-card"
+  trigger="viewport"
+  props='{"plan":"pro"}'
+></mountly-feature>
+```
+
+That's the whole API surface. The element handles attach, mount, prop updates, and unmount on disconnect.
+
+## Wire it once
+
+Custom elements need two things: a registered factory for each `module-id`, and a `customElements.define()` call.
+
+```ts
+import { registerCustomElement, defineMountlyFeature, createOnDemandFeature } from "mountly";
+
+registerCustomElement("signup-card", () =>
+  createOnDemandFeature({
+    moduleId: "signup-card",
+    loadModule: () => import("./signup-card.js"),
+    render: ({ mod, container, props }) => mod.mount(container, props),
+  }),
+);
+
+defineMountlyFeature();   // registers <mountly-feature>
+```
+
+Call this once per page, before any `<mountly-feature>` is parsed (or before it scrolls/hovers into life — the element is forgiving).
+
+You can rename the tag if `mountly-feature` collides with something:
+
+```ts
+defineMountlyFeature("widget-island");
+```
+
+## Attributes
+
+| Attribute | Type | Default | Notes |
+|---|---|---|---|
+| `module-id` | string | required | Must match a `registerCustomElement` factory. |
+| `trigger` | `"hover"` · `"click"` · `"focus"` · `"viewport"` · `"idle"` · `"media"` · `"url-change"` | `"click"` | High-level trigger preset. |
+| `trigger-delay` | number ms | trigger default | Hover delay override. |
+| `preload-on` | `"hover"` · `"viewport"` · `"idle"` · `"media"` · `"false"` | mapped from `trigger` | Explicit `attach().preloadOn` override. |
+| `activate-on` | `"click"` · `"hover"` · `"focus"` · `"viewport"` · `"idle"` · `"media"` · `"url-change"` | mapped from `trigger` | Explicit `attach().activateOn` override. |
+| `preload-media-query` | string | — | Required with `preload-on="media"`. |
+| `activate-media-query` | string | — | Required with `activate-on="media"` or `trigger="media"`. |
+| `idle-timeout` | number ms | — | Used by idle triggers. |
+| `viewport-root-margin` | string | `"0px"` | Forwarded to `IntersectionObserver`. |
+| `url-events` | comma list (`popstate,hashchange,pushstate,replacestate`) | all four | Used with `activate-on="url-change"` / `trigger="url-change"`. |
+| `data-url` | string | — | If set, the element fetches JSON from this URL as `loadData`. |
+| `data-method` | `"GET"` · `"POST"` etc | `"GET"` | Used with `data-url`. |
+| `props` | JSON string | `{}` | Passed to `render()`. Live-updates via `update()`. |
+| `mount-selector` | CSS selector | self | Render target other than the element itself. |
+
+## Live prop updates
+
+Change the `props` attribute and the element calls `feature.update(...)`. If the widget exposes `update(container, props)` (React adapter does, others can opt in), framework-internal state is preserved. Otherwise it falls back to a re-render in the same container.
+
+```ts
+const el = document.querySelector("mountly-feature");
+el.setAttribute("props", JSON.stringify({ plan: "enterprise" }));
+```
+
+## Mount target
+
+By default, the widget mounts inside the element itself. To mount into a sibling instead — useful when the trigger element should stay tiny and the widget renders into a pre-positioned container — pass `mount-selector`:
+
+```html
+<button id="cta">Buy</button>
+<div id="modal-root"></div>
+<mountly-feature
+  module-id="payment-breakdown"
+  trigger="click"
+  mount-selector="#modal-root"
+></mountly-feature>
+```
+
+The element's own DOM stays empty; the widget renders into `#modal-root`.
+
+## Unknown `module-id`
+
+If the element connects with a `module-id` that has no registered factory, you get a console warning listing the registered IDs. The element stays inert until the factory is registered later — useful when the registration is split across code-split chunks.
+
+## When to prefer the imperative API
+
+- You need `onMount` / `onError` callbacks.
+- The trigger element is dynamic (e.g. created in response to user input).
+- You want to wire analytics next to the trigger.
+
+In those cases, call `feature.attach({ trigger, mount, … })` directly. The custom element is the ergonomic shortcut for static-HTML hosts; `attach()` is the full API.
+
+## Astro parity scope
+
+You can replicate Astro timing directives in declarative HTML:
+
+- `client:idle` → `trigger="idle"` (optionally `idle-timeout`)
+- `client:visible={{ rootMargin }}` → `trigger="viewport"` + `viewport-root-margin="..."`
+- `client:media` → `trigger="media"` + `activate-media-query="(query)"`
+
+Compiler/server directives remain Astro-only (`client:only`, `server:defer`, `set:html`, etc.).

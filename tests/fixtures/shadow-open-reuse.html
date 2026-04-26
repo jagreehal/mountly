@@ -1,0 +1,20 @@
+<!doctype html>
+<html><body>
+  <div id="container"></div>
+  <script type="module">
+    import { attachShadow } from "/packages/mountly/dist/index.js";
+    const c = document.getElementById("container");
+    const m1 = attachShadow(c, { styles: ".x{}", shadowMode: "open" });
+    const m2 = attachShadow(c, { styles: ".x{}", shadowMode: "open" });
+    const root = c.shadowRoot;
+    window.__result = {
+      shadowRoots: c.shadowRoot ? 1 : 0,
+      // Style is present either as adopted stylesheet OR as <style> element
+      stylePresent:
+        (root.adoptedStyleSheets && root.adoptedStyleSheets.length > 0) ||
+        root.querySelectorAll("style").length > 0,
+      mountNodes: root.querySelectorAll("[data-mountly-root]").length,
+      sameMountReference: m1 === m2,
+    };
+  </script>
+</body></html>

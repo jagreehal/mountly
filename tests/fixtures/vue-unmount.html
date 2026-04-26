@@ -1,0 +1,38 @@
+<!doctype html>
+<html><body>
+  <div id="c"></div>
+  <script type="importmap">
+    {"imports":{"vue":"https://esm.sh/vue@3","mountly":"/packages/mountly/dist/index.js"}}
+  </script>
+  <script type="module">
+    import { h } from "vue";
+    import { createWidget } from "/packages/adapters/mountly-vue/dist/index.js";
+
+    const T = {
+      props: ["msg"],
+      render() { return h("span", this.msg); },
+    };
+
+    const w = createWidget(T, { styles: ".x{}" });
+    const c = document.getElementById("c");
+    w.mount(c, { msg: "alive" });
+
+    const root = c.shadowRoot;
+    const before = root.querySelector("[data-mountly-root]")?.textContent ?? "";
+
+    w.unmount(c);
+
+    const mountAfterUnmount = root.querySelector("[data-mountly-root]");
+    const textAfter = mountAfterUnmount?.textContent ?? "";
+
+    // Re-mounting after unmount must rebuild a working widget tree.
+    w.mount(c, { msg: "reborn" });
+    const textAfterRemount = c.shadowRoot.querySelector("[data-mountly-root]")?.textContent ?? "";
+
+    window.__result = {
+      before,
+      textAfter,
+      textAfterRemount,
+    };
+  </script>
+</body></html>

@@ -1,0 +1,12 @@
+{
+  "name": "shadcn-drop-in-example",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "serve -l 5177 ../.."
+  },
+  "devDependencies": {
+    "serve": "^14.2.6"
+  }
+}

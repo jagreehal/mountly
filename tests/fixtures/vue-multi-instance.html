@@ -1,0 +1,33 @@
+<!doctype html>
+<html><body>
+  <div id="a"></div>
+  <div id="b"></div>
+  <script type="importmap">
+    {"imports":{"vue":"https://esm.sh/vue@3","mountly":"/packages/mountly/dist/index.js"}}
+  </script>
+  <script type="module">
+    import { h } from "vue";
+    import { createWidget } from "/packages/adapters/mountly-vue/dist/index.js";
+
+    const T = {
+      props: ["msg"],
+      render() { return h("span", this.msg); },
+    };
+
+    const w = createWidget(T, { styles: ".shared{}" });
+    const a = document.getElementById("a");
+    const b = document.getElementById("b");
+    w.mount(a, { msg: "alpha" });
+    w.mount(b, { msg: "beta" });
+
+    // Unmount one, leave the other.
+    w.unmount(a);
+
+    window.__result = {
+      aTextAfter: a.shadowRoot.querySelector("[data-mountly-root]")?.textContent ?? "",
+      bText: b.shadowRoot.querySelector("[data-mountly-root]")?.textContent ?? "",
+      aHasShadow: !!a.shadowRoot,
+      bHasShadow: !!b.shadowRoot,
+    };
+  </script>
+</body></html>

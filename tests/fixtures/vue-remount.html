@@ -1,0 +1,30 @@
+<!doctype html>
+<html><body>
+  <div id="c"></div>
+  <script type="importmap">
+    {"imports":{"vue":"https://esm.sh/vue@3","mountly":"/packages/mountly/dist/index.js"}}
+  </script>
+  <script type="module">
+    import { h } from "vue";
+    import { createWidget } from "/packages/adapters/mountly-vue/dist/index.js";
+    const T = {
+      props: ["msg"],
+      render() {
+        return h("div", this.msg);
+      },
+    };
+    const w = createWidget(T, { styles: ".x{}" });
+    const c = document.getElementById("c");
+    w.mount(c, { msg: "first" });
+    w.mount(c, { msg: "second" });
+
+    const root = c.shadowRoot;
+    window.__result = {
+      mountNodes: root.querySelectorAll("[data-mountly-root]").length,
+      stylePresent:
+        !!root.querySelector("style") ||
+        (root.adoptedStyleSheets && root.adoptedStyleSheets.length > 0),
+      text: root.querySelector("[data-mountly-root]")?.textContent ?? "",
+    };
+  </script>
+</body></html>

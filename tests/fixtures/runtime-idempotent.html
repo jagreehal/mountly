@@ -1,0 +1,12 @@
+<!doctype html>
+<html><body><script type="module">
+  import { installRuntime } from "/packages/mountly/dist/index.js";
+  const urls = {
+    react: "https://example.test/react.js",
+    reactJsxRuntime: "https://example.test/react-jsx-runtime.js",
+    reactDom: "https://example.test/react-dom.js",
+    reactDomClient: "https://example.test/react-dom-client.js",
+  };
+  installRuntime(urls);
+  installRuntime(urls);
+</script></body></html>

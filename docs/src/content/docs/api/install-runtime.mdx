@@ -1,0 +1,102 @@
+---
+title: installRuntime
+description: Inject an import map for shared React/ReactDOM in plain-HTML hosts. One line, one place — early in the head.
+---
+
+```ts
+import { installRuntime } from "mountly";
+```
+
+Writes an `<script type="importmap">` to `<head>` mapping `react`, `react/jsx-runtime`, `react-dom`, and `react-dom/client` to the URLs you pass. Pair with peer-built widgets so the host ships **one** copy of React for many widgets.
+
+## Signature
+
+```ts
+function installRuntime(urls: RuntimeUrls): void;
+
+interface RuntimeUrls {
+  react: string;
+  reactDom: string;
+  reactDomClient: string;
+  reactJsxRuntime?: string;   // derived from react if omitted
+}
+```
+
+## Use it
+
+In an inline module script in `<head>`, **before** any other module imports:
+
+```html
+<head>
+  <script type="module">
+    import { installRuntime } from "https://cdn.jsdelivr.net/npm/mountly@0.1/dist/index.js";
+    installRuntime({
+      react: "https://esm.sh/react@18",
+      reactDom: "https://esm.sh/react-dom@18",
+      reactDomClient: "https://esm.sh/react-dom@18/client",
+    });
+  </script>
+  <!-- … rest of head … -->
+</head>
+```
+
+After this runs, any subsequent `import "mountly"` (or any peer-built widget importing `react`) resolves through the import map.
+
+## What it produces
+
+A single `<script type="importmap" data-mountly-runtime>` element prepended to `<head>`:
+
+```json
+{
+  "imports": {
+    "react": "https://esm.sh/react@18",
+    "react/jsx-runtime": "https://esm.sh/react@18/jsx-runtime",
+    "react-dom": "https://esm.sh/react-dom@18",
+    "react-dom/client": "https://esm.sh/react-dom@18/client"
+  }
+}
+```
+
+`react/jsx-runtime` is derived from `react` by appending `/jsx-runtime` if you don't pass `reactJsxRuntime`.
+
+## Rules
+
+### 1. Call before any module imports
+
+If `installRuntime` runs **after** another module has started loading, the runtime warns:
+
+```
+[mountly] installRuntime called after module loading may have started.
+Call it from an inline <script> in <head>, before any module imports.
+```
+
+The browser commits to an import map at the moment the first module begins resolving. Later mutation is a no-op.
+
+### 2. First call wins
+
+Calling `installRuntime` twice with **different** URLs warns:
+
+```
+[mountly] installRuntime called twice with different URLs; first call wins.
+```
+
+The second call is otherwise ignored. If you need to change runtime URLs at runtime, you'd be re-architecting more than this helper supports.
+
+### 3. The mark attribute
+
+The injected element has `data-mountly-runtime` so you can detect it from external tooling:
+
+```js
+const map = document.querySelector("script[data-mountly-runtime]");
+```
+
+## When to skip it
+
+- You're using **self-contained** widget builds (`dist/index.js`). They embed React and don't need an import map.
+- You're inside a bundler (Vite, Next, Astro). The bundler resolves `react` directly; an import map would be redundant or conflicting.
+- You manage your own import map already. mountly's helper is a convenience, not a requirement.
+
+## Related
+
+- [Distribution](/mountly/concepts/distribution/) — when to ship `peer.js` vs `index.js`.
+- [Plain HTML](/mountly/frameworks/plain-html/) — the host pattern that needs this helper.

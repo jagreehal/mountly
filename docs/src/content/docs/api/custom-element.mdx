@@ -1,0 +1,139 @@
+---
+title: Custom element
+description: Reference for <mountly-feature> — the declarative way to drop a feature into HTML.
+---
+
+```ts
+import { registerCustomElement, defineMountlyFeature } from "mountly";
+```
+
+A custom element wrapper around `OnDemandFeature`. Useful for hosts that drop in HTML rather than write JS — CMS pages, marketing sites, partner integrations.
+
+## Wire it up
+
+```ts
+registerCustomElement("signup-card", () => createOnDemandFeature({ … }));
+defineMountlyFeature();   // registers <mountly-feature>
+```
+
+Call this once per page. After it runs, every `<mountly-feature module-id="signup-card">` on the page is connected.
+
+## `registerCustomElement(moduleId, factory)`
+
+```ts
+function registerCustomElement(
+  moduleId: string,
+  factory: () => OnDemandFeature | Promise<OnDemandFeature>
+): void;
+```
+
+Maps a `module-id` attribute value to a factory that returns a feature. The factory may be sync or async. Mountly calls it once per element instance (so two `<mountly-feature module-id="signup-card">` on the page yield two features).
+
+To unregister:
+
+```ts
+unregisterCustomElement("signup-card");
+```
+
+## `defineMountlyFeature(tagName?)`
+
+```ts
+function defineMountlyFeature(tagName?: string): void;
+```
+
+Calls `customElements.define(tagName ?? "mountly-feature", …)` if it isn't already defined. Idempotent.
+
+Pass a custom tag name if `mountly-feature` collides with something else on the page:
+
+```ts
+defineMountlyFeature("widget-island");
+```
+
+The element observes the same attributes either way.
+
+## Element attributes
+
+Set on `<mountly-feature>`:
+
+| Attribute | Type | Default | Notes |
+|---|---|---|---|
+| `module-id` | string | required | Must match a `registerCustomElement` factory. |
+| `trigger` | `"hover"` · `"click"` · `"focus"` · `"viewport"` · `"idle"` · `"media"` · `"url-change"` | `"click"` | High-level trigger preset. |
+| `trigger-delay` | number ms | trigger default | Hover delay override. |
+| `preload-on` | `"hover"` · `"viewport"` · `"idle"` · `"media"` · `"false"` | mapped from `trigger` | Explicit `attach().preloadOn` override. |
+| `activate-on` | `"click"` · `"hover"` · `"focus"` · `"viewport"` · `"idle"` · `"media"` · `"url-change"` | mapped from `trigger` | Explicit `attach().activateOn` override. |
+| `preload-media-query` | string | — | Required with `preload-on="media"`. |
+| `activate-media-query` | string | — | Required with `activate-on="media"` or `trigger="media"`. |
+| `idle-timeout` | number ms | — | Used by idle triggers. |
+| `viewport-root-margin` | string | `"0px"` | Forwarded to `IntersectionObserver`. |
+| `url-events` | comma list (`popstate,hashchange,pushstate,replacestate`) | all four | Used with `activate-on="url-change"` / `trigger="url-change"`. |
+| `data-url` | string | — | If set, the element fetches JSON from this URL as `loadData`. |
+| `data-method` | `"GET"` · `"POST"` etc. | `"GET"` | Used with `data-url`. |
+| `props` | JSON string | `{}` | Passed to the feature's `render()`. |
+| `mount-selector` | CSS selector | self | Render target other than the element itself. |
+
+## Trigger → attach mapping
+
+The element translates `trigger` into the appropriate `preloadOn` / `activateOn` pair:
+
+| `trigger` | `preloadOn` | `activateOn` |
+|---|---|---|
+| `"hover"` | `"hover"` | `"hover"` |
+| `"focus"` | `false` | `"focus"` |
+| `"viewport"` | `"viewport"` | `"viewport"` |
+| `"idle"` | `"idle"` | `"click"` |
+| `"media"` | `false` | `"media"` |
+| `"url-change"` | `false` | `"url-change"` |
+| `"click"` (default) | `false` | `"click"` |
+
+If you need different combinations, use [`feature.attach(...)`](/mountly/api/create-on-demand-feature/#attachoptions) directly.
+
+## Astro parity notes
+
+`<mountly-feature>` can match Astro client hydration timing semantics:
+
+- `client:idle` → `trigger="idle"` (optionally `idle-timeout`)
+- `client:visible={{ rootMargin }}` → `trigger="viewport"` + `viewport-root-margin="..."`
+- `client:media="(query)"` → `trigger="media"` + `activate-media-query="(query)"`
+- `client:load` / immediate mount → skip triggers and call `feature.mount(...)` programmatically
+
+Astro-specific compile-time/server directives (`client:only`, `server:defer`, `set:html`, `is:inline`, etc.) are outside mountly’s runtime scope.
+
+## Live prop updates
+
+Setting the `props` attribute on a connected element triggers `feature.update(container, parsedProps)` — preserving framework-internal state when the widget supports it.
+
+```js
+const el = document.querySelector("mountly-feature");
+el.setAttribute("props", JSON.stringify({ plan: "pro" }));
+```
+
+## Errors
+
+If a `module-id` has no registered factory:
+
+```
+[mountly] <mountly-feature module-id="x"> has no registered factory.
+Call registerCustomElement("x", () => yourFeature) before the element connects.
+Currently registered: "signup-card", "payment-breakdown".
+```
+
+The element stays inert until the factory is registered (later registration is honoured on the next reconnect).
+
+## Lifecycle hooks
+
+The element does not expose `onMount` / `onUnmount` itself — for those, attach analytics handlers via the feature's [`onAnalyticsEvent`](/mountly/api/analytics/) or wire them inside the factory:
+
+```ts
+registerCustomElement("signup-card", () => {
+  const feature = createOnDemandFeature({ … });
+  // Hook into all mounts of this feature, regardless of trigger.
+  onAnalyticsEvent("signup-card", (e) => analytics.track(e.phase));
+  return feature;
+});
+```
+
+## Related
+
+- [Custom element concept](/mountly/concepts/custom-element/) — the explainer.
+- [`createOnDemandFeature`](/mountly/api/create-on-demand-feature/) — what the factory returns.

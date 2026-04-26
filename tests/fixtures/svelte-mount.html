@@ -1,0 +1,22 @@
+<!doctype html>
+<html><body>
+  <div id="c"></div>
+  <script type="importmap">{"imports":{"mountly":"/packages/mountly/dist/index.js"}}</script>
+  <script type="module">
+    import { createWidget } from "/packages/adapters/mountly-svelte/dist/index.js";
+
+    class HelloComponent {
+      constructor({ target, props }) {
+        this.el = document.createElement("span");
+        this.el.textContent = String(props?.msg ?? "");
+        target.appendChild(this.el);
+      }
+      $destroy() {
+        this.el?.remove();
+      }
+    }
+
+    const widget = createWidget(HelloComponent, { styles: ".x{}" });
+    widget.mount(document.getElementById("c"), { msg: "hello world" });
+  </script>
+</body></html>

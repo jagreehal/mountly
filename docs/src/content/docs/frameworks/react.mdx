@@ -1,0 +1,107 @@
+---
+title: React
+description: Use mountly-react to wrap any React 18 or 19 component as a mountable widget.
+---
+
+`mountly-react` is the React adapter. It turns any React component into a mountly **widget** — an object with `mount(container, props)` and `unmount(container)`, framework-agnostic at the boundary.
+
+## Install
+
+```bash
+pnpm add mountly mountly-react react react-dom
+```
+
+React is a peer dependency. Install whichever version you ship.
+
+## Basic usage
+
+```tsx title="signup-card.ts"
+import { createWidget } from "mountly-react";
+import SignupCard from "./SignupCard.tsx";
+import styles from "./SignupCard.css?inline";
+
+export default createWidget(SignupCard, { styles });
+```
+
+`styles` is the CSS the widget needs. The string is injected into the widget's shadow root, so it never escapes. Use Vite's `?inline` query, esbuild's `text` loader, or any tool that gives you the CSS as a string.
+
+## Mounting
+
+The widget exposes `mount(container, props)`. The `props` are passed through to your component:
+
+```ts
+import widget from "./signup-card.js";
+
+widget.mount(document.querySelector("#cta-mount"), {
+  headline: "Try the API",
+  plan: "pro",
+});
+```
+
+Each call to `mount()` unmounts any existing root in the same container first, so calling it twice is safe.
+
+## With the on-demand lifecycle
+
+Wrap the widget in a feature for on-intent loading:
+
+```ts
+import { createOnDemandFeature } from "mountly";
+
+const signup = createOnDemandFeature({
+  moduleId: "signup-card",
+  loadModule: () => import("./signup-card.js"),
+  render: ({ mod, container, props }) => mod.mount(container, props),
+});
+
+signup.attach({
+  trigger: document.querySelector("#cta")!,
+  preloadOn: "hover",
+  activateOn: "click",
+});
+```
+
+## Live updates without remounting
+
+The React adapter exposes `update()` automatically — it routes through React's reconciler so internal state survives:
+
+```ts
+await signup.update(container, { plan: "enterprise" });
+// Component re-renders with the new prop, hooks state preserved.
+```
+
+The custom element `<mountly-feature>` calls this for you when its `props` attribute changes.
+
+## Two builds, one source
+
+`mountly init` configures `tsup` to emit:
+
+- `dist/index.js` — bundles React + ReactDOM. Drop into any host.
+- `dist/peer.js` — externalises React. Pairs with the host's import map; one React for many widgets.
+
+You don't choose at build time — both are produced. The host's import map decides which to load. See [Distribution](/mountly/concepts/distribution/).
+
+## Server components
+
+The React adapter mounts on the **client**. It assumes a `Component` that renders client-side. If you want React Server Components, you're outside mountly's design — the adapter calls `createRoot()` and `render()`, which only work in the browser.
+
+You can still mount a client component that *fetches* server-rendered HTML and shows it; the framing is "client widget that consumes server data."
+
+## Common pitfalls
+
+### Two React instances
+
+If you ship two widgets, both with `dist/index.js`, you have two copies of React. Hooks in the two trees can't share context. **Always use the peer build for multi-widget pages.** See [Distribution](/mountly/concepts/distribution/).
+
+### Styles not appearing
+
+The `styles` argument must be a **string** of CSS, not a CSS file path. If your styles aren't appearing, check the bundler's import — Vite needs `?inline`, esbuild needs `text` loader, etc.
+
+### Hydration error in dev
+
+The adapter mounts a fresh tree, not a hydrated one. If you mount into a `<div>` that already contains DOM produced server-side, React will complain. Mount into an empty element.
+
+## Reference
+
+- [`createWidget`](/mountly/api/create-widget/) — the adapter API.
+- [`createOnDemandFeature`](/mountly/api/create-on-demand-feature/) — the lifecycle wrapper.
+- `examples/signup-card`, `examples/payment-breakdown`, `examples/image-lightbox` in the repo are React widgets.

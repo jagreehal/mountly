@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>mountly — Shared React</title>
+    <style>
+      body {
+        font-family: system-ui, -apple-system, sans-serif;
+        background: #f8fafc;
+        color: #0f172a;
+        padding: 40px 20px;
+        margin: 0;
+      }
+      .wrap { max-width: 780px; margin: 0 auto; }
+      h1 { font-size: 28px; margin: 0 0 8px; }
+      .sub { color: #64748b; margin-bottom: 24px; }
+      .pill {
+        display: inline-block;
+        background: #0f172a;
+        color: #fff;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        margin-bottom: 24px;
+      }
+      section {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+      }
+      h2 { font-size: 17px; margin: 0 0 4px; }
+      .desc { color: #64748b; font-size: 14px; margin-bottom: 16px; }
+      button.trigger {
+        background: #3b82f6;
+        color: #fff;
+        border: 0;
+        padding: 10px 16px;
+        border-radius: 8px;
+        font-weight: 500;
+        cursor: pointer;
+      }
+      button.trigger:hover { background: #2563eb; }
+      .slot { margin-top: 12px; }
+      .callout {
+        background: #f1f5f9;
+        border-radius: 8px;
+        padding: 12px 14px;
+        font-size: 13px;
+        color: #334155;
+        line-height: 1.55;
+        margin-bottom: 20px;
+      }
+      .callout code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 12px;
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        padding: 1px 5px;
+        border-radius: 4px;
+      }
+    </style>
+
+    <!--
+      Import map: host supplies React (from a CDN here — could be your own
+      bundled copy). Widgets resolve "react" and "react-dom/client" through
+      this map, so all three widgets share ONE React instance.
+
+      To swap back to the self-contained build, change the widget entries
+      from "/peer.js" to "/index.js" and drop the react entries.
+    -->
+    <script type="importmap">
+      {
+        "imports": {
+          "react": "https://esm.sh/react@18.3.1",
+          "react/jsx-runtime": "https://esm.sh/react@18.3.1/jsx-runtime",
+          "react-dom/client": "https://esm.sh/react-dom@18.3.1/client",
+          "mountly": "/packages/mountly/dist/index.js",
+          "mountly-react": "/packages/adapters/mountly-react/dist/index.js",
+          "payment-breakdown": "/examples/payment-breakdown/dist/peer.js",
+          "image-lightbox": "/examples/image-lightbox/dist/peer.js"
+        }
+      }
+    </script>
+  </head>
+
+  <body>
+    <div class="wrap">
+      <span class="pill">Shared React</span>
+      <h1>mountly — three widgets, one React</h1>
+      <p class="sub">
+        Three widget instances, but only one copy of React is downloaded.
+        Check the Network tab — you'll see a single <code>react@18</code>
+        request, not three.
+      </p>
+
+      <div class="callout">
+        <strong>How it works:</strong> the import map above points each widget
+        at its <code>/peer.js</code> build instead of <code>/index.js</code>.
+        Peer builds leave <code>react</code> and <code>react-dom/client</code>
+        as external specifiers, which the browser resolves via the same import
+        map. Swap the entries back to <code>/index.js</code> and remove the
+        React entries to go back to self-contained widgets.
+      </div>
+
+      <section>
+        <h2>Widget 1 — Payment breakdown</h2>
+        <p class="desc">Default-themed payment popover.</p>
+        <button class="trigger" id="trigger-a">View payment</button>
+        <div class="slot" id="slot-a" style="min-width: 320px; min-height: 240px;"></div>
+      </section>
+
+      <section>
+        <h2>Widget 2 — Payment breakdown, retuned palette</h2>
+        <p class="desc">
+          Same widget code, different tokens. The host sets
+          <code>--ui-accent</code> on the mount element.
+        </p>
+        <button class="trigger" id="trigger-b" style="background:#7c3aed;">
+          View payment (purple)
+        </button>
+        <div
+          class="slot"
+          id="slot-b"
+          style="
+            min-width: 320px;
+            min-height: 240px;
+            --ui-accent: oklch(0.55 0.20 285);
+          "
+        ></div>
+      </section>
+
+      <section>
+        <h2>Widget 3 — Image lightbox</h2>
+        <p class="desc">A different widget entirely, dark aesthetic.</p>
+        <button class="trigger" id="trigger-c" style="background:#0f172a;">
+          Open lightbox
+        </button>
+        <div id="slot-c"></div>
+      </section>
+    </div>
+
+    <script type="module">
+      import {
+        defineMountlyFeature,
+        registerCustomElement,
+      } from "mountly";
+      import { paymentBreakdown } from "payment-breakdown";
+      import { imageLightbox } from "image-lightbox";
+
+      registerCustomElement("payment-breakdown", () => paymentBreakdown);
+      registerCustomElement("image-lightbox", () => imageLightbox);
+      defineMountlyFeature();
+
+      // Mock API for the two payment widgets.
+      const originalFetch = window.fetch;
+      window.fetch = (url, init) => {
+        const u = typeof url === "string" ? url : url.url;
+        if (u.includes("/api/payments/pay_123")) {
+          return Promise.resolve(
+            new Response(
+              JSON.stringify({
+                total: 149.99,
+                currency: "USD",
+                items: [
+                  { description: "Pro Plan (Monthly)", amount: 129.99, currency: "USD" },
+                  { description: "Additional storage", amount: 20.0, currency: "USD" },
+                ],
+                tax: 12.5,
+                discount: 12.5,
+              }),
+              { status: 200, headers: { "content-type": "application/json" } }
+            )
+          );
+        }
+        if (u.includes("/api/payments/pay_456")) {
+          return Promise.resolve(
+            new Response(
+              JSON.stringify({
+                total: 49.0,
+                currency: "EUR",
+                items: [{ description: "Starter Plan", amount: 49.0, currency: "EUR" }],
+              }),
+              { status: 200, headers: { "content-type": "application/json" } }
+            )
+          );
+        }
+        return originalFetch(url, init);
+      };
+
+      paymentBreakdown.attach({
+        trigger: document.getElementById("trigger-a"),
+        mount: document.getElementById("slot-a"),
+        context: { paymentId: "pay_123" },
+      });
+
+      paymentBreakdown.attach({
+        trigger: document.getElementById("trigger-b"),
+        mount: document.getElementById("slot-b"),
+        context: { paymentId: "pay_456" },
+      });
+
+      imageLightbox.attach({
+        trigger: document.getElementById("trigger-c"),
+        mount: document.getElementById("slot-c"),
+        activateOn: "click",
+        props: {
+          data: {
+            src:
+              "data:image/svg+xml;utf8," +
+              encodeURIComponent(
+                `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 800'>
+                   <rect width='1200' height='800' fill='%230f172a'/>
+                   <text x='50%' y='50%' font-family='system-ui' font-size='56'
+                         fill='%23e2e8f0' text-anchor='middle' dy='.3em'
+                         letter-spacing='6'>SHARED REACT</text></svg>`
+              ),
+            alt: "Shared React demo image",
+            caption:
+              "Three widgets above. One React download. Check the Network tab — react@18 appears exactly once.",
+            index: 3,
+            total: 3,
+          },
+        },
+      });
+    </script>
+  </body>
+</html>

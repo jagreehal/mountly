@@ -1,0 +1,107 @@
+---
+title: Distribution
+description: Self-contained vs shared-React widget builds, when to ship each, and how the host's import map decides.
+---
+
+Each widget scaffolded by `mountly init` ships **two** ESM entries. The choice between them lives in the host's import map — the widget source is the same.
+
+## The two builds
+
+### `dist/index.js` — self-contained
+
+Bundles your component, the adapter, and the framework. Drop into any page; no host setup required.
+
+- ✅ Zero host wiring.
+- ✅ Works in CMS pages, partner sites, anywhere you don't control the runtime.
+- ❌ ~148 KB gz for a representative React widget.
+- ❌ One copy of React per widget if you ship multiple on the same page.
+
+### `dist/peer.js` — peer build
+
+Excludes the framework. Expects the host to provide it via an import map.
+
+- ✅ ~5 KB gz per widget on top of one ~45 KB gz copy of React shared across all widgets.
+- ✅ One React instance for two or more widgets on the same page.
+- ❌ Host must ship the import map. mountly provides [`installRuntime`](/mountly/api/install-runtime/) to do this in one line.
+
+Numbers are representative — measure your own widgets in DevTools.
+
+## Pick one
+
+| Use case | Pick | Why |
+|---|---|---|
+| One widget on a page, host has no React | **Self-contained** | Zero wiring; ~148 KB gz |
+| Two or more widgets on the same page | **Shared React** | One copy of React; ~5 KB gz per widget |
+| Host is already a React/Next app | **Shared React** | Avoids two React instances on one page |
+| Quick prototype, single embed | **Self-contained** | Faster to wire; bytes only matter in production |
+
+## How the host chooses
+
+The host's import map maps the bare specifier (e.g. `"signup-card"`) to one URL or the other:
+
+```html
+<!-- Self-contained — no other imports needed -->
+<script type="importmap">
+  {
+    "imports": {
+      "signup-card": "/widgets/signup-card/dist/index.js"
+    }
+  }
+</script>
+```
+
+```html
+<!-- Shared React — host provides react + react-dom -->
+<script type="importmap">
+  {
+    "imports": {
+      "signup-card": "/widgets/signup-card/dist/peer.js",
+      "payment-breakdown": "/widgets/payment-breakdown/dist/peer.js",
+      "react": "https://esm.sh/react@18",
+      "react/jsx-runtime": "https://esm.sh/react@18/jsx-runtime",
+      "react-dom": "https://esm.sh/react-dom@18",
+      "react-dom/client": "https://esm.sh/react-dom@18/client"
+    }
+  }
+</script>
+```
+
+Use [`installRuntime`](/mountly/api/install-runtime/) to inject that React block from JS instead of writing it by hand.
+
+## A common mistake
+
+Don't ship `index.js` for two widgets on the same page. You'll end up with **two** copies of React rendering trees in **two** separate roots, and forget about context, refs, or any third-party React library that uses module-level singletons (state managers, query clients, etc.).
+
+If two widgets must share React state at runtime — e.g. a query client — they **must** use the peer build with one React copy.
+
+## Static hosts (no bundler)
+
+The plain-HTML host pattern is documented end-to-end in `examples/plain-html`. The shape:
+
+1. Inline `<script>` calls `installRuntime({ react, reactDom, reactDomClient })` as the **first** thing in `<head>` — before any module imports.
+2. A second `<script type="importmap">` (or `installRuntime`'s) maps each widget specifier to its `peer.js` URL.
+3. Widgets register custom elements, or you call `feature.attach()` from a module script.
+
+```html
+<head>
+  <script type="module">
+    import { installRuntime } from "https://cdn.jsdelivr.net/npm/mountly@0.1/dist/index.js";
+    installRuntime({
+      react: "https://esm.sh/react@18",
+      reactDom: "https://esm.sh/react-dom@18",
+      reactDomClient: "https://esm.sh/react-dom@18/client",
+    });
+  </script>
+</head>
+```
+
+Calling `installRuntime` after a module script has started loading will warn — the import map must be in place before any bare-specifier import resolves.
+
+## Bundler hosts
+
+If the host is a Vite/Next/Astro app, you can:
+
+- Continue to use `peer.js` and let the host's bundler resolve `react` normally — the published peer build's `react` import is just a bare specifier.
+- Or import the widget's `index.js` directly in the host code if you only have one widget.
+
+The `examples/demo` directory shows the bundler-host pattern for both single and multi-widget pages.

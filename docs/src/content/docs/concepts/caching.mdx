@@ -1,0 +1,105 @@
+---
+title: Caching
+description: How mountly caches modules and data, how cache keys are built, and how to invalidate.
+---
+
+mountly keeps two cooperating caches. They are simple, in-memory, and survive across re-mounts within a page session.
+
+## Module cache
+
+Stores resolved widget modules, keyed by `moduleId`.
+
+- One key per `moduleId` regardless of `loadModule` implementation.
+- **In-flight deduplication** — if 12 hovers fire before the first `import()` resolves, you get one fetch and 12 callers awaiting one promise.
+- An aborted load clears the cache entry so the next attempt starts fresh.
+
+You rarely interact with it directly. The exported `moduleCache` is available if you need to seed entries or invalidate from outside the runtime:
+
+```ts
+import { moduleCache } from "mountly";
+
+// e.g. force a re-fetch on next preload
+moduleCache.delete("signup-card");
+```
+
+## Data cache
+
+Stores `loadData` responses, keyed by a stable serialisation of the **feature context**. The default builder excludes the non-serialisable fields (`element`, `event`) and uses sorted-key JSON of everything else, prefixed with the `moduleId`.
+
+```
+default cache key: `${moduleId}:${stableJSON(context - {element, event})}`
+```
+
+If you pass `context: { locale: "en", segment: "pro" }` the cache key becomes:
+
+```
+signup-card:{"locale":"en","segment":"pro","triggerType":"hover"}
+```
+
+### Custom cache keys
+
+Override `getCacheKey` for coarser caching or contexts with non-serialisable values:
+
+```ts
+createOnDemandFeature({
+  moduleId: "signup-card",
+  loadModule: …,
+  loadData: …,
+  // Cache by locale only — ignore everything else.
+  getCacheKey: (ctx) => `signup-card:${ctx.locale}`,
+});
+```
+
+### In-flight deduplication
+
+Same rule as the module cache: two concurrent activations with the same key share a single fetch. The runtime's `DedupCache` is exported as `dataCache` if you need to interact directly:
+
+```ts
+import { dataCache } from "mountly";
+
+// Manually invalidate when the user updates their plan
+dataCache.delete(`signup-card:${currentLocale}`);
+```
+
+## What the caches don't do
+
+- They don't persist across page reloads. (You can layer a Service Worker on top of `moduleCache` for that.)
+- They don't honour HTTP cache headers — that's the browser's job, downstream of the loader.
+- They don't ship invalidation primitives beyond `delete()`. Use timeouts or app-level events.
+
+## The `DedupCache` primitive
+
+Both caches are instances of the same class:
+
+```ts
+import { DedupCache } from "mountly";
+
+const cache = new DedupCache<MyValue>();
+
+const value = await cache.resolve(
+  "key",
+  async () => fetchSomething(),
+  { signal },
+);
+```
+
+Concurrent `resolve` calls with the same key share a single promise. Pass an `AbortSignal` to cancel.
+
+## A typical timeline
+
+```
+T+0    user hovers #cta              → preload(ctx)
+T+0    moduleCache.resolve("signup-card", loadModule)
+T+0    dataCache.resolve("signup-card:{...}", loadData) — runs in parallel
+T+128  module resolves               → cached
+T+340  data resolves                 → cached
+T+1500 user clicks                   → activate(ctx)
+T+1500 cache hits both. activate completes synchronously
+T+1500 mount → render
+```
+
+Open the same widget elsewhere on the page — both caches hit, mount happens within a frame.
+
+## Inspecting the cache
+
+The [devtools panel](/mountly/concepts/devtools/) shows live module and data cache contents alongside feature states. Useful for spotting an over-aggressive prefetch or a missed cache-key collision.

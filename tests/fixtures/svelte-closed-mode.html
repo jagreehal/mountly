@@ -1,0 +1,35 @@
+<!doctype html>
+<html><body>
+  <div id="c"></div>
+  <script type="importmap">
+    {"imports":{"mountly":"/packages/mountly/dist/index.js"}}
+  </script>
+  <script type="module">
+    import { createWidget } from "/packages/adapters/mountly-svelte/dist/index.js";
+
+    class HelloComponent {
+      constructor({ target, props }) {
+        const el = document.createElement("span");
+        el.textContent = String(props?.msg ?? "");
+        target.appendChild(el);
+        this.el = el;
+      }
+      $destroy() { this.el?.remove(); }
+    }
+
+    try {
+      const w = createWidget(HelloComponent, { styles: ".x{}", shadowMode: "closed" });
+      const c = document.getElementById("c");
+      w.mount(c, { msg: "closed" });
+      window.__result = {
+        error: null,
+        containerShadowRootIsNull: c.shadowRoot === null,
+        canRemount: (() => {
+          try { w.mount(c, { msg: "again" }); return true; } catch { return false; }
+        })(),
+      };
+    } catch (e) {
+      window.__result = { error: String(e) };
+    }
+  </script>
+</body></html>

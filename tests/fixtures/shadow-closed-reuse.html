@@ -1,0 +1,20 @@
+<!doctype html>
+<html><body>
+  <div id="container"></div>
+  <script type="module">
+    import { attachShadow } from "/packages/mountly/dist/index.js";
+    const c = document.getElementById("container");
+    let error = null, m1, m2;
+    try {
+      m1 = attachShadow(c, { styles: ".x{}", shadowMode: "closed" });
+      m2 = attachShadow(c, { styles: ".x{}", shadowMode: "closed" });
+    } catch (e) {
+      error = String(e);
+    }
+    window.__result = {
+      error,
+      containerShadowRootIsNull: c.shadowRoot === null,
+      sameMountReference: m1 === m2,
+    };
+  </script>
+</body></html>

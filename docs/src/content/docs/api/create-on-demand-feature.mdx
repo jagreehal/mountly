@@ -1,0 +1,207 @@
+---
+title: createOnDemandFeature
+description: The core primitive — wraps a widget with the on-demand lifecycle.
+---
+
+```ts
+import { createOnDemandFeature } from "mountly";
+```
+
+Builds an [`OnDemandFeature`](#ondemandfeature) — a widget plus the lifecycle, caching, and trigger setup. This is the layer you wire to the page.
+
+## Signature
+
+```ts
+function createOnDemandFeature(
+  options: CreateOnDemandFeatureOptions
+): OnDemandFeature;
+```
+
+### `CreateOnDemandFeatureOptions`
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `moduleId` | `string` | yes | Stable identifier. Used as the module-cache key and the data-cache key prefix. |
+| `loadModule` | `() => Promise<FeatureModule>` | yes | Called once per page (deduplicated). Should resolve to the widget's module. |
+| `loadData` | `(ctx: FeatureContext) => Promise<unknown>` | no | Optional data fetch. Cached by [`getCacheKey`](#getcachekey). |
+| `getCacheKey` | `(ctx: FeatureContext) => string` | no | Override the default cache-key builder. |
+| `render` | `(args: RenderArgs) => void` | yes | Called on each `mount`. Responsible for rendering the widget. |
+
+### `RenderArgs`
+
+```ts
+{
+  mod: FeatureModule;       // resolved loadModule()
+  data: unknown;            // resolved loadData() or null
+  context: FeatureContext;  // current activation context
+  container: HTMLElement;   // mount target
+  props: Record<string, unknown>; // props from mount() / attach()
+}
+```
+
+### `FeatureModule`
+
+```ts
+interface FeatureModule {
+  mount(container: HTMLElement, props: Record<string, unknown>): void;
+  unmount?(container: HTMLElement): void;
+  update?(container: HTMLElement, props: Record<string, unknown>): void;
+}
+```
+
+Anything returned by `mountly-react` / `mountly-vue` / `mountly-svelte`'s `createWidget()` matches this shape.
+
+## Returned `OnDemandFeature`
+
+```ts
+interface OnDemandFeature {
+  readonly id: string;
+
+  preload(context?: Partial<FeatureContext>): Promise<void>;
+  activate(context?: Partial<FeatureContext>): Promise<void>;
+  mount(container: HTMLElement, context?, props?): Promise<{ unmount: () => void }>;
+  update(container: HTMLElement, props, context?): Promise<void>;
+  attach(options: AttachOptions): () => void;
+  abort(): void;
+
+  getState(): FeatureState;
+  isAborted(): boolean;
+  getMounts(): ReadonlyArray<HTMLElement>;
+}
+```
+
+### `attach(options)`
+
+The high-level wiring. Sets up the trigger, calls `mount` / `unmount` for you, returns a cleanup function.
+
+| Field | Type | Default | Notes |
+|---|---|---|---|
+| `trigger` | `HTMLElement` | required | The element the user interacts with. |
+| `mount` | `HTMLElement` | `trigger` | Where to render. Defaults to the trigger element itself. |
+| `context` | `Partial<FeatureContext>` or `() => Partial<FeatureContext>` | — | Static or dynamic context. |
+| `props` | `Record<string, unknown>` or `() => Record<string, unknown>` | — | Static or dynamic props. |
+| `preloadOn` | `"hover"` · `"viewport"` · `"idle"` · `"media"` · `false` | `"hover"` | When to start preloading. |
+| `activateOn` | `"click"` · `"hover"` · `"focus"` · `"viewport"` · `"idle"` · `"media"` · `"url-change"` | `"click"` | When to mount. |
+| `activateOnUrlEvents` | `("popstate" \| "hashchange" \| "pushstate" \| "replacestate")[]` | all four | Used with `activateOn: "url-change"`. |
+| `preloadOnMediaQuery` | `string` | — | Required when `preloadOn: "media"`. |
+| `activateOnMediaQuery` | `string` | — | Required when `activateOn: "media"`. |
+| `idleTimeout` | `number` | — | Passed to `requestIdleCallback({ timeout })` for `idle` triggers. |
+| `viewportRootMargin` | `string` | `"0px"` | Forwarded to `IntersectionObserver` for viewport triggers. |
+| `toggle` | `boolean` | `true` | A second activate event unmounts. |
+| `onMount` | `({ unmount }) => void` | — | Fires after each successful mount. |
+| `onUnmount` | `() => void` | — | Fires after each unmount. |
+| `onError` | `(err: unknown) => void` | — | Fires on any thrown error. |
+
+Returns a cleanup function that detaches the trigger and unmounts any active mount.
+
+### `preload(ctx?)`
+
+Begins module fetch (and `loadData` if `ctx` is provided). Idempotent — calling it twice while preloading shares one promise.
+
+### `activate(ctx?)`
+
+Ensures module + data are ready. Cheaper than `mount` because it doesn't call `render`. Useful for "load now, render later" flows.
+
+### `mount(container, ctx?, props?)`
+
+The full path. Resolves to `{ unmount }` for that container only.
+
+### `update(container, props, ctx?)`
+
+Live prop update. Calls `mod.update()` if defined; otherwise re-renders via `render(...)`. No-op if the container isn't currently mounted.
+
+### `abort()`
+
+Aborts any in-flight `preload` / `activate`. State transitions to `"aborted"`. The next `preload` / `activate` / `mount` recovers automatically.
+
+### `getState()`
+
+Returns the current `FeatureState`:
+
+```ts
+type FeatureState =
+  | "idle"
+  | "preloading"
+  | "preloaded"
+  | "activating"
+  | "activated"
+  | "mounted"
+  | "aborted";
+```
+
+### `getMounts()`
+
+Returns a read-only array of currently-mounted containers. Useful for debugging or for invalidation logic.
+
+## Worked example
+
+```ts
+import { createOnDemandFeature } from "mountly";
+
+const payment = createOnDemandFeature({
+  moduleId: "payment-breakdown",
+
+  loadModule: () => import("./payment-breakdown/dist/peer.js"),
+
+  loadData: async (ctx) => {
+    return fetch(`/api/quote?plan=${ctx.plan}`).then((r) => r.json());
+  },
+
+  getCacheKey: (ctx) => `payment:${ctx.plan ?? "free"}`,
+
+  render: ({ mod, data, container, props }) => {
+    mod.mount(container, { ...props, ...data });
+  },
+});
+
+// Attach to a button — preload on hover, mount on click
+const detach = payment.attach({
+  trigger: document.querySelector("#buy")!,
+  mount: document.querySelector("#modal-root")!,
+  context: () => ({ plan: getCurrentPlan() }),
+  props: () => ({ currency: "GBP" }),
+  preloadOn: "hover",
+  activateOn: "click",
+  toggle: true,
+  onError: (err) => Sentry.captureException(err),
+});
+
+// Astro-style media hydration parity:
+payment.attach({
+  trigger: document.querySelector("#responsive-slot")!,
+  preloadOn: false,
+  activateOn: "media",
+  activateOnMediaQuery: "(max-width: 50em)",
+});
+
+// Astro-style visible rootMargin parity:
+payment.attach({
+  trigger: document.querySelector("#below-fold")!,
+  preloadOn: "viewport",
+  activateOn: "viewport",
+  viewportRootMargin: "200px",
+});
+
+// On route change:
+window.addEventListener("popstate", () => {
+  payment.abort();
+  detach();
+});
+```
+
+## Errors
+
+`loadModule` failures that look like import-map misconfigurations get wrapped with a hint:
+
+```
+[mountly] loadModule for "payment-breakdown" failed to resolve.
+If you're in plain HTML, check that your <script type="importmap"> maps the bare specifier …
+```
+
+Other errors propagate unchanged. `onError` (in `attach`) catches both.
+
+## Related
+
+- [Lifecycle](/mountly/concepts/lifecycle/) — the state diagram.
+- [Triggers](/mountly/concepts/triggers/) — what `preloadOn` / `activateOn` map to.
+- [Caching](/mountly/concepts/caching/) — how `loadData` and `getCacheKey` interact.

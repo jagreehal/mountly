@@ -1,0 +1,118 @@
+---
+title: Lifecycle
+description: The five states every feature passes through, the transitions between them, and how to observe and abort.
+---
+
+Every feature is a small state machine with five states. The same shape on every framework, with no hidden side effects.
+
+## The states
+
+```
+idle → preloading → preloaded → activating → activated → mounted
+                                                              ↓
+                                                          unmount → activated
+                                                                        ↓
+                                                                       idle
+                                                              (when last mount unmounts)
+
+(any state) → aborted (on feature.abort())
+```
+
+| State | Meaning |
+|---|---|
+| `idle` | Nothing loaded. Waiting on a trigger. |
+| `preloading` | Module fetch in flight. Optionally, data fetch too. |
+| `preloaded` | Module ready in the cache. Awaiting commit. |
+| `activating` | Activation signal received. Finalising data. |
+| `activated` | Module + data ready. Render not yet called. |
+| `mounted` | At least one container has the widget rendered. |
+| `aborted` | A `feature.abort()` interrupted an in-flight transition. |
+
+`feature.getState()` returns the current state at any time.
+
+## Why two phases before mount
+
+Splitting `preload` from `activate` lets the trigger choice express intent precisely:
+
+- **Hover** preloads but doesn't activate — the user might leave.
+- **Click** activates regardless of preload state — if preload didn't happen, activation does both.
+
+When the click arrives after hover has finished, mount happens almost instantly because the module and (often) data are already cached.
+
+## Multiple mounts
+
+A single feature can mount many times on the same page. `feature.mount(container)` returns `{ unmount }` for **that container only**:
+
+```ts
+const a = await feature.mount(containerA);
+const b = await feature.mount(containerB);
+
+a.unmount();             // state stays "mounted" while b is alive
+b.unmount();             // state drops to "activated"; modules stay cached
+```
+
+`feature.getMounts()` returns the live containers.
+
+## Updating without remounting
+
+If the widget module exposes an `update(container, props)` function, `feature.update(container, props)` calls it directly — preserving framework-internal state (React reconciliation, Vue reactivity, Svelte component instance).
+
+If the widget doesn't expose `update`, mountly falls back to a re-render via the original `render` callback. Same DOM container, fresh component instance.
+
+```ts
+await feature.update(container, { plan: "pro" });
+```
+
+The custom element calls this automatically when its `props` attribute changes.
+
+## Aborting in flight
+
+`feature.abort()` interrupts any in-flight `preload` or `activate`:
+
+- The internal `AbortController` aborts. In-flight `loadModule` / `loadData` see `signal.aborted === true` and may throw `DOMException("AbortError")`.
+- State transitions to `aborted`.
+- `feature.isAborted()` returns true until the next call to `preload` / `activate` / `mount`, which auto-recovers.
+
+A typical use is "user navigated away":
+
+```ts
+window.addEventListener("popstate", () => feature.abort());
+```
+
+## Hooks
+
+`feature.attach(...)` exposes three hooks:
+
+```ts
+feature.attach({
+  trigger: btn,
+  onMount: ({ unmount }) => analytics.track("widget_mounted"),
+  onUnmount: () => analytics.track("widget_unmounted"),
+  onError: (err) => Sentry.captureException(err),
+});
+```
+
+For programmatic control without `attach`, observe state via the analytics hooks instead — see [Analytics](/mountly/api/analytics/).
+
+## Error recovery
+
+If `loadModule` rejects, the failing promise is cleared and the next call to `preload` / `activate` / `mount` retries from scratch. The state returns to `idle`. Errors that look like import-map misconfigurations are wrapped with a hint pointing at `installRuntime`.
+
+If `loadData` rejects, the same recovery applies — module stays cached, data is refetched on the next attempt.
+
+## Putting it together
+
+A typical hover-to-click flow looks like this:
+
+```
+T+0    user mouseenters #cta            → preload (hover delay 100 ms)
+T+100  loadModule() begins              → preloading
+T+228  module resolves                  → preloaded
+T+1500 user clicks                      → activating
+T+1502 loadData() begins (cached if hovered with context)
+T+1530 data resolves                    → activated
+T+1530 render() called                  → mounted
+T+9000 user clicks again (toggle)       → unmount → activated
+```
+
+Re-opening is instant because modules and data are cached. See [Caching](/mountly/concepts/caching/).

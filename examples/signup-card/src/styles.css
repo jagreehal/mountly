@@ -1,0 +1,12 @@
+@import "mountly-tailwind";
+@source "./";
+
+/*
+ * Design tokens come from mountly-tailwind (--color-ui-*, --ui-*, etc.).
+ * Override at the host: <div data-mountly-mount style="--ui-accent: ...">
+ *
+ * Local additions only — widget-specific tokens that the preset doesn't supply.
+ */
+:host {
+  display: block;
+}

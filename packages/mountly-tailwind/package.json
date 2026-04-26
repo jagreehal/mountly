@@ -1,0 +1,28 @@
+{
+  "name": "mountly-tailwind",
+  "version": "0.1.0",
+  "description": "Design tokens and Tailwind v4 preset for mountly widgets",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "./dist/index.css",
+  "style": "./dist/index.css",
+  "exports": {
+    ".": "./dist/index.css",
+    "./tokens": "./dist/tokens.css",
+    "./package.json": "./package.json"
+  },
+  "files": ["dist"],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "node scripts/build.js",
+    "typecheck": "echo 'no TS in this package' && exit 0",
+    "dev": "node scripts/build.js --watch",
+    "prepack": "rm -f LICENSE && cp ../../LICENSE LICENSE",
+    "postpack": "rm -f LICENSE && ln -s ../../LICENSE LICENSE"
+  },
+  "dependencies": {
+    "tailwindcss": "^4.2.4"
+  }
+}

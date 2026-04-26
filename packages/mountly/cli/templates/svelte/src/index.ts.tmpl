@@ -1,0 +1,9 @@
+import { createWidget } from "mountly-svelte";
+import Component from "./Component.js";
+import styles from "./styles.{{stylesExtension}}";
+
+const widget = createWidget(Component, { styles });
+
+export const mount = widget.mount;
+export const unmount = widget.unmount;
+export default widget;

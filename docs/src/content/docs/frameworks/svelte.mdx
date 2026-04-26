@@ -1,0 +1,98 @@
+---
+title: Svelte
+description: Use mountly-svelte to wrap a Svelte 4 or Svelte 5 component as a mountable widget.
+---
+
+`mountly-svelte` is the Svelte adapter. It supports both Svelte 4 (legacy class component API) and Svelte 5 (functional component API), and auto-detects which one your component uses.
+
+## Install
+
+```bash
+pnpm add mountly mountly-svelte svelte
+```
+
+## Svelte 4
+
+If you're on Svelte 4, the adapter detects the legacy class API and uses `new Component({ target, props })` internally. No extra setup.
+
+```ts title="signup-card.ts"
+import { createWidget } from "mountly-svelte";
+import SignupCard from "./SignupCard.svelte";
+import styles from "./SignupCard.css?inline";
+
+export default createWidget(SignupCard, { styles });
+```
+
+## Svelte 5
+
+Svelte 5 components are plain functions. The adapter detects the functional shape but **needs the runtime's `mount` and `unmount`** — they're not auto-imported. Pass them explicitly:
+
+```ts title="signup-card.ts"
+import { createWidget } from "mountly-svelte";
+import { mount, unmount } from "svelte";
+import SignupCard from "./SignupCard.svelte";
+import styles from "./SignupCard.css?inline";
+
+export default createWidget(SignupCard, { styles, mount, unmount });
+```
+
+If you forget, the adapter throws a clear error pointing at this docs page.
+
+## Why pass `mount` / `unmount`
+
+Svelte 5 deliberately doesn't expose `mount` from the component module — it's a runtime function imported from `"svelte"`. The adapter can't know which version of Svelte you have, so it asks. This is the smallest possible API; if you'd rather not think about it, leave the import there even on Svelte 4 — it's a no-op when the adapter detects a v4 class.
+
+## Mounting
+
+```ts
+import widget from "./signup-card.js";
+
+widget.mount(document.querySelector("#cta-mount"), {
+  headline: "Try the API",
+});
+```
+
+Each `mount()` unmounts any existing instance in the same container first.
+
+## With the on-demand lifecycle
+
+```ts
+import { createOnDemandFeature } from "mountly";
+
+const signup = createOnDemandFeature({
+  moduleId: "signup-card",
+  loadModule: () => import("./signup-card.js"),
+  render: ({ mod, container, props }) => mod.mount(container, props),
+});
+
+signup.attach({ trigger: btn, preloadOn: "hover", activateOn: "click" });
+```
+
+## Live updates
+
+The Svelte adapter falls back to remount on `feature.update()`, which preserves the container but creates a new component instance — local state inside the component **resets**. If you need state to survive a prop change, lift it to a store or pass it back in via props.
+
+## Common pitfalls
+
+### Forgot `mount` / `unmount` on Svelte 5
+
+You'll see:
+
+```
+[mountly-svelte] Svelte 5 component detected but `mount`/`unmount` options were not provided.
+```
+
+Add them as shown above.
+
+### Two Svelte runtimes on the same page
+
+Same risk as React/Vue. Use the peer build pattern for multi-widget pages — externalise `svelte` and provide it once via the host's import map.
+
+### Style isolation
+
+Svelte's component-scoped styles compose nicely with the shadow root — both work, both isolate. Global styles (`:global(...)`) inside a Svelte component still respect the shadow root boundary because they're injected into the shadow tree, not the document.
+
+## Reference
+
+- [`createWidget`](/mountly/api/create-widget/) — the adapter API.
+- [`createOnDemandFeature`](/mountly/api/create-on-demand-feature/) — the lifecycle wrapper.

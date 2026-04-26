@@ -1,0 +1,15 @@
+<!doctype html>
+<html><body>
+  <img id="img"/>
+  <script type="module">
+    import { attachShadow } from "/packages/mountly/dist/index.js";
+    const img = document.getElementById("img");
+    const mount = attachShadow(img, { styles: ".x{}", shadowMode: "open" });
+    // Mount must be a sibling of the img (next-sibling), NOT a child.
+    window.__result = {
+      mountIsSibling: mount.previousElementSibling === img,
+      mountIsRendered: document.body.contains(mount),
+      mountAttr: mount.getAttribute("data-mountly-root") === "",
+    };
+  </script>
+</body></html>

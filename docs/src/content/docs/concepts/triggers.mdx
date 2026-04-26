@@ -1,0 +1,144 @@
+---
+title: Triggers
+description: The built-in triggers, what each one is for, and how to compose them via attach().
+---
+
+A **trigger** is the signal that moves a feature between states. mountly ships seven built-in trigger modes in `attach()` and lets you register more as plugins.
+
+You almost never call the trigger setup directly. Instead, you describe intent through `feature.attach({ preloadOn, activateOn })` and the runtime wires the right listeners for you.
+
+## Built-in trigger modes
+
+### `hover`
+
+Preloads on `mouseenter`, mounts on click. The default for **discoverable** controls — buttons, menu items, link previews. The 100 ms delay before fire suppresses fly-over hovers; if the user leaves before the delay elapses, the load is cancelled.
+
+```ts
+feature.attach({ trigger: btn, preloadOn: "hover", activateOn: "click" });
+```
+
+### `click`
+
+Mounts on click without preloading. Use when intent is **committed** rather than exploratory — modal openers, save buttons, anything where you'd rather pay the load cost on click than on every passing hover.
+
+```ts
+feature.attach({ trigger: btn, preloadOn: false, activateOn: "click" });
+```
+
+### `focus`
+
+Preloads on `focus`, mounts on commit. The keyboard counterpart to hover — pair both so mouse and keyboard users get parity.
+
+```ts
+feature.attach({ trigger: input, preloadOn: "hover", activateOn: "focus" });
+```
+
+### `viewport`
+
+Mounts when the trigger element enters the viewport. Backed by `IntersectionObserver` with a configurable threshold (default `0.1`). The default for below-the-fold widgets — analytics dashboards, embedded media, anything the user might never scroll to.
+
+```ts
+feature.attach({ trigger: section, preloadOn: "viewport", activateOn: "viewport" });
+```
+
+### `idle`
+
+Uses `requestIdleCallback` to preload during quiet moments. Use sparingly — every idle preload is bytes the user might never need. Pair with [predictive prefetch](/mountly/concepts/prefetch/) for the smarter version that scores against interaction history.
+
+```ts
+feature.attach({ trigger: el, preloadOn: "idle", activateOn: "click" });
+```
+
+You can also mount on idle directly (Astro-like `client:idle` behavior):
+
+```ts
+feature.attach({ trigger: el, preloadOn: false, activateOn: "idle", idleTimeout: 500 });
+```
+
+### `media`
+
+Mounts when a CSS media query matches (Astro-like `client:media`).
+
+```ts
+feature.attach({
+  trigger: el,
+  preloadOn: false,
+  activateOn: "media",
+  activateOnMediaQuery: "(max-width: 50em)",
+});
+```
+
+### `url-change`
+
+Mounts when the URL matches a pattern. Listens to `popstate`, `hashchange`, and (via patched method) `pushState` / `replaceState`. Useful for route-driven content in non-SPA hosts.
+
+```ts
+feature.attach({
+  trigger: container,
+  activateOn: "url-change",
+  activateOnUrlEvents: ["popstate", "pushstate"],
+});
+```
+
+## Combining preload and activate
+
+The two stages are independent. You can preload aggressively but mount conservatively, or vice versa.
+
+| Goal | `preloadOn` | `activateOn` |
+|---|---|---|
+| Discoverable button | `"hover"` | `"click"` |
+| Form-only action | `"hover"` | `"focus"` |
+| Below-fold reveal | `"viewport"` | `"viewport"` |
+| Below-fold with early wakeup | `"viewport"` + `viewportRootMargin: "200px"` | `"viewport"` |
+| Below-fold but only after explicit interest | `"viewport"` | `"click"` |
+| Route-driven panel | `"idle"` | `"url-change"` |
+| Responsive-only widget | `false` | `"media"` |
+| Idle auto-mount | `false` | `"idle"` |
+| Fully imperative | `false` | (you call `feature.mount` yourself) |
+
+## The `toggle` flag
+
+By default `attach()` toggles: a second `activateOn` event unmounts the feature. Set `toggle: false` for one-way mount.
+
+```ts
+feature.attach({ trigger: btn, activateOn: "click", toggle: false });
+```
+
+## Cancellation
+
+Hover, focus, and idle all cancel automatically if the user backs out before the delay fires (`mouseleave`, `blur`, idle slot withdrawn). Once a request is in flight, you can abort it manually:
+
+```ts
+feature.abort();
+// state → "aborted", any in-flight load DOMException("AbortError")s
+```
+
+## Custom triggers via plugins
+
+Anything not covered by the built-ins can be added as a plugin. Three are provided out of the box:
+
+- `createSwipeTrigger` — touch swipe gestures.
+- `createLongPressTrigger` — touch / mouse long-press.
+- `createKeyboardTrigger` — single keys or chord shortcuts.
+
+See [Trigger plugins](/mountly/api/trigger-plugins/) for the full API and how to register your own.
+
+## When the trigger isn't a DOM event
+
+Skip `attach()` entirely and drive the feature programmatically:
+
+```ts
+await feature.preload();      // start the load when you want
+await feature.activate();     // commit once data is ready
+const handle = await feature.mount(container, context, props);
+// later:
+handle.unmount();
+```
+
+Use this when the host owns timing (route changes, server-driven flags, wizard steps, batch operations).
+
+## Astro parity scope
+
+mountly can match Astro’s client-side timing directives (`load`, `idle`, `visible`, `media`) at runtime.
+
+It does **not** implement Astro compile-time/server directives (`client:only`, `server:defer`, `set:html`, `is:inline`, etc.), which belong to Astro’s compiler/runtime model.

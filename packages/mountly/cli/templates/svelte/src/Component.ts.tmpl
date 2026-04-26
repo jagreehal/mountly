@@ -1,0 +1,14 @@
+export default class Component {
+  private el: HTMLDivElement;
+
+  constructor(options: { target: Element; props?: { message?: string } }) {
+    this.el = document.createElement("div");
+    this.el.className = "ui-card";
+    this.el.textContent = options.props?.message ?? "Hello from {{name}}";
+    options.target.appendChild(this.el);
+  }
+
+  $destroy(): void {
+    this.el.remove();
+  }
+}

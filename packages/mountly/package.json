@@ -1,0 +1,32 @@
+{
+  "name": "mountly",
+  "version": "0.1.0",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": ["dist", "cli"],
+  "bin": {
+    "mountly": "./cli/index.js"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "dev": "tsup --watch",
+    "prepack": "rm -f README.md LICENSE && cp ../../README.md README.md && cp ../../LICENSE LICENSE",
+    "postpack": "rm -f README.md LICENSE && ln -s ../../README.md README.md && ln -s ../../LICENSE LICENSE"
+  },
+  "devDependencies": {
+    "tsup": "^8.5.1",
+    "typescript": "^6.0.3"
+  }
+}

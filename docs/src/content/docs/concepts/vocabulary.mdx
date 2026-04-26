@@ -1,0 +1,63 @@
+---
+title: Components, widgets, features
+description: The three terms mountly uses, what each one means, and why the distinction matters.
+---
+
+mountly has three things, and they are not synonyms. The vocabulary is enforced because it pays off the moment you have more than one widget on a page.
+
+## Component
+
+Your normal React, Vue, or Svelte component. Whatever you'd write today. mountly never asks you to learn a new component model.
+
+```tsx
+export default function SignupCard({ headline }: { headline: string }) {
+  return <h2>{headline}</h2>;
+}
+```
+
+A component is **the input**.
+
+## Widget
+
+A component **wrapped by a framework adapter** into a self-contained, mountable, framework-agnostic unit. Every adapter exposes the same surface:
+
+```ts
+const widget = createWidget(Component, { styles });
+// → { mount(container, props), unmount(container) }
+```
+
+A widget knows nothing about *when* it loads. It knows how to render into a container and how to clean itself up. It always mounts inside a shadow root, so styles are scoped both ways.
+
+A widget is **the framework-agnostic output**.
+
+## Feature
+
+A widget plus the **on-demand lifecycle**: a trigger, a module loader, optional data fetching, dual caching, and a state machine. This is what you actually attach to a page.
+
+```ts
+const feature = createOnDemandFeature({
+  moduleId: "signup-card",
+  loadModule: () => import("./signup-card.js"),
+  render: ({ mod, container, props }) => mod.mount(container, props),
+});
+
+feature.attach({ trigger: el, preloadOn: "hover", activateOn: "click" });
+```
+
+A feature is **a widget that knows when to show up**.
+
+## Why enforce the vocabulary
+
+Without it, "widget" and "feature" drift into synonyms and the docs lose their footing. With it, you can read a sentence like *"the host registers two features that share a widget"* and know exactly what's true:
+
+- **One** widget module is loaded.
+- **Two** features wrap it, possibly with different triggers, props, or contexts.
+- **Two** mounts can happen on the page; one cache hit covers both.
+
+Don't substitute the terms in code, in docs, or in PR descriptions.
+
+## A one-line summary
+
+> You write **components**, the adapter wraps them as **widgets**, and you ship them as **features**.
+
+That's the whole model.

@@ -1,0 +1,65 @@
+---
+title: Tailwind
+description: An optional Tailwind v4 design preset shared across mountly widgets.
+---
+
+`mountly-tailwind` is an opt-in Tailwind v4 preset. It gives widgets a shared starting palette and spacing scale so multiple widgets on one page feel like they belong together. Skip it if you're already happy with your own Tailwind config.
+
+## Install
+
+```bash
+pnpm add -D mountly-tailwind tailwindcss
+```
+
+The preset targets **Tailwind v4** (`@tailwindcss/cli` or the Vite plugin). v3 is not supported.
+
+## Use the preset
+
+In your widget's CSS entry:
+
+```css title="src/styles.css"
+@import "tailwindcss";
+@config "mountly-tailwind/preset";
+```
+
+Or, if you're on the JS-config style (legacy v4):
+
+```ts title="tailwind.config.ts"
+import { mountlyPreset } from "mountly-tailwind";
+
+export default {
+  presets: [mountlyPreset],
+  content: ["./src/**/*.{ts,tsx,vue,svelte}"],
+};
+```
+
+## What it provides
+
+- A neutral, accessible base palette (no opinionated brand colours — those are yours).
+- A spacing scale aligned to a 4 px grid.
+- Sensible font defaults that fall back to the host's stack.
+- Utility extensions for shadow-DOM-friendly variants.
+
+The preset is intentionally small. The point is consistency across widgets, not opinion about your brand.
+
+## Shadow root and Tailwind
+
+Tailwind utilities are normally applied as classes scoped by the document. Inside a widget's shadow root, those classes still need their CSS to be present in the **shadow tree**. The widget bundle compiles Tailwind to CSS at build time and ships the CSS string as the `styles` argument to `createWidget(...)`:
+
+```ts
+import { createWidget } from "mountly-react";
+import Component from "./Component.tsx";
+import styles from "./styles.css?inline";   // compiled Tailwind output
+
+export default createWidget(Component, { styles });
+```
+
+Vite's `?inline` query, esbuild's `text` loader, and `tailwindcss/lib` outputs all work — the only requirement is that you end up with a string of CSS at runtime.
+
+## Skip the preset
+
+You don't need `mountly-tailwind` to use Tailwind in widgets. The preset is purely a starting point — strip it back to a vanilla `@import "tailwindcss";` and configure your own theme.
+
+## Reference
+
+- The `mountly-tailwind/preset` file is the shipped artifact. See `packages/mountly-tailwind/dist/` after a build.

@@ -1,0 +1,142 @@
+---
+title: Plain HTML
+description: Run mountly with no bundler — import maps, native modules, one inline script.
+---
+
+mountly's most distinctive use case is **plain HTML hosts** — CMS pages, partner integrations, static sites. No bundler. No SPA. Just an import map and a `<script type="module">`.
+
+That makes it a strong fit for legacy modernization: you can keep the existing host page and add richer features incrementally instead of rewriting the whole app.
+
+## The minimum host
+
+```html title="host.html"
+<!doctype html>
+<html>
+  <head>
+    <script type="module">
+      import { installRuntime } from "https://cdn.jsdelivr.net/npm/mountly@0.1/dist/index.js";
+      installRuntime({
+        react: "https://esm.sh/react@18",
+        reactDom: "https://esm.sh/react-dom@18",
+        reactDomClient: "https://esm.sh/react-dom@18/client",
+      });
+    </script>
+    <script type="importmap">
+      {
+        "imports": {
+          "signup-card": "https://cdn.jsdelivr.net/npm/signup-card@1/dist/peer.js"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <button id="cta">Sign up</button>
+    <script type="module">
+      import { createOnDemandFeature, registerCustomElement, defineMountlyFeature } from "mountly";
+
+      const signup = createOnDemandFeature({
+        moduleId: "signup-card",
+        loadModule: () => import("signup-card"),
+        render: ({ mod, container, props }) => mod.mount(container, props),
+      });
+
+      signup.attach({
+        trigger: document.getElementById("cta"),
+        preloadOn: "hover",
+        activateOn: "click",
+      });
+    </script>
+  </body>
+</html>
+```
+
+## What `installRuntime` does
+
+It writes a `<script type="importmap">` to `<head>` mapping `react`, `react/jsx-runtime`, `react-dom`, and `react-dom/client` to the URLs you pass. The widget's peer build imports `react` as a bare specifier; the import map resolves that bare specifier to the URL.
+
+Two rules:
+
+1. **Call it before any module imports start resolving.** The first inline `<script type="module">` is fine; later ones, after other modules have started, are too late and will warn.
+2. **First call wins.** Calling `installRuntime` twice with different URLs warns and keeps the first set.
+
+See [`installRuntime`](/mountly/api/install-runtime/) for the full reference.
+
+## Declarative usage with `<mountly-feature>`
+
+If the host is a CMS or a static templating engine where you'd rather drop in HTML, use the [custom element](/mountly/concepts/custom-element/):
+
+```html
+<button id="cta">Sign up</button>
+<div id="modal-root"></div>
+
+<mountly-feature
+  module-id="signup-card"
+  trigger="hover"
+  mount-selector="#modal-root"
+  props='{"plan":"pro"}'
+></mountly-feature>
+
+<script type="module">
+  import { createOnDemandFeature, registerCustomElement, defineMountlyFeature } from "mountly";
+
+  registerCustomElement("signup-card", () =>
+    createOnDemandFeature({
+      moduleId: "signup-card",
+      loadModule: () => import("signup-card"),
+      render: ({ mod, container, props }) => mod.mount(container, props),
+    }),
+  );
+  defineMountlyFeature();
+</script>
+```
+
+The element handles attach, mount, prop updates, and unmount. The script is wired once per page; the markup can repeat as much as you like.
+
+## Multi-widget pages
+
+For more than one widget, use peer builds and one import map for everything:
+
+```html
+<script type="module">
+  import { installRuntime } from "https://cdn.jsdelivr.net/npm/mountly@0.1/dist/index.js";
+  installRuntime({
+    react: "https://esm.sh/react@18",
+    reactDom: "https://esm.sh/react-dom@18",
+    reactDomClient: "https://esm.sh/react-dom@18/client",
+  });
+</script>
+
+<script type="importmap">
+  {
+    "imports": {
+      "signup-card": "https://cdn.jsdelivr.net/npm/signup-card@1/dist/peer.js",
+      "payment-breakdown": "https://cdn.jsdelivr.net/npm/payment-breakdown@1/dist/peer.js",
+      "image-lightbox": "https://cdn.jsdelivr.net/npm/image-lightbox@1/dist/peer.js"
+    }
+  }
+</script>
+```
+
+One ~45 KB gz copy of React, ~5 KB gz per widget. See [Distribution](/mountly/concepts/distribution/).
+
+## Diagnostic errors
+
+If a widget fails to load with **"Failed to fetch dynamically imported module"** or **"Failed to resolve module specifier"**, the runtime wraps the error with a hint:
+
+```
+[mountly] loadModule for "signup-card" failed to resolve.
+If you're in plain HTML, check that your <script type="importmap"> maps the bare specifier
+— e.g. { "imports": { "signup-card": "/path/to/signup-card/dist/index.js" } } —
+and that installRuntime() runs before any module imports.
+```
+
+When you see that, check the import map and the order of `<script>` tags.
+
+## Runnable example
+
+The repo's `examples/plain-html` directory is the canonical reference. It serves both a self-contained host and a shared-React host on the same domain so you can compare network panels side by side.
+
+```bash
+cd examples/plain-html && pnpm dev
+# → http://localhost:5175/examples/plain-html/
+```

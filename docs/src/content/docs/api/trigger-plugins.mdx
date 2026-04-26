@@ -1,0 +1,151 @@
+---
+title: Trigger plugins
+description: Built-in plugins for swipe, long-press, keyboard, and URL change — plus the API for registering your own.
+---
+
+The five built-in triggers (`hover`, `click`, `focus`, `viewport`, `idle`) cover most cases. For everything else, mountly ships a small **trigger plugin** API and four ready-made plugins.
+
+```ts
+import {
+  registerTriggerPlugin,
+  unregisterTriggerPlugin,
+  getTriggerPlugin,
+  getAllTriggerPlugins,
+  createPluginTrigger,
+  registerBuiltInPlugins,
+  // Built-ins:
+  createSwipeTrigger,
+  createLongPressTrigger,
+  createKeyboardTrigger,
+  createUrlChangeTrigger,
+} from "mountly";
+```
+
+## Built-in plugins
+
+### `createSwipeTrigger(element, callback, options?)`
+
+Touch swipe gesture detection. Returns a cleanup function.
+
+```ts
+const cleanup = createSwipeTrigger(
+  panelElement,
+  () => panelFeature.activate(),
+  { direction: "left", threshold: 60 }
+);
+```
+
+| Option | Type | Default | Notes |
+|---|---|---|---|
+| `direction` | `"up"` · `"down"` · `"left"` · `"right"` | `"left"` | Required swipe direction. |
+| `threshold` | number px | `40` | Minimum distance for a swipe. |
+| `velocity` | number px/ms | `0.3` | Minimum velocity. |
+
+### `createLongPressTrigger(element, callback, options?)`
+
+Mouse / touch long-press. Cancels on movement past `tolerance` px.
+
+```ts
+const cleanup = createLongPressTrigger(
+  contextMenuTarget,
+  () => menuFeature.activate(),
+  { duration: 600, tolerance: 8 }
+);
+```
+
+| Option | Type | Default | Notes |
+|---|---|---|---|
+| `duration` | number ms | `500` | Hold time before firing. |
+| `tolerance` | number px | `10` | Cancel if pointer moves further than this. |
+
+### `createKeyboardTrigger(callback, options)`
+
+Single key or chord shortcut. Listens at the document level.
+
+```ts
+const cleanup = createKeyboardTrigger(
+  () => commandPaletteFeature.activate(),
+  { key: "k", meta: true }   // Cmd+K / Ctrl+K
+);
+```
+
+| Option | Type | Default | Notes |
+|---|---|---|---|
+| `key` | string | required | Matches `event.key`. |
+| `meta` | boolean | `false` | Require Meta on macOS, Ctrl on others. |
+| `shift` | boolean | `false` | Require Shift. |
+| `alt` | boolean | `false` | Require Alt. |
+| `preventDefault` | boolean | `true` | Call `event.preventDefault()` on match. |
+
+### `createUrlChangeTrigger(element, callback, options?)`
+
+Listens for URL changes and fires when one matches.
+
+```ts
+const cleanup = createUrlChangeTrigger(
+  pageContainer,
+  () => billingFeature.activate(),
+  { events: ["popstate", "pushstate"] }
+);
+```
+
+| Option | Type | Default | Notes |
+|---|---|---|---|
+| `events` | `("popstate" \| "hashchange" \| "pushstate" \| "replacestate")[]` | all four | Which URL events to listen for. |
+
+## The plugin API
+
+A trigger plugin is an object that knows how to wire and unwire itself for an element.
+
+```ts
+interface TriggerPlugin {
+  name: string;
+  setup(
+    element: HTMLElement,
+    onTrigger: (ctx: TriggerContext) => void,
+    options?: Record<string, unknown>
+  ): () => void;
+}
+```
+
+Register with `registerTriggerPlugin`:
+
+```ts
+registerTriggerPlugin({
+  name: "double-tap",
+  setup(element, onTrigger, options) {
+    let lastTap = 0;
+    const handler = () => {
+      const now = Date.now();
+      if (now - lastTap < (options?.window ?? 300)) onTrigger({ element, triggerType: "programmatic" });
+      lastTap = now;
+    };
+    element.addEventListener("pointerup", handler);
+    return () => element.removeEventListener("pointerup", handler);
+  },
+});
+```
+
+Then wire it via `createPluginTrigger`:
+
+```ts
+const cleanup = createPluginTrigger("double-tap", element, () => feature.activate(), {
+  window: 250,
+});
+```
+
+## Discovery
+
+```ts
+getTriggerPlugin("double-tap");      // → TriggerPlugin | undefined
+getAllTriggerPlugins();              // → TriggerPlugin[]
+unregisterTriggerPlugin("double-tap");
+```
+
+## `registerBuiltInPlugins()`
+
+Convenience to register the four shipped plugins under a known set of names. Call once if you want them discoverable via `getTriggerPlugin`. The standalone `createSwipeTrigger` etc. work without it.
+
+## Related
+
+- [Triggers](/mountly/concepts/triggers/) — the conceptual overview, including the built-in five.

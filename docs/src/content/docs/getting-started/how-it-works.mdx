@@ -1,0 +1,145 @@
+---
+title: How it works
+description: The mountly architecture in one page — components, widgets, features, lifecycle, and bundle strategy.
+---
+
+mountly has three layers and one state machine. That's the whole concept.
+
+## Three layers
+
+### 1. Components — your code
+
+Plain framework components. No special APIs, no decorators, no new model. Same code you'd write today.
+
+```tsx title="src/SignupCard.tsx"
+import { useState } from "react";
+
+export default function SignupCard({ headline }: { headline: string }) {
+  const [email, setEmail] = useState("");
+  return (
+    <form>
+      <h2>{headline}</h2>
+      <input value={email} onChange={(e) => setEmail(e.target.value)} />
+      <button type="submit">Subscribe</button>
+    </form>
+  );
+}
+```
+
+### 2. Widgets — framework-agnostic mounting units
+
+A framework adapter wraps the component into a **widget**: an object with `mount(container, props)` and `unmount(container)`. The widget knows nothing about *when* it's loaded — only *how* to render.
+
+```ts title="signup-card.ts"
+import { createWidget } from "mountly-react";
+import SignupCard from "./SignupCard.tsx";
+import styles from "./SignupCard.css?inline";
+
+export default createWidget(SignupCard, { styles });
+```
+
+Each adapter ([React](/mountly/frameworks/react/), [Vue](/mountly/frameworks/vue/), [Svelte](/mountly/frameworks/svelte/)) exposes the **same** `createWidget(Component, { styles })` signature. The widget always mounts into a shadow root, so styles are scoped and the host can't bleed in.
+
+### 3. Features — the on-demand lifecycle
+
+A **feature** wraps a widget with a trigger, a module loader, optional data fetching, dual caching, and a state machine. This is the layer you actually use in production.
+
+```ts title="signup-feature.ts"
+import { createOnDemandFeature } from "mountly";
+
+export const signupFeature = createOnDemandFeature({
+  moduleId: "signup-card",
+  loadModule: () => import("./signup-card.js"),
+  loadData: async () => fetch("/api/copy").then((r) => r.json()),
+  render: ({ mod, data, container, props }) => {
+    mod.mount(container, { ...props, ...data });
+  },
+});
+```
+
+## The lifecycle
+
+Every feature flows through the same five states:
+
+```
+idle → preload → activate → mount → unmount
+```
+
+- **idle** — nothing loaded. Waiting for a trigger.
+- **preload** — module is fetched. Optionally, data fetch begins in parallel.
+- **activate** — commitment signal received (e.g. click). Finalise data fetch, prepare to mount.
+- **mount** — widget rendered into the container's shadow root.
+- **unmount** — DOM removed. Module + data caches are retained, so re-mounting is free.
+
+You can hook any phase, abort in flight (`feature.abort()`), and inspect the current state (`feature.getState()`). See [Lifecycle](/mountly/concepts/lifecycle/) for the full state diagram.
+
+## Triggers
+
+A trigger decides when a feature moves between states. Seven are built in:
+
+| Trigger | Description | Best for |
+|---|---|---|
+| `hover` | Preload on `mouseenter`, mount on click. | Discoverable controls. |
+| `click` | Mount on click without preload. | Committed actions. |
+| `focus` | Preload on `focus`, mount on commit. | Keyboard-accessible counterparts to hover. |
+| `viewport` | Mount when element enters viewport (configurable threshold). | Below-the-fold content. |
+| `idle` | Use `requestIdleCallback` to preload during quiet moments. | Predictive prefetch. |
+| `media` | Mount when a CSS media query matches. | Responsive-only UI. |
+| `url-change` | Mount on `popstate`/`hashchange`/`pushState`/`replaceState`. | Route-driven content. |
+
+You can also register [trigger plugins](/mountly/api/trigger-plugins/) — swipe, long-press, keyboard chord — without touching the runtime.
+
+## Dual caching
+
+mountly keeps two cooperating caches:
+
+### Module cache
+
+Stores downloaded JavaScript bundles, keyed by `moduleId`. Deduplicates in-flight requests — if 12 hovers fire before the first import resolves, you get one network request, not twelve.
+
+### Data cache
+
+Stores `loadData` responses, keyed by a stable serialisation of the feature context (excludes the DOM `element` and `event` fields by default). Override `getCacheKey` for coarser caching.
+
+Both caches survive across re-mounts, so the second open of the same widget is instant.
+
+## Bundle strategy
+
+When you build a widget, the CLI emits two ESM entries:
+
+### `dist/index.js` — self-contained
+
+Includes the component, the adapter, and the framework. Drop it into any page; it works without any host setup. ~148 KB gz for a representative React widget.
+
+### `dist/peer.js` — peer build
+
+Excludes the framework. Expects the host to provide `react`, `react-dom`, `react-dom/client`, and `react/jsx-runtime` via an import map. ~5 KB gz per widget plus one ~45 KB gz copy of React shared across all widgets.
+
+The host picks which to load via the import map — the widget source is identical. See [Distribution](/mountly/concepts/distribution/) for when each makes sense and [`installRuntime`](/mountly/api/install-runtime/) for the helper that wires the React import map for you.
+
+## Custom element
+
+Declarative usage uses a custom element:
+
+```html
+<mountly-feature module-id="signup-card" trigger="viewport" props='{"plan":"pro"}' />
+```
+
+Register the factory once and the element handles attach/detach automatically. See [Custom element](/mountly/concepts/custom-element/).
+
+## What you write vs what mountly provides
+
+| You write | mountly provides |
+|---|---|
+| Components (React/Vue/Svelte) | Adapters that wrap them as widgets |
+| `createOnDemandFeature(...)` config | Lifecycle, abort, dual caching, in-flight dedup |
+| Trigger choice (`hover`, `viewport`, …) | Trigger setup, cleanup, cancellation |
+| `loadModule` / `loadData` | Module cache, data cache, error wrapping |
+| `<mountly-feature>` markup | Custom element wiring |
+
+## Next
+
+- [**Triggers**](/mountly/concepts/triggers/) — go deep on each trigger type.
+- [**Lifecycle**](/mountly/concepts/lifecycle/) — the state diagram and abort behaviour.
+- [**Caching**](/mountly/concepts/caching/) — cache keys, invalidation, in-flight dedup.
+- [**Distribution**](/mountly/concepts/distribution/) — self-contained vs shared React.

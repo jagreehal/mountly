@@ -1,0 +1,47 @@
+---
+title: Devtools panel
+description: A floating overlay that shows live feature states, cache contents, and analytics events. Development-only.
+---
+
+`createDevtoolsPanel` mounts a floating overlay on the page that shows what every feature is doing, in real time. Use it during development; gate it behind your own dev flag for production.
+
+## Wire it up
+
+```ts
+import { createDevtoolsPanel } from "mountly";
+
+if (import.meta.env.DEV) {
+  createDevtoolsPanel({
+    features: [signupFeature, paymentFeature, lightboxFeature],
+    position: "bottom-right",
+    collapsed: true,
+  });
+}
+```
+
+The panel adds itself to `<body>` and unsubscribes from analytics events when removed.
+
+## What it shows
+
+For each registered feature:
+
+- Current state (`idle` / `preloading` / `preloaded` / `activating` / `activated` / `mounted` / `aborted`).
+- Phase timings from the last lifecycle (preload, activate, mount durations in ms).
+- Module cache hit/miss for the last load.
+- Active mount containers.
+
+It also shows a rolling log of analytics events (the same events `onAnalyticsEvent` exposes) and the contents of the module + data caches.
+
+## Options
+
+| Option | Type | Default | Notes |
+|---|---|---|---|
+| `features` | `OnDemandFeature[]` | required | Features to inspect. |
+| `position` | `"top-left"` · `"top-right"` · `"bottom-left"` · `"bottom-right"` | `"bottom-right"` | Anchor on screen. |
+| `collapsed` | boolean | `false` | Start collapsed. |
+| `theme` | `"auto"` · `"light"` · `"dark"` | `"auto"` | Match the page or override. |
+| `maxLogEntries` | number | `100` | Trim the analytics ring buffer. |
+
+## Don't ship it
+
+The panel is a development aid, not a runtime feature. Gate it with `import.meta.env.DEV`, `process.env.NODE_ENV !== "production"`, or whatever your bundler uses. Tree-shake it out of production builds.

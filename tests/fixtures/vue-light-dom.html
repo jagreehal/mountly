@@ -1,0 +1,31 @@
+<!doctype html>
+<html><body>
+  <img id="c" alt="" />
+  <script type="importmap">
+    {"imports":{"vue":"https://esm.sh/vue@3","mountly":"/packages/mountly/dist/index.js"}}
+  </script>
+  <script type="module">
+    import { h } from "vue";
+    import { createWidget } from "/packages/adapters/mountly-vue/dist/index.js";
+
+    const T = {
+      props: ["msg"],
+      render() { return h("span", this.msg); },
+    };
+
+    const w = createWidget(T, { styles: ".vue-light{}" });
+    const img = document.getElementById("c");
+    w.mount(img, { msg: "fallback" });
+
+    // Mount node should have been inserted as a sibling, since <img> is a void
+    // element and can't host a shadow root.
+    const sibling = img.nextElementSibling;
+    window.__result = {
+      mountIsSibling: sibling?.getAttribute("data-mountly-root") === "",
+      mountText: sibling?.textContent ?? "",
+      hasShadowOnImg: !!img.shadowRoot,
+      // Global fallback style was injected because shadow couldn't carry it.
+      hasFallbackStyle: !!document.head.querySelector('style[data-mountly-fallback]'),
+    };
+  </script>
+</body></html>

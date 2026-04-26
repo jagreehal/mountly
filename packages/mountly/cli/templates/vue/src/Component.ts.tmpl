@@ -1,0 +1,14 @@
+import { defineComponent, h } from "vue";
+
+export default defineComponent({
+  name: "MountlyWidget",
+  props: {
+    message: {
+      type: String,
+      default: "Hello from {{name}}",
+    },
+  },
+  setup(props) {
+    return () => h("div", { class: "ui-card" }, props.message);
+  },
+});

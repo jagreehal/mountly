@@ -1,0 +1,56 @@
+---
+title: Introduction
+description: What mountly is, what problem it solves, and who it's for.
+---
+
+mountly is a small frontend runtime that solves a single problem: **modern web apps ship too much JavaScript upfront.**
+
+Component libraries load everything at once. Microfrontends are operationally heavy. Framework lazy-loading lacks standardised interaction patterns. There's no unified system for *"load rich UI only when the user actually needs it."*
+
+mountly is that system.
+
+It is built for incremental adoption: keep your current host app and drop in on-demand features without a full rewrite.
+
+## The shape of it
+
+You write components the way you already do — React, Vue, or Svelte. The framework adapter wraps each component as a **widget**: a self-contained, mountable, framework-agnostic unit. `createOnDemandFeature` then adds a lifecycle around the widget — a trigger (hover, click, focus, viewport, idle, url-change), a module loader, optional data fetching, dual caching, and a standardised state machine.
+
+The vocabulary is enforced in the docs because it pays off:
+
+- **Component** — your normal React/Vue/Svelte component. Nothing new to learn.
+- **Widget** — a component wrapped by an adapter. Has `mount` and `unmount`. Knows nothing about *when*.
+- **Feature** — a widget plus the on-demand lifecycle. Built with [`createOnDemandFeature`](/mountly/api/create-on-demand-feature/) or declared with [`<mountly-feature>`](/mountly/concepts/custom-element/).
+
+You write **components**, the adapter wraps them as **widgets**, and you ship them as **features**.
+
+## Why it matters
+
+- **Faster initial load** — less JS to download and parse before the page is interactive.
+- **Better on low-end devices** — the cost of a feature is paid only by users who use it.
+- **Reduced bandwidth on slow connections** — widgets stream in on demand.
+- **Improved Core Web Vitals** — directly addresses TTI and INP.
+
+## Who it's for
+
+mountly is appropriate when:
+
+- You ship **embeddable widgets** onto static sites, CMS pages, or third-party hosts where bundle size and host conflicts matter.
+- You want **intent-based activation** with a shared module + data cache story.
+- You need **multiple widgets on one page** sharing a single React copy via the host's import map.
+
+It's the **wrong** tool when you have a single SPA where the bundler owns every surface, when you need SSR + hydration of server-rendered HTML, or when you actually want a microfrontend control plane. See [When not to use mountly](/mountly/concepts/when-not-to-use/) for the longer answer.
+
+## How it compares
+
+| Approach | Initial bundle | User experience | Developer complexity |
+|---|---|---|---|
+| Traditional SPA | Large | Slow first paint, fast after | Low |
+| Framework code-splitting | Medium | Better, but route-bound | Medium |
+| Microfrontend orchestrators | Variable | Good, runtime-coordinated | High |
+| **mountly** | **~9 KB core** | **Instant shell, features on intent** | **Low** |
+
+## Where to next
+
+- [**Quick start**](/mountly/getting-started/quick-start/) — scaffold and ship your first widget in 60 seconds.
+- [**How it works**](/mountly/getting-started/how-it-works/) — read the architecture before you commit.
+- [**Vocabulary**](/mountly/concepts/vocabulary/) — the three terms you'll see everywhere.

@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>mountly — shadcn drop-in example</title>
+    <style>
+      :root {
+        --page-bg: #f8fafc;
+        --ink: #0f172a;
+        --muted: #475569;
+        --card: #ffffff;
+        --rule: #e2e8f0;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: Inter, system-ui, -apple-system, sans-serif;
+        color: var(--ink);
+        background: var(--page-bg);
+      }
+      .wrap {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 40px 20px 56px;
+      }
+      h1 { margin: 0 0 8px; font-size: 30px; }
+      .lede { margin: 0 0 20px; color: var(--muted); max-width: 70ch; }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 16px;
+      }
+      .panel {
+        background: var(--card);
+        border: 1px solid var(--rule);
+        border-radius: 12px;
+        padding: 16px;
+      }
+      .panel h2 { margin: 0 0 6px; font-size: 18px; }
+      .panel p { margin: 0 0 12px; color: var(--muted); font-size: 14px; }
+      button.trigger {
+        border: 0;
+        border-radius: 8px;
+        background: #0f172a;
+        color: #fff;
+        padding: 10px 14px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .slot {
+        min-width: 320px;
+        min-height: 220px;
+        margin-top: 12px;
+      }
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        background: #eef2ff;
+        padding: 1px 5px;
+        border-radius: 4px;
+      }
+    </style>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "react": "https://esm.sh/react@18.3.1",
+          "react/jsx-runtime": "https://esm.sh/react@18.3.1/jsx-runtime",
+          "react-dom/client": "https://esm.sh/react-dom@18.3.1/client",
+          "mountly": "/packages/mountly/dist/index.js",
+          "mountly-react": "/packages/adapters/mountly-react/dist/index.js",
+          "signup-card": "/examples/signup-card/dist/peer.js"
+        }
+      }
+    </script>
+  </head>
+
+  <body>
+    <main class="wrap">
+      <h1>shadcn-style React, dropped into static HTML</h1>
+      <p class="lede">
+        The host is plain HTML. The widget is compiled React from
+        <code>examples/signup-card</code>. No framework bootstrapping on the host.
+      </p>
+
+      <div class="grid">
+        <section class="panel">
+          <h2>Imperative attach()</h2>
+          <p>Hover preloads the widget; click mounts it into the slot.</p>
+          <button id="hero-trigger" class="trigger" type="button">Open signup widget</button>
+          <div id="hero-mount" class="slot"></div>
+        </section>
+
+        <section class="panel">
+          <h2>Declarative custom element</h2>
+          <p>Same widget, mounted via <code>&lt;mountly-feature&gt;</code>.</p>
+          <mountly-feature module-id="signup-card" trigger="viewport">
+            <div
+              data-mountly-mount
+              class="slot"
+              style="--primary: 262 83% 58%; --ring: 262 83% 58%;"
+            ></div>
+          </mountly-feature>
+        </section>
+      </div>
+    </main>
+
+    <script type="module">
+      import { defineMountlyFeature, registerCustomElement } from "mountly";
+      import { signupCard } from "signup-card";
+
+      registerCustomElement("signup-card", () => signupCard);
+      defineMountlyFeature();
+
+      signupCard.attach({
+        trigger: document.getElementById("hero-trigger"),
+        mount: document.getElementById("hero-mount"),
+        preloadOn: "hover",
+        activateOn: "click",
+        props: {
+          data: {
+            headline: "Drop in a signup card",
+            subline: "This UI is React, but this page is plain HTML.",
+            cta: "Subscribe"
+          }
+        }
+      });
+    </script>
+  </body>
+</html>

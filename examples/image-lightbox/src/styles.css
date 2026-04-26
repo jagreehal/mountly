@@ -1,0 +1,33 @@
+@import "mountly-tailwind";
+@source "./";
+
+/*
+ * Design tokens come from mountly-tailwind (--color-ui-*, --ui-*, etc.).
+ * Override at the host: <div data-mountly-mount style="--ui-accent: ...">
+ *
+ * Local additions only — widget-specific cinematic/editorial tokens that
+ * the preset doesn't supply. Hosts can override on the mount container.
+ */
+:host {
+  --lb-backdrop: oklch(0.14 0.008 270 / 0.94);
+  --lb-frame: oklch(0.3 0.01 270);
+  --lb-caption: oklch(0.82 0.008 60);
+  --lb-caption-subtle: oklch(0.58 0.008 60);
+  --lb-button-bg: oklch(0.22 0.01 270 / 0.85);
+  --lb-button-fg: oklch(0.92 0.006 60);
+  --lb-accent: oklch(0.7 0.14 42);
+
+  --lb-font-caption: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --lb-font-mono: ui-monospace, "SF Mono", Menlo, Monaco, monospace;
+
+  display: block;
+}
+
+@keyframes lb-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes lb-rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

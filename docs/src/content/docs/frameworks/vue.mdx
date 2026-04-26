@@ -1,0 +1,92 @@
+---
+title: Vue
+description: Use mountly-vue to wrap any Vue 3 component as a mountable widget.
+---
+
+`mountly-vue` is the Vue 3 adapter. Same surface as the React adapter — `createWidget(Component, { styles })` — different rendering layer underneath.
+
+## Install
+
+```bash
+pnpm add mountly mountly-vue vue
+```
+
+## Basic usage
+
+```ts title="signup-card.ts"
+import { createWidget } from "mountly-vue";
+import SignupCard from "./SignupCard.vue";
+import styles from "./SignupCard.css?inline";
+
+export default createWidget(SignupCard, { styles });
+```
+
+The widget always mounts inside its own shadow root. Styles in the `styles` string are injected into the shadow root and don't leak.
+
+## Mounting
+
+```ts
+import widget from "./signup-card.js";
+
+widget.mount(document.querySelector("#cta-mount"), {
+  headline: "Try the API",
+  plan: "pro",
+});
+```
+
+Each `mount()` unmounts any existing Vue app in the same container first.
+
+Under the hood, the adapter calls `createApp({ render: () => h(Component, props) })` and mounts that into the shadow root. There is one Vue app per container.
+
+## With the on-demand lifecycle
+
+```ts
+import { createOnDemandFeature } from "mountly";
+
+const signup = createOnDemandFeature({
+  moduleId: "signup-card",
+  loadModule: () => import("./signup-card.js"),
+  render: ({ mod, container, props }) => mod.mount(container, props),
+});
+
+signup.attach({ trigger: btn, preloadOn: "hover", activateOn: "click" });
+```
+
+## Composition API and Options API
+
+Both work. The adapter doesn't care which API style your component uses — it just calls `createApp` with the imported component.
+
+## Provide / inject
+
+Each widget mount is its own Vue app. **Providers do not cross widgets.** If two widgets need to share state, either:
+
+- Wrap them in one outer Vue app and use `mountly` only for the load lifecycle (you mount the outer app yourself).
+- Use a framework-agnostic store (Pinia with a global instance, or any `import`-level singleton).
+
+## Two builds, one source
+
+`mountly init --vue` (when supported by the CLI version you have) configures `tsup` to emit:
+
+- `dist/index.js` — bundles Vue.
+- `dist/peer.js` — externalises Vue. Pairs with an import map.
+
+Multi-widget hosts should use the peer build to share one Vue copy. See [Distribution](/mountly/concepts/distribution/).
+
+## Common pitfalls
+
+### Style leakage
+
+Vue SFC `<style scoped>` works inside the widget — the shadow root adds another layer of isolation. If you're using global utility classes (Tailwind), those go into `styles` so the shadow root has them.
+
+### Two Vue copies
+
+Same hazard as React: two widgets with `dist/index.js` give you two Vue runtimes on the same page. Use the peer build for multi-widget pages.
+
+### Single-File Components
+
+Vite's Vue plugin handles `.vue` files in the widget build. If you're running `tsup` directly, install `unplugin-vue` or a similar SFC compiler — `mountly-vue` does **not** ship one.
+
+## Reference
+
+- [`createWidget`](/mountly/api/create-widget/) — the adapter API.
+- [`createOnDemandFeature`](/mountly/api/create-on-demand-feature/) — the lifecycle wrapper.

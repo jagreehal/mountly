@@ -1,0 +1,28 @@
+<!doctype html>
+<html><body>
+  <div id="c"></div>
+  <script type="importmap">
+    {"imports":{"react":"https://esm.sh/react@18","react-dom/client":"https://esm.sh/react-dom@18/client","react-dom":"https://esm.sh/react-dom@18","mountly":"/packages/mountly/dist/index.js"}}
+  </script>
+  <script type="module">
+    import { createElement } from "react";
+    import { createWidget } from "/packages/adapters/mountly-react/dist/index.js";
+    const T = (props) => createElement("span", null, props.label);
+    const w = createWidget(T, { styles: ".x{}" });
+    const c = document.getElementById("c");
+    w.mount(c, { label: "first" });
+    await new Promise((r) => requestAnimationFrame(r));
+    w.mount(c, { label: "second" });
+    // Wait two frames for React to flush
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    const root = c.shadowRoot;
+    window.__result = {
+      mountNodes: root.querySelectorAll("[data-mountly-root]").length,
+      // Style is present either as adopted stylesheet OR as <style> element
+      stylePresent:
+        (root.adoptedStyleSheets && root.adoptedStyleSheets.length > 0) ||
+        root.querySelectorAll("style").length > 0,
+      text: root.querySelector("[data-mountly-root]").textContent,
+    };
+  </script>
+</body></html>

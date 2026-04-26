@@ -1,0 +1,61 @@
+<!doctype html>
+<html><body>
+  <div id="c"></div>
+  <script type="importmap">
+    {"imports":{"mountly":"/packages/mountly/dist/index.js"}}
+  </script>
+  <script type="module">
+    import { createWidget } from "/packages/adapters/mountly-svelte/dist/index.js";
+
+    // Simulate Svelte 5's functional component shape: a plain function (not a
+    // class), used together with a host-provided `mount` and `unmount` from
+    // "svelte". We stub `mount`/`unmount` here so the test doesn't depend on
+    // a Svelte compile step for the fixture itself — what we care about is
+    // that the adapter dispatches to the v5 path when the component isn't a
+    // legacy class.
+    function HelloComponent(target, props) {
+      const el = document.createElement("span");
+      el.textContent = String(props?.msg ?? "");
+      target.appendChild(el);
+      return { el };
+    }
+
+    let mountCalls = 0;
+    let unmountCalls = 0;
+    const handles = new Map();
+
+    function mountStub(Component, { target, props }) {
+      mountCalls += 1;
+      const handle = Component(target, props);
+      handles.set(target, handle);
+      return handle;
+    }
+    function unmountStub(handle) {
+      unmountCalls += 1;
+      handle.el?.remove();
+    }
+
+    const w = createWidget(HelloComponent, {
+      styles: ".x{}",
+      mount: mountStub,
+      unmount: unmountStub,
+    });
+    const c = document.getElementById("c");
+    w.mount(c, { msg: "v5-alive" });
+    const text1 = c.shadowRoot.querySelector("[data-mountly-root]")?.textContent ?? "";
+
+    w.unmount(c);
+    const text2 = c.shadowRoot.querySelector("[data-mountly-root]")?.textContent ?? "";
+
+    w.mount(c, { msg: "v5-reborn" });
+    const text3 = c.shadowRoot.querySelector("[data-mountly-root]")?.textContent ?? "";
+
+    window.__result = {
+      text1,
+      text2,
+      text3,
+      mountCalls,
+      unmountCalls,
+    };
+  </script>
+</body></html>

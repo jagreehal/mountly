@@ -1,0 +1,36 @@
+<!doctype html>
+<html><body>
+  <div id="c"></div>
+  <script type="importmap">
+    {"imports":{"vue":"https://esm.sh/vue@3","mountly":"/packages/mountly/dist/index.js"}}
+  </script>
+  <script type="module">
+    import { h } from "vue";
+    import { createWidget } from "/packages/adapters/mountly-vue/dist/index.js";
+
+    const T = {
+      props: ["msg"],
+      render() { return h("span", this.msg); },
+    };
+
+    let error = null;
+    let mounted = false;
+    try {
+      const w = createWidget(T, { styles: ".x{}", shadowMode: "closed" });
+      const c = document.getElementById("c");
+      w.mount(c, { msg: "closed" });
+      // closed shadowRoots aren't exposed as element.shadowRoot
+      window.__result = {
+        error: null,
+        // The container should not expose a shadow root from the outside.
+        containerShadowRootIsNull: c.shadowRoot === null,
+        // Re-mount must still reuse internal state without throwing.
+        canRemount: (() => {
+          try { w.mount(c, { msg: "again" }); return true; } catch { return false; }
+        })(),
+      };
+    } catch (e) {
+      window.__result = { error: String(e) };
+    }
+  </script>
+</body></html>

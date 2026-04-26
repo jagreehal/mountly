@@ -1,0 +1,42 @@
+<!doctype html>
+<html><body>
+  <div id="c"></div>
+  <script type="importmap">
+    {"imports":{"mountly":"/packages/mountly/dist/index.js"}}
+  </script>
+  <script type="module">
+    import { createWidget } from "/packages/adapters/mountly-svelte/dist/index.js";
+
+    let destroyCalls = 0;
+    class HelloComponent {
+      constructor({ target, props }) {
+        this.el = document.createElement("span");
+        this.el.textContent = String(props?.msg ?? "");
+        target.appendChild(this.el);
+      }
+      $destroy() {
+        destroyCalls += 1;
+        this.el?.remove();
+      }
+    }
+
+    const w = createWidget(HelloComponent, { styles: ".x{}" });
+    const c = document.getElementById("c");
+    w.mount(c, { msg: "alive" });
+
+    const before = c.shadowRoot.querySelector("[data-mountly-root]")?.textContent ?? "";
+
+    w.unmount(c);
+    const textAfter = c.shadowRoot.querySelector("[data-mountly-root]")?.textContent ?? "";
+
+    w.mount(c, { msg: "reborn" });
+    const textAfterRemount = c.shadowRoot.querySelector("[data-mountly-root]")?.textContent ?? "";
+
+    window.__result = {
+      before,
+      textAfter,
+      textAfterRemount,
+      destroyCallsAfterUnmount: destroyCalls,
+    };
+  </script>
+</body></html>

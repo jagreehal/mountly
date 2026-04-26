@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>mountly — Plain HTML Example</title>
+    <style>
+      body {
+        font-family: system-ui, -apple-system, sans-serif;
+        background: #f8fafc;
+        color: #0f172a;
+        padding: 40px 20px;
+        margin: 0;
+      }
+      .wrap { max-width: 780px; margin: 0 auto; }
+      h1 { font-size: 28px; margin: 0 0 8px; }
+      .sub { color: #64748b; margin-bottom: 32px; }
+      section {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+      }
+      h2 { font-size: 18px; margin: 0 0 4px; }
+      .desc { color: #64748b; font-size: 14px; margin-bottom: 16px; }
+      button.trigger {
+        background: #3b82f6;
+        color: #fff;
+        border: 0;
+        padding: 10px 16px;
+        border-radius: 8px;
+        font-weight: 500;
+        cursor: pointer;
+      }
+      button.trigger:hover { background: #2563eb; }
+      .slot { margin-top: 12px; }
+      .skeleton {
+        min-width: 320px;
+        min-height: 240px;
+        border: 1px dashed #cbd5e1;
+        border-radius: 12px;
+        padding: 20px;
+        background: #f8fafc;
+        color: #94a3b8;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+      }
+      input[type="number"] {
+        padding: 6px 10px;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        font-size: 14px;
+        width: 120px;
+      }
+      label { font-size: 14px; color: #334155; margin-right: 8px; }
+    </style>
+
+    <!--
+      Import map lets browsers resolve bare specifiers ("mountly",
+      "payment-breakdown") to built files. Serve the repo root so
+      /packages/... and /examples/... are reachable.
+    -->
+    <script type="importmap">
+      {
+        "imports": {
+          "mountly": "/packages/mountly/dist/index.js",
+          "payment-breakdown": "/examples/payment-breakdown/dist/index.js",
+          "image-lightbox": "/examples/image-lightbox/dist/index.js"
+        }
+      }
+    </script>
+  </head>
+
+  <body>
+    <div class="wrap">
+      <h1>mountly — Plain HTML</h1>
+      <p class="sub">
+        A real HTML page. No build step for the host. Widgets are bundled once by
+        their author; the host just imports them.
+      </p>
+
+      <!-- 1. Imperative attach() -->
+      <section>
+        <h2>1. Imperative <code>attach()</code></h2>
+        <p class="desc">Hover preloads, click mounts, click again unmounts.</p>
+        <button class="trigger" id="trigger-1">View payment</button>
+        <div
+          class="slot"
+          id="slot-1"
+          style="min-width: 320px; min-height: 240px;"
+        >
+          <div class="skeleton">Loading payment…</div>
+        </div>
+      </section>
+
+      <!-- 2. Custom element -->
+      <section>
+        <h2>2. Custom element (<code>&lt;mountly-feature&gt;</code>)</h2>
+        <p class="desc">Declarative; hover to mount, click the × to dismiss.</p>
+        <mountly-feature
+          module-id="payment-breakdown"
+          trigger="hover"
+          props='{"data":{"total":49,"currency":"EUR","items":[{"description":"Starter plan","amount":49,"currency":"EUR"}]}}'
+        >
+          <button class="trigger">Hover me</button>
+          <div data-mountly-mount class="slot"></div>
+        </mountly-feature>
+      </section>
+
+      <!-- 3. Reactive props -->
+      <section>
+        <h2>3. Reactive props</h2>
+        <p class="desc">
+          Change the total below — the mounted widget updates in place, no
+          remount.
+        </p>
+        <label for="total">Total (USD):</label>
+        <input type="number" id="total" value="99" min="1" step="1" />
+
+        <mountly-feature
+          id="reactive-feature"
+          module-id="payment-breakdown"
+          trigger="hover"
+          props='{"data":{"total":99,"currency":"USD","items":[{"description":"Pro plan","amount":99,"currency":"USD"}]}}'
+        >
+          <button class="trigger" style="margin-top: 12px;">Hover to mount</button>
+          <div data-mountly-mount class="slot"></div>
+        </mountly-feature>
+      </section>
+
+      <!-- 4. Second widget with divergent aesthetic -->
+      <section>
+        <h2>4. A second widget, different aesthetic</h2>
+        <p class="desc">
+          Same distribution pattern, entirely different visual language. Both
+          widgets share only the infrastructure — not the style.
+        </p>
+        <button class="trigger" id="lightbox-trigger" style="background:#0f172a;">
+          View image
+        </button>
+        <div id="lightbox-mount"></div>
+      </section>
+    </div>
+
+    <!-- Host script: wires up #1 and reactive #3. -->
+    <script type="module">
+      import {
+        defineMountlyFeature,
+        registerCustomElement,
+      } from "mountly";
+      import {
+        paymentBreakdown,
+        paymentBreakdownDimensions,
+      } from "payment-breakdown";
+      import { imageLightbox } from "image-lightbox";
+
+      // Register both widget factories, then define the element tag.
+      registerCustomElement("payment-breakdown", () => paymentBreakdown);
+      registerCustomElement("image-lightbox", () => imageLightbox);
+      defineMountlyFeature();
+
+      // Section 1 — imperative attach, with data fetched from a mock API.
+      // We intercept fetch to keep this example self-contained.
+      const originalFetch = window.fetch;
+      window.fetch = (url, init) => {
+        const u = typeof url === "string" ? url : url.url;
+        if (u.endsWith("/api/payments/pay_123")) {
+          return Promise.resolve(
+            new Response(
+              JSON.stringify({
+                total: 149.99,
+                currency: "USD",
+                items: [
+                  { description: "Pro Plan (Monthly)", amount: 129.99, currency: "USD" },
+                  { description: "Additional storage", amount: 20.0, currency: "USD" },
+                ],
+                tax: 12.5,
+                discount: 12.5,
+              }),
+              { status: 200, headers: { "content-type": "application/json" } }
+            )
+          );
+        }
+        return originalFetch(url, init);
+      };
+
+      paymentBreakdown.attach({
+        trigger: document.getElementById("trigger-1"),
+        mount: document.getElementById("slot-1"),
+        context: { paymentId: "pay_123" },
+      });
+
+      // Section 3 — reactive props via attribute updates.
+      const totalInput = document.getElementById("total");
+      const reactiveEl = document.getElementById("reactive-feature");
+      totalInput.addEventListener("input", (e) => {
+        const total = Number(e.target.value) || 0;
+        // Mutating the `props` attribute triggers the custom element's
+        // attributeChangedCallback, which calls feature.update() for us.
+        reactiveEl.setAttribute(
+          "props",
+          JSON.stringify({
+            data: {
+              total,
+              currency: "USD",
+              items: [{ description: "Pro plan", amount: total, currency: "USD" }],
+            },
+          })
+        );
+      });
+
+      // Show the widget's recommended footprint (just for demonstration).
+      console.log("Recommended widget dimensions:", paymentBreakdownDimensions);
+
+      // Section 4 — second widget wired up the same way.
+      imageLightbox.attach({
+        trigger: document.getElementById("lightbox-trigger"),
+        mount: document.getElementById("lightbox-mount"),
+        activateOn: "click",
+        props: {
+          data: {
+            src:
+              "data:image/svg+xml;utf8," +
+              encodeURIComponent(
+                `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 800'>
+                   <defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>
+                     <stop offset='0' stop-color='#c2410c'/>
+                     <stop offset='1' stop-color='#7c2d12'/></linearGradient></defs>
+                   <rect width='1200' height='800' fill='url(%23g)'/>
+                   <text x='50%' y='50%' font-family='system-ui' font-size='72'
+                         fill='#fef3c7' text-anchor='middle' dy='.3em'
+                         letter-spacing='8'>SAMPLE IMAGE</text></svg>`
+              ),
+            alt: "A warm gradient placeholder",
+            caption:
+              "Two widgets, one infrastructure, wholly different looks.",
+            index: 1,
+            total: 1,
+          },
+        },
+      });
+    </script>
+  </body>
+</html>

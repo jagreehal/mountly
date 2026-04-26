@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>mountly Pokemon Kitchen Sink</title>
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: Inter, system-ui, -apple-system, sans-serif;
+        background: #f8fafc;
+        color: #0f172a;
+      }
+      .container { max-width: 1100px; margin: 0 auto; padding: 32px 20px 64px; }
+      h1 { margin: 0; font-size: 30px; }
+      .muted { color: #475569; }
+      .section {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 16px;
+        margin-top: 16px;
+      }
+      .controls { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+      button {
+        border: 1px solid #cbd5e1;
+        background: #fff;
+        border-radius: 8px;
+        padding: 8px 12px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      button.primary { background: #2563eb; color: #fff; border-color: #2563eb; }
+      .grid {
+        margin-top: 16px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 12px;
+      }
+      .card {
+        border: 1px solid #cbd5e1;
+        border-radius: 10px;
+        padding: 12px;
+        background: #fff;
+      }
+      .card h3 { margin: 0 0 6px 0; text-transform: capitalize; font-size: 18px; }
+      .mount { min-height: 120px; margin-top: 8px; }
+      .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+      #analytics-log { max-height: 180px; overflow: auto; padding: 8px; background: #020617; color: #e2e8f0; border-radius: 8px; }
+      .spacer { height: 120px; display: grid; place-items: center; color: #64748b; }
+    </style>
+  </head>
+  <body>
+    <main class="container">
+      <h1>Pokemon Kitchen Sink Demo</h1>
+      <p class="muted">
+        mountly with PokeAPI: hover preload, click mount, viewport preload,
+        immediate programmatic render, custom element, analytics, and devtools.
+      </p>
+
+      <section class="section">
+        <h2>Global controls</h2>
+        <div class="controls">
+          <button id="load-list" class="primary">Load Pokemon List</button>
+          <button id="immediate-render">Immediate Render First Pokemon</button>
+          <button id="clear-mounts">Unmount All</button>
+          <span id="state" class="mono">state: idle</span>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Hover + Click attach()</h2>
+        <p class="muted">Hover preloads code/data. Click mounts details. Click again unmounts.</p>
+        <div id="pokemon-grid" class="grid"></div>
+      </section>
+
+      <section class="section">
+        <h2>Viewport preload + click activate</h2>
+        <div class="spacer">Scroll target below preloads with viewport trigger</div>
+        <div class="card" id="viewport-trigger">
+          <h3>pikachu</h3>
+          <button id="viewport-activate">Click to mount Pikachu</button>
+          <div id="viewport-mount" class="mount"></div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Custom element usage</h2>
+        <mountly-feature module-id="pokemon-detail-ce" trigger="hover" data-url="https://pokeapi.co/api/v2/pokemon/charizard">
+          <button>Hover for Charizard (custom element)</button>
+          <div data-mountly-mount class="mount"></div>
+        </mountly-feature>
+      </section>
+
+      <section class="section">
+        <h2>Tailwind-style widget in custom element</h2>
+        <p class="muted">
+          This widget is styled internally (as if produced by Tailwind build output),
+          while the host page themes it through CSS variables.
+        </p>
+        <mountly-feature
+          module-id="pokemon-tailwind-ce"
+          trigger="click"
+          data-url="https://pokeapi.co/api/v2/pokemon/gengar"
+          style="--pk-accent: #7c3aed; --pk-surface: #f5f3ff; --pk-text: #2e1065;"
+        >
+          <button>Click for Gengar (Tailwind-style)</button>
+          <div data-mountly-mount class="mount"></div>
+        </mountly-feature>
+      </section>
+
+      <section class="section">
+        <h2>Analytics</h2>
+        <div id="analytics-log" class="mono">Interact to see timing events...</div>
+      </section>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

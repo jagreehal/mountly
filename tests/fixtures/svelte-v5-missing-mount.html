@@ -1,0 +1,29 @@
+<!doctype html>
+<html><body>
+  <div id="c"></div>
+  <script type="importmap">
+    {"imports":{"mountly":"/packages/mountly/dist/index.js"}}
+  </script>
+  <script type="module">
+    import { createWidget } from "/packages/adapters/mountly-svelte/dist/index.js";
+
+    // A Svelte 5 component without the required mount/unmount options must
+    // throw with an actionable hint, not silently no-op.
+    function HelloComponent(target, props) {
+      const el = document.createElement("span");
+      el.textContent = String(props?.msg ?? "");
+      target.appendChild(el);
+      return { el };
+    }
+
+    let caught = "";
+    try {
+      const w = createWidget(HelloComponent, { styles: ".x{}" });
+      w.mount(document.getElementById("c"), { msg: "x" });
+    } catch (e) {
+      caught = e instanceof Error ? e.message : String(e);
+    }
+
+    window.__result = { caught };
+  </script>
+</body></html>
