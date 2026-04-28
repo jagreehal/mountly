@@ -51,28 +51,6 @@ importers:
         specifier: ^6.1.9
         version: 6.1.9(@types/node@25.6.0)(jiti@2.6.1)(lightningcss@1.32.0)(rollup@4.60.2)(typescript@6.0.3)
 
-  examples/counter-card:
-    dependencies:
-      mountly:
-        specifier: ^0.1.0
-        version: link:../../packages/mountly
-      mountly-svelte:
-        specifier: ^0.1.0
-        version: link:../../packages/adapters/mountly-svelte
-      svelte:
-        specifier: ^5.55.5
-        version: 5.55.5
-    devDependencies:
-      '@sveltejs/vite-plugin-svelte':
-        specifier: ^7.0.0
-        version: 7.0.0(svelte@5.55.5)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1))
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
-      vite:
-        specifier: ^8.0.10
-        version: 8.0.10(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)
-
   examples/cross-framework-bus:
     dependencies:
       mountly:
@@ -316,7 +294,7 @@ importers:
         specifier: ^19.2.3
         version: 19.2.3(@types/react@19.2.14)
       mountly:
-        specifier: ^0.1.0
+        specifier: ^0.1.1
         version: link:../../mountly
       react:
         specifier: ^19.2.5
@@ -334,7 +312,7 @@ importers:
   packages/adapters/mountly-svelte:
     devDependencies:
       mountly:
-        specifier: ^0.1.0
+        specifier: ^0.1.1
         version: link:../../mountly
       svelte:
         specifier: ^5.0.0
@@ -349,7 +327,7 @@ importers:
   packages/adapters/mountly-vue:
     devDependencies:
       mountly:
-        specifier: ^0.1.0
+        specifier: ^0.1.1
         version: link:../../mountly
       tsup:
         specifier: ^8.5.1
