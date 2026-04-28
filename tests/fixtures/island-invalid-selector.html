@@ -1,0 +1,17 @@
+<!doctype html>
+<html><body>
+  <div id="island" data-mountly-island='{"id":"x","moduleId":"demo","schemaVersion":1,"targetSelector":"["}'></div>
+  <script type="importmap">{"imports":{"mountly":"/packages/mountly/dist/index.js"}}</script>
+  <script type="module">
+    import { readIslandPayload } from "/packages/mountly/dist/index.js";
+    let caught = "";
+    const events = [];
+    document.addEventListener("mountly:error", (e) => events.push(e.detail));
+    try {
+      readIslandPayload(document.getElementById("island"));
+    } catch (e) {
+      caught = e instanceof Error ? e.message : String(e);
+    }
+    window.__result = { caught, events };
+  </script>
+</body></html>

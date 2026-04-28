@@ -25,22 +25,17 @@ export default createWidget(SignupCard, { styles });
 
 ## Svelte 5
 
-Svelte 5 components are plain functions. The adapter detects the functional shape but **needs the runtime's `mount` and `unmount`** — they're not auto-imported. Pass them explicitly:
+Svelte 5 components are plain functions. The adapter auto-loads `mount` / `unmount` from `"svelte"` when needed, so the default remains simple:
 
 ```ts title="signup-card.ts"
 import { createWidget } from "mountly-svelte";
-import { mount, unmount } from "svelte";
 import SignupCard from "./SignupCard.svelte";
 import styles from "./SignupCard.css?inline";
 
-export default createWidget(SignupCard, { styles, mount, unmount });
+export default createWidget(SignupCard, { styles });
 ```
 
-If you forget, the adapter throws a clear error pointing at this docs page.
-
-## Why pass `mount` / `unmount`
-
-Svelte 5 deliberately doesn't expose `mount` from the component module — it's a runtime function imported from `"svelte"`. The adapter can't know which version of Svelte you have, so it asks. This is the smallest possible API; if you'd rather not think about it, leave the import there even on Svelte 4 — it's a no-op when the adapter detects a v4 class.
+You can still pass `mount` and `unmount` explicitly if you want full control.
 
 ## Mounting
 
@@ -74,16 +69,6 @@ The Svelte adapter falls back to remount on `feature.update()`, which preserves 
 
 ## Common pitfalls
 
-### Forgot `mount` / `unmount` on Svelte 5
-
-You'll see:
-
-```
-[mountly-svelte] Svelte 5 component detected but `mount`/`unmount` options were not provided.
-```
-
-Add them as shown above.
-
 ### Two Svelte runtimes on the same page
 
 Same risk as React/Vue. Use the peer build pattern for multi-widget pages — externalise `svelte` and provide it once via the host's import map.
@@ -96,3 +81,26 @@ Svelte's component-scoped styles compose nicely with the shadow root — both wo
 
 - [`createWidget`](/mountly/api/create-widget/) — the adapter API.
 - [`createOnDemandFeature`](/mountly/api/create-on-demand-feature/) — the lifecycle wrapper.
+
+
+## Tailwind and non-Tailwind defaults
+
+### No Tailwind
+
+```ts
+import { createWidget } from "mountly-svelte";
+import Component from "./Component.svelte";
+import styles from "./Component.css?inline";
+
+export default createWidget(Component, { styles });
+```
+
+### With Tailwind
+
+```ts
+import { createWidget } from "mountly-svelte";
+import Component from "./Component.svelte";
+import styles from "./styles.css?inline";
+
+export default createWidget(Component, { styles });
+```

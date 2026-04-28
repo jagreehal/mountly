@@ -1,0 +1,27 @@
+<!doctype html>
+<html><body>
+  <button id="island" data-mountly-island='{"id":"au1","moduleId":"demo","trigger":"click","preloadOn":false,"schemaVersion":1}'></button>
+  <script type="module">
+    import { mountIslandFeature } from "/packages/mountly/dist/index.js";
+    const island = document.getElementById("island");
+    const mod = {
+      mount(container) {
+        const span = document.createElement("span");
+        span.className = "alive";
+        span.textContent = "alive";
+        container.appendChild(span);
+      },
+      unmount() {},
+    };
+    const mounted = mountIslandFeature(island, { demo: async () => ({ default: mod }) });
+    island.click();
+    await Promise.resolve();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    const before = island.textContent ?? "";
+    island.dispatchEvent(new CustomEvent("mountly:unmount", { bubbles: true }));
+    await Promise.resolve();
+    const after = island.textContent ?? "";
+    mounted.detach();
+    window.__result = { before, after };
+  </script>
+</body></html>

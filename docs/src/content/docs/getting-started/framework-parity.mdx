@@ -1,0 +1,26 @@
+---
+title: Framework Parity Matrix
+description: Guaranteed adapter behaviors across React, Vue, and Svelte.
+---
+
+This matrix defines parity guarantees for `mountly-react`, `mountly-vue`, and `mountly-svelte`.
+
+## Guaranteed
+
+- `mount(container, props)` mounts widget UI.
+- `unmount(container)` tears down widget UI.
+- `update(container, props)` is available on all three adapters.
+- Shadow root mounting by default.
+- `shadowMode: "open" | "closed"` support.
+- Light-DOM fallback when shadow root is not available.
+- Explicit `shadow: false` support with style injection.
+
+## Notes by framework
+
+- React: `update()` uses React render on existing root.
+- Vue: `update()` remounts deterministically with next props.
+- Svelte: `update()` remounts deterministically with next props.
+
+## Scope
+
+Parity here is about mountly adapter contract behavior, not framework internals (e.g. React hooks reconciliation semantics vs Vue/Svelte instance replacement semantics).

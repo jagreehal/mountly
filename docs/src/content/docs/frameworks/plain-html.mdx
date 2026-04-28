@@ -3,11 +3,30 @@ title: Plain HTML
 description: Run mountly with no bundler — import maps, native modules, one inline script.
 ---
 
-mountly's most distinctive use case is **plain HTML hosts** — CMS pages, partner integrations, static sites. No bundler. No SPA. Just an import map and a `<script type="module">`.
+mountly's most distinctive use case is **plain HTML hosts** — CMS pages, partner integrations, static sites. No bundler. No SPA. Use declarative islands plus one host script tag.
 
 That makes it a strong fit for legacy modernization: you can keep the existing host page and add richer features incrementally instead of rewriting the whole app.
 
-## The minimum host
+## The minimum host (recommended)
+
+```html title="host.html"
+<div
+  data-mountly-island='{"schemaVersion":1,"id":"signup","moduleId":"signup-card","trigger":"idle","props":{"plan":"pro"}}'
+>
+  <a href="/signup">Sign up (fallback)</a>
+</div>
+
+<script
+  type="module"
+  src="/packages/mountly/dist/host-entry.js"
+  data-mountly-host
+  data-mountly-loaders='{"signup-card":"https://cdn.jsdelivr.net/npm/signup-card@1/dist/index.js"}'
+></script>
+```
+
+`host-entry.js` auto-mounts all `data-mountly-island` payloads on the page. Keep meaningful fallback HTML inside each island so content remains usable if JavaScript is disabled.
+
+## Programmatic host (advanced)
 
 ```html title="host.html"
 <!doctype html>

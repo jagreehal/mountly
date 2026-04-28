@@ -272,7 +272,7 @@ test("attach throws an actionable error when mount is null", async ({ page }) =>
 
   expect(result.threw).toBe(true);
   expect(result.message).toContain("null-mount-feature");
-  expect(result.message).toContain("Pass an HTMLElement");
+  expect(result.message).toContain("instead of an Element");
 });
 
 test("loadModule resolution failure is wrapped with import-map hint", async ({ page }) => {

@@ -1,0 +1,33 @@
+<!doctype html>
+<html><body>
+  <div id="c"></div>
+  <script type="importmap">
+    {"imports":{"mountly":"/packages/mountly/dist/index.js"}}
+  </script>
+  <script type="module">
+    import { createWidget } from "/packages/adapters/mountly-svelte/dist/index.js";
+
+    class HelloComponent {
+      constructor({ target, props }) {
+        const el = document.createElement("span");
+        el.className = "svelte-no-shadow";
+        el.textContent = String(props?.msg ?? "");
+        target.appendChild(el);
+        this.el = el;
+      }
+      $destroy() { this.el?.remove(); }
+    }
+
+    const w = createWidget(HelloComponent, { styles: ".svelte-no-shadow{color:rgb(1,2,3)}", shadow: false });
+    const c = document.getElementById("c");
+    w.mount(c, { msg: "plain" });
+
+    const textNode = c.querySelector(".svelte-no-shadow");
+    window.__result = {
+      hasShadowRoot: !!c.shadowRoot,
+      text: textNode?.textContent ?? "",
+      hasInlineStyleTag: !!c.querySelector('style[data-mountly-inline="true"]'),
+      computedColor: textNode ? getComputedStyle(textNode).color : "",
+    };
+  </script>
+</body></html>

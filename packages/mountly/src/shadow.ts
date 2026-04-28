@@ -42,6 +42,29 @@ export function attachShadow(
   const existing = mountNodes.get(container);
   if (existing) return existing;
 
+  if (options.shadow === false) {
+    if (options.styles) {
+      if (options.styleMode === "isolated") {
+        const existingInline = container.querySelector(
+          'style[data-mountly-inline="true"]',
+        );
+        if (!existingInline) {
+          const inlineStyle = document.createElement("style");
+          inlineStyle.setAttribute("data-mountly-inline", "true");
+          inlineStyle.textContent = options.styles;
+          container.appendChild(inlineStyle);
+        }
+      } else {
+        injectGlobalStyles(container, options.styles);
+      }
+    }
+    const mount = document.createElement("div");
+    mount.setAttribute(MOUNT_ATTR, "");
+    container.appendChild(mount);
+    mountNodes.set(container, mount);
+    return mount;
+  }
+
   let root: ShadowRoot;
   try {
     root = container.attachShadow({ mode: options.shadowMode ?? "open" });

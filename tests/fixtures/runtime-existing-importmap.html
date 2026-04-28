@@ -1,0 +1,10 @@
+<script type="importmap">{"imports":{"x":"/x.js"}}</script>
+<script type="module">
+  import { installRuntime } from "/packages/mountly/dist/index.js";
+  installRuntime({
+    react: "https://example.test/react.js",
+    reactDom: "https://example.test/react-dom.js",
+    reactDomClient: "https://example.test/react-dom-client.js",
+    reactJsxRuntime: "https://example.test/react-jsx-runtime.js",
+  });
+</script>

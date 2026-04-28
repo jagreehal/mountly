@@ -1,0 +1,29 @@
+<!doctype html>
+<html><body>
+  <div id="island" data-mountly-island='{"id":"evt-1","moduleId":"demo","props":{"msg":"event-ok"},"trigger":"click","preloadOn":false,"schemaVersion":1}'></div>
+  <script type="importmap">{"imports":{"mountly":"/packages/mountly/dist/index.js"}}</script>
+  <script type="module">
+    import { mountIslandFeature } from "/packages/mountly/dist/index.js";
+
+    const island = document.getElementById("island");
+    const events = [];
+    for (const name of ["load-start", "load-end", "mount", "error"]) {
+      island.addEventListener(`mountly:island:${name}`, (e) => events.push({ name, detail: e.detail }));
+    }
+
+    const widgetModule = {
+      mount(container, props) {
+        const span = document.createElement("span");
+        span.textContent = String(props?.msg ?? "");
+        container.appendChild(span);
+      },
+      unmount() {},
+    };
+
+    mountIslandFeature(island, { demo: async () => ({ default: widgetModule }) });
+    island.click();
+
+    window.__ready = () => events.some((e) => e.name === "mount");
+    window.__events = events;
+  </script>
+</body></html>

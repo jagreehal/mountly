@@ -1,0 +1,28 @@
+<!doctype html>
+<html><body>
+  <div id="island" data-mountly-island='{"id":"h2","moduleId":"demo","props":{"msg":"client"},"trigger":"click","preloadOn":false,"schemaVersion":1}' data-mountly-hydrated="true">
+    <span class="ssr">ssr-content</span>
+  </div>
+  <script type="module">
+    import { mountIslandFeature } from "/packages/mountly/dist/index.js";
+    const island = document.getElementById("island");
+    const widgetModule = {
+      mount(container, props) {
+        const span = document.createElement("span");
+        span.className = "client";
+        span.textContent = String(props?.msg ?? "");
+        container.appendChild(span);
+      },
+      unmount() {},
+    };
+    mountIslandFeature(island, { demo: async () => ({ default: widgetModule }) }, { skipIfHydrated: true, forceRemount: true });
+    island.click();
+    await Promise.resolve();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    window.__result = {
+      text: island.textContent ?? "",
+      hasClient: !!island.querySelector('.client'),
+      hydratedAttr: island.getAttribute('data-mountly-hydrated') ?? null,
+    };
+  </script>
+</body></html>

@@ -1,0 +1,36 @@
+---
+title: Cross-framework Event Bus
+description: React, Vue, and Svelte widgets communicating on the same host page.
+---
+
+This pattern shows three independent widgets sharing state without importing each other.
+
+- React 19 widget (`mountly-react`)
+- Vue widget (`mountly-vue`)
+- Svelte widget (`mountly-svelte`)
+
+They communicate through a host-level event bus (`EventTarget`) and publish counter updates.
+
+## Why this matters
+
+- No framework coupling between widgets.
+- Incremental adoption on legacy pages.
+- Works with `shadow: false` or default shadow mode.
+
+## Example location
+
+- `examples/cross-framework-bus`
+
+## Run
+
+```bash
+pnpm --filter cross-framework-bus dev
+```
+
+Then open the local Vite URL and click each framework button:
+
+- `+ React`
+- `+ Vue`
+- `+ Svelte`
+
+Each widget view updates peer values from the other two frameworks.

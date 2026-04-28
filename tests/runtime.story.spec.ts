@@ -72,4 +72,13 @@ test.describe("Runtime story", () => {
     then("react/jsx-runtime is derived from react URL");
     expect(map?.imports?.["react/jsx-runtime"]).toBe("https://example.test/react.js/jsx-runtime?dev");
   });
+
+  test("installRuntime warns when an import map already exists", async ({ page }, testInfo) => {
+    story.init(testInfo, { tags: ["runtime"], ticket: "MOUNTLY-RT-5" });
+    const warnings: string[] = [];
+    page.on("console", (msg) => msg.type() === "warning" && warnings.push(msg.text()));
+    await page.goto("http://localhost:5175/tests/fixtures/runtime-existing-importmap.html");
+    await page.waitForLoadState("networkidle");
+    expect(warnings.some((w) => w.includes("existing import map detected"))).toBe(true);
+  });
 });

@@ -1,0 +1,27 @@
+<!doctype html>
+<html><body>
+  <div id="root">
+    <button data-mountly-island='{"id":"u1","moduleId":"demo","props":{"msg":"A"},"trigger":"click","preloadOn":false,"schemaVersion":1}'></button>
+    <button data-mountly-island='{"id":"u2","moduleId":"demo","props":{"msg":"B"},"trigger":"click","preloadOn":false,"schemaVersion":1}'></button>
+  </div>
+  <script type="module">
+    import { mountAllIslands, unmountAllIslands } from "/packages/mountly/dist/index.js";
+    const widgetModule = {
+      mount(container, props) {
+        const span = document.createElement("span");
+        span.className = "island-client";
+        span.textContent = String(props?.msg ?? "");
+        container.appendChild(span);
+      },
+      unmount() {},
+    };
+    const mounted = mountAllIslands(document.getElementById("root"), { demo: async () => ({ default: widgetModule }) });
+    for (const m of mounted) m.element.click();
+    await Promise.resolve();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    const before = document.getElementById("root")?.textContent ?? "";
+    unmountAllIslands(mounted);
+    const after = document.getElementById("root")?.textContent ?? "";
+    window.__result = { count: mounted.length, before, after, alive: !!document.querySelector('.island-client') };
+  </script>
+</body></html>

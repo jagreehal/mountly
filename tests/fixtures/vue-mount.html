@@ -10,10 +10,10 @@
     const Hello = {
       props: ["msg"],
       render() {
-        return h("span", this.msg);
+        return h("span", { class: "vue-mounted" }, this.msg);
       },
     };
-    const widget = createWidget(Hello, { styles: ".x{}" });
+    const widget = createWidget(Hello, { styles: ".vue-mounted{color:rgb(44, 55, 66)}" });
     widget.mount(document.getElementById("c"), { msg: "hello world" });
   </script>
 </body></html>

@@ -47,6 +47,12 @@ export default defineConfig({
   ],
   webServer: [
     {
+      command: "pnpm --filter cross-framework-bus dev",
+      url: "http://localhost:5173",
+      reuseExistingServer: !process.env.CI,
+      timeout: 30_000,
+    },
+    {
       command: "pnpm --filter mountly-demo dev",
       url: "http://localhost:5174",
       reuseExistingServer: !process.env.CI,

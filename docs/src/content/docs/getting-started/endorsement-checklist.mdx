@@ -1,0 +1,50 @@
+---
+title: Endorsement Checklist
+description: Product and engineering bar for a framework-credible mountly 1.0.
+---
+
+Use this as the release gate for framework-grade DX.
+
+## API and Defaults
+
+- One obvious happy path per framework (React, Vue, Svelte).
+- Sensible defaults: shadow DOM on; optional `shadow: false`.
+- Clear canonical naming (`mount` as primary; aliases documented as compatibility only).
+- Errors must be actionable and include exact next step.
+
+## Framework Semantics
+
+- React: state-preserving updates and predictable remount/unmount behavior.
+- Vue: one app instance per container, clean unmount lifecycle.
+- Svelte: Svelte 4 + 5 supported, minimal ceremony for Svelte 5.
+
+## Plain HTML Integration
+
+- Import-map examples must run copy/paste.
+- On-demand lifecycle works with no framework runtime in host page.
+- All docs examples verified by Playwright fixtures.
+
+## Bundle and Distribution
+
+- Adapters remain tiny (sub-2KB minified target).
+- Core supports subpath exports so users import only what they need.
+- Distribution guidance clearly explains bundled vs peer output.
+
+## Tailwind and Non-Tailwind Paths
+
+- Every framework doc includes:
+  - no Tailwind path
+  - Tailwind path
+- Tailwind usage in shadow DOM is explicit about CSS string injection.
+
+## Testing and CI
+
+- Required e2e matrix: mount, remount, unmount, shadow/light DOM fallback, multi-instance.
+- Required docs smoke: framework quickstart snippets.
+- Required compatibility table: versions tested for React, Vue, Svelte.
+
+## Product Positioning
+
+- Explicit “when to use mountly” and “when not to use mountly”.
+- No claims that conflict with framework idioms.
+- Onboarding copy optimized for incremental adoption on existing pages.

@@ -23,7 +23,8 @@
     "quality": "pnpm run lint && pnpm run typecheck && pnpm run test",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "release": "pnpm build && changeset publish"
+    "release": "pnpm build && changeset publish",
+    "test:e2e:critical": "PLAYWRIGHT_HTML_OPEN=never playwright test \"tests/svelte-adapter.spec.ts\" \"tests/vue-adapter.spec.ts\" \"tests/island.spec.ts\" \"tests/loader-css.spec.ts\" \"tests/host-bootstrap.spec.ts\""
   },
   "devDependencies": {
     "@changesets/cli": "^2.31.0",

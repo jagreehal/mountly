@@ -99,7 +99,7 @@ The widget mounts inside its own shadow root with bundled styles. That's the who
 - **Lazy load on user intent (Features)** — `createOnDemandFeature(...)` adds hover/click/viewport/idle triggers around a widget. See [examples/marketing-site](examples/marketing-site/README.md).
 - **Plain-HTML host (no bundler)** — `installRuntime({...})` injects a shared-React import map. See [examples/plain-html](examples/plain-html/README.md).
 - **Pick a distribution (self-contained vs shared React)** — when to ship one widget vs many, when to share React. See [examples/README.md#choosing-a-distribution](examples/README.md#choosing-a-distribution).
-- **When *not* to use mountly** — single SPA, SSR + hydration, MFE orchestration. See [examples/README.md#when-not-to-use-it](examples/README.md#when-not-to-use-it).
+- **When *not* to use mountly** — single SPA, full SSR-hydration ownership, MFE orchestration. See [examples/README.md#when-not-to-use-it](examples/README.md#when-not-to-use-it).
 - **All runnable examples** — [examples/README.md](examples/README.md).
 - **Host runtime API** — [packages/mountly/README.md](packages/mountly/README.md).
 
@@ -113,6 +113,19 @@ The widget mounts inside its own shadow root with bundled styles. That's the who
 - `installRuntime` shape (including `react/jsx-runtime` mapping support)
 
 Breaking changes to this surface should wait for `0.2.0` and must be called out in release notes. Releases follow [docs/release-checklist.md](docs/release-checklist.md).
+
+## Islands + SSR Controls
+
+`mountly` now includes guarded island mounting primitives for SSR handoff safety:
+
+- `mountIslandFeature()` / `mountAllIslands()`
+- hydration guards: `skipIfHydrated`, `forceRemount`, `hydratedAttr`
+- nested ordering guard: `waitForParent`
+- deterministic single hydration: `once`
+- loader resilience: `retry`, `retryDelayMs`
+- SSR marker gating: `requireSsrMarker`, `ssrMarkerAttr`
+- teardown controls: `unmount()`, `unmountAllIslands()`, `mountly:unmount` event
+- runtime state marker: `data-mountly-state` (`idle|loading|mounted|error`)
 
 ## Examples
 

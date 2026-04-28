@@ -7,8 +7,8 @@
   <script type="module">
     import { createWidget } from "/packages/adapters/mountly-svelte/dist/index.js";
 
-    // A Svelte 5 component without the required mount/unmount options must
-    // throw with an actionable hint, not silently no-op.
+    // In this fixture we intentionally do not map "svelte" in importmap,
+    // so auto-runtime loading should fail with an actionable error.
     function HelloComponent(target, props) {
       const el = document.createElement("span");
       el.textContent = String(props?.msg ?? "");
@@ -16,10 +16,10 @@
       return { el };
     }
 
+    const w = createWidget(HelloComponent, { styles: ".x{}" });
     let caught = "";
     try {
-      const w = createWidget(HelloComponent, { styles: ".x{}" });
-      w.mount(document.getElementById("c"), { msg: "x" });
+      await w.mount(document.getElementById("c"), { msg: "x" });
     } catch (e) {
       caught = e instanceof Error ? e.message : String(e);
     }

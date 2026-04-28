@@ -1,0 +1,30 @@
+<!doctype html>
+<html><body>
+  <div id="c"></div>
+  <script type="importmap">
+    {"imports":{"vue":"https://esm.sh/vue@3","mountly":"/packages/mountly/dist/index.js"}}
+  </script>
+  <script type="module">
+    import { createWidget } from "/packages/adapters/mountly-vue/dist/index.js";
+    import { h } from "vue";
+
+    const T = {
+      props: ["msg"],
+      render() {
+        return h("span", { class: "vue-no-shadow" }, this.msg);
+      },
+    };
+
+    const w = createWidget(T, { styles: ".vue-no-shadow{color:rgb(4,5,6)}", shadow: false });
+    const c = document.getElementById("c");
+    w.mount(c, { msg: "plain" });
+
+    const textNode = c.querySelector(".vue-no-shadow");
+    window.__result = {
+      hasShadowRoot: !!c.shadowRoot,
+      text: textNode?.textContent ?? "",
+      hasInlineStyleTag: !!c.querySelector('style[data-mountly-inline="true"]'),
+      computedColor: textNode ? getComputedStyle(textNode).color : "",
+    };
+  </script>
+</body></html>

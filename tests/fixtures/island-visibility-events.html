@@ -1,0 +1,18 @@
+<!doctype html>
+<html><body>
+  <div id="island" data-mountly-island='{"schemaVersion":1,"id":"vis","moduleId":"demo"}'></div>
+  <script type="importmap">{"imports":{"mountly":"/packages/mountly/dist/index.js"}}</script>
+  <script type="module">
+    import { mountIslandFeature } from "/packages/mountly/dist/index.js";
+    const events = [];
+    const island = document.getElementById('island');
+    island.addEventListener('mountly:island:pause', () => events.push('pause'));
+    island.addEventListener('mountly:island:resume', () => events.push('resume'));
+    mountIslandFeature(island, { demo: async () => ({ default: { mount(c){ c.textContent='ok'; } } }) }, { pauseOnHidden: true });
+    Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'hidden' });
+    document.dispatchEvent(new Event('visibilitychange'));
+    Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'visible' });
+    document.dispatchEvent(new Event('visibilitychange'));
+    window.__result = { events };
+  </script>
+</body></html>
