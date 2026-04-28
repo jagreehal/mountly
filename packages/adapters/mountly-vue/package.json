@@ -1,6 +1,6 @@
 {
   "name": "mountly-vue",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Vue adapter for mountly widgets",
   "license": "Apache-2.0",
   "repository": {
@@ -21,7 +21,9 @@
       "types": "./dist/index.d.ts"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "publishConfig": {
     "access": "public"
   },
@@ -34,10 +36,10 @@
   },
   "peerDependencies": {
     "vue": "^3.5.33",
-    "mountly": "^0.1.0"
+    "mountly": "^0.1.1"
   },
   "devDependencies": {
-    "mountly": "^0.1.0",
+    "mountly": "^0.1.1",
     "tsup": "^8.5.1",
     "typescript": "^6.0.3",
     "vue": "^3.5.33"

@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "signup-card",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -37,5 +37,7 @@
     "tsup": "^8.5.1",
     "typescript": "^6.0.3"
   },
-  "files": ["dist"]
+  "files": [
+    "dist"
+  ]
 }
