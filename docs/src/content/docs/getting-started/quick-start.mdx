@@ -38,30 +38,51 @@ See [Distribution](/mountly/concepts/distribution/) for which one to ship.
 ```html title="host.html"
 <div id="mount"></div>
 <script type="module">
-  import widget from "./my-widget/dist/index.js";
-  widget.mount(document.getElementById("mount"));
+  import widget from './my-widget/dist/index.js';
+  widget.mount(document.getElementById('mount'));
 </script>
 ```
 
-The widget mounts inside its own shadow root. Styles are bundled and scoped — the host can't bleed into the widget and the widget can't bleed out.
+The widget mounts inside its own shadow root. Styles load automatically.
+
+## 3b. Lowest-ceremony host (recommended for plain HTML)
+
+If you're on a static/CMS host, prefer declarative islands + one script tag:
+
+```html title="host.html"
+<div
+  data-mountly-island='{"schemaVersion":1,"id":"signup","moduleId":"signup-card","trigger":"idle","props":{"plan":"pro"}}'
+>
+  <a href="/signup">Sign up (fallback)</a>
+</div>
+
+<script
+  type="module"
+  src="/packages/mountly/dist/host-entry.js"
+  data-mountly-host
+  data-mountly-loaders='{"signup-card":"/widgets/signup-card.js"}'
+></script>
+```
+
+This is the default DX path: no host app code, one script tag, and fallback HTML still works when JS is unavailable.
 
 ## 4. Add the on-demand lifecycle
 
 `mount()` is the bare minimum. To get **on-intent loading**, wrap the widget in a feature:
 
 ```ts title="page.ts"
-import { createOnDemandFeature } from "mountly";
+import { createOnDemandFeature } from 'mountly';
 
 const signup = createOnDemandFeature({
-  moduleId: "signup-card",
-  loadModule: () => import("./my-widget/dist/index.js"),
+  moduleId: 'signup-card',
+  loadModule: () => import('./my-widget/dist/index.js'),
   render: ({ mod, container, props }) => mod.mount(container, props),
 });
 
 signup.attach({
-  trigger: document.querySelector("#cta")!,
-  preloadOn: "hover",
-  activateOn: "click",
+  trigger: document.querySelector('#cta')!,
+  preloadOn: 'hover',
+  activateOn: 'click',
 });
 ```
 

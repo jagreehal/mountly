@@ -19,6 +19,9 @@ export function createWidget<P>(
   return {
     mount(container, props) {
       unmount(container);
+      if (options.reserveSize) {
+        (container as HTMLElement).style.cssText += `;${options.reserveSize}`;
+      }
       const target = attachShadow(container, options);
       const root = createRoot(target);
       // Props arrive as Record<string,unknown> from the WidgetModule boundary.
@@ -26,6 +29,14 @@ export function createWidget<P>(
       // overloads resolve, props narrowed to P & object (satisfies Attributes).
       root.render(createElement(Component as React.ComponentType, props as unknown as P & object));
       roots.set(container, root);
+    },
+    update(container, props) {
+      const existing = roots.get(container);
+      if (!existing) {
+        this.mount(container, props);
+        return;
+      }
+      existing.render(createElement(Component as React.ComponentType, props as unknown as P & object));
     },
     unmount,
   };

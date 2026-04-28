@@ -1,0 +1,13 @@
+<!doctype html>
+<html><body>
+  <div id="c"></div>
+  <script type="importmap">{"imports":{"mountly":"/packages/mountly/dist/index.js"}}</script>
+  <script type="module">
+    import { createWidget } from '/packages/adapters/mountly-svelte/dist/index.js';
+    class C { constructor({target}){ const el=document.createElement('div'); el.style.height='20px'; el.textContent='s'; target.appendChild(el); this.el=el; } $destroy(){ this.el?.remove(); } }
+    const w = createWidget(C, { reserveSize: 'min-height: 40px;' });
+    const c = document.getElementById('c');
+    w.mount(c, {});
+    window.__result = { h: c.offsetHeight };
+  </script>
+</body></html>

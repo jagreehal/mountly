@@ -1,0 +1,12 @@
+<!doctype html>
+<html><body>
+  <div id="island" data-mountly-island='{"schemaVersion":1,"id":"w","moduleId":"demo","trigger":"url-change","preloadOn":"hover","extraKey":true}'></div>
+  <script type="importmap">{"imports":{"mountly":"/packages/mountly/dist/index.js"}}</script>
+  <script type="module">
+    import { readIslandPayload } from "/packages/mountly/dist/index.js";
+    const warnings = [];
+    document.addEventListener("mountly:warning", (e) => warnings.push(e.detail));
+    readIslandPayload(document.getElementById('island'));
+    window.__result = { warnings };
+  </script>
+</body></html>

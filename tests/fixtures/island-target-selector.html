@@ -1,0 +1,23 @@
+<!doctype html>
+<html><body>
+  <div id="island" data-mountly-island='{"id":"hero-cta","moduleId":"demo","props":{"msg":"hello-target"},"trigger":"click","preloadOn":false,"targetSelector":"[data-slot]","schemaVersion":1}'>
+    <div data-slot></div>
+  </div>
+  <script type="importmap">{"imports":{"mountly":"/packages/mountly/dist/index.js"}}</script>
+  <script type="module">
+    import { mountIslandFeature } from "/packages/mountly/dist/index.js";
+    const island = document.getElementById("island");
+    const widgetModule = {
+      mount(container, props) {
+        const span = document.createElement("span");
+        span.className = "island-msg";
+        span.textContent = String(props?.msg ?? "");
+        container.appendChild(span);
+      },
+      unmount(container) { container.innerHTML = ""; }
+    };
+    mountIslandFeature(island, { demo: async () => ({ default: widgetModule }) });
+    island.click();
+    window.__ready = () => (island.textContent ?? "").includes("hello-target");
+  </script>
+</body></html>

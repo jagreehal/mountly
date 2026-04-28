@@ -1,0 +1,15 @@
+<!doctype html>
+<html><body>
+  <button id="island" data-mountly-island='{"id":"se1","moduleId":"boom","trigger":"click","preloadOn":false,"schemaVersion":1}'></button>
+  <script type="module">
+    import { mountIslandFeature } from "/packages/mountly/dist/index.js";
+    const island = document.getElementById("island");
+    mountIslandFeature(island, {
+      boom: async () => { throw new Error("boom"); },
+    });
+    island.click();
+    await Promise.resolve();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    window.__result = { state: island.getAttribute("data-mountly-state") };
+  </script>
+</body></html>

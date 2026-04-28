@@ -1,0 +1,31 @@
+<!doctype html>
+<html><body>
+  <button id="island" data-mountly-island='{"id":"once-1","moduleId":"demo","props":{"msg":"hello-once"},"trigger":"click","preloadOn":false,"schemaVersion":1,"once":true}'></button>
+  <script type="module">
+    import { mountIslandFeature } from "/packages/mountly/dist/index.js";
+    const island = document.getElementById("island");
+    const widgetModule = {
+      mount(container, props) {
+        const span = document.createElement("span");
+        span.className = "once-msg";
+        span.textContent = String(props?.msg ?? "");
+        container.appendChild(span);
+      },
+      unmount(container) {
+        container.innerHTML = "";
+      },
+    };
+
+    mountIslandFeature(island, { demo: async () => ({ default: widgetModule }) });
+    island.click();
+    await Promise.resolve();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    const first = island.textContent ?? "";
+    island.click();
+    await Promise.resolve();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    const second = island.textContent ?? "";
+
+    window.__result = { first, second };
+  </script>
+</body></html>

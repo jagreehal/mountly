@@ -105,3 +105,30 @@ The adapter mounts a fresh tree, not a hydrated one. If you mount into a `<div>`
 - [`createWidget`](/mountly/api/create-widget/) — the adapter API.
 - [`createOnDemandFeature`](/mountly/api/create-on-demand-feature/) — the lifecycle wrapper.
 - `examples/signup-card`, `examples/payment-breakdown`, `examples/image-lightbox` in the repo are React widgets.
+
+
+## Tailwind and non-Tailwind defaults
+
+### No Tailwind
+
+Use plain CSS imported as a string:
+
+```tsx
+import { createWidget } from "mountly-react";
+import Component from "./Component.tsx";
+import styles from "./Component.css?inline";
+
+export default createWidget(Component, { styles });
+```
+
+### With Tailwind
+
+Compile Tailwind to CSS, then inject the compiled string:
+
+```tsx
+import { createWidget } from "mountly-react";
+import Component from "./Component.tsx";
+import styles from "./styles.css?inline";
+
+export default createWidget(Component, { styles });
+```

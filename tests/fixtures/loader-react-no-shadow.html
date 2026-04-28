@@ -1,0 +1,19 @@
+<!doctype html>
+<html><body>
+  <button id="trigger">load</button>
+  <div id="mount"></div>
+  <script type="importmap">
+    {"imports":{"react":"https://esm.sh/react@18","react-dom/client":"https://esm.sh/react-dom@18/client","react-dom":"https://esm.sh/react-dom@18","react/jsx-runtime":"https://esm.sh/react@18/jsx-runtime","vue":"https://esm.sh/vue@3","mountly":"/packages/mountly/dist/index.js"}}
+  </script>
+  <script type="module">
+    import { createOnDemandFeature, createModuleLoader } from "/packages/mountly/dist/index.js";
+    const feature = createOnDemandFeature({
+      moduleId: "loader-react-no-shadow",
+      loadModule: createModuleLoader("/tests/fixtures/loader-react-module-no-shadow.js", { css: "auto" }),
+      render: ({ mod, container, props }) => mod.mount(container, props),
+    });
+    feature.attach({ trigger: document.getElementById("trigger"), mount: document.getElementById("mount"), activateOn: "click" });
+    document.getElementById("trigger").click();
+    window.__ready = () => !!document.querySelector("#mount .react-loader-widget");
+  </script>
+</body></html>

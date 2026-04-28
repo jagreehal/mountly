@@ -1,0 +1,31 @@
+<!doctype html>
+<html>
+  <body>
+    <button id="trigger">go</button>
+    <div id="island" data-mountly-island='{"schemaVersion":1,"id":"refresh","moduleId":"demo","trigger":"click","props":{"label":"hello"}}'>
+      <div data-mountly-target></div>
+    </div>
+    <script type="module">
+      import { mountIslandFeature } from "/packages/mountly/dist/index.js";
+
+      const widgetModule = {
+        mount(container, props) {
+          container.innerHTML = `<p class="value">${props.label}:1</p>`;
+        },
+        refresh(container, props) {
+          const el = container.querySelector('.value');
+          const current = Number((el?.textContent?.split(':')[1] || '0').trim());
+          container.innerHTML = `<p class="value">${props.label}:${current + 1}</p>`;
+        }
+      };
+
+      mountIslandFeature(document.getElementById('island'), {
+        demo: async () => ({ default: widgetModule })
+      });
+
+      document.getElementById('trigger').addEventListener('click', () => {
+        document.getElementById('island').dispatchEvent(new CustomEvent('click', { bubbles: true }));
+      });
+    </script>
+  </body>
+</html>

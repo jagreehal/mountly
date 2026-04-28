@@ -8,6 +8,7 @@
     class HelloComponent {
       constructor({ target, props }) {
         this.el = document.createElement("span");
+        this.el.className = "svelte-mounted";
         this.el.textContent = String(props?.msg ?? "");
         target.appendChild(this.el);
       }
@@ -16,7 +17,9 @@
       }
     }
 
-    const widget = createWidget(HelloComponent, { styles: ".x{}" });
+    const widget = createWidget(HelloComponent, {
+      styles: ".svelte-mounted{color:rgb(11, 22, 33)}",
+    });
     widget.mount(document.getElementById("c"), { msg: "hello world" });
   </script>
 </body></html>

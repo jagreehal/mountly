@@ -17,14 +17,26 @@ export function createWidget<P>(
   return {
     mount(container, props) {
       unmount(container);
+      if (options.reserveSize) {
+        (container as HTMLElement).style.cssText += `;${options.reserveSize}`;
+      }
       const target = attachShadow(container, options);
+      const state = { props: (props as P) };
       const app = createApp({
         render() {
-          return h(Component as Component, props as P);
+          return h(Component as Component, state.props);
         },
       });
       app.mount(target);
       apps.set(container, app);
+    },
+    update(container, props) {
+      if (!apps.has(container)) {
+        this.mount(container, props);
+        return;
+      }
+      // Vue adapter parity path: remount to apply new props deterministically.
+      this.mount(container, props);
     },
     unmount,
   };

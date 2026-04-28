@@ -1,0 +1,14 @@
+<!doctype html>
+<html><body>
+  <div id="c"></div>
+  <script type="importmap">{"imports":{"vue":"https://esm.sh/vue@3","mountly":"/packages/mountly/dist/index.js"}}</script>
+  <script type="module">
+    import { h } from 'vue';
+    import { createWidget } from '/packages/adapters/mountly-vue/dist/index.js';
+    const C = { render(){ return h('div', { style: { height: '20px' } }, 'v'); } };
+    const w = createWidget(C, { reserveSize: 'min-height: 40px;' });
+    const c = document.getElementById('c');
+    w.mount(c, {});
+    window.__result = { h: c.offsetHeight };
+  </script>
+</body></html>

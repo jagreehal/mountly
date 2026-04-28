@@ -90,3 +90,26 @@ Vite's Vue plugin handles `.vue` files in the widget build. If you're running `t
 
 - [`createWidget`](/mountly/api/create-widget/) — the adapter API.
 - [`createOnDemandFeature`](/mountly/api/create-on-demand-feature/) — the lifecycle wrapper.
+
+
+## Tailwind and non-Tailwind defaults
+
+### No Tailwind
+
+```ts
+import { createWidget } from "mountly-vue";
+import Component from "./Component.vue";
+import styles from "./Component.css?inline";
+
+export default createWidget(Component, { styles });
+```
+
+### With Tailwind
+
+```ts
+import { createWidget } from "mountly-vue";
+import Component from "./Component.vue";
+import styles from "./styles.css?inline";
+
+export default createWidget(Component, { styles });
+```

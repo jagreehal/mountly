@@ -1,0 +1,38 @@
+<!doctype html>
+<html><body>
+  <button id="parent" data-mountly-island='{"id":"p","moduleId":"parent","props":{"msg":"P"},"trigger":"click","preloadOn":false,"schemaVersion":1}'>
+    <button id="child" data-mountly-island='{"id":"c","moduleId":"child","props":{"msg":"C"},"trigger":"click","preloadOn":false,"schemaVersion":1,"waitForParent":true}'></button>
+  </button>
+  <script type="module">
+    import { mountAllIslands } from "/packages/mountly/dist/index.js";
+    const order = [];
+    const parentMod = {
+      mount(container, props) {
+        order.push('parent-mount');
+        const s = document.createElement('span'); s.className='p'; s.textContent=props.msg; container.appendChild(s);
+      },
+      unmount() {},
+    };
+    const childMod = {
+      mount(container, props) {
+        order.push('child-mount');
+        const s = document.createElement('span'); s.className='c'; s.textContent=props.msg; container.appendChild(s);
+      },
+      unmount() {},
+    };
+    const mounted = mountAllIslands(document.body, {
+      parent: async () => ({ default: parentMod }),
+      child: async () => ({ default: childMod }),
+    });
+    document.getElementById('child').click();
+    await Promise.resolve();
+    const beforeParent = [...order];
+    document.getElementById('parent').click();
+    await Promise.resolve();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    document.getElementById('child').click();
+    await Promise.resolve();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    window.__result = { beforeParent, order, mountedCount: mounted.length };
+  </script>
+</body></html>

@@ -25,6 +25,34 @@
     ".": {
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
+    },
+    "./core": {
+      "import": "./dist/core.js",
+      "types": "./dist/core.d.ts"
+    },
+    "./analytics": {
+      "import": "./dist/analytics-entry.js",
+      "types": "./dist/analytics-entry.d.ts"
+    },
+    "./prefetch": {
+      "import": "./dist/prefetch-entry.js",
+      "types": "./dist/prefetch-entry.d.ts"
+    },
+    "./plugins": {
+      "import": "./dist/plugins-entry.js",
+      "types": "./dist/plugins-entry.d.ts"
+    },
+    "./devtools": {
+      "import": "./dist/devtools-entry.js",
+      "types": "./dist/devtools-entry.d.ts"
+    },
+    "./overlays": {
+      "import": "./dist/overlays-entry.js",
+      "types": "./dist/overlays-entry.d.ts"
+    },
+    "./runtime": {
+      "import": "./dist/runtime-entry.js",
+      "types": "./dist/runtime-entry.d.ts"
     }
   },
   "scripts": {

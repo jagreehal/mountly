@@ -40,3 +40,17 @@ test("style tag survives React reconciliation", async ({ page }) => {
   const result = await page.evaluate(() => (window as any).__result);
   expect(result.styleStillPresent).toBe(true);
 });
+
+test("React widget exposes update() and applies new props", async ({ page }) => {
+  await page.goto("http://localhost:5175/tests/fixtures/react-update.html");
+  await page.waitForLoadState("networkidle");
+  await page.waitForFunction(() => {
+    const el = document.getElementById("c");
+    return (el?.shadowRoot?.textContent ?? "").includes("b");
+  }, null, { timeout: 8000 });
+  const text = await page.evaluate(() => {
+    const el = document.getElementById("c");
+    return el?.shadowRoot?.textContent ?? "";
+  });
+  expect(text).toContain("b");
+});

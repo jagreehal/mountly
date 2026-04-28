@@ -32,6 +32,39 @@ interface SvelteWidgetOptions extends AdapterOptions {
   unmount?: SvelteV5Unmount;
 }
 
+let cachedSvelteRuntime:
+  | { mount: SvelteV5Mount; unmount: SvelteV5Unmount }
+  | null = null;
+
+async function getSvelteRuntime(): Promise<{
+  mount: SvelteV5Mount;
+  unmount: SvelteV5Unmount;
+}> {
+  if (cachedSvelteRuntime) return cachedSvelteRuntime;
+  let runtime: typeof import("svelte");
+  try {
+    runtime = await import("svelte");
+  } catch (error) {
+    const wrapped = new Error(
+      "[mountly-svelte] Could not import `svelte` runtime for a Svelte 5 component. " +
+        "In plain HTML, map `svelte` in your import map; in bundled apps, ensure `svelte` is installed and resolvable.",
+    );
+    (wrapped as Error & { cause?: unknown }).cause = error;
+    throw wrapped;
+  }
+  if (typeof runtime.mount !== "function" || typeof runtime.unmount !== "function") {
+    throw new Error(
+      "[mountly-svelte] Failed to load `mount`/`unmount` from `svelte`. " +
+        "Make sure your app installs a Svelte 5 runtime.",
+    );
+  }
+  cachedSvelteRuntime = {
+    mount: runtime.mount as unknown as SvelteV5Mount,
+    unmount: runtime.unmount as unknown as SvelteV5Unmount,
+  };
+  return cachedSvelteRuntime;
+}
+
 interface ActiveInstance {
   legacy?: SvelteLegacyInstance;
   v5?: { handle: Record<string, unknown>; unmount: SvelteV5Unmount };
@@ -74,8 +107,11 @@ export function createWidget<P>(
   }
 
   return {
-    mount(container, props) {
+    async mount(container, props) {
       unmount(container);
+      if (options.reserveSize) {
+        (container as HTMLElement).style.cssText += `;${options.reserveSize}`;
+      }
       const target = attachShadow(container, options);
 
       if (isLegacyClass(Component)) {
@@ -85,22 +121,21 @@ export function createWidget<P>(
       }
 
       // Svelte 5 path: caller must supply mount/unmount from "svelte".
-      if (!svelteMount || !svelteUnmount) {
-        throw new Error(
-          "[mountly-svelte] Svelte 5 component detected but `mount`/`unmount` " +
-            "options were not provided. Pass them from `svelte`: " +
-            'createWidget(MyComponent, { styles, mount, unmount }) where ' +
-            '`{ mount, unmount } = await import("svelte")`. ' +
-            "For Svelte 4, no extra options are needed.",
-        );
-      }
-      const handle = svelteMount(Component as SvelteV5Component<P>, {
+      const runtime =
+        svelteMount && svelteUnmount
+          ? { mount: svelteMount, unmount: svelteUnmount }
+          : await getSvelteRuntime();
+      const handle = runtime.mount(Component as SvelteV5Component<P>, {
         target,
         props: props as P,
       });
       instances.set(container, {
-        v5: { handle, unmount: svelteUnmount },
+        v5: { handle, unmount: runtime.unmount },
       });
+    },
+    update(container, props) {
+      // Svelte parity path: remount with next props.
+      return this.mount(container, props);
     },
     unmount,
   };

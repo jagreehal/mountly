@@ -26,12 +26,13 @@ export interface FeatureModule {
    * falls back to remounting.
    */
   update?: (container: HTMLElement, props: Record<string, unknown>) => void;
+  refresh?: (container: HTMLElement, props: Record<string, unknown>) => void;
   [key: string]: unknown;
 }
 
 export interface CreateOnDemandFeatureOptions {
   moduleId: string;
-  loadModule: () => Promise<FeatureModule>;
+  loadModule: () => Promise<unknown>;
   loadData?: (context: FeatureContext) => Promise<unknown>;
   /**
    * Build a stable cache key for `loadData` from a context. The default
@@ -54,6 +55,8 @@ export interface AttachOptions {
   trigger: HTMLElement;
   /** Container to render into. Defaults to `trigger`. */
   mount?: HTMLElement;
+  /** Alias for `mount` (DX convenience for early adopters). */
+  mountContainer?: HTMLElement;
   /** Static context or a getter called at activation time. */
   context?: Partial<FeatureContext> | (() => Partial<FeatureContext>);
   /** Extra props forwarded to `render`. A getter is called at each mount. */
@@ -109,6 +112,11 @@ export interface OnDemandFeature {
     props: Record<string, unknown>,
     context?: Partial<FeatureContext>
   ) => Promise<void>;
+  refresh: (
+    container: HTMLElement,
+    context?: Partial<FeatureContext>,
+    props?: Record<string, unknown>
+  ) => Promise<void>;
   /** Wire trigger + mount in one call. Returns a cleanup function. */
   attach: (options: AttachOptions) => () => void;
   abort: () => void;
@@ -116,6 +124,21 @@ export interface OnDemandFeature {
   isAborted: () => boolean;
   /** Currently active mount containers. */
   getMounts: () => ReadonlyArray<HTMLElement>;
+}
+
+function resolveFeatureModule(moduleId: string, value: unknown): FeatureModule {
+  const candidate = (value as { default?: unknown })?.default ?? value;
+  if (
+    candidate &&
+    typeof candidate === "object" &&
+    typeof (candidate as { mount?: unknown }).mount === "function"
+  ) {
+    return candidate as FeatureModule;
+  }
+  throw new Error(
+    `[mountly] loadModule for "${moduleId}" must resolve to a widget module with mount(container, props). ` +
+      `Tip: return the module's default export or the widget object directly.`,
+  );
 }
 
 export type FeatureState =
@@ -222,7 +245,7 @@ export function createOnDemandFeature(
     if (loadedModule) return loadedModule;
     if (!modulePromise) {
       const signal = getAbortSignal();
-      modulePromise = moduleCache
+      modulePromise = (moduleCache
         .resolve(
           moduleId,
           async () => {
@@ -230,7 +253,8 @@ export function createOnDemandFeature(
               throw new DOMException("Aborted", "AbortError");
             }
             try {
-              return await loadModule();
+              const mod = await loadModule();
+              return resolveFeatureModule(moduleId, mod);
             } catch (err) {
               if (isAbortError(err)) throw err;
               throw wrapModuleLoadError(moduleId, err);
@@ -244,10 +268,10 @@ export function createOnDemandFeature(
             modulePromise = null;
             throw err;
           }
-        );
+        )) as Promise<FeatureModule>;
     }
     loadedModule = await modulePromise;
-    return loadedModule;
+    return loadedModule!;
   };
 
   const ensureData = async (context: FeatureContext): Promise<unknown> => {
@@ -437,6 +461,24 @@ export function createOnDemandFeature(
     });
   };
 
+  const refresh = async (
+    container: HTMLElement,
+    contextInput?: Partial<FeatureContext>,
+    props?: Record<string, unknown>
+  ): Promise<void> => {
+    if (!mounts.has(container)) return;
+    const mod = loadedModule;
+    if (mod?.refresh) {
+      try {
+        mod.refresh(container, props ?? {});
+      } catch (err) {
+        console.error(`[mountly] refresh(${moduleId}) failed:`, err);
+      }
+      return;
+    }
+    await update(container, props ?? {}, contextInput);
+  };
+
   const attach = (opts: AttachOptions): (() => void) => {
     if (!(opts?.trigger instanceof Element)) {
       throw new Error(
@@ -445,16 +487,23 @@ export function createOnDemandFeature(
           `Check the element exists in the DOM at the time attach() runs (e.g. defer until DOMContentLoaded).`,
       );
     }
-    if (opts.mount !== undefined && !(opts.mount instanceof Element)) {
+    const hasMount = Object.prototype.hasOwnProperty.call(opts, "mount");
+    const hasMountContainer = Object.prototype.hasOwnProperty.call(
+      opts,
+      "mountContainer",
+    );
+    const mountTarget = hasMount ? opts.mount : opts.mountContainer;
+    if ((hasMount || hasMountContainer) && !(mountTarget instanceof Element)) {
       throw new Error(
-        `[mountly] attach({ mount }) for "${moduleId}" got ${describeArg(opts.mount)} ` +
+        `[mountly] attach({ mount | mountContainer }) for "${moduleId}" got ${describeArg(mountTarget)} ` +
           `instead of an Element. Pass an HTMLElement to mount into, or omit the option to mount inside the trigger.`,
       );
     }
 
     const {
       trigger,
-      mount: mountEl = trigger,
+      mount: mountOpt,
+      mountContainer,
       context,
       props,
       preloadOn = "hover",
@@ -469,6 +518,7 @@ export function createOnDemandFeature(
       onUnmount,
       onError,
     } = opts;
+    const mountEl = mountOpt ?? mountContainer ?? trigger;
 
     const cleanups: Array<() => void> = [];
     let active: { unmount: () => void } | null = null;
@@ -606,6 +656,7 @@ export function createOnDemandFeature(
     activate,
     mount,
     update,
+    refresh,
     attach,
     abort,
     getState,

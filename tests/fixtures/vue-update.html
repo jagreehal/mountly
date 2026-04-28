@@ -1,0 +1,16 @@
+<!doctype html>
+<html><body>
+  <div id="c"></div>
+  <script type="importmap">{"imports":{"vue":"https://esm.sh/vue@3","mountly":"/packages/mountly/dist/index.js"}}</script>
+  <script type="module">
+    import { h } from "vue";
+    import { createWidget } from "/packages/adapters/mountly-vue/dist/index.js";
+
+    const C = { props:["msg"], render(){ return h("span", this.msg); } };
+    const w = createWidget(C, { styles: ".x{}" });
+    const c = document.getElementById("c");
+    w.mount(c, { msg: "a" });
+    w.update?.(c, { msg: "b" });
+    window.__result = { text: c.shadowRoot?.textContent ?? "" };
+  </script>
+</body></html>

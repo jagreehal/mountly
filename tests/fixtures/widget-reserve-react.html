@@ -1,0 +1,14 @@
+<!doctype html>
+<html><body>
+  <div id="c"></div>
+  <script type="importmap">{"imports":{"react":"https://esm.sh/react@18","react-dom":"https://esm.sh/react-dom@18","react-dom/client":"https://esm.sh/react-dom@18/client","mountly":"/packages/mountly/dist/index.js"}}</script>
+  <script type="module">
+    import { createElement } from 'react';
+    import { createWidget } from '/packages/adapters/mountly-react/dist/index.js';
+    const C = () => createElement('div', { style: { height: '20px' } }, 'r');
+    const w = createWidget(C, { reserveSize: 'min-height: 40px;' });
+    const c = document.getElementById('c');
+    w.mount(c, {});
+    window.__result = { h: c.offsetHeight };
+  </script>
+</body></html>

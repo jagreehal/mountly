@@ -1,0 +1,16 @@
+export {
+  registerTriggerPlugin,
+  unregisterTriggerPlugin,
+  getTriggerPlugin,
+  getAllTriggerPlugins,
+  createPluginTrigger,
+  createSwipeTrigger,
+  createLongPressTrigger,
+  createKeyboardTrigger,
+  createUrlChangeTrigger,
+  createMediaTrigger,
+  registerBuiltInPlugins,
+  type TriggerPlugin,
+  type UrlChangeTriggerOptions,
+  type MediaTriggerOptions,
+} from "./plugins.js";

@@ -81,6 +81,9 @@ jobs:
       - name: Playwright tests
         run: pnpm run test:e2e
 
+      - name: Critical integration gate (shadow/no-shadow + cross-framework)
+        run: pnpm run test:e2e:critical
+
       - name: Playwright stories report
         if: always()
         uses: jagreehal/executable-stories-action@v1

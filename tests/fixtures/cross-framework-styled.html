@@ -1,0 +1,66 @@
+<!doctype html>
+<html><body>
+  <div id="react-root"></div>
+  <div id="vue-root"></div>
+  <div id="svelte-root"></div>
+  <script type="importmap">
+  {"imports":{
+    "react":"https://esm.sh/react@18",
+    "react-dom":"https://esm.sh/react-dom@18",
+    "react-dom/client":"https://esm.sh/react-dom@18/client",
+    "vue":"https://esm.sh/vue@3",
+    "mountly":"/packages/mountly/dist/index.js"
+  }}
+  </script>
+  <script type="module">
+    import React, { useEffect, useState } from "react";
+    import { h } from "vue";
+    import { createWidget as createReactWidget } from "/packages/adapters/mountly-react/dist/index.js";
+    import { createWidget as createVueWidget } from "/packages/adapters/mountly-vue/dist/index.js";
+    import { createWidget as createSvelteWidget } from "/packages/adapters/mountly-svelte/dist/index.js";
+
+    const subs = new Set();
+    const state = { react: 0, vue: 0, svelte: 0 };
+    const emit = () => subs.forEach((fn) => fn({ ...state }));
+    const on = (fn) => { subs.add(fn); return () => subs.delete(fn); };
+
+    function ReactCounter() {
+      const [s, setS] = useState({ ...state });
+      useEffect(() => on(setS), []);
+      return React.createElement('section', { className: 'rf-card' },
+        React.createElement('p', null, `react=${s.react} | vue=${s.vue} | svelte=${s.svelte}`),
+        React.createElement('button', { onClick: () => { state.react += 1; emit(); } }, '+ React')
+      );
+    }
+
+    const VueCounter = { render() { return h('section', { class: 'vue-card' }, [
+      h('p', `vue=${state.vue} | react=${state.react} | svelte=${state.svelte}`),
+      h('button', { onClick: () => { state.vue += 1; emit(); } }, '+ Vue')
+    ]); } };
+
+    class SvelteCounter {
+      constructor({ target }) {
+        this.el = document.createElement('section');
+        this.el.className = 'sv-card';
+        this.p = document.createElement('p');
+        this.btn = document.createElement('button');
+        this.btn.textContent = '+ Svelte';
+        this.btn.onclick = () => { state.svelte += 1; emit(); this.render(); };
+        this.el.append(this.p, this.btn);
+        target.appendChild(this.el);
+        this.stop = on(() => this.render());
+        this.render();
+      }
+      render() { this.p.textContent = `svelte=${state.svelte} | react=${state.react} | vue=${state.vue}`; }
+      $destroy() { this.stop?.(); this.el.remove(); }
+    }
+
+    const reactW = createReactWidget(ReactCounter, { shadow: false, styles: '.rf-card{color:rgb(200,60,60)}' });
+    const vueW = createVueWidget(VueCounter, { shadow: false, styles: '.vue-card{color:rgb(60,140,220)}' });
+    const svelteW = createSvelteWidget(SvelteCounter, { shadow: false, styles: '.sv-card{color:rgb(50,160,100)}' });
+
+    reactW.mount(document.getElementById('react-root'), {});
+    vueW.mount(document.getElementById('vue-root'), {});
+    svelteW.mount(document.getElementById('svelte-root'), {});
+  </script>
+</body></html>

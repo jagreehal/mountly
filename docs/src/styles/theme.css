@@ -767,6 +767,7 @@ header.header {
 }
 
 .compare table {
+  display: table;
   width: 100%;
   border-collapse: collapse;
 }
@@ -793,8 +794,12 @@ header.header {
   border-bottom: none;
 }
 
-.compare tr.highlight td {
+.compare tr.highlight {
   background: oklch(from var(--accent) l c h / 0.06);
+}
+
+.compare tr.highlight td {
+  background: transparent;
   color: var(--text-strong);
   font-weight: 540;
 }

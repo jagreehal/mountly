@@ -20,6 +20,12 @@ test("createWidget mount renders the Svelte component into the shadow root", asy
     return el?.shadowRoot?.querySelector("[data-mountly-root]")?.textContent;
   });
   expect(text).toBe("hello world");
+  const color = await page.evaluate(() => {
+    const el = document.getElementById("c");
+    const node = el?.shadowRoot?.querySelector(".svelte-mounted");
+    return node ? getComputedStyle(node).color : "";
+  });
+  expect(color).toBe("rgb(11, 22, 33)");
 });
 
 test("createWidget remount is idempotent (single shadow root, single style, fresh tree)", async ({ page }) => {
@@ -99,12 +105,29 @@ test("Svelte 5 functional components dispatch through host-supplied mount/unmoun
   expect(result.unmountCalls).toBe(1);
 });
 
-test("Svelte 5 functional component without mount/unmount throws actionable error", async ({ page }) => {
+test("Svelte 5 auto-runtime import errors clearly when `svelte` is not resolvable", async ({ page }) => {
   await page.goto("http://localhost:5175/tests/fixtures/svelte-v5-missing-mount.html");
   await page.waitForLoadState("networkidle");
   await page.waitForFunction(() => (window as any).__result, null, { timeout: 8000 });
   const result = await page.evaluate(() => (window as any).__result);
-  expect(result.caught).toContain("Svelte 5");
-  expect(result.caught).toContain("mount");
-  expect(result.caught).toContain('import("svelte")');
+  expect(result.caught).toContain("Could not import `svelte` runtime");
+  expect(result.caught).toContain("import map");
+});
+
+test("Svelte widget supports shadow: false and still applies styles", async ({ page }) => {
+  await page.goto("http://localhost:5175/tests/fixtures/svelte-no-shadow.html");
+  await page.waitForLoadState("networkidle");
+  await page.waitForFunction(() => (window as any).__result, null, { timeout: 8000 });
+  const result = await page.evaluate(() => (window as any).__result);
+  expect(result.hasShadowRoot).toBe(false);
+  expect(result.text).toBe("plain");
+  expect(result.computedColor).toBe("rgb(1, 2, 3)");
+});
+
+test("Svelte widget exposes update() and applies new props", async ({ page }) => {
+  await page.goto("http://localhost:5175/tests/fixtures/svelte-update.html");
+  await page.waitForLoadState("networkidle");
+  await page.waitForFunction(() => (window as any).__result, null, { timeout: 8000 });
+  const result = await page.evaluate(() => (window as any).__result);
+  expect(result.text).toContain("b");
 });

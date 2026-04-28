@@ -21,6 +21,18 @@ function deriveReactJsxRuntimeUrl(reactUrl: string): string {
 }
 
 export function installRuntime(urls: RuntimeUrls): void {
+  if (typeof document === "undefined") {
+    throw new Error("[mountly] installRuntime() requires a browser document.");
+  }
+  const firstModuleScript = document.querySelector("script[type=module]");
+  if (
+    firstModuleScript &&
+    firstModuleScript.compareDocumentPosition(document.head) === Node.DOCUMENT_POSITION_PRECEDING
+  ) {
+    console.warn(
+      "[mountly] installRuntime detected module scripts before runtime import map; bare-specifier imports may fail.",
+    );
+  }
   const reactJsxRuntime = urls.reactJsxRuntime ?? deriveReactJsxRuntimeUrl(urls.react);
   const desired = {
     react: urls.react,
@@ -54,6 +66,12 @@ export function installRuntime(urls: RuntimeUrls): void {
     console.warn(
       "[mountly] installRuntime called after module loading may have started. " +
         "Call it from an inline <script> in <head>, before any module imports.",
+    );
+  }
+  const preExistingImportMap = document.querySelector("script[type=importmap]:not([data-mountly-runtime])");
+  if (preExistingImportMap) {
+    console.warn(
+      "[mountly] existing import map detected; ensure runtime imports are defined before widget module imports.",
     );
   }
 

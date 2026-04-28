@@ -5,7 +5,7 @@ description: What mountly is, what problem it solves, and who it's for.
 
 mountly is a small frontend runtime that solves a single problem: **modern web apps ship too much JavaScript upfront.**
 
-Component libraries load everything at once. Microfrontends are operationally heavy. Framework lazy-loading lacks standardised interaction patterns. There's no unified system for *"load rich UI only when the user actually needs it."*
+Component libraries load everything at once. Microfrontends are operationally heavy. Framework lazy-loading lacks standardised interaction patterns. There's no unified system for _"load rich UI only when the user actually needs it."_
 
 mountly is that system.
 
@@ -18,7 +18,7 @@ You write components the way you already do — React, Vue, or Svelte. The frame
 The vocabulary is enforced in the docs because it pays off:
 
 - **Component** — your normal React/Vue/Svelte component. Nothing new to learn.
-- **Widget** — a component wrapped by an adapter. Has `mount` and `unmount`. Knows nothing about *when*.
+- **Widget** — a component wrapped by an adapter. Has `mount` and `unmount`. Knows nothing about _when_.
 - **Feature** — a widget plus the on-demand lifecycle. Built with [`createOnDemandFeature`](/mountly/api/create-on-demand-feature/) or declared with [`<mountly-feature>`](/mountly/concepts/custom-element/).
 
 You write **components**, the adapter wraps them as **widgets**, and you ship them as **features**.
@@ -42,12 +42,12 @@ It's the **wrong** tool when you have a single SPA where the bundler owns every 
 
 ## How it compares
 
-| Approach | Initial bundle | User experience | Developer complexity |
-|---|---|---|---|
-| Traditional SPA | Large | Slow first paint, fast after | Low |
-| Framework code-splitting | Medium | Better, but route-bound | Medium |
-| Microfrontend orchestrators | Variable | Good, runtime-coordinated | High |
-| **mountly** | **~9 KB core** | **Instant shell, features on intent** | **Low** |
+| Approach                    | Initial bundle | User experience                       | Developer complexity |
+| --------------------------- | -------------- | ------------------------------------- | -------------------- |
+| Traditional SPA             | Large          | Slow first paint, fast after          | Low                  |
+| Framework code-splitting    | Medium         | Better, but route-bound               | Medium               |
+| Microfrontend orchestrators | Variable       | Good, runtime-coordinated             | High                 |
+| **mountly**                 | **~9 KB core** | **Instant shell, features on intent** | **Low**              |
 
 ## Where to next
 

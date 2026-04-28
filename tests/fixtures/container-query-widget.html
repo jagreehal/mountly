@@ -1,0 +1,19 @@
+<!doctype html>
+<html><body>
+  <div id="wrap" style="container-type:inline-size;width:260px;">
+    <div id="mount"></div>
+  </div>
+  <script type="importmap">{"imports":{"mountly":"/packages/mountly/dist/index.js"}}</script>
+  <script type="module">
+    import widget from "/tests/fixtures/host-widget-module.js";
+    const mount = document.getElementById('mount');
+    const style = document.createElement('style');
+    style.textContent = `.host-widget{color:rgb(10,10,10)} @container (min-width: 300px){ .host-widget{ color: rgb(220, 80, 80); } }`;
+    document.head.appendChild(style);
+    widget.mount(mount, { msg: 'cq' });
+    window.__result = () => {
+      const node = document.querySelector('.host-widget');
+      return node ? getComputedStyle(node).color : '';
+    };
+  </script>
+</body></html>
