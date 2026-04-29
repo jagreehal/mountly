@@ -294,7 +294,7 @@ importers:
         specifier: ^19.2.3
         version: 19.2.3(@types/react@19.2.14)
       mountly:
-        specifier: ^0.1.1
+        specifier: ^0.1.2
         version: link:../../mountly
       react:
         specifier: ^19.2.5
@@ -312,7 +312,7 @@ importers:
   packages/adapters/mountly-svelte:
     devDependencies:
       mountly:
-        specifier: ^0.1.1
+        specifier: ^0.1.2
         version: link:../../mountly
       svelte:
         specifier: ^5.0.0
@@ -327,7 +327,7 @@ importers:
   packages/adapters/mountly-vue:
     devDependencies:
       mountly:
-        specifier: ^0.1.1
+        specifier: ^0.1.2
         version: link:../../mountly
       tsup:
         specifier: ^8.5.1
