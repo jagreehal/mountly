@@ -1,0 +1,39 @@
+<!doctype html>
+<html><body>
+  <button id="trigger">load</button>
+  <div id="mount"></div>
+  <script type="importmap">
+    {"imports":{"vue":"https://esm.sh/vue@3","mountly":"/packages/mountly/dist/index.js"}}
+  </script>
+  <script type="module">
+    import {
+      createOnDemandFeature,
+      __clearCssTextCache,
+    } from "/packages/mountly/dist/index.js";
+    __clearCssTextCache();
+
+    const feature = createOnDemandFeature({
+      moduleId: "vue-zc",
+      moduleUrl: "/tests/fixtures/zero-config-vue-widget.js",
+    });
+    feature.attach({
+      trigger: document.getElementById("trigger"),
+      mountContainer: document.getElementById("mount"),
+      activateOn: "click",
+    });
+    document.getElementById("trigger").click();
+
+    window.__ready = () => {
+      const c = document.getElementById("mount");
+      const node = c?.shadowRoot?.querySelector(".styled-widget");
+      if (!node) return false;
+      window.__result = {
+        hasShadowRoot: !!c.shadowRoot,
+        text: node.textContent ?? "",
+        computedColor: getComputedStyle(node).color,
+        adoptedRuleCount: c.shadowRoot.adoptedStyleSheets[0]?.cssRules.length ?? 0,
+      };
+      return true;
+    };
+  </script>
+</body></html>

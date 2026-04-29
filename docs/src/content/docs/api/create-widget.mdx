@@ -22,11 +22,30 @@ function createWidget<P>(
 
 ### `AdapterOptions` (shared)
 
-| Field            | Type                  | Notes                                        |
-| ---------------- | --------------------- | -------------------------------------------- |
-| `styles`         | `string`              | CSS to inject into the widget's shadow root. |
-| `mode`           | `"open"` · `"closed"` | Shadow root mode. Default `"open"`.          |
-| `delegatesFocus` | `boolean`             | Forward to `attachShadow`.                   |
+| Field            | Type                  | Notes                                                                                                                                                                  |
+| ---------------- | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `styles`         | `string`              | CSS to inject directly into the widget's shadow root. Use when the CSS is small or already a string at build time.                                                     |
+| `cssUrl`         | `string`              | URL to fetch CSS from at mount time. Sent with `Accept: text/css` so Vite-style dev servers return raw CSS instead of an HMR-wrapped JS module.                        |
+| `moduleUrl`      | `string`              | URL to the widget's JS bundle. The adapter derives the sibling `.css` (`/dist/index.js` → `/dist/index.css`) unless `cssUrl` is also set.                              |
+| `shadow`         | `boolean`             | Default `true`. Set `false` to mount in light DOM; styles fall back to a `<style data-mountly-fallback>` injected into `<head>` (or inline with `styleMode:"isolated"`). |
+| `shadowMode`     | `"open"` · `"closed"` | Shadow root mode. Default `"open"`.                                                                                                                                    |
+| `styleMode`      | `"global"` · `"isolated"` | Light-DOM only. `"global"` (default) appends a single `<style>` to `<head>`. `"isolated"` writes a `<style>` next to the mount point.                              |
+| `delegatesFocus` | `boolean`             | Forwarded to `attachShadow`.                                                                                                                                           |
+| `reserveSize`    | `string`              | CSS applied to the container before render. Useful for preventing CLS while the widget loads.                                                                          |
+
+`cssUrl`, `moduleUrl`, and `shadow:false` apply to all three adapters (`mountly-react`, `mountly-vue`, `mountly-svelte`).
+
+### CSS source resolution
+
+When multiple sources are provided, the order from highest to lowest priority is:
+
+1. `cssUrl` passed via `mount(container, { cssUrl })` (mount-time prop).
+2. `cssUrl` set on `createWidget(Component, { cssUrl })` (option).
+3. `moduleUrl` passed via `mount(container, { moduleUrl })` → derived `.css`.
+4. `moduleUrl` set on `createWidget(Component, { moduleUrl })` → derived `.css`.
+5. `styles` set on `createWidget` (literal string).
+
+If a fetch fails (404, network error), mount still succeeds. The widget renders unstyled rather than throwing.
 
 ### Adapter-specific extensions
 
@@ -57,21 +76,29 @@ interface WidgetModule {
 ```ts
 import { createWidget } from 'mountly-react';
 import SignupCard from './SignupCard.tsx';
-import styles from './SignupCard.css?inline';
 
-export default createWidget(SignupCard, { styles });
+// Lowest-ceremony: emit a sibling .css next to dist/index.js (Vite library
+// mode does this by default for components with stylesheets) and let
+// createOnDemandFeature thread `moduleUrl` through to the adapter.
+export default createWidget(SignupCard);
 ```
 
-The React adapter exposes `update()` automatically — `feature.update(container, props)` reuses the same React root, preserving hooks state.
+The React adapter exposes `update()` automatically. `feature.update(container, props)` reuses the same React root, preserving hooks state. **CSS Modules** pair naturally: the build emits hashed class names referenced from JSX, the shadow root provides the scoping React itself doesn't have. See [Styling](/mountly/concepts/styling/).
+
+If you'd rather inline the CSS at build time:
+
+```ts
+import styles from './SignupCard.css?inline';
+export default createWidget(SignupCard, { styles });
+```
 
 ## Vue example
 
 ```ts
 import { createWidget } from 'mountly-vue';
 import SignupCard from './SignupCard.vue';
-import styles from './SignupCard.css?inline';
 
-export default createWidget(SignupCard, { styles });
+export default createWidget(SignupCard);
 ```
 
 One Vue app per container. Two widget mounts = two Vue apps; providers don't cross.
@@ -81,9 +108,8 @@ One Vue app per container. Two widget mounts = two Vue apps; providers don't cro
 ```ts
 import { createWidget } from 'mountly-svelte';
 import SignupCard from './SignupCard.svelte'; // Svelte 4 class component
-import styles from './SignupCard.css?inline';
 
-export default createWidget(SignupCard, { styles });
+export default createWidget(SignupCard);
 ```
 
 ## Svelte 5 example
@@ -92,10 +118,11 @@ export default createWidget(SignupCard, { styles });
 import { createWidget } from 'mountly-svelte';
 import { mount, unmount } from 'svelte';
 import SignupCard from './SignupCard.svelte'; // Svelte 5 functional component
-import styles from './SignupCard.css?inline';
 
-export default createWidget(SignupCard, { styles, mount, unmount });
+export default createWidget(SignupCard, { mount, unmount });
 ```
+
+The adapter auto-loads `mount` / `unmount` from `"svelte"` if you don't supply them, but passing them explicitly avoids a deferred dynamic import on first mount.
 
 If you forget `mount` / `unmount` on a v5 component, you'll see:
 
@@ -105,7 +132,15 @@ If you forget `mount` / `unmount` on a v5 component, you'll see:
 
 ## Styling
 
-No manual CSS loading, no FOUC, no host conflicts. Every widget gets automatic companion CSS loading . It arrives before your widget renders.
+No manual CSS loading, no FOUC, no host conflicts. Every widget gets automatic companion CSS loading; it arrives before the widget renders.
+
+The adapter follows this resolution order on each `mount`:
+
+1. If a `cssUrl` or `moduleUrl` is set (in options or props), fetch the corresponding `.css` and adopt it into the shadow root via `adoptedStyleSheets`.
+2. Otherwise, use the literal `styles` option if one was provided.
+3. Otherwise, render unstyled. That's fine when the host page already wires a global stylesheet.
+
+Fetched CSS is cached in-memory per URL, so repeated mounts of the same widget never refetch. See [Styling](/mountly/concepts/styling/) for the full matrix including light DOM, CSS Modules, and noscript fallback patterns.
 
 ## Shadow DOM
 
@@ -120,4 +155,5 @@ If you want to mount into a non-shadow element (advanced, breaks isolation), imp
 ## Related
 
 - [`createOnDemandFeature`](/mountly/api/create-on-demand-feature/) — wrap the widget with on-demand lifecycle.
+- [Styling](/mountly/concepts/styling/) for the full CSS resolution matrix.
 - [React](/mountly/frameworks/react/), [Vue](/mountly/frameworks/vue/), [Svelte](/mountly/frameworks/svelte/) — adapter-specific notes.

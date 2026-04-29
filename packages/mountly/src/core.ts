@@ -44,7 +44,18 @@ export type {
 } from "./adapter.js";
 
 export { attachShadow } from "./shadow.js";
-export { createModuleLoader, type CssAutoLoadOptions } from "./assets.js";
+export {
+  createModuleLoader,
+  loadCssText,
+  resolveCssUrl,
+  __clearCssTextCache,
+  type CssAutoLoadOptions,
+} from "./assets.js";
+export {
+  createWidgetBundle,
+  type CreateWidgetBundleOptions,
+  type WidgetBundle,
+} from "./bundle.js";
 export {
   bootstrapMountlyHost,
   bootstrapMountlyHostFromScriptTag,

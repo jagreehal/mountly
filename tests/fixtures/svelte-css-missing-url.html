@@ -1,0 +1,39 @@
+<!doctype html>
+<html><body>
+  <div id="c"></div>
+  <script type="importmap">{"imports":{"mountly":"/packages/mountly/dist/index.js"}}</script>
+  <script type="module">
+    import { __clearCssTextCache } from "/packages/mountly/dist/index.js";
+    import { createWidget } from "/packages/adapters/mountly-svelte/dist/index.js";
+    __clearCssTextCache();
+
+    class HelloComponent {
+      constructor({ target, props }) {
+        this.el = document.createElement("span");
+        this.el.className = "styled-widget";
+        this.el.textContent = String(props?.msg ?? "");
+        target.appendChild(this.el);
+      }
+      $destroy() { this.el?.remove(); }
+    }
+
+    // 404 CSS must not break mount — component should still render unstyled.
+    const widget = createWidget(HelloComponent, {
+      cssUrl: "/tests/fixtures/this-file-does-not-exist.css",
+    });
+    const c = document.getElementById("c");
+    let mountError = null;
+    try {
+      await widget.mount(c, { msg: "missing" });
+    } catch (e) { mountError = String(e); }
+
+    const node = c.shadowRoot?.querySelector(".styled-widget");
+    window.__result = {
+      mountError,
+      hasShadowRoot: !!c.shadowRoot,
+      text: node?.textContent ?? "",
+      computedColor: node ? getComputedStyle(node).color : "",
+      adoptedSheetCount: c.shadowRoot?.adoptedStyleSheets.length ?? 0,
+    };
+  </script>
+</body></html>

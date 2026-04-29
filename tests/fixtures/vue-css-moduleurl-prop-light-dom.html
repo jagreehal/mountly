@@ -1,0 +1,38 @@
+<!doctype html>
+<html><body>
+  <div id="c"></div>
+  <script type="importmap">
+    {"imports":{"vue":"https://esm.sh/vue@3","mountly":"/packages/mountly/dist/index.js"}}
+  </script>
+  <script type="module">
+    import { h } from "vue";
+    import { __clearCssTextCache } from "/packages/mountly/dist/index.js";
+    import { createWidget } from "/packages/adapters/mountly-vue/dist/index.js";
+    __clearCssTextCache();
+
+    const Hello = {
+      props: ["msg"],
+      render() { return h("span", { class: "styled-widget" }, this.msg); },
+    };
+
+    const widget = createWidget(Hello, {
+      shadow: false,
+      styleMode: "isolated",
+    });
+    const c = document.getElementById("c");
+    await widget.mount(c, {
+      msg: "light-moduleUrl",
+      moduleUrl: "/tests/fixtures/css-loader-asset.js",
+    });
+
+    const node = c.querySelector(".styled-widget");
+    const styleTag = c.querySelector('style[data-mountly-inline="true"]');
+    window.__result = {
+      hasShadowRoot: !!c.shadowRoot,
+      text: node?.textContent ?? "",
+      computedColor: node ? getComputedStyle(node).color : "",
+      hasInlineStyleTag: !!styleTag,
+      inlineStyleHasCss: !!styleTag?.textContent?.includes("styled-widget"),
+    };
+  </script>
+</body></html>

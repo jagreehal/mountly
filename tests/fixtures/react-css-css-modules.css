@@ -1,0 +1,15 @@
+/* Simulates the output of a CSS-Modules build: hashed class names that match
+ * the JS module's exported `styles` object. These hashed selectors are
+ * intentionally unique — even if a global stylesheet defined `.button`,
+ * inside the shadow root only this file's rules apply. */
+.button_h_4f9c1 {
+  color: rgb(7, 7, 7);
+  background: rgb(255, 200, 100);
+  border: 2px dotted rgb(7, 7, 7);
+  padding: 6px 10px;
+}
+.label_h_4f9c1 {
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: rgb(20, 80, 160);
+}

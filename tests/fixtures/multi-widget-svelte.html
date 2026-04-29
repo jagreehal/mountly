@@ -1,0 +1,84 @@
+<!doctype html>
+<html><body>
+  <button id="trigger-counter">load counter</button>
+  <button id="trigger-clock">load clock</button>
+  <button id="trigger-status">load status</button>
+  <div id="mount-counter"></div>
+  <div id="mount-clock"></div>
+  <div id="mount-status"></div>
+
+  <script type="importmap">{"imports":{"mountly":"/packages/mountly/dist/index.js"}}</script>
+  <script type="module">
+    import {
+      createWidgetBundle,
+      __clearCssTextCache,
+    } from "/packages/mountly/dist/index.js";
+    __clearCssTextCache();
+
+    // One bundle, one fetch, three features.
+    const bundle = createWidgetBundle({
+      moduleUrl: "/tests/fixtures/multi-widget-svelte-bundle.js",
+    });
+
+    const counter = bundle.feature({ moduleId: "counter", export: "counter" });
+    const clock   = bundle.feature({ moduleId: "clock",   export: "clock"   });
+    const status  = bundle.feature({ moduleId: "status",  export: "status"  });
+
+    counter.attach({
+      trigger: document.getElementById("trigger-counter"),
+      mountContainer: document.getElementById("mount-counter"),
+      activateOn: "click",
+      props: { start: 7 },
+    });
+    clock.attach({
+      trigger: document.getElementById("trigger-clock"),
+      mountContainer: document.getElementById("mount-clock"),
+      activateOn: "click",
+      props: { now: "11:42" },
+    });
+    status.attach({
+      trigger: document.getElementById("trigger-status"),
+      mountContainer: document.getElementById("mount-status"),
+      activateOn: "click",
+      props: { message: "All systems nominal" },
+    });
+
+    // Click all three. Test then asserts shared loading + adopted CSS.
+    document.getElementById("trigger-counter").click();
+    document.getElementById("trigger-clock").click();
+    document.getElementById("trigger-status").click();
+
+    window.__ready = () => {
+      const mounts = ["mount-counter", "mount-clock", "mount-status"]
+        .map((id) => document.getElementById(id));
+      if (mounts.some((m) => !m?.shadowRoot?.querySelector(".card"))) return false;
+      window.__result = {
+        // All three mounted.
+        allMounted: mounts.every((m) => !!m.shadowRoot?.querySelector(".card")),
+        // Each adopted the same shared stylesheet.
+        adoptedRuleCounts: mounts.map((m) => m.shadowRoot.adoptedStyleSheets[0]?.cssRules.length ?? 0),
+        // Different widgets render different DOM but share the helper styles.
+        counterText: mounts[0].shadowRoot.querySelector(".num").textContent,
+        clockText: mounts[1].shadowRoot.querySelector(".num").textContent,
+        statusText: mounts[2].shadowRoot.querySelector(".msg").textContent,
+        // Constructed-stylesheet identity check: the same `CSSStyleSheet`
+        // instance is adopted by all three roots (mountly's sheet cache).
+        sameSheetInstance:
+          mounts[0].shadowRoot.adoptedStyleSheets[0] ===
+            mounts[1].shadowRoot.adoptedStyleSheets[0] &&
+          mounts[1].shadowRoot.adoptedStyleSheets[0] ===
+            mounts[2].shadowRoot.adoptedStyleSheets[0],
+        // Counted module fetches (browser dedup means it's exactly one).
+        moduleFetchCount: performance.getEntriesByName(
+          new URL("/tests/fixtures/multi-widget-svelte-bundle.js", location.origin).href,
+          "resource",
+        ).length,
+        cssFetchCount: performance.getEntriesByName(
+          new URL("/tests/fixtures/multi-widget-svelte-bundle.css", location.origin).href,
+          "resource",
+        ).length,
+      };
+      return true;
+    };
+  </script>
+</body></html>

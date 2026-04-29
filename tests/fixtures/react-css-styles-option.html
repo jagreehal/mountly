@@ -1,0 +1,30 @@
+<!doctype html>
+<html><body>
+  <div id="c"></div>
+  <script type="importmap">
+    {"imports":{"react":"https://esm.sh/react@18","react-dom/client":"https://esm.sh/react-dom@18/client","react-dom":"https://esm.sh/react-dom@18","mountly":"/packages/mountly/dist/index.js"}}
+  </script>
+  <script type="module">
+    import { createElement } from "react";
+    import { __clearCssTextCache } from "/packages/mountly/dist/index.js";
+    import { createWidget } from "/packages/adapters/mountly-react/dist/index.js";
+    __clearCssTextCache();
+
+    const Hello = (props) => createElement("span", { className: "styled-widget" }, props.msg);
+    const widget = createWidget(Hello, {
+      styles: ".styled-widget{color:rgb(11, 22, 33)}",
+    });
+    const c = document.getElementById("c");
+    await widget.mount(c, { msg: "literal" });
+
+    // React renders synchronously via createRoot.render, but the mount itself
+    // returns synchronously here (no CSS fetch). Wait a microtask for paint.
+    await new Promise((r) => setTimeout(r, 0));
+    const node = c.shadowRoot.querySelector(".styled-widget");
+    window.__result = {
+      hasShadowRoot: !!c.shadowRoot,
+      text: node?.textContent ?? "",
+      computedColor: node ? getComputedStyle(node).color : "",
+    };
+  </script>
+</body></html>

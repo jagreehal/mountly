@@ -1,0 +1,99 @@
+<!doctype html>
+<html>
+  <head>
+    <!-- One global stylesheet stands in for `app/globals.css` from a
+         shadcn project: tokens on :root, utility classes underneath.
+         Every light-DOM widget below picks these up automatically. -->
+    <link rel="stylesheet" href="/tests/fixtures/shadcn-light-dom-tokens.css" />
+    <script type="importmap">
+      {"imports":{
+        "react":"https://esm.sh/react@19.2.5",
+        "react/jsx-runtime":"https://esm.sh/react@19.2.5/jsx-runtime",
+        "react-dom/client":"https://esm.sh/react-dom@19.2.5/client?deps=react@19.2.5",
+        "react-dom":"https://esm.sh/react-dom@19.2.5?deps=react@19.2.5",
+        "mountly":"/packages/mountly/dist/index.js"
+      }}
+    </script>
+  </head>
+  <body>
+    <button id="t-hero">hero</button>
+    <button id="t-pricing">pricing</button>
+    <button id="t-newsletter">newsletter</button>
+    <div id="m-hero"></div>
+    <div id="m-pricing"></div>
+    <div id="m-newsletter"></div>
+
+    <script type="module">
+      import {
+        createWidgetBundle,
+        __clearCssTextCache,
+      } from "/packages/mountly/dist/index.js";
+      __clearCssTextCache();
+
+      // assetOptions:none — we don't want a per-widget <link>; the host
+      // page already supplies the global Tailwind/tokens stylesheet.
+      const bundle = createWidgetBundle({
+        moduleUrl: "/tests/fixtures/shadcn-light-dom-bundle.js",
+        assetOptions: { css: "none" },
+      });
+
+      const hero = bundle.feature({ moduleId: "hero", export: "hero" });
+      const pricing = bundle.feature({ moduleId: "pricing", export: "pricing" });
+      const newsletter = bundle.feature({ moduleId: "newsletter", export: "newsletter" });
+
+      hero.attach({
+        trigger: document.getElementById("t-hero"),
+        mountContainer: document.getElementById("m-hero"),
+        activateOn: "click",
+        props: { headline: "Ship widgets, not framework migrations.", cta: "Get started" },
+      });
+      pricing.attach({
+        trigger: document.getElementById("t-pricing"),
+        mountContainer: document.getElementById("m-pricing"),
+        activateOn: "click",
+        props: { plan: "Pro", price: 29 },
+      });
+      newsletter.attach({
+        trigger: document.getElementById("t-newsletter"),
+        mountContainer: document.getElementById("m-newsletter"),
+        activateOn: "click",
+        props: { buttonLabel: "Subscribe" },
+      });
+
+      document.getElementById("t-hero").click();
+      document.getElementById("t-pricing").click();
+      document.getElementById("t-newsletter").click();
+
+      window.__ready = () => {
+        const mh = document.getElementById("m-hero");
+        const mp = document.getElementById("m-pricing");
+        const mn = document.getElementById("m-newsletter");
+        const heroBtn = mh.querySelector(".btn-primary");
+        const pricingBtn = mp.querySelector(".btn-primary");
+        const newsletterBtn = mn.querySelector(".btn-default");
+        if (!heroBtn || !pricingBtn || !newsletterBtn) return false;
+        // Wait one frame for layout/style flush in jsdom-less Chromium.
+        window.__result = {
+          // Light DOM: no shadow root on any container.
+          shadowRoots: [mh.shadowRoot, mp.shadowRoot, mn.shadowRoot].map((s) => !!s),
+          // Global Tailwind/tokens reach all three (same primary color).
+          buttonColors: [
+            getComputedStyle(heroBtn).backgroundColor,
+            getComputedStyle(pricingBtn).backgroundColor,
+          ],
+          // The bundle's three widgets all rendered into the document.
+          domLooksRight:
+            mh.querySelector(".card-title")?.textContent === "Hero" &&
+            mp.querySelector(".card-title")?.textContent === "Pricing" &&
+            mn.querySelector(".card-title")?.textContent === "Newsletter",
+          // Bundle was fetched once.
+          moduleFetchCount: performance.getEntriesByName(
+            new URL("/tests/fixtures/shadcn-light-dom-bundle.js", location.origin).href,
+            "resource",
+          ).length,
+        };
+        return true;
+      };
+    </script>
+  </body>
+</html>

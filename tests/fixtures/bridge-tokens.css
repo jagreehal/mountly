@@ -1,0 +1,43 @@
+/* Stand-in for the host app's `globals.css`. Tokens on :root, utility
+ * classes underneath. The same file would style the library inside a
+ * Next.js app, a TanStack Start app, or any other React host. */
+:root {
+  --ui-bg: rgb(248, 249, 252);
+  --ui-fg: rgb(20, 20, 30);
+  --ui-muted: rgb(110, 110, 130);
+  --ui-primary: rgb(60, 80, 220);
+  --ui-border: rgb(220, 220, 230);
+}
+.ui-card {
+  background: var(--ui-bg);
+  color: var(--ui-fg);
+  border: 1px solid var(--ui-border);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+  font-family: system-ui, sans-serif;
+}
+.ui-card-primary { border-color: var(--ui-primary); }
+.ui-card-success { border-color: rgb(40, 160, 100); }
+.ui-card-title { margin: 0 0 6px; font-weight: 700; font-size: 16px; }
+.ui-card-body  { display: flex; flex-direction: column; gap: 8px; }
+.ui-btn {
+  display: inline-flex;
+  align-items: center;
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+}
+.ui-btn-default { background: white; color: var(--ui-fg); border: 1px solid var(--ui-border); }
+.ui-btn-primary { background: var(--ui-primary); color: white; }
+.ui-muted { margin: 0; color: var(--ui-muted); }
+.ui-amount { margin: 0; font-size: 20px; font-weight: 700; }
+.ui-input {
+  padding: 8px 10px;
+  border: 1px solid var(--ui-border);
+  border-radius: 6px;
+  font-size: 14px;
+}

@@ -1,0 +1,232 @@
+---
+title: Multi-widget bundles
+description: When you have several widgets that share code, ship them in one bundle and wire them with createWidgetBundle. One fetch, one stylesheet, many features.
+---
+
+mountly's default unit is one widget per `dist/index.js`. That's the right shape when widgets are independent. When widgets share code (a design system, utility components, shadcn primitives, a date library), shipping them as separate bundles forces every page that uses two or more to redownload the shared bytes. `createWidgetBundle` collapses that duplication.
+
+## The pattern
+
+Author a single source bundle that exports each widget by name:
+
+```ts title="src/widget.ts"
+import { createWidget } from "mountly-svelte"; // or -react / -vue
+import Counter from "./Counter.svelte";
+import Clock from "./Clock.svelte";
+import Status from "./Status.svelte";
+
+export const counter = createWidget(Counter);
+export const clock = createWidget(Clock);
+export const status = createWidget(Status);
+```
+
+Vite library mode emits `dist/index.js` containing all three (plus any shared helpers) and one `dist/index.css` containing every component's styles.
+
+Wire it on the host:
+
+```ts title="page.ts"
+import { createWidgetBundle } from "mountly";
+
+const dashboard = createWidgetBundle({
+  moduleUrl: "/widgets/dashboard/dist/index.js",
+});
+
+const counter = dashboard.feature({ moduleId: "counter", export: "counter" });
+const clock   = dashboard.feature({ moduleId: "clock",   export: "clock"   });
+const status  = dashboard.feature({ moduleId: "status",  export: "status"  });
+
+counter.attach({ trigger: btn1, activateOn: "click" });
+clock.attach({ trigger: btn2, activateOn: "click" });
+status.attach({ trigger: btn3, activateOn: "click" });
+```
+
+Each `dashboard.feature(...)` returns a regular `OnDemandFeature`. The bundle's JS module is fetched **once**, the companion CSS is fetched **once**, and every feature's shadow root adopts the same `CSSStyleSheet` instance. The repo test (`tests/multi-widget-bundles.spec.ts`) asserts all three: `moduleFetchCount === 1`, `cssFetchCount === 1`, `sameSheetInstance === true`.
+
+## When to bundle vs ship separately
+
+| Bundle when…                                                     | Ship separately when…                                  |
+| ---------------------------------------------------------------- | ------------------------------------------------------ |
+| Widgets share components, utilities, or design tokens.           | Widgets are independent (signup card + cookie banner). |
+| Widgets always or usually appear together (a dashboard, a flow). | Widgets live on different pages or surfaces.           |
+| Mid-size bundle, fetched eagerly anyway.                         | Bundle size differs sharply between widgets.           |
+
+## External npm dependencies
+
+A bundled widget can import from any npm package: `@tanstack/react-table`, `date-fns`, `lucide-react`, `zod`, etc. Two configurations to choose from:
+
+### Bundled (default)
+
+The build inlines everything except the framework runtime. One JS file, one network request, no host-side import-map entries needed beyond `react` (for the peer build) or nothing (for the self-contained build).
+
+### Externalised via the host import map
+
+Larger or commonly-shared dependencies can be marked `external` in `tsup`/`vite` config. The host then provides them through its import map, sharing one copy across many widgets:
+
+```html
+<script type="importmap">
+  {
+    "imports": {
+      "react": "https://esm.sh/react@19.2.5",
+      "react-dom/client": "https://esm.sh/react-dom@19.2.5/client?deps=react@19.2.5",
+      "@tanstack/react-table": "https://esm.sh/@tanstack/react-table@8?deps=react@19.2.5"
+    }
+  }
+</script>
+```
+
+The `?deps=react@19.2.5` query is important on esm.sh; without it, every package brings its own React copy and you'll hit the classic "Invalid hook call" / "two Reacts" dispatcher error.
+
+A test in the repo (`tests/fixtures/tanstack-table-widget.js` + spec) loads a non-trivial third-party package this way and proves it works through the mountly pipeline.
+
+## Shadow DOM vs light DOM for a bundle
+
+A whole bundle should commit to **one mode**. Mixing shadow-rooted and light-DOM widgets within a single design system tends to confuse styling assumptions (does the host's Tailwind reach in? does the design token cascade work?).
+
+### All shadow DOM
+
+Default. Each widget gets its own shadow root; the bundle's CSS is adopted into every root. Best when:
+
+- Widgets must not be styled by the host page.
+- Component-scoped styles (Svelte hashes, Vue `<style scoped>`, CSS Modules) work without further isolation effort.
+- The bundle owns its design language end-to-end.
+
+### All light DOM
+
+Set `shadow: false` on every widget in the bundle. The host's global stylesheets reach in. Best when:
+
+- The widgets are styled by the host's design system (Tailwind, shadcn).
+- A library like Radix UI (used by shadcn) portals content to `document.body` and you don't want to reconfigure each component's portal target.
+- You're fine with Tailwind's `:root` tokens flowing through the document, since shadow-rooted widgets don't see them by default.
+
+The repo's `examples/shadcn-light-dom` and matching test (`shadcn-light-dom.html`) demonstrate three React widgets sharing a global Tailwind/tokens stylesheet through this approach.
+
+## Monorepo: shared UI library + widgets package
+
+The natural shape for non-trivial apps. Two workspace packages plus the
+host:
+
+```
+my-org/
+├── packages/
+│   ├── ui-lib/      # @my-org/ui: Button, Card, etc. No mountly.
+│   └── widgets/     # @my-org/widgets: depends on @my-org/ui,
+│                    #   exports widget bundle entries via createWidget.
+└── apps/
+    └── docs-site/   # consumes packages/widgets/dist/index.js
+```
+
+The UI library is a normal component library. It can pull in shadcn,
+Radix, lucide-react, clsx, tailwind-merge, anything from npm. The
+widgets package depends on it via the workspace alias and exports each
+widget through one bundle entry.
+
+After `pnpm -r build`:
+
+- `packages/widgets/dist/index.js` contains every widget, the UI
+  library code (one copy), and any third-party deps the library uses.
+- React/ReactDOM are externalised; the host import map provides them.
+- The host's `createWidgetBundle({ moduleUrl })` registers each widget
+  by export name.
+
+`examples/monorepo-component-library/README.md` walks through the
+package.json, vite.config, and host wiring step by step. The repo also
+ships `tests/monorepo-component-library.spec.ts` which simulates this
+exact shape (UI library importing `clsx` from npm, widgets package
+composing the library's primitives) and asserts: one bundle fetch, one
+CSS fetch, one shared `CSSStyleSheet` across all widgets, library
+imports resolved, third-party deps working.
+
+## Bridging an existing UI library
+
+The most common real-world shape: a team already has a UI library built
+for Next.js / Nuxt / a Svelte app / a TanStack Start app. The library
+knows nothing about mountly. They want to also drop widgets that use
+this library onto static pages, third-party hosts, or partner sites.
+
+The right answer is **a separate bridge package**, not a fork of the
+library:
+
+```
+my-org/
+├── packages/
+│   ├── ui/                  # pure React/Vue/Svelte components.
+│   │                        # Used by the Next.js app, the Storybook,
+│   │                        # any other consumer. No mountly imports.
+│   │
+│   └── widgets-mountly/     # the bridge: imports @my-org/ui,
+│                            # composes Hero / Pricing / etc. surfaces,
+│                            # wraps each with createWidget.
+└── apps/
+    └── web/                 # Next.js app, consumes @my-org/ui directly.
+```
+
+The library stays a normal component library. It's importable wherever
+React/Vue/Svelte renders. The bridge is small (typically tens of lines
+per widget) and is the only file that imports `mountly-react` /
+`mountly-vue` / `mountly-svelte`.
+
+```ts title="packages/widgets-mountly/src/index.ts"
+import { createWidget } from "mountly-react";
+import { Button, Card, Stack } from "@my-org/ui";
+
+function HeroSurface({ headline, ctaLabel, ctaHref }) {
+  return (
+    <Card tone="primary" title="Hero">
+      <Stack gap={8}>
+        <p>{headline}</p>
+        <Button asChild variant="primary">
+          <a href={ctaHref}>{ctaLabel}</a>
+        </Button>
+      </Stack>
+    </Card>
+  );
+}
+
+export const hero = createWidget(HeroSurface, { shadow: false });
+// + pricing, newsletter, etc.
+```
+
+That same `Button`, `Card`, `Stack` library renders unchanged inside the
+Next.js app via JSX, **and** through the bridge via `createWidgetBundle`
+on a static HTML host.
+
+The repo proves this works for all three frameworks. Each fixture
+imports its pure UI library once and renders it twice on the same page:
+
+- `tests/fixtures/bridge-host.html`: React (with Radix Slot's `asChild`
+  pattern proving real third-party React deps survive the pipeline).
+- `tests/fixtures/bridge-vue-host.html`: Vue 3 with `createApp` direct
+  render alongside the mountly bridge.
+- `tests/fixtures/bridge-svelte-host.html`: Svelte 4-style class
+  components rendered directly via `new Component({ target, props })`
+  alongside the bridge.
+
+`tests/bridge-pure-ui-libraries.spec.ts` asserts the same shape for all
+three: same library, two consumers, same global stylesheet reaches both,
+light-DOM mode preserved, bundle JS fetched exactly once.
+
+### Why a separate bridge package?
+
+You _could_ co-locate the bridge with the library, exporting both
+`@my-org/ui` and `@my-org/ui/mountly`. It works. But:
+
+- The library's primary deps (peer deps on react/vue/svelte) and the
+  bridge's deps (`mountly-*`) live at different layers. Splitting
+  packages keeps each `package.json` honest.
+- Some consumers won't want mountly in their dependency tree at all
+  (e.g. a server-only package re-exporting the library types).
+- Bridge versions can move independently of library versions when the
+  bridge surface changes shape.
+
+Co-location is reasonable for a single-team library. Separation pays
+off when more than one consumer depends on the UI library.
+
+## Mixing modes (don't)
+
+You _can_ have one widget with `shadow: true` and another with `shadow: false` in the same bundle. It rarely ends well: the global stylesheet styles half your widgets and not the others, design-token inheritance is asymmetric, and any bug report becomes "but on this widget…" detective work. Pick a mode per bundle.
+
+## Related
+
+- [`createWidgetBundle`](/mountly/api/create-on-demand-feature/#createwidgetbundle) for the API reference.
+- [Styling](/mountly/concepts/styling/) for the full CSS resolution matrix.
+- [Distribution](/mountly/concepts/distribution/) for the trade-offs around peer vs self-contained bundles.

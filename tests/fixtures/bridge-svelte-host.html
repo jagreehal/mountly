@@ -1,0 +1,110 @@
+<!doctype html>
+<html>
+  <head>
+    <link rel="stylesheet" href="/tests/fixtures/bridge-tokens.css" />
+    <script type="importmap">
+      {"imports":{"mountly":"/packages/mountly/dist/index.js"}}
+    </script>
+  </head>
+  <body>
+    <button id="t-hero">hero</button>
+    <button id="t-pricing">pricing</button>
+    <button id="t-newsletter">newsletter</button>
+    <div id="m-hero"></div>
+    <div id="m-pricing"></div>
+    <div id="m-newsletter"></div>
+    <div id="direct-svelte"></div>
+
+    <script type="module">
+      import {
+        createWidgetBundle,
+        __clearCssTextCache,
+      } from "mountly";
+      __clearCssTextCache();
+
+      // Path 1: consume the pure Svelte library DIRECTLY via the
+      // class-component constructor. Same code path you'd use in a
+      // Svelte app: `new Card({ target, props })`.
+      const ui = await import("/tests/fixtures/bridge-pure-svelte-lib.js");
+      const directRoot = document.getElementById("direct-svelte");
+      const directCard = new ui.Card({
+        target: directRoot,
+        props: { tone: "primary", title: "Direct" },
+      });
+      new ui.Button({
+        target: directCard.body,
+        props: {
+          variant: "primary",
+          label: "Used directly, no mountly",
+          testid: "direct-button",
+        },
+      });
+
+      // Path 2: same library via the mountly bridge.
+      const widgets = createWidgetBundle({
+        moduleUrl: "/tests/fixtures/bridge-svelte-widgets.js",
+        assetOptions: { css: "none" },
+      });
+
+      widgets
+        .feature({ moduleId: "svelte-hero", export: "hero" })
+        .attach({
+          trigger: document.getElementById("t-hero"),
+          mountContainer: document.getElementById("m-hero"),
+          activateOn: "click",
+          props: { headline: "Same UI library, two ways.", ctaLabel: "Get started", ctaHref: "/start" },
+        });
+      widgets
+        .feature({ moduleId: "svelte-pricing", export: "pricing" })
+        .attach({
+          trigger: document.getElementById("t-pricing"),
+          mountContainer: document.getElementById("m-pricing"),
+          activateOn: "click",
+          props: { plan: "Pro", price: 29, blurb: "Everything in Free, plus" },
+        });
+      widgets
+        .feature({ moduleId: "svelte-newsletter", export: "newsletter" })
+        .attach({
+          trigger: document.getElementById("t-newsletter"),
+          mountContainer: document.getElementById("m-newsletter"),
+          activateOn: "click",
+          props: { buttonLabel: "Subscribe" },
+        });
+
+      document.getElementById("t-hero").click();
+      document.getElementById("t-pricing").click();
+      document.getElementById("t-newsletter").click();
+
+      import("/tests/fixtures/bridge-svelte-widgets.js").then((m) => {
+        window.__bridge = m;
+      });
+
+      window.__ready = () => {
+        if (!window.__bridge) return false;
+        const direct = document.querySelector('[data-testid="direct-button"]');
+        const heroM = document.getElementById("m-hero");
+        const heroCta = heroM.querySelector('[data-testid="hero-cta"]');
+        const pricingM = document.getElementById("m-pricing");
+        const newsletterM = document.getElementById("m-newsletter");
+        const newsletterBtn = newsletterM.querySelector(".ui-btn-default");
+        if (!direct || !heroCta || !pricingM.querySelector(".ui-card") || !newsletterBtn) return false;
+        window.__result = {
+          bridgeId: window.__bridge.__bridge_id,
+          directRendered: !!direct,
+          directButtonText: direct.textContent,
+          directButtonColor: getComputedStyle(direct).backgroundColor,
+          shadowRoots: [heroM, pricingM, newsletterM].map((m) => !!m.shadowRoot),
+          heroCtaTag: heroCta.tagName.toLowerCase(),
+          heroCtaHref: heroCta.getAttribute("href"),
+          heroCtaColor: getComputedStyle(heroCta).backgroundColor,
+          newsletterButtonColor: getComputedStyle(newsletterBtn).backgroundColor,
+          bridgeFetchCount: performance.getEntriesByName(
+            new URL("/tests/fixtures/bridge-svelte-widgets.js", location.origin).href,
+            "resource",
+          ).length,
+        };
+        return true;
+      };
+    </script>
+  </body>
+</html>

@@ -1,4 +1,10 @@
-import { attachShadow, type AdapterOptions, type WidgetModule } from "mountly";
+import {
+  attachShadow,
+  loadCssText,
+  resolveCssUrl,
+  type AdapterOptions,
+  type WidgetModule,
+} from "mountly";
 
 // Svelte 4: legacy class component — `new Component({ target, props })`
 // returns an instance with a `$destroy()` method.
@@ -23,6 +29,16 @@ type SvelteV5Unmount = (handle: Record<string, unknown>) => void | Promise<void>
 type SvelteAnyComponent<P> = SvelteLegacyCtor<P> | SvelteV5Component<P>;
 
 interface SvelteWidgetOptions extends AdapterOptions {
+  /**
+   * URL to the component's JavaScript bundle. Used to derive the CSS URL
+   * if `cssUrl` is not provided (e.g., "/dist/index.js" -> "/dist/index.css").
+   */
+  moduleUrl?: string;
+  /**
+   * URL to the component's CSS file. If not provided, derived from
+   * `moduleUrl` (replaces ".js" with ".css").
+   */
+  cssUrl?: string;
   /**
    * Svelte 5's `mount` and `unmount`, imported from "svelte" by the consumer
    * and passed in. Required for Svelte 5 components. Omit for Svelte 4 — the
@@ -93,7 +109,7 @@ export function createWidget<P>(
   options: SvelteWidgetOptions = {},
 ): WidgetModule {
   const instances = new WeakMap<Element, ActiveInstance>();
-  const { mount: svelteMount, unmount: svelteUnmount } = options;
+  const { mount: svelteMount, unmount: svelteUnmount, moduleUrl, cssUrl } = options;
 
   function unmount(container: Element): void {
     const existing = instances.get(container);
@@ -106,32 +122,65 @@ export function createWidget<P>(
     instances.delete(container);
   }
 
-  return {
-    async mount(container, props) {
-      unmount(container);
-      if (options.reserveSize) {
-        (container as HTMLElement).style.cssText += `;${options.reserveSize}`;
-      }
-      const target = attachShadow(container, options);
-
-      if (isLegacyClass(Component)) {
-        const instance = new Component({ target, props: props as P });
-        instances.set(container, { legacy: instance });
-        return;
-      }
-
-      // Svelte 5 path: caller must supply mount/unmount from "svelte".
-      const runtime =
-        svelteMount && svelteUnmount
-          ? { mount: svelteMount, unmount: svelteUnmount }
-          : await getSvelteRuntime();
+  // Returns a promise iff async work was needed (Svelte 5 runtime import).
+  // Sync return path keeps tests/hosts that don't await mount() working.
+  function mountWith(
+    container: Element,
+    props: Record<string, unknown> | undefined,
+    fetched: string | undefined,
+  ): void | Promise<void> {
+    if (options.reserveSize) {
+      (container as HTMLElement).style.cssText += `;${options.reserveSize}`;
+    }
+    const target = attachShadow(
+      container,
+      fetched ? { ...options, styles: fetched } : options,
+    );
+    if (isLegacyClass(Component)) {
+      const instance = new Component({ target, props: props as P });
+      instances.set(container, { legacy: instance });
+      return;
+    }
+    if (svelteMount && svelteUnmount) {
+      const handle = svelteMount(Component as SvelteV5Component<P>, {
+        target,
+        props: props as P,
+      });
+      instances.set(container, { v5: { handle, unmount: svelteUnmount } });
+      return;
+    }
+    return getSvelteRuntime().then((runtime) => {
       const handle = runtime.mount(Component as SvelteV5Component<P>, {
         target,
         props: props as P,
       });
-      instances.set(container, {
-        v5: { handle, unmount: runtime.unmount },
+      instances.set(container, { v5: { handle, unmount: runtime.unmount } });
+    });
+  }
+
+  return {
+    mount(container, props) {
+      unmount(container);
+      const cssUrlFromProps = (props as Record<string, unknown>)?.cssUrl as string | undefined;
+      const moduleUrlFromProps = (props as Record<string, unknown>)?.moduleUrl as string | undefined;
+      const cssUrlResolved = resolveCssUrl({
+        cssUrlOption: cssUrl,
+        moduleUrlOption: moduleUrl,
+        cssUrlProp: cssUrlFromProps,
+        moduleUrlProp: moduleUrlFromProps,
       });
+      const propsRecord = props as Record<string, unknown> | undefined;
+      // Fast path: no CSS to fetch — stay synchronous when possible so
+      // hosts that don't await mount() and synchronously inspect the
+      // shadow root keep working. Svelte 5 with auto-runtime still needs
+      // to wait for the dynamic import; in that case mountWith returns a
+      // promise we forward.
+      if (!cssUrlResolved) {
+        return mountWith(container, propsRecord, undefined);
+      }
+      return loadCssText(cssUrlResolved).then(
+        (css) => mountWith(container, propsRecord, css || undefined),
+      );
     },
     update(container, props) {
       // Svelte parity path: remount with next props.
