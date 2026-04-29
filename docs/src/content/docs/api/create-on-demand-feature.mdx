@@ -19,13 +19,19 @@ function createOnDemandFeature(
 
 ### `CreateOnDemandFeatureOptions`
 
+You need either `moduleUrl` (the recommended zero-config path) **or** an explicit `loadModule`.
+
 | Field | Type | Required | Notes |
 |---|---|---|---|
 | `moduleId` | `string` | yes | Stable identifier. Used as the module-cache key and the data-cache key prefix. |
-| `loadModule` | `() => Promise<FeatureModule>` | yes | Called once per page (deduplicated). Should resolve to the widget's module. |
+| `moduleUrl` | `string` | yes¹ | URL to the widget bundle. Drives auto-loading **and** is forwarded to the adapter so shadow-DOM CSS adoption works without extra wiring. |
+| `assetOptions` | `CssAutoLoadOptions` | no | Forwarded to `createModuleLoader` when `moduleUrl` is set. Default `{ css: "none" }`. Set `{ css: "auto" }` if you want a global `<link>` for light-DOM mounts. |
+| `loadModule` | `() => Promise<FeatureModule>` | yes¹ | Override of the auto-derived loader. Use when you need a custom import (e.g. a function that adds telemetry). |
 | `loadData` | `(ctx: FeatureContext) => Promise<unknown>` | no | Optional data fetch. Cached by [`getCacheKey`](#getcachekey). |
 | `getCacheKey` | `(ctx: FeatureContext) => string` | no | Override the default cache-key builder. |
-| `render` | `(args: RenderArgs) => void` | yes | Called on each `mount`. Responsible for rendering the widget. |
+| `render` | `(args: RenderArgs) => void` | no | Override the default render. The default `mount`s with the supplied props plus the `moduleUrl` so the adapter can adopt the sibling stylesheet. |
+
+¹ At least one of `moduleUrl` / `loadModule` is required. Setting both is allowed; an explicit `loadModule` wins.
 
 ### `RenderArgs`
 
@@ -133,7 +139,26 @@ type FeatureState =
 
 Returns a read-only array of currently-mounted containers. Useful for debugging or for invalidation logic.
 
-## Worked example
+## Zero-config (recommended)
+
+For the common case (load a widget bundle and let its companion CSS adopt into the shadow root), pass `moduleUrl` and you're done:
+
+```ts
+import { createOnDemandFeature } from "mountly";
+
+const signup = createOnDemandFeature({
+  moduleId: "signup-card",
+  moduleUrl: "/widgets/signup-card/dist/index.js",
+});
+
+signup.attach({ trigger: btn, preloadOn: "hover", activateOn: "click" });
+```
+
+mountly synthesises `loadModule` (via `createModuleLoader`) and a default `render` that forwards `moduleUrl` into the adapter's mount props. The adapter fetches `dist/index.css` (sibling of the JS bundle), sends `Accept: text/css` so dev servers like Vite return raw CSS rather than HMR-wrapped JS, and adopts it into the shadow root. See [Styling](/mountly/concepts/styling/) for the full picture.
+
+## Worked example with overrides
+
+When you need bespoke loading or rendering, all the original hooks are still available:
 
 ```ts
 import { createOnDemandFeature } from "mountly";
@@ -189,6 +214,31 @@ window.addEventListener("popstate", () => {
 });
 ```
 
+## `createWidgetBundle`
+
+Sibling primitive for the multi-widget case: one bundle, many features, shared loading.
+
+```ts
+import { createWidgetBundle } from "mountly";
+
+const dashboard = createWidgetBundle({
+  moduleUrl: "/widgets/dashboard/dist/index.js",
+  // assetOptions?: CssAutoLoadOptions  // forwarded to createModuleLoader
+});
+
+const counter = dashboard.feature({ moduleId: "counter", export: "counter" });
+const clock   = dashboard.feature({ moduleId: "clock",   export: "clock"   });
+```
+
+| Field         | Type                  | Notes                                                                                        |
+| ------------- | --------------------- | -------------------------------------------------------------------------------------------- |
+| `moduleUrl`   | `string` (required)   | URL of the bundle's JS entry. Loaded once; shared across every `feature(...)` call.          |
+| `assetOptions`| `CssAutoLoadOptions`  | Default `{ css: "none" }`. Set `{ css: "auto" }` for light-DOM bundles (global `<link>`).    |
+
+`feature(opts)` accepts the same fields as `createOnDemandFeature` (minus `moduleUrl`/`loadModule`) plus an `export` name. The bundle's URL is automatically threaded into mount props so framework adapters adopt the sibling `.css` into the shadow root.
+
+See [Multi-widget bundles](/mountly/concepts/multi-widget/) for when to use it and the test suite (`tests/multi-widget-bundles.spec.ts`) for the asserted guarantees: one JS fetch, one CSS fetch, one shared `CSSStyleSheet` instance across all features.
+
 ## Errors
 
 `loadModule` failures that look like import-map misconfigurations get wrapped with a hint:
@@ -205,3 +255,4 @@ Other errors propagate unchanged. `onError` (in `attach`) catches both.
 - [Lifecycle](/mountly/concepts/lifecycle/) — the state diagram.
 - [Triggers](/mountly/concepts/triggers/) — what `preloadOn` / `activateOn` map to.
 - [Caching](/mountly/concepts/caching/) — how `loadData` and `getCacheKey` interact.
+- [Styling](/mountly/concepts/styling/) for how shadow-DOM and noscript styling fit together.

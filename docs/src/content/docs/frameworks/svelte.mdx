@@ -18,24 +18,25 @@ If you're on Svelte 4, the adapter detects the legacy class API and uses `new Co
 ```ts title="signup-card.ts"
 import { createWidget } from "mountly-svelte";
 import SignupCard from "./SignupCard.svelte";
-import styles from "./SignupCard.css?inline";
 
-export default createWidget(SignupCard, { styles });
+export default createWidget(SignupCard);
 ```
+
+The Vite library build emits `dist/index.js` plus `dist/index.css` (Svelte's component styles, hashed). The adapter fetches the CSS automatically when the host wires up `moduleUrl`; see "[On-demand lifecycle (zero-config)](#on-demand-lifecycle-zero-config)" below.
 
 ## Svelte 5
 
-Svelte 5 components are plain functions. The adapter auto-loads `mount` / `unmount` from `"svelte"` when needed, so the default remains simple:
+Svelte 5 components are plain functions. Pass `mount` and `unmount` from `"svelte"`:
 
 ```ts title="signup-card.ts"
 import { createWidget } from "mountly-svelte";
+import { mount, unmount } from "svelte";
 import SignupCard from "./SignupCard.svelte";
-import styles from "./SignupCard.css?inline";
 
-export default createWidget(SignupCard, { styles });
+export default createWidget(SignupCard, { mount, unmount });
 ```
 
-You can still pass `mount` and `unmount` explicitly if you want full control.
+If you omit them, the adapter dynamically imports `"svelte"` itself. That works, but adds one promise hop on first mount.
 
 ## Mounting
 
@@ -49,19 +50,22 @@ widget.mount(document.querySelector("#cta-mount"), {
 
 Each `mount()` unmounts any existing instance in the same container first.
 
-## With the on-demand lifecycle
+## On-demand lifecycle (zero-config)
 
 ```ts
 import { createOnDemandFeature } from "mountly";
 
 const signup = createOnDemandFeature({
   moduleId: "signup-card",
-  loadModule: () => import("./signup-card.js"),
-  render: ({ mod, container, props }) => mod.mount(container, props),
+  moduleUrl: "/widgets/signup-card/dist/index.js",
 });
 
 signup.attach({ trigger: btn, preloadOn: "hover", activateOn: "click" });
 ```
+
+mountly threads `moduleUrl` through to the adapter, which fetches `dist/index.css` (sibling) and adopts it into the shadow root before render. No FOUC, no manual loader.
+
+Need to override? `loadModule` / `render` still work and trump the auto-derived defaults.
 
 ## Live updates
 
@@ -87,15 +91,28 @@ Svelte's component-scoped styles compose nicely with the shadow root — both wo
 
 ### No Tailwind
 
+The Vite + `@sveltejs/vite-plugin-svelte` library build emits a sibling `dist/index.css` for any component that has `<style>`. The adapter picks it up automatically when the host passes `moduleUrl`:
+
 ```ts
 import { createWidget } from "mountly-svelte";
 import Component from "./Component.svelte";
-import styles from "./Component.css?inline";
 
-export default createWidget(Component, { styles });
+export default createWidget(Component);
 ```
 
 ### With Tailwind
+
+Compile Tailwind into the same `dist/index.css` (via your build's CSS entry) and the same zero-config flow applies. If your Tailwind output lives at a non-default path, point the host at it explicitly:
+
+```ts
+createOnDemandFeature({
+  moduleId: "card",
+  moduleUrl: "/widgets/card/dist/index.js",
+  // No assetOptions needed; adapter derives /widgets/card/dist/index.css.
+});
+```
+
+If you'd rather inline the CSS string at build time (e.g. small components, no shared Tailwind layer), that path still works:
 
 ```ts
 import { createWidget } from "mountly-svelte";

@@ -1,0 +1,40 @@
+/* In a real monorepo this is the widgets package's `dist/index.css`,
+ * compiled from the UI library's component styles + any widget-specific
+ * additions. One file, shared across every widget in the bundle. */
+.ui-card {
+  font-family: system-ui, sans-serif;
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 8px;
+  border: 1px solid rgb(220, 220, 230);
+}
+.ui-card-neutral { background: rgb(248, 249, 252); color: rgb(20, 20, 30); }
+.ui-card-primary { background: rgb(245, 247, 255); color: rgb(20, 20, 30); }
+.ui-card-success { background: rgb(240, 252, 246); color: rgb(20, 60, 40); }
+.ui-card-header { font-weight: 700; margin-bottom: 8px; font-size: 14px; }
+.ui-card-body { display: flex; flex-direction: column; gap: 8px; }
+.ui-chip {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgb(60, 80, 220);
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.ui-btn {
+  border: 0;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 14px;
+}
+.ui-btn-default { background: white; color: rgb(20, 20, 30); border: 1px solid rgb(220, 220, 230); }
+.ui-btn-primary { background: rgb(60, 80, 220); color: white; }
+.ui-row { display: flex; gap: 6px; align-items: center; }
+.ui-num { font-size: 22px; font-weight: 700; margin: 0; }
+.ui-msg { margin: 0; color: rgb(60, 60, 80); }
+.ui-amount { font-size: 20px; font-weight: 700; margin: 0; }

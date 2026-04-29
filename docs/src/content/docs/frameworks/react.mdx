@@ -18,12 +18,107 @@ React is a peer dependency. Install whichever version you ship.
 ```tsx title="signup-card.ts"
 import { createWidget } from "mountly-react";
 import SignupCard from "./SignupCard.tsx";
-import styles from "./SignupCard.css?inline";
 
+export default createWidget(SignupCard);
+```
+
+That's it for the widget side. When the host wires `moduleUrl`, the adapter fetches the sibling `dist/index.css` (whatever your build emits: plain CSS, CSS Modules, Tailwind output) and adopts it into the shadow root before React renders. No FOUC.
+
+The string-based path still works if you'd rather inline:
+
+```tsx
+import styles from "./SignupCard.css?inline";
 export default createWidget(SignupCard, { styles });
 ```
 
-`styles` is the CSS the widget needs. The string is injected into the widget's shadow root, so it never escapes. Use Vite's `?inline` query, esbuild's `text` loader, or any tool that gives you the CSS as a string.
+## Scoped styles in React (the framework that doesn't have them)
+
+React itself has no native style scoping. **The shadow root is the scoping mechanism.** Whatever class names your build emits (plain, BEM, hashed) only apply inside the widget's shadow tree. A global `.button { color: red }` rule on the host page cannot reach in. Conversely, your component's CSS cannot leak out.
+
+This means you can use any styling approach React supports and get true isolation for free:
+
+### CSS Modules
+
+```tsx title="SignupCard.tsx"
+import styles from "./SignupCard.module.css";
+
+export default function SignupCard({ msg }: { msg: string }) {
+  return (
+    <button className={styles.button}>
+      <span className={styles.label}>{msg}</span>
+    </button>
+  );
+}
+```
+
+The build emits hashed selectors like `.button_h_4f9c1` in `dist/index.css` and `{ button: "button_h_4f9c1" }` in the JS bundle. Both live inside the shadow root. Mountly's repo includes a Playwright test (`react-css-modules.html`) that proves a colliding global `.button { color: red !important }` rule does **not** pierce the shadow root.
+
+### Plain CSS files
+
+```tsx
+import "./SignupCard.css"; // build emits dist/index.css
+```
+
+Works the same way: the adapter fetches the sibling stylesheet and adopts it into the shadow root.
+
+### CSS-in-JS (styled-components, emotion, etc.)
+
+These libraries inject `<style>` tags at runtime. By default they target `document.head`, which the shadow root can't see. Most have a "shadow root mode" or styleSheet manager you can configure to inject into a specific root. Pass the shadow root via React Context if you go this route. For most cases, though, CSS Modules or plain CSS is simpler.
+
+## shadcn / Tailwind
+
+shadcn pairs Tailwind tokens with Radix UI primitives. Two friction points appear inside a shadow root:
+
+1. **`:root` tokens don't apply.** shadcn's `bg-background` resolves to `hsl(var(--background))`; `--background` is set on `:root` (the document `<html>`). Inside a shadow root, `:root` matches nothing, so every shadcn token comes out empty.
+2. **Radix portals target `document.body`.** Dialog, Popover, DropdownMenu, etc. portal their content outside the component tree. From inside a shadow root, that portal lands outside the shadow boundary, so the styles don't reach it.
+
+You can fight both: compile Tailwind targeting `:host`, wrap every Radix-using component to pass a `Portal container` from inside the shadow root via context. It's a lot of plumbing.
+
+The pragmatic alternative: **light DOM**. Set `shadow: false` on every widget that uses shadcn primitives, ship one global Tailwind stylesheet through a `<link>` in the host's `<head>`, and let things work the way Radix and shadcn were designed for.
+
+```ts
+// All widgets in this bundle commit to light DOM.
+const lightDom = { shadow: false };
+export const hero = createWidget(Hero, lightDom);
+export const pricing = createWidget(Pricing, lightDom);
+export const newsletter = createWidget(Newsletter, lightDom);
+```
+
+```html
+<head>
+  <link rel="stylesheet" href="/app/dist/globals.css" /> <!-- Tailwind output -->
+</head>
+```
+
+The repo demonstrates this end-to-end:
+
+- `tests/fixtures/shadcn-light-dom-bundle.js`: three React widgets composing shared `Button`/`Card` primitives.
+- `tests/fixtures/shadcn-light-dom-tokens.css`: stand-in for `app/globals.css` with `:root` tokens and utility classes.
+- `tests/multi-widget-bundles.spec.ts`: proves all three widgets pick up the same primary color from the global stylesheet.
+
+For more on the choice, see [Multi-widget bundles](/mountly/concepts/multi-widget/).
+
+## External npm packages
+
+Components are free to import any npm package: `@tanstack/react-table`, `date-fns`, `lucide-react`, whatever. Two configurations:
+
+**Bundled** (default for Vite library mode): the build inlines the package. One JS file. No host setup needed.
+
+**Externalised**: mark the package `external` in your build config so the host import map provides it. Lets multiple widgets share one copy.
+
+```html
+<script type="importmap">
+  {
+    "imports": {
+      "react": "https://esm.sh/react@19.2.5",
+      "react-dom/client": "https://esm.sh/react-dom@19.2.5/client?deps=react@19.2.5",
+      "@tanstack/react-table": "https://esm.sh/@tanstack/react-table@8?deps=react@19.2.5"
+    }
+  }
+</script>
+```
+
+The `?deps=react@19.2.5` query is what tells esm.sh to align every package on one React copy. Without it you'll see "Invalid hook call" errors from React seeing two different runtime instances. The repo has a `tanstack-table` fixture and test that uses this pattern with React 19 and proves table rendering works through the mountly pipeline.
 
 ## Mounting
 
@@ -40,17 +135,14 @@ widget.mount(document.querySelector("#cta-mount"), {
 
 Each call to `mount()` unmounts any existing root in the same container first, so calling it twice is safe.
 
-## With the on-demand lifecycle
-
-Wrap the widget in a feature for on-intent loading:
+## On-demand lifecycle (zero-config)
 
 ```ts
 import { createOnDemandFeature } from "mountly";
 
 const signup = createOnDemandFeature({
   moduleId: "signup-card",
-  loadModule: () => import("./signup-card.js"),
-  render: ({ mod, container, props }) => mod.mount(container, props),
+  moduleUrl: "/widgets/signup-card/dist/index.js",
 });
 
 signup.attach({
@@ -59,6 +151,8 @@ signup.attach({
   activateOn: "click",
 });
 ```
+
+mountly threads `moduleUrl` through to the adapter, which fetches `dist/index.css` and adopts it into the shadow root before React renders.
 
 ## Live updates without remounting
 
@@ -94,7 +188,11 @@ If you ship two widgets, both with `dist/index.js`, you have two copies of React
 
 ### Styles not appearing
 
-The `styles` argument must be a **string** of CSS, not a CSS file path. If your styles aren't appearing, check the bundler's import — Vite needs `?inline`, esbuild needs `text` loader, etc.
+Three usual causes:
+
+1. **Wrong source.** If you're passing `styles`, it must be a CSS **string**, not a path. Vite needs `?inline`, esbuild needs `text` loader, etc.
+2. **Missing sibling .css.** If you're relying on `moduleUrl` auto-derivation, check that your build actually emits `dist/index.css` next to `dist/index.js`. Vite library mode does this whenever a component imports a stylesheet.
+3. **Dev server returning JS instead of CSS.** Vite serves `.css` as an HMR-wrapped JS module unless `Accept: text/css` is sent. The adapter sends that header. If you've put a custom proxy or service worker in front, make sure it doesn't strip it.
 
 ### Hydration error in dev
 
@@ -111,19 +209,17 @@ The adapter mounts a fresh tree, not a hydrated one. If you mount into a `<div>`
 
 ### No Tailwind
 
-Use plain CSS imported as a string:
-
 ```tsx
 import { createWidget } from "mountly-react";
+import "./Component.css";          // build emits dist/index.css
 import Component from "./Component.tsx";
-import styles from "./Component.css?inline";
 
-export default createWidget(Component, { styles });
+export default createWidget(Component);
 ```
 
 ### With Tailwind
 
-Compile Tailwind to CSS, then inject the compiled string:
+Tailwind compiles into the same `dist/index.css` and the same zero-config flow works. If you'd rather inline:
 
 ```tsx
 import { createWidget } from "mountly-react";

@@ -16,12 +16,18 @@ pnpm add mountly mountly-vue vue
 ```ts title="signup-card.ts"
 import { createWidget } from "mountly-vue";
 import SignupCard from "./SignupCard.vue";
-import styles from "./SignupCard.css?inline";
 
-export default createWidget(SignupCard, { styles });
+export default createWidget(SignupCard);
 ```
 
-The widget always mounts inside its own shadow root. Styles in the `styles` string are injected into the shadow root and don't leak.
+The widget always mounts inside its own shadow root. The adapter fetches the sibling `dist/index.css` (extracted by Vite's Vue plugin from `<style scoped>`) and adopts it into the shadow root, so styles are scoped twice: once by Vue's `data-v-…` hash and once by the shadow root. No leakage in either direction.
+
+Want to inline the CSS string instead? That's still fine:
+
+```ts
+import styles from "./SignupCard.css?inline";
+export default createWidget(SignupCard, { styles });
+```
 
 ## Mounting
 
@@ -38,19 +44,20 @@ Each `mount()` unmounts any existing Vue app in the same container first.
 
 Under the hood, the adapter calls `createApp({ render: () => h(Component, props) })` and mounts that into the shadow root. There is one Vue app per container.
 
-## With the on-demand lifecycle
+## On-demand lifecycle (zero-config)
 
 ```ts
 import { createOnDemandFeature } from "mountly";
 
 const signup = createOnDemandFeature({
   moduleId: "signup-card",
-  loadModule: () => import("./signup-card.js"),
-  render: ({ mod, container, props }) => mod.mount(container, props),
+  moduleUrl: "/widgets/signup-card/dist/index.js",
 });
 
 signup.attach({ trigger: btn, preloadOn: "hover", activateOn: "click" });
 ```
+
+mountly threads `moduleUrl` through to the adapter, which fetches `dist/index.css` (sibling) and adopts it into the shadow root before render. Use `loadModule` / `render` only when you need bespoke behaviour.
 
 ## Composition API and Options API
 
@@ -99,12 +106,15 @@ Vite's Vue plugin handles `.vue` files in the widget build. If you're running `t
 ```ts
 import { createWidget } from "mountly-vue";
 import Component from "./Component.vue";
-import styles from "./Component.css?inline";
 
-export default createWidget(Component, { styles });
+export default createWidget(Component);
 ```
 
+The Vite Vue plugin extracts `<style scoped>` blocks into `dist/index.css`. The adapter picks it up automatically when the host passes `moduleUrl`.
+
 ### With Tailwind
+
+Compile Tailwind into the same `dist/index.css` and the zero-config flow still applies. If you prefer to ship the CSS as an inline string:
 
 ```ts
 import { createWidget } from "mountly-vue";

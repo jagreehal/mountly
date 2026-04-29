@@ -22,6 +22,15 @@ export interface IslandPayload {
   requireSsrMarker?: boolean;
   ssrMarkerAttr?: string;
   version?: string;
+  /**
+   * Optional widget bundle URL. When set, mountly forwards it to the adapter
+   * so framework-specific CSS auto-loading (shadow-DOM `adoptedStyleSheets`)
+   * works without extra wiring. The adapter derives the sibling .css unless
+   * `cssUrl` is also given.
+   */
+  moduleUrl?: string;
+  /** Explicit stylesheet URL; overrides `moduleUrl`-derived path. */
+  cssUrl?: string;
 }
 
 export interface IslandLoaders {
@@ -84,6 +93,8 @@ const ISLAND_PAYLOAD_KEYS = new Set([
   "requireSsrMarker",
   "ssrMarkerAttr",
   "version",
+  "moduleUrl",
+  "cssUrl",
 ]);
 
 function islandError(code: IslandErrorCode, message: string): Error {
@@ -351,7 +362,17 @@ export function mountIslandFeature(
         );
       }
       mark(perfMarks, `mountly:island:${payload.id}:mount-start`);
-      mod.mount(container, props);
+      // Auto-thread payload's CSS hints into mount props so adapters can
+      // adopt the right stylesheet without the host writing custom render.
+      const propsWithCss =
+        payload.moduleUrl || payload.cssUrl
+          ? {
+              ...props,
+              ...(payload.moduleUrl ? { moduleUrl: payload.moduleUrl } : {}),
+              ...(payload.cssUrl ? { cssUrl: payload.cssUrl } : {}),
+            }
+          : props;
+      mod.mount(container, propsWithCss);
       mark(perfMarks, `mountly:island:${payload.id}:mount-end`);
       element.setAttribute(hydratedAttr, "true");
       setIslandState(element, "mounted");

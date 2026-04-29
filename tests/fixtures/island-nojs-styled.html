@@ -1,0 +1,25 @@
+<!doctype html>
+<html>
+  <head>
+    <!-- The noscript fallback pattern: ship the SSR markup AND a global
+         stylesheet. With JS on, the adapter additionally adopts the same
+         CSS into the shadow root for proper scoping; with JS off, this
+         <link> is the only thing keeping the SSR content readable. -->
+    <link rel="stylesheet" href="/tests/fixtures/css-loader-asset.css" />
+    <script type="importmap">
+      {"imports":{"mountly":"/packages/mountly/dist/index.js"}}
+    </script>
+  </head>
+  <body>
+    <!-- Server-rendered island content. Visible regardless of JS. -->
+    <div id="island"
+         data-mountly-island='{"schemaVersion":1,"id":"nojs","moduleId":"demo","trigger":"click","props":{"msg":"server-rendered"},"moduleUrl":"/tests/fixtures/zero-config-svelte-widget.js"}'>
+      <span class="styled-widget">server-rendered</span>
+    </div>
+    <!-- Host script. With JS off, the browser ignores this entirely and the
+         server-rendered span above remains styled by the head <link>. -->
+    <script type="module" src="/packages/mountly/dist/host-entry.js"
+            data-mountly-host
+            data-mountly-loaders='{"demo":"/tests/fixtures/zero-config-svelte-widget.js"}'></script>
+  </body>
+</html>

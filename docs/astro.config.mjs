@@ -57,6 +57,8 @@ export default defineConfig({
             { label: "Components, widgets, features", slug: "concepts/vocabulary" },
             { label: "Triggers", slug: "concepts/triggers" },
             { label: "Lifecycle", slug: "concepts/lifecycle" },
+            { label: "Styling", slug: "concepts/styling" },
+            { label: "Multi-widget bundles", slug: "concepts/multi-widget" },
             { label: "Caching", slug: "concepts/caching" },
             { label: "Distribution", slug: "concepts/distribution" },
             { label: "Custom element", slug: "concepts/custom-element" },

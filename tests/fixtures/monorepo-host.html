@@ -1,0 +1,105 @@
+<!doctype html>
+<html><body>
+  <button id="t-counter">counter</button>
+  <button id="t-status">status</button>
+  <button id="t-pricing">pricing</button>
+  <div id="m-counter"></div>
+  <div id="m-status"></div>
+  <div id="m-pricing"></div>
+
+  <script type="importmap">
+    {"imports":{
+      "react":"https://esm.sh/react@19.2.5",
+      "react/jsx-runtime":"https://esm.sh/react@19.2.5/jsx-runtime",
+      "react-dom/client":"https://esm.sh/react-dom@19.2.5/client?deps=react@19.2.5",
+      "react-dom":"https://esm.sh/react-dom@19.2.5?deps=react@19.2.5",
+      "mountly":"/packages/mountly/dist/index.js"
+    }}
+  </script>
+  <script type="module">
+    import {
+      createWidgetBundle,
+      __clearCssTextCache,
+    } from "/packages/mountly/dist/index.js";
+    __clearCssTextCache();
+
+    // Host wires the widgets package's bundle entry. In a real deployment
+    // this URL points at the widgets package's published `dist/index.js`;
+    // here it's a static fixture that internally imports a "UI library"
+    // module representing a workspace dependency.
+    const widgets = createWidgetBundle({
+      moduleUrl: "/tests/fixtures/monorepo-widgets-bundle.js",
+    });
+
+    const counter = widgets.feature({ moduleId: "counter", export: "counter" });
+    const status  = widgets.feature({ moduleId: "status",  export: "status"  });
+    const pricing = widgets.feature({ moduleId: "pricing", export: "pricing" });
+
+    counter.attach({
+      trigger: document.getElementById("t-counter"),
+      mountContainer: document.getElementById("m-counter"),
+      activateOn: "click",
+      props: { start: 5 },
+    });
+    status.attach({
+      trigger: document.getElementById("t-status"),
+      mountContainer: document.getElementById("m-status"),
+      activateOn: "click",
+      props: { message: "All systems nominal" },
+    });
+    pricing.attach({
+      trigger: document.getElementById("t-pricing"),
+      mountContainer: document.getElementById("m-pricing"),
+      activateOn: "click",
+      props: { plan: "Enterprise", price: 99 },
+    });
+
+    // Pre-import the bundle so the test's `__ready` stays synchronous.
+    // import() is deduplicated by the browser module graph: this resolves
+    // to the same module instance the bundle loader uses.
+    import("/tests/fixtures/monorepo-widgets-bundle.js").then((m) => {
+      window.__bundleMod = m;
+    });
+
+    document.getElementById("t-counter").click();
+    document.getElementById("t-status").click();
+    document.getElementById("t-pricing").click();
+
+    window.__ready = () => {
+      if (!window.__bundleMod) return false;
+      const mounts = ["m-counter", "m-status", "m-pricing"]
+        .map((id) => document.getElementById(id));
+      const cards = mounts.map((m) => m.shadowRoot?.querySelector(".ui-card"));
+      if (cards.some((c) => !c)) return false;
+      const bundleMod = window.__bundleMod;
+      window.__result = {
+        // Library import resolved at build time (in a real monorepo via
+        // workspace alias; here via static URL).
+        libraryMarker: bundleMod.__ui_lib_marker,
+        // Each widget rendered with the library's primitives.
+        chipText: cards.map((c) => c.querySelector(".ui-chip")?.textContent),
+        // Library-defined `clsx`-merged classes show on every Button.
+        firstButtonClasses: mounts[0].shadowRoot.querySelector(".ui-btn")?.className,
+        // Shared stylesheet adopted into every shadow root.
+        sameSheet:
+          mounts[0].shadowRoot.adoptedStyleSheets[0] ===
+            mounts[1].shadowRoot.adoptedStyleSheets[0] &&
+          mounts[1].shadowRoot.adoptedStyleSheets[0] ===
+            mounts[2].shadowRoot.adoptedStyleSheets[0],
+        adoptedRuleCount: mounts[0].shadowRoot.adoptedStyleSheets[0]?.cssRules.length ?? 0,
+        // Exactly one network fetch per asset.
+        bundleFetchCount: performance.getEntriesByName(
+          new URL("/tests/fixtures/monorepo-widgets-bundle.js", location.origin).href,
+          "resource",
+        ).length,
+        cssFetchCount: performance.getEntriesByName(
+          new URL("/tests/fixtures/monorepo-widgets-bundle.css", location.origin).href,
+          "resource",
+        ).length,
+        // Counter's starting value picked up from props.
+        counterStart: mounts[0].shadowRoot.querySelector('[data-testid="counter-value"]')?.textContent,
+      };
+      return true;
+    };
+  </script>
+</body></html>

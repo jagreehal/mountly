@@ -1,0 +1,32 @@
+<!doctype html>
+<html><body>
+  <div id="c"></div>
+  <script type="importmap">
+    {"imports":{"react":"https://esm.sh/react@18","react-dom/client":"https://esm.sh/react-dom@18/client","react-dom":"https://esm.sh/react-dom@18","mountly":"/packages/mountly/dist/index.js"}}
+  </script>
+  <script type="module">
+    import { createElement } from "react";
+    import { __clearCssTextCache } from "/packages/mountly/dist/index.js";
+    import { createWidget } from "/packages/adapters/mountly-react/dist/index.js";
+    __clearCssTextCache();
+
+    const Hello = (props) => createElement("span", { className: "styled-widget" }, props.msg);
+    const widget = createWidget(Hello, {
+      cssUrl: "/tests/fixtures/this-file-does-not-exist.css",
+    });
+    const c = document.getElementById("c");
+    let mountError = null;
+    try {
+      await widget.mount(c, { msg: "missing" });
+      await new Promise((r) => setTimeout(r, 0));
+    } catch (e) { mountError = String(e); }
+
+    const node = c.shadowRoot?.querySelector(".styled-widget");
+    window.__result = {
+      mountError,
+      hasShadowRoot: !!c.shadowRoot,
+      text: node?.textContent ?? "",
+      adoptedSheetCount: c.shadowRoot?.adoptedStyleSheets.length ?? 0,
+    };
+  </script>
+</body></html>

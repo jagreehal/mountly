@@ -75,8 +75,7 @@ import { createOnDemandFeature } from 'mountly';
 
 const signup = createOnDemandFeature({
   moduleId: 'signup-card',
-  loadModule: () => import('./my-widget/dist/index.js'),
-  render: ({ mod, container, props }) => mod.mount(container, props),
+  moduleUrl: './my-widget/dist/index.js',
 });
 
 signup.attach({
@@ -86,7 +85,9 @@ signup.attach({
 });
 ```
 
-Now the widget code is fetched on first hover and mounted on click. Open DevTools → Network and watch.
+mountly synthesises the loader and a default render that threads `moduleUrl` through to the adapter, so the sibling `dist/index.css` is fetched and adopted into the shadow root automatically. The widget code is fetched on first hover and mounted on click. Open DevTools → Network and watch.
+
+Need bespoke loading or rendering? `loadModule` and `render` are still available and override the auto-derived defaults.
 
 ## 5. See the full demo
 

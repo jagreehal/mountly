@@ -47,3 +47,65 @@ export function createModuleLoader(moduleUrl: string, options: CssAutoLoadOption
   };
 }
 
+// Cache one in-flight or resolved CSS load per URL. Storing the promise
+// rather than the resolved string is what dedupes concurrent mounts: when a
+// bundle fires three feature mounts on click, all three see the same pending
+// fetch and share one network request.
+const cssTextCache = new Map<string, Promise<string | null>>();
+
+/**
+ * Fetch a CSS file as raw text, suitable for shadow-DOM `adoptedStyleSheets`.
+ *
+ * Sends `Accept: text/css` so dev servers (e.g., Vite) return the raw
+ * stylesheet instead of the JS module they emit by default for HMR. Returns
+ * `null` on network errors or non-2xx responses; adapters should treat that as
+ * "no styles" rather than failing the mount.
+ */
+export function loadCssText(url: string): Promise<string | null> {
+  const cached = cssTextCache.get(url);
+  if (cached) return cached;
+  const promise = (async () => {
+    try {
+      const res = await fetch(url, { headers: { Accept: "text/css" } });
+      if (!res.ok) return null;
+      return await res.text();
+    } catch {
+      return null;
+    }
+  })();
+  cssTextCache.set(url, promise);
+  // Drop the cache entry on rejection so a later mount can retry. Resolved
+  // null (404 etc.) stays cached — the user's URL won't suddenly start
+  // working within a page session.
+  promise.catch(() => cssTextCache.delete(url));
+  return promise;
+}
+
+/**
+ * Resolve which CSS URL an adapter should fetch, given the various override
+ * sources. Order: explicit `cssUrl` (option or prop), then `.js → .css`
+ * derived from a `moduleUrl` (option or prop). Props always win over options
+ * when both are provided.
+ */
+export function resolveCssUrl(sources: {
+  cssUrlOption?: string;
+  moduleUrlOption?: string;
+  cssUrlProp?: string;
+  moduleUrlProp?: string;
+}): string | null {
+  const fromModule = (m?: string): string | null =>
+    m ? m.replace(/\.js(\?.*)?$/, ".css$1") : null;
+  return (
+    sources.cssUrlProp ||
+    sources.cssUrlOption ||
+    fromModule(sources.moduleUrlProp) ||
+    fromModule(sources.moduleUrlOption) ||
+    null
+  );
+}
+
+/** Test-only: clear the in-memory CSS cache so unit/integration tests are isolated. */
+export function __clearCssTextCache(): void {
+  cssTextCache.clear();
+}
+

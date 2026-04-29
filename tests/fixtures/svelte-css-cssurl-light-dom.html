@@ -1,0 +1,39 @@
+<!doctype html>
+<html><body>
+  <div id="c"></div>
+  <script type="importmap">{"imports":{"mountly":"/packages/mountly/dist/index.js"}}</script>
+  <script type="module">
+    import { __clearCssTextCache } from "/packages/mountly/dist/index.js";
+    import { createWidget } from "/packages/adapters/mountly-svelte/dist/index.js";
+    __clearCssTextCache();
+
+    class HelloComponent {
+      constructor({ target, props }) {
+        this.el = document.createElement("span");
+        this.el.className = "styled-widget";
+        this.el.textContent = String(props?.msg ?? "");
+        target.appendChild(this.el);
+      }
+      $destroy() { this.el?.remove(); }
+    }
+
+    const widget = createWidget(HelloComponent, {
+      shadow: false,
+      cssUrl: "/tests/fixtures/css-loader-asset.css",
+    });
+    const c = document.getElementById("c");
+    await widget.mount(c, { msg: "light-cssUrl" });
+
+    const node = c.querySelector(".styled-widget");
+    const styleTag = c.querySelector('style[data-mountly-inline="true"]');
+    const fallbackHead = document.head.querySelector('style[data-mountly-fallback]');
+    window.__result = {
+      hasShadowRoot: !!c.shadowRoot,
+      text: node?.textContent ?? "",
+      computedColor: node ? getComputedStyle(node).color : "",
+      hasInlineStyleTag: !!styleTag,
+      hasHeadFallback: !!fallbackHead,
+      headFallbackHasCss: !!fallbackHead?.textContent?.includes("styled-widget"),
+    };
+  </script>
+</body></html>

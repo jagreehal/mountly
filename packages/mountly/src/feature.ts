@@ -1,4 +1,5 @@
 import { moduleCache, dataCache } from "./cache.js";
+import { createModuleLoader, type CssAutoLoadOptions } from "./assets.js";
 import {
   setupTrigger,
   type TriggerType,
@@ -32,7 +33,22 @@ export interface FeatureModule {
 
 export interface CreateOnDemandFeatureOptions {
   moduleId: string;
-  loadModule: () => Promise<unknown>;
+  /**
+   * URL to the widget's JavaScript bundle. Pass this and mountly handles the
+   * rest: it builds a `loadModule` for you, threads the URL through to the
+   * adapter so framework-specific CSS auto-loading (shadow-DOM `<style>`
+   * adoption) works out of the box, and uses a sensible default `render`.
+   *
+   * For light-DOM mounts where you want the core to also append a global
+   * `<link rel="stylesheet">`, pass `assetOptions: { css: "auto" }`.
+   *
+   * Override `loadModule` and/or `render` if you need bespoke behaviour;
+   * either explicit option wins over the `moduleUrl` shortcut.
+   */
+  moduleUrl?: string;
+  /** Forwarded to `createModuleLoader` when `moduleUrl` is used. */
+  assetOptions?: CssAutoLoadOptions;
+  loadModule?: () => Promise<unknown>;
   loadData?: (context: FeatureContext) => Promise<unknown>;
   /**
    * Build a stable cache key for `loadData` from a context. The default
@@ -41,7 +57,7 @@ export interface CreateOnDemandFeatureOptions {
    * context includes non-serializable values.
    */
   getCacheKey?: (context: FeatureContext) => string;
-  render: (args: {
+  render?: (args: {
     mod: FeatureModule;
     data: unknown;
     context: FeatureContext;
@@ -217,7 +233,27 @@ function wrapModuleLoadError(moduleId: string, err: unknown): Error {
 export function createOnDemandFeature(
   options: CreateOnDemandFeatureOptions
 ): OnDemandFeature {
-  const { moduleId, loadModule, loadData, render } = options;
+  const { moduleId, moduleUrl, assetOptions, loadData } = options;
+  if (!options.loadModule && !moduleUrl) {
+    throw new Error(
+      `[mountly] createOnDemandFeature("${moduleId}"): provide either \`moduleUrl\` (recommended) or \`loadModule\`.`,
+    );
+  }
+  // Default loadModule: createModuleLoader with css:"none" so we don't append
+  // a global <link>. Shadow-DOM widgets need their CSS adopted into the root,
+  // which the framework adapters handle via `moduleUrl` we thread into props.
+  // Light-DOM users can opt in with `assetOptions: { css: "auto" }`.
+  const loadModule =
+    options.loadModule ||
+    createModuleLoader(moduleUrl as string, assetOptions ?? { css: "none" });
+  // Default render: forwards props plus moduleUrl so adapters can resolve CSS.
+  // Users who supply their own render keep full control.
+  const render =
+    options.render ||
+    (({ mod, container, props }) => {
+      const merged = moduleUrl ? { ...props, moduleUrl } : props;
+      mod.mount(container, merged);
+    });
   const getCacheKey = options.getCacheKey
     ? options.getCacheKey
     : (ctx: FeatureContext) => defaultCacheKey(moduleId, ctx);

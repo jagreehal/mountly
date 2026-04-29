@@ -1,0 +1,126 @@
+<!doctype html>
+<html>
+  <head>
+    <!-- Global stylesheet, same shape as a Next.js app's globals.css.
+         Provides :root tokens and utility classes. Reaches every light-DOM
+         widget on the page. The same stylesheet would also style the
+         library's components inside Next.js. -->
+    <link rel="stylesheet" href="/tests/fixtures/bridge-tokens.css" />
+    <script type="importmap">
+      {"imports":{
+        "react":"https://esm.sh/react@19.2.5",
+        "react/jsx-runtime":"https://esm.sh/react@19.2.5/jsx-runtime",
+        "react-dom":"https://esm.sh/react-dom@19.2.5?deps=react@19.2.5",
+        "react-dom/client":"https://esm.sh/react-dom@19.2.5/client?deps=react@19.2.5",
+        "mountly":"/packages/mountly/dist/index.js"
+      }}
+    </script>
+  </head>
+  <body>
+    <button id="t-hero">hero</button>
+    <button id="t-pricing">pricing</button>
+    <button id="t-newsletter">newsletter</button>
+    <div id="m-hero"></div>
+    <div id="m-pricing"></div>
+    <div id="m-newsletter"></div>
+    <!-- Direct-React mount target — proves the same UI library is usable
+         outside mountly entirely (the "Next.js use case"). -->
+    <div id="direct-react"></div>
+
+    <script type="module">
+      import { createElement as h } from "react";
+      import { createRoot } from "react-dom/client";
+      import {
+        createWidgetBundle,
+        __clearCssTextCache,
+      } from "mountly";
+      __clearCssTextCache();
+
+      // Path 1: consume the pure-React library DIRECTLY. No bridge,
+      // no mountly. Same code path you'd use inside a Next.js app.
+      const ui = await import("/tests/fixtures/bridge-pure-ui-lib.js");
+      createRoot(document.getElementById("direct-react")).render(
+        h(ui.Card, { tone: "primary", title: "Direct" },
+          h(ui.Button, { variant: "primary", "data-testid": "direct-button" },
+            "Used directly, no mountly"),
+        ),
+      );
+
+      // Path 2: consume the SAME library via the mountly bridge. The
+      // bridge is its own small package; the library is unchanged.
+      const widgets = createWidgetBundle({
+        moduleUrl: "/tests/fixtures/bridge-widgets.js",
+        assetOptions: { css: "none" }, // global tokens already in <head>
+      });
+
+      const hero = widgets.feature({ moduleId: "hero", export: "hero" });
+      const pricing = widgets.feature({ moduleId: "pricing", export: "pricing" });
+      const newsletter = widgets.feature({ moduleId: "newsletter", export: "newsletter" });
+
+      hero.attach({
+        trigger: document.getElementById("t-hero"),
+        mountContainer: document.getElementById("m-hero"),
+        activateOn: "click",
+        props: { headline: "Ship the same UI library two ways.", ctaLabel: "Get started", ctaHref: "/start" },
+      });
+      pricing.attach({
+        trigger: document.getElementById("t-pricing"),
+        mountContainer: document.getElementById("m-pricing"),
+        activateOn: "click",
+        props: { plan: "Pro", price: 29, blurb: "Everything in Free, plus" },
+      });
+      newsletter.attach({
+        trigger: document.getElementById("t-newsletter"),
+        mountContainer: document.getElementById("m-newsletter"),
+        activateOn: "click",
+        props: { buttonLabel: "Subscribe" },
+      });
+
+      document.getElementById("t-hero").click();
+      document.getElementById("t-pricing").click();
+      document.getElementById("t-newsletter").click();
+
+      // Pre-import bridge so __ready stays sync.
+      import("/tests/fixtures/bridge-widgets.js").then((m) => {
+        window.__bridge = m;
+      });
+
+      window.__ready = () => {
+        const direct = document.getElementById("direct-react").querySelector(".ui-btn");
+        const heroM = document.getElementById("m-hero");
+        const heroCta = heroM.querySelector('[data-testid="hero-cta"]');
+        const pricingM = document.getElementById("m-pricing");
+        const newsletterM = document.getElementById("m-newsletter");
+        const newsletterBtn = newsletterM.querySelector(".ui-btn-default");
+        if (!direct || !heroCta || !pricingM.querySelector(".ui-card") || !newsletterBtn) return false;
+        if (!window.__bridge) return false;
+        window.__result = {
+          // Library marker readable directly (no bridge involved).
+          libraryId: window.__bridge.__bridge_id ? "via-bridge" : "missing",
+          bridgeId: window.__bridge.__bridge_id,
+          // Direct-React path renders.
+          directRendered: !!direct,
+          directButtonText: direct.textContent,
+          directButtonColor: getComputedStyle(direct).backgroundColor,
+          // Bridge path renders, all light DOM.
+          shadowRoots: [heroM, pricingM, newsletterM].map((m) => !!m.shadowRoot),
+          // Radix Slot's asChild pattern: <a> ended up with Button classes.
+          heroCtaTag: heroCta.tagName.toLowerCase(),
+          heroCtaIsAnchor: heroCta.tagName === "A",
+          heroCtaHref: heroCta.getAttribute("href"),
+          heroCtaHasButtonClass: heroCta.classList.contains("ui-btn"),
+          heroCtaColor: getComputedStyle(heroCta).backgroundColor,
+          // Newsletter button uses the same global token, proving the host
+          // stylesheet reaches every bridged widget.
+          newsletterButtonColor: getComputedStyle(newsletterBtn).backgroundColor,
+          // The bridge JS file fetched once.
+          bridgeFetchCount: performance.getEntriesByName(
+            new URL("/tests/fixtures/bridge-widgets.js", location.origin).href,
+            "resource",
+          ).length,
+        };
+        return true;
+      };
+    </script>
+  </body>
+</html>
