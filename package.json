@@ -22,7 +22,7 @@
     "test:headed": "playwright test --headed",
     "quality": "pnpm run lint && pnpm run typecheck && pnpm run test",
     "changeset": "changeset",
-    "version-packages": "changeset version",
+    "version-packages": "changeset version && pnpm install --lockfile-only",
     "release": "pnpm build && changeset publish",
     "test:e2e:critical": "PLAYWRIGHT_HTML_OPEN=never playwright test \"tests/svelte-adapter.spec.ts\" \"tests/vue-adapter.spec.ts\" \"tests/island.spec.ts\" \"tests/loader-css.spec.ts\" \"tests/host-bootstrap.spec.ts\""
   },
