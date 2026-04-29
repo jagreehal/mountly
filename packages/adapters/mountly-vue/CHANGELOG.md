@@ -1,5 +1,13 @@
 # mountly-vue
 
+## 0.1.2
+
+### Patch Changes
+
+- 2545d57: Styling DX
+- Updated dependencies [2545d57]
+  - mountly@0.1.2
+
 ## 0.1.1
 
 ### Patch Changes
