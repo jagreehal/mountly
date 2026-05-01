@@ -1,5 +1,13 @@
 # mountly-react
 
+## 0.1.4
+
+### Patch Changes
+
+- bace1e2: Add first-party Mountly primitives for data sources, URL query state, typed cross-island events, and widget test fixtures.
+- Updated dependencies [bace1e2]
+  - mountly@0.1.4
+
 ## 0.1.3
 
 ### Patch Changes
