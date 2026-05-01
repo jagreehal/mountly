@@ -1,0 +1,92 @@
+---
+title: TSRX
+description: Use mountly-tsrx to expose TSRX-style render or lifecycle modules as mountable widgets.
+---
+
+`mountly-tsrx` is a small adapter for TSRX-style output. It does not compile `.tsrx` files. It adapts the runtime shape your TSRX compiler emits into Mountly's `WidgetModule` contract.
+
+## Install
+
+```bash
+pnpm add mountly mountly-tsrx
+```
+
+## Supported component shapes
+
+The adapter accepts either a render object:
+
+```ts
+import { createWidget } from "mountly-tsrx";
+
+export default createWidget({
+  render(target, props: { message?: string }) {
+    const root = document.createElement("div");
+    root.textContent = props.message ?? "Hello";
+    target.appendChild(root);
+
+    return {
+      update(nextProps) {
+        root.textContent = nextProps.message ?? "Hello";
+      },
+      destroy() {
+        root.remove();
+      },
+    };
+  },
+});
+```
+
+Or a lifecycle object:
+
+```ts
+import { createWidget } from "mountly-tsrx";
+
+export default createWidget({
+  mount(target, props: { message?: string }) {
+    target.textContent = props.message ?? "Hello";
+  },
+  update(target, props) {
+    target.textContent = props.message ?? "Hello";
+  },
+  unmount(target) {
+    target.textContent = "";
+  },
+});
+```
+
+If no `update()` is available, Mountly falls back to unmounting and mounting again for prop updates.
+
+## Styling
+
+The TSRX adapter follows the same CSS rules as the React, Vue, and Svelte adapters. When the host passes `moduleUrl`, the adapter derives the sibling stylesheet and adopts it into the shadow root:
+
+```ts
+const feature = createOnDemandFeature({
+  moduleId: "profile-card",
+  moduleUrl: "/widgets/profile-card/dist/index.js",
+});
+```
+
+You can also pass an explicit stylesheet URL:
+
+```ts
+export default createWidget(Component, {
+  cssUrl: "/widgets/profile-card/dist/index.css",
+});
+```
+
+Or inline CSS:
+
+```ts
+export default createWidget(Component, {
+  styles: ".profile-card { color: rgb(12, 34, 56); }",
+});
+```
+
+The repo includes Playwright coverage proving both component shapes work and CSS is applied inside the shadow root.
+
+## When to use it
+
+Use `mountly-tsrx` when your TSRX compiler emits DOM-facing render/lifecycle code and you want the same host integration as the first-party framework adapters: shadow DOM, CSS loading, `mount/update/unmount`, and on-demand activation.
+
+If your TSRX output targets React, Vue, or Svelte components directly, use that framework's adapter instead.

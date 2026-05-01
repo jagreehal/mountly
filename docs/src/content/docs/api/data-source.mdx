@@ -1,0 +1,100 @@
+---
+title: createDataSource
+description: A small data loading primitive with cache, stale state, retry, abort, and loading/error snapshots.
+---
+
+```ts
+import { createDataSource } from "mountly/data";
+```
+
+`createDataSource()` is for widget data that should be shared across islands without each widget inventing its own cache lifecycle. It wraps an async loader with request dedupe, stale-while-revalidate, retry, abort, subscriptions, and a standard snapshot shape.
+
+## Basic usage
+
+```ts
+const products = createDataSource<string, Product>({
+  staleTime: 30_000,
+  retry: 2,
+  load: async ({ key, signal }) => {
+    const res = await fetch(`/api/products/${key}`, { signal });
+    if (!res.ok) throw new Error(`Failed to load product ${key}`);
+    return res.json();
+  },
+});
+
+const data = await products.read("sku_123");
+const snapshot = products.getSnapshot("sku_123");
+```
+
+## Snapshot
+
+```ts
+interface DataSourceSnapshot<T> {
+  status: "idle" | "loading" | "success" | "error";
+  data: T | undefined;
+  error: unknown;
+  loading: boolean;
+  stale: boolean;
+  cacheHit: boolean;
+  updatedAt: number | null;
+}
+```
+
+Widgets can render consistently from `status`, `loading`, `error`, and `data` rather than each framework inventing a slightly different shape.
+
+## Options
+
+| Field | Type | Default | Notes |
+|---|---|---|---|
+| `load` | `({ key, signal }) => Promise<T>` | required | Fetcher for one key. Always receives an `AbortSignal`. |
+| `cacheKey` | `(key) => string` | string or `JSON.stringify(key)` | Normalizes cache keys. |
+| `ttl` | `number \| null` | `null` | Hard cache expiry in milliseconds. |
+| `staleTime` | `number \| null` | `null` | Marks data as stale after this many milliseconds. |
+| `staleWhileRevalidate` | `boolean` | `true` | Return stale data immediately while refreshing in the background. |
+| `retry` | `number` | `0` | Retry count after the first failed attempt. |
+| `retryDelay` | `number \| (attempt, error) => number` | `0` | Delay between retries. |
+| `cache` | `DedupCache<string, T>` | new cache | Override storage for tests or advanced sharing. |
+
+## Subscribe
+
+```ts
+const off = products.subscribe("sku_123", (snapshot) => {
+  render(snapshot);
+});
+
+await products.read("sku_123");
+off();
+```
+
+Subscribers receive the current snapshot immediately and then every transition: loading, success, error, and invalidation.
+
+## Abort and invalidation
+
+```ts
+products.abort("sku_123");      // abort one in-flight key
+products.abort();               // abort every in-flight key
+
+products.invalidate("sku_123"); // drop one cached value
+products.clear();               // drop everything
+```
+
+Use `abort()` when an island is no longer relevant, such as a route transition or a closing modal. Use `invalidate()` when a mutation changes server state.
+
+## With `createOnDemandFeature`
+
+```ts
+const quoteSource = createDataSource<string, Quote>({
+  staleTime: 60_000,
+  load: ({ key, signal }) =>
+    fetch(`/api/quotes/${key}`, { signal }).then((r) => r.json()),
+});
+
+const quoteFeature = createOnDemandFeature({
+  moduleId: "quote-card",
+  moduleUrl: "/widgets/quote-card/dist/index.js",
+  loadData: (ctx) => quoteSource.read(String(ctx.quoteId)),
+  getCacheKey: (ctx) => `quote:${ctx.quoteId}`,
+});
+```
+
+`createOnDemandFeature` still owns feature lifecycle. `createDataSource` owns data lifecycle when more than one feature or widget needs the same data semantics.

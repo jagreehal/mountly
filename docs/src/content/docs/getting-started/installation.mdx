@@ -22,9 +22,10 @@ yarn add mountly
 | React | `mountly-react` | React 18 or 19. |
 | Vue | `mountly-vue` | Vue 3. |
 | Svelte | `mountly-svelte` | Auto-detects v4 (class) vs v5 (functional) component shape. |
+| TSRX | `mountly-tsrx` | Adapts TSRX render/lifecycle output. |
 
 ```bash
-pnpm add mountly-react   # or mountly-vue, mountly-svelte
+pnpm add mountly-react   # or mountly-vue, mountly-svelte, mountly-tsrx
 ```
 
 The adapter declares the framework as a peer dependency — install it yourself if it isn't already in the project:
@@ -34,6 +35,8 @@ pnpm add react react-dom         # for mountly-react
 pnpm add vue                     # for mountly-vue
 pnpm add svelte                  # for mountly-svelte
 ```
+
+`mountly-tsrx` has no framework peer dependency. It expects your TSRX compiler output to expose either a `render()` object or `mount/update/unmount` lifecycle object.
 
 ## Optional: Tailwind preset
 
