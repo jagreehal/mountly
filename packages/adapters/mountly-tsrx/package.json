@@ -1,0 +1,45 @@
+{
+  "name": "mountly-tsrx",
+  "version": "0.1.3",
+  "description": "TSRX adapter utilities for mountly widgets",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jagreehal/mountly",
+    "directory": "packages/adapters/mountly-tsrx"
+  },
+  "bugs": {
+    "url": "https://github.com/jagreehal/mountly/issues"
+  },
+  "homepage": "https://github.com/jagreehal/mountly/tree/main/packages/adapters/mountly-tsrx#readme",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "dev": "tsup --watch",
+    "prepack": "rm -f LICENSE && cp ../../../LICENSE LICENSE",
+    "postpack": "rm -f LICENSE && ln -s ../../../LICENSE LICENSE"
+  },
+  "peerDependencies": {
+    "mountly": "^0.1.3"
+  },
+  "devDependencies": {
+    "mountly": "^0.1.3",
+    "tsup": "^8.5.1",
+    "typescript": "^6.0.3"
+  }
+}

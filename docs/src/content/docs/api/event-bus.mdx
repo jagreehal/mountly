@@ -1,0 +1,80 @@
+---
+title: Event bus
+description: Typed cross-island events with namespaces and optional payload validation.
+---
+
+```ts
+import { createEventBus } from "mountly/bus";
+```
+
+`createEventBus()` gives independent widgets a shared event channel without importing each other or committing to one framework's store.
+
+## Basic usage
+
+```ts
+type CartEvents = {
+  "cart:changed": { count: number };
+  "product:selected": { sku: string };
+};
+
+const bus = createEventBus<CartEvents>();
+
+const off = bus.on("cart:changed", (payload) => {
+  console.log(payload.count);
+});
+
+bus.emit("cart:changed", { count: 3 });
+off();
+```
+
+The generic type is compile-time only. Runtime validation is optional.
+
+## Namespaces
+
+```ts
+const cartBus = createEventBus<{
+  changed: { count: number };
+}>({
+  namespace: "cart",
+});
+
+cartBus.eventName("changed"); // "cart:changed"
+cartBus.emit("changed", { count: 1 });
+```
+
+Namespaces are useful when several teams or bundles share the same page. They keep short event names readable without making global event names ambiguous.
+
+## Payload validation
+
+```ts
+const bus = createEventBus<{
+  selected: { id: string };
+}>({
+  validators: {
+    selected: (payload): payload is { id: string } =>
+      typeof payload === "object" &&
+      payload !== null &&
+      typeof (payload as { id?: unknown }).id === "string",
+  },
+});
+
+bus.emit("selected", { id: "sku_123" }); // ok
+bus.emit("selected", { id: 123 });       // throws
+```
+
+Use validators at host boundaries where event payloads may come from separately deployed widgets. Keep them simple; the helper accepts any type guard, so you can use a schema library if the host already has one.
+
+## Custom target
+
+By default the bus uses a shared `EventTarget` inside the `mountly` module instance. Pass a target when you want browser-level events or test isolation:
+
+```ts
+const bus = createEventBus<AppEvents>({
+  target: window,
+  namespace: "mountly",
+});
+```
+
+## Related
+
+- [Cross-framework Event Bus](/mountly/getting-started/cross-framework-event-bus/) shows the same pattern across React, Vue, and Svelte widgets.

@@ -56,6 +56,22 @@
     "./runtime": {
       "import": "./dist/runtime-entry.js",
       "types": "./dist/runtime-entry.d.ts"
+    },
+    "./data": {
+      "import": "./dist/data-entry.js",
+      "types": "./dist/data-entry.d.ts"
+    },
+    "./url": {
+      "import": "./dist/url-entry.js",
+      "types": "./dist/url-entry.d.ts"
+    },
+    "./bus": {
+      "import": "./dist/bus-entry.js",
+      "types": "./dist/bus-entry.d.ts"
+    },
+    "./test": {
+      "import": "./dist/test-entry.js",
+      "types": "./dist/test-entry.d.ts"
     }
   },
   "scripts": {

@@ -9,7 +9,7 @@ This pattern shows three independent widgets sharing state without importing eac
 - Vue widget (`mountly-vue`)
 - Svelte widget (`mountly-svelte`)
 
-They communicate through a host-level event bus (`EventTarget`) and publish counter updates.
+They communicate through a host-level event bus and publish counter updates.
 
 ## Why this matters
 
@@ -20,6 +20,26 @@ They communicate through a host-level event bus (`EventTarget`) and publish coun
 ## Example location
 
 - `examples/cross-framework-bus`
+
+For new code, use Mountly's typed helper:
+
+```ts
+import { createEventBus } from "mountly/bus";
+
+type CounterEvents = {
+  changed: { source: "react" | "vue" | "svelte"; value: number };
+};
+
+const bus = createEventBus<CounterEvents>({ namespace: "counter" });
+
+bus.emit("changed", { source: "react", value: 1 });
+
+const off = bus.on("changed", (event) => {
+  console.log(event.source, event.value);
+});
+```
+
+The example app keeps the raw `EventTarget` version visible so the pattern is easy to inspect. The `mountly/bus` helper adds namespacing, typed payloads, unsubscribe helpers, and optional runtime validation. See [Event bus](/mountly/api/event-bus/).
 
 ## Run
 

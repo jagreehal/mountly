@@ -1,0 +1,69 @@
+---
+title: URL state
+description: Parse, serialize, and patch query parameters safely from multiple islands.
+---
+
+```ts
+import { createUrlState, parseQuery, serializeQuery } from "mountly/url";
+```
+
+The URL state helper is intentionally small. It handles query strings only: parse current params, serialize deterministic output, and write patches without dropping unrelated keys owned by another island.
+
+## Parse and serialize
+
+```ts
+parseQuery("?tab=stats&filter=open&filter=paid");
+// { tab: "stats", filter: ["open", "paid"] }
+
+serializeQuery({ tab: "stats", page: 2, empty: null });
+// "page=2&tab=stats"
+```
+
+Serialization sorts keys so tests and generated links are stable. `null` and `undefined` remove/omit a value.
+
+## Sync with the browser URL
+
+```ts
+const productUrl = createUrlState<{
+  tab: string;
+  variant: string;
+  compare: string[];
+}>({
+  defaults: { tab: "details" },
+  history: "replace",
+});
+
+const state = productUrl.read();
+
+productUrl.write({ variant: "blue" });
+productUrl.write({ tab: "reviews" }, { history: "push" });
+```
+
+Each `write()` patches the current URL. If another island has already written `?coupon=SUMMER`, your patch preserves it unless you explicitly set `coupon`.
+
+## Subscribe
+
+```ts
+const off = productUrl.subscribe((state) => {
+  updateTabs(state.tab ?? "details");
+});
+
+off();
+```
+
+Subscriptions fire immediately, then again after `write()`, `popstate`, and `hashchange`.
+
+## In-memory URLs
+
+Tests and server-side helpers can pass a URL explicitly:
+
+```ts
+const url = createUrlState({
+  url: "https://example.test/products?tab=details",
+});
+
+url.write({ page: 2 });
+url.toString(); // "page=2&tab=details"
+```
+
+When `url` is provided, writes update that in-memory URL instead of `window.history`.

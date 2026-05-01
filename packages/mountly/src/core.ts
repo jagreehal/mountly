@@ -13,6 +13,37 @@ export {
   dataCache,
   type CacheOptions,
 } from "./cache.js";
+export {
+  createDataSource,
+  type CreateDataSourceOptions,
+  type DataSource,
+  type DataSourceLoadContext,
+  type DataSourceReadOptions,
+  type DataSourceSnapshot,
+  type DataSourceStatus,
+} from "./data-source.js";
+export {
+  createUrlState,
+  parseQuery,
+  serializeQuery,
+  type QueryState,
+  type QueryValue,
+  type UrlState,
+  type UrlStateOptions,
+} from "./url-state.js";
+export {
+  createEventBus,
+  type EventBus,
+  type EventBusOptions,
+  type EventMap,
+  type EventValidator,
+} from "./bus.js";
+export {
+  mountWidgetFixture,
+  cycleWidgetFixture,
+  triggerFixture,
+  type WidgetFixture,
+} from "./test-utils.js";
 
 export {
   createMountContainer,
