@@ -1,5 +1,13 @@
 # mountly
 
+## 0.2.0
+
+### Minor Changes
+
+- 888e622: Add media-query trigger support for island payloads and expand the custom element API for module registration/auto-registration in `mountly`.
+
+  Update adapter peer dependency ranges for React, Svelte, and Vue to support a wider set of framework versions.
+
 ## 0.1.4
 
 ### Patch Changes
