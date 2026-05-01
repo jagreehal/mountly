@@ -1,5 +1,14 @@
 # signup-card
 
+## 0.0.5
+
+### Patch Changes
+
+- Updated dependencies [bace1e2]
+  - mountly-react@0.1.4
+  - mountly-tailwind@0.1.2
+  - mountly@0.1.4
+
 ## 0.0.4
 
 ### Patch Changes
