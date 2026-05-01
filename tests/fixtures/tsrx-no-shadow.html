@@ -1,0 +1,28 @@
+<!doctype html>
+<html><body>
+  <div id="c"></div>
+  <script type="importmap">
+    {"imports":{"mountly":"/packages/mountly/dist/index.js"}}
+  </script>
+  <script type="module">
+    import { createWidget } from "/packages/adapters/mountly-tsrx/dist/index.js";
+
+    const w = createWidget({
+      render(target, props) {
+        target.textContent = props.msg;
+        target.className = "plain-tsrx";
+      },
+    }, { styles: ".plain-tsrx{color:rgb(1,2,3)}", shadow: false });
+
+    const c = document.getElementById("c");
+    w.mount(c, { msg: "plain" });
+
+    await new Promise(r => setTimeout(r, 50));
+
+    window.__result = {
+      hasShadowRoot: !!c.shadowRoot,
+      text: c.querySelector("[data-mountly-root]")?.textContent ?? "",
+      computedColor: getComputedStyle(c.querySelector(".plain-tsrx")).color,
+    };
+  </script>
+</body></html>

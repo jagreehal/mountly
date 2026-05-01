@@ -3,7 +3,11 @@ title: Installation
 description: Install the mountly runtime and a framework adapter.
 ---
 
-mountly is a runtime plus an adapter for your framework of choice. The runtime is required; pick the adapter that matches your component code.
+mountly is a runtime plus optional framework adapters. Install depends on what the repo owns.
+
+- A **widget repo** installs `mountly`, one adapter, and that framework.
+- A **host-only repo** that only loads already-built widget bundles usually installs `mountly` only.
+- A repo that both builds widgets and hosts them installs both sides.
 
 ## Runtime
 
@@ -15,14 +19,14 @@ npm install mountly
 yarn add mountly
 ```
 
-## Adapter
+## Adapter for widget code
 
-| Framework | Package | Notes |
-|---|---|---|
-| React | `mountly-react` | React 18 or 19. |
-| Vue | `mountly-vue` | Vue 3. |
-| Svelte | `mountly-svelte` | Auto-detects v4 (class) vs v5 (functional) component shape. |
-| TSRX | `mountly-tsrx` | Adapts TSRX render/lifecycle output. |
+| Framework | Package          | Notes                                                       |
+| --------- | ---------------- | ----------------------------------------------------------- |
+| React     | `mountly-react`  | React 18 or 19.                                             |
+| Vue       | `mountly-vue`    | Vue 3.                                                      |
+| Svelte    | `mountly-svelte` | Auto-detects v4 (class) vs v5 (functional) component shape. |
+| TSRX      | `mountly-tsrx`   | Adapts TSRX render/lifecycle output.                        |
 
 ```bash
 pnpm add mountly-react   # or mountly-vue, mountly-svelte, mountly-tsrx
@@ -37,6 +41,29 @@ pnpm add svelte                  # for mountly-svelte
 ```
 
 `mountly-tsrx` has no framework peer dependency. It expects your TSRX compiler output to expose either a `render()` object or `mount/update/unmount` lifecycle object.
+
+Widget entry:
+
+```ts
+import { createWidget } from 'mountly-react'; // or mountly-vue / mountly-svelte
+import Component from './Component';
+
+export default createWidget(Component);
+```
+
+Host entry:
+
+```html
+<signup-card trigger="idle" props='{"plan":"pro"}'></signup-card>
+
+<script type="module">
+  import { defineMountlyFeature } from 'mountly';
+
+  defineMountlyFeature('/widgets/signup-card/dist/index.js');
+</script>
+```
+
+The host does not need `mountly-react`, `react`, `vue`, or `svelte` unless it also builds the widget. The built widget bundle owns its framework runtime unless you intentionally externalize shared dependencies.
 
 ## Optional: Tailwind preset
 
@@ -54,7 +81,7 @@ For prototyping or static hosts, you can load mountly directly:
 
 ```html
 <script type="module">
-  import { createOnDemandFeature } from "https://cdn.jsdelivr.net/npm/mountly@0.1/dist/index.js";
+  import { createOnDemandFeature } from 'https://cdn.jsdelivr.net/npm/mountly@0.1/dist/index.js';
   // …
 </script>
 ```
@@ -74,14 +101,18 @@ See [Quick start](/mountly/getting-started/quick-start/) for what it produces.
 ## Verify the install
 
 ```ts
-import { createOnDemandFeature } from "mountly";
-import { createWidget } from "mountly-react";
+import { createOnDemandFeature } from 'mountly';
+import { createWidget } from 'mountly-react';
 
 console.log(typeof createOnDemandFeature, typeof createWidget);
 // "function" "function"
 ```
 
 If both log `"function"`, you're set.
+
+## Tested npm path
+
+The repo has an external-consumer Playwright test that packs the publish artifacts, installs them into a clean Vite project with `npm install`, builds the consumer app, and renders React, Vue, Svelte, and TSRX widgets through `defineMountlyFeature`. That test is the release gate for package install DX.
 
 ## Next
 

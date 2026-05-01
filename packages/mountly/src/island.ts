@@ -10,8 +10,10 @@ export interface IslandPayload {
   moduleId: string;
   targetSelector?: string;
   props?: Record<string, unknown>;
-  trigger?: "click" | "hover" | "focus" | "viewport" | "idle" | "media" | "url-change";
+  trigger?: "click" | "hover" | "focus" | "viewport" | "idle" | "media" | "url-change" | "never";
+  activateOnMediaQuery?: string;
   preloadOn?: "hover" | "viewport" | "idle" | "media" | false;
+  preloadOnMediaQuery?: string;
   skipIfHydrated?: boolean;
   forceRemount?: boolean;
   hydratedAttr?: string;
@@ -380,15 +382,19 @@ export function mountIslandFeature(
     },
   });
 
-  const attachNow = () =>
-    feature.attach({
+  const attachNow = () => {
+    if (payload.trigger === "never") return () => {};
+    return feature.attach({
       trigger,
       mount: mountTarget,
       preloadOn: payload.preloadOn ?? "hover",
+      preloadOnMediaQuery: payload.preloadOnMediaQuery,
       activateOn: payload.trigger ?? "click",
+      activateOnMediaQuery: payload.activateOnMediaQuery,
       props: payload.props ?? {},
       toggle: once ? false : true,
     });
+  };
 
   let detach = () => {};
   const parentIsland = waitForParent ? findParentIsland(element) : null;

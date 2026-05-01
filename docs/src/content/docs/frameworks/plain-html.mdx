@@ -3,7 +3,7 @@ title: Plain HTML
 description: Run mountly with no bundler — import maps, native modules, one inline script.
 ---
 
-mountly's most distinctive use case is **plain HTML hosts** — CMS pages, partner integrations, static sites. No bundler. No SPA. Use declarative islands plus one host script tag.
+mountly's most distinctive use case is **plain HTML hosts** — CMS pages, partner integrations, static sites. No bundler. No SPA. Use custom tags or declarative islands plus one host script tag.
 
 That makes it a strong fit for legacy modernization: you can keep the existing host page and add richer features incrementally instead of rewriting the whole app.
 
@@ -29,15 +29,15 @@ That makes it a strong fit for legacy modernization: you can keep the existing h
 ## Programmatic host (advanced)
 
 ```html title="host.html"
-<!doctype html>
+<!DOCTYPE html>
 <html>
   <head>
     <script type="module">
-      import { installRuntime } from "https://cdn.jsdelivr.net/npm/mountly@0.1/dist/index.js";
+      import { installRuntime } from 'https://cdn.jsdelivr.net/npm/mountly@0.1/dist/index.js';
       installRuntime({
-        react: "https://esm.sh/react@18",
-        reactDom: "https://esm.sh/react-dom@18",
-        reactDomClient: "https://esm.sh/react-dom@18/client",
+        react: 'https://esm.sh/react@18',
+        reactDom: 'https://esm.sh/react-dom@18',
+        reactDomClient: 'https://esm.sh/react-dom@18/client',
       });
     </script>
     <script type="importmap">
@@ -51,18 +51,22 @@ That makes it a strong fit for legacy modernization: you can keep the existing h
   <body>
     <button id="cta">Sign up</button>
     <script type="module">
-      import { createOnDemandFeature, registerCustomElement, defineMountlyFeature } from "mountly";
+      import {
+        createOnDemandFeature,
+        registerCustomElement,
+        defineMountlyFeature,
+      } from 'mountly';
 
       const signup = createOnDemandFeature({
-        moduleId: "signup-card",
-        loadModule: () => import("signup-card"),
+        moduleId: 'signup-card',
+        loadModule: () => import('signup-card'),
         render: ({ mod, container, props }) => mod.mount(container, props),
       });
 
       signup.attach({
-        trigger: document.getElementById("cta"),
-        preloadOn: "hover",
-        activateOn: "click",
+        trigger: document.getElementById('cta'),
+        preloadOn: 'hover',
+        activateOn: 'click',
       });
     </script>
   </body>
@@ -80,48 +84,83 @@ Two rules:
 
 See [`installRuntime`](/mountly/api/install-runtime/) for the full reference.
 
-## Declarative usage with `<mountly-feature>`
+## Declarative usage with custom tags
 
-If the host is a CMS or a static templating engine where you'd rather drop in HTML, use the [custom element](/mountly/concepts/custom-element/):
+If the host is a CMS or a static templating engine where you'd rather drop in HTML, use the [custom element](/mountly/concepts/custom-element/) aliases:
 
 ```html
-<button id="cta">Sign up</button>
-<div id="modal-root"></div>
-
-<mountly-feature
-  module-id="signup-card"
-  trigger="hover"
-  mount-selector="#modal-root"
-  props='{"plan":"pro"}'
-></mountly-feature>
+<signup-card trigger="hover" props='{"plan":"pro"}'></signup-card>
+<payment-breakdown
+  trigger="idle"
+  props='{"invoiceId":"inv_123"}'
+></payment-breakdown>
 
 <script type="module">
-  import { createOnDemandFeature, registerCustomElement, defineMountlyFeature } from "mountly";
+  import { defineMountlyFeature } from 'mountly';
 
-  registerCustomElement("signup-card", () =>
-    createOnDemandFeature({
-      moduleId: "signup-card",
-      loadModule: () => import("signup-card"),
-      render: ({ mod, container, props }) => mod.mount(container, props),
-    }),
-  );
-  defineMountlyFeature();
+  defineMountlyFeature('/widgets/dist/index.js');
 </script>
 ```
 
-The element handles attach, mount, prop updates, and unmount. The script is wired once per page; the markup can repeat as much as you like.
+`defineMountlyFeature(source)` scans the page, defines alias tags, and loads matching named exports from the shared bundle (`signup-card` → `signupCard`). If the shared bundle exports a default widget, Mountly uses that as the fallback.
+
+Use `prefix` when the host needs namespaced custom tags:
+
+```html
+<acme-signup-card trigger="hover" props='{"plan":"pro"}'></acme-signup-card>
+
+<script type="module">
+  import { defineMountlyFeature } from 'mountly';
+
+  defineMountlyFeature({
+    source: '/widgets/dist/index.js',
+    prefix: 'acme',
+  });
+</script>
+```
+
+The tag is prefixed, but the module ID and named export stay unprefixed (`signup-card` → `signupCard`).
+
+When widgets are split into separate files, restrict the modules and derive URLs from a base path:
+
+```html
+<signup-card trigger="hover" props='{"plan":"pro"}'></signup-card>
+
+<script type="module">
+  import { defineMountlyFeature } from 'mountly';
+
+  defineMountlyFeature({
+    baseUrl: '/widgets',
+    modules: ['signup-card'],
+  });
+</script>
+```
+
+This loads `/widgets/signup-card/dist/index.js` and ignores other custom tags on the page. That is the byte-control path.
+
+You can still use the wrapper tag directly when a module ID cannot be a browser custom element name:
+
+```html
+<mountly-feature
+  module-id="signup"
+  trigger="hover"
+  props='{"plan":"pro"}'
+></mountly-feature>
+```
+
+Browser custom elements must include a hyphen, so `<signup>` is not valid.
 
 ## Multi-widget pages
 
-For more than one widget, use peer builds and one import map for everything:
+For more than one framework widget, use peer builds and one import map for shared framework dependencies:
 
 ```html
 <script type="module">
-  import { installRuntime } from "https://cdn.jsdelivr.net/npm/mountly@0.1/dist/index.js";
+  import { installRuntime } from 'https://cdn.jsdelivr.net/npm/mountly@0.1/dist/index.js';
   installRuntime({
-    react: "https://esm.sh/react@18",
-    reactDom: "https://esm.sh/react-dom@18",
-    reactDomClient: "https://esm.sh/react-dom@18/client",
+    react: 'https://esm.sh/react@18',
+    reactDom: 'https://esm.sh/react-dom@18',
+    reactDomClient: 'https://esm.sh/react-dom@18/client',
   });
 </script>
 

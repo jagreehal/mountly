@@ -1,0 +1,90 @@
+---
+title: Positioning
+description: How to think about mountly, where it fits, and what it is not.
+---
+
+mountly is best described as an **on-demand component runtime**.
+
+Short version:
+
+> Framework components. Any page. On demand.
+
+Longer version:
+
+> mountly turns React, Vue, Svelte, and TSRX components into lazy, isolated, HTML-addressable features that can be dropped into CMS pages, marketing sites, legacy apps, partner embeds, and framework migrations.
+
+## The center
+
+The core primitive is not an app, route, page, or microfrontend. It is a **feature**:
+
+- A normal framework component.
+- Wrapped as a mountable widget.
+- Addressed from HTML.
+- Loaded and mounted when a trigger says "now".
+- Isolated from host styles by default.
+
+Everything else is a use case built on that primitive.
+
+## Use cases
+
+| Use case              | What mountly provides                                                     |
+| --------------------- | ------------------------------------------------------------------------- |
+| Marketing pages       | Product-owned components on fast campaign pages without copying UI code.  |
+| CMS and static hosts  | Custom tags plus one host script instead of a full app shell.             |
+| Legacy modernization  | Replace old UI one feature at a time while the host remains in place.     |
+| Runtime islands       | Island-style activation for HTML hosts without adopting a site framework. |
+| Partner embeds        | Stable HTML tags that load isolated interactive UI on demand.             |
+| Framework transitions | React, Vue, Svelte, and TSRX widgets can coexist during migration.        |
+| Performance work      | Heavy UI loads on intent, viewport, idle, media query, or URL change.     |
+
+## What it is
+
+- A component delivery runtime.
+- A progressive enhancement layer.
+- A framework bridge.
+- A declarative custom-element loader.
+- An on-demand activation and caching system.
+
+## What it is not
+
+- Not a replacement for Next, Nuxt, SvelteKit, Remix, or Astro.
+- Not a full app router.
+- Not a global state framework.
+- Not a microfrontend control plane.
+- Not a requirement to rewrite components as Web Components.
+
+## Compared with nearby tools
+
+### Astro
+
+Astro is a site framework with compile-time island directives. mountly is runtime-first and host-agnostic. It works inside pages that already exist: CMS templates, static files, legacy apps, partner pages, or app shells from another framework.
+
+Use Astro when Astro owns the site. Use mountly when the page already exists and you need to drop in an interactive component.
+
+They can also work together: Astro can render the shell and content, while mountly handles a portable, deeply interactive widget that should keep its own release path or framework lifecycle.
+
+### Web Components
+
+mountly uses custom elements as a delivery mechanism, not as the authoring model. You still write React, Vue, Svelte, or TSRX components. The adapter exposes them as mountable widgets, and mountly gives the host a stable tag such as `<signup-card>`.
+
+### Module Federation
+
+Module Federation is for sharing modules across separately built applications. mountly is smaller and more page-oriented: "put this component here, load it on demand, isolate it from the host."
+
+### Framework lazy loading
+
+Framework lazy loading works well when one framework owns the app. mountly is for heterogeneous hosts, plain HTML, CMS pages, and migrations where the component team and host page may not share a bundler.
+
+It is also composable with framework apps. A Next, Astro, Remix, Vue, or SvelteKit app can own routing and SSR while mountly owns a specific embedded feature that needs custom-tag placement, trigger-based activation, or cross-framework portability.
+
+## The decision rule
+
+Use mountly when you can describe the work as:
+
+> We have a component, and we need to place it into a page that should not own the component's framework lifecycle.
+
+If the work is instead:
+
+> We are building a full application and one framework owns every route and surface.
+
+then mountly is usually not the right center of gravity. Use the framework's own routing, data, and lazy-loading model.

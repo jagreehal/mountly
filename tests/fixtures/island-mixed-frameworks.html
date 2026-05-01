@@ -1,0 +1,68 @@
+<!doctype html>
+<html><body>
+  <!-- React-style widget -->
+  <div id="react-island" data-mountly-island='{"schemaVersion":1,"id":"react-widget","moduleId":"react-widget","trigger":"click"}'>
+    <span>Load React widget</span>
+  </div>
+
+  <!-- Svelte-style widget -->
+  <div id="svelte-island" data-mountly-island='{"schemaVersion":1,"id":"svelte-widget","moduleId":"svelte-widget","trigger":"click"}'>
+    <span>Load Svelte widget</span>
+  </div>
+
+  <script type="module">
+    import { mountIslandFeature } from "/packages/mountly/dist/index.js";
+
+    // Simulate a React-style widget (just uses regular mount interface)
+    const reactWidget = {
+      mount(target) {
+        const div = document.createElement("div");
+        div.className = "react-widget";
+        div.textContent = "React Widget (framework-agnostic mount)";
+        target.appendChild(div);
+      },
+      unmount() {},
+    };
+
+    // Simulate a Svelte-style widget (same interface)
+    const svelteWidget = {
+      mount(target) {
+        const div = document.createElement("div");
+        div.className = "svelte-widget";
+        div.textContent = "Svelte Widget (framework-agnostic mount)";
+        target.appendChild(div);
+      },
+      unmount() {},
+    };
+
+    const loaders = {
+      "react-widget": async () => ({ default: reactWidget }),
+      "svelte-widget": async () => ({ default: svelteWidget }),
+    };
+
+    const reactContainer = document.getElementById("react-island");
+    const svelteContainer = document.getElementById("svelte-island");
+
+    // Mount both using same mountIslandFeature API
+    // Different "frameworks" are abstracted away by the adapter interface
+    mountIslandFeature(reactContainer, loaders);
+    mountIslandFeature(svelteContainer, loaders);
+
+    // Trigger both
+    setTimeout(() => {
+      reactContainer.click();
+      svelteContainer.click();
+    }, 50);
+
+    // Verify both loaded
+    setTimeout(() => {
+      window.__result = {
+        reactLoaded: !!document.querySelector('.react-widget'),
+        svelteLoaded: !!document.querySelector('.svelte-widget'),
+        reactText: document.querySelector('.react-widget')?.textContent ?? '',
+        svelteText: document.querySelector('.svelte-widget')?.textContent ?? '',
+        bothInSamePage: !!(document.querySelector('.react-widget') && document.querySelector('.svelte-widget')),
+      };
+    }, 200);
+  </script>
+</body></html>

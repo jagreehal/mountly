@@ -1,0 +1,335 @@
+---
+title: Islands Architecture
+description: Server-render static HTML, selectively hydrate interactive regions, and serve minimal JavaScript. How Mountly fits the islands pattern.
+---
+
+Islands architecture is a pattern where you ship mostly **static HTML** from the server and activate only the **interactive regions** (islands) with JavaScript on the client. The rest of the page remains static HTML and ships little to no client-side JavaScript unless explicitly needed.
+
+**Key distinction:** Islands architecture is a **rendering pattern**, not a deployment or team architecture. It controls how a page renders and hydrates—not how teams or codebases are organized.
+
+## The problem it solves
+
+Traditional SPAs hydrate the entire page tree, even regions that will never change. This means:
+
+- Larger JavaScript bundles
+- Slower time-to-interactive (TTI) on slower networks/devices
+- Wasted CPU hydrating static content
+- Poorer fallback behavior if JavaScript fails to load
+
+Islands architecture inverts this: ship HTML-first, then opt specific regions into JavaScript only when they need it. By reducing JavaScript sent to the client and limiting hydration work to interactive regions only, islands improve load and interaction performance.
+
+---
+
+**Quick mental model:**
+
+Think of islands as controlling **when and where JavaScript runs**, not how teams or codebases are organized. Islands optimize rendering and hydration within a single application, not team boundaries or independent deployment.
+
+**On hydration:** Only interactive islands are hydrated—the rest of the page remains static HTML. This means the browser only runs JavaScript setup (event listeners, state initialization, etc.) for regions that need interactivity, leaving static regions untouched.
+
+---
+
+## How Mountly fits
+
+Mountly is not a full SSR framework. It is a **component mounting library** that activates server-rendered regions using the **`mountIslandFeature()`** API. Your server or framework renders the initial HTML and writes a `data-mountly-island` payload. Mountly reads that payload and uses triggers to decide when to load and mount the client module.
+
+You can use Mountly in two ways for islands:
+- **As a dependency** — `npm install mountly` and call `mountIslandFeature()` directly on DOM nodes in your app
+- **Via custom elements** — use `defineMountlyFeature()` to register widgets as `<custom-element>` tags (useful for unknown hosts, CMS pages, or third-party embeds)
+
+```html
+<!-- Server renders the island HTML -->
+<div
+  id="cart"
+  data-mountly-hydrated="true"
+  data-mountly-island='{
+    "schemaVersion":1,
+    "id":"cart-widget",
+    "moduleId":"cart",
+    "trigger":"click",
+    "props":{"items":3},
+    "skipIfHydrated":true
+  }'
+>
+  <!-- SSR content, visible immediately -->
+  <div class="cart-summary">3 items, $42</div>
+</div>
+
+<script type="module">
+  import { mountIslandFeature } from 'mountly';
+
+  const loaders = {
+    cart: () => import('./cart-widget.js'),
+  };
+
+  mountIslandFeature(document.getElementById('cart'), loaders);
+</script>
+```
+
+This keeps Mountly composable with Astro, Next.js, Remix, Rails, Django, CMS templates, or plain server-rendered HTML. Those tools can own routing and rendering; Mountly owns the portable activation layer.
+
+## Trigger types
+
+Control **when** JavaScript loads and runs.
+
+| Trigger | When JS loads | Best for |
+|---------|---------------|----------|
+| `click` | On first click | Forms, modals, drawers |
+| `hover` | On hover | Menus, previews, tooltip-like widgets |
+| `focus` | On focus | Inputs, search boxes, accessible controls |
+| `idle` | When browser is idle via `requestIdleCallback` | Below-the-fold content, low-priority features |
+| `viewport` | When element enters viewport | Lazy sections, cards, comments, feeds |
+| `media` | When a media query matches | Device/layout-specific UI |
+| `url-change` | When URL/history changes | Search/filter panels, route-aware widgets |
+| `never` | Only if manually triggered | Server-rendered features that may never need JS |
+
+Islands can hydrate using different strategies: on page load, on user interaction (click, focus, hover), when entering the viewport, when the browser is idle, or when a media query matches. This flexibility lets you optimize when JavaScript runs based on user behavior and network conditions.
+
+## Island options
+
+The island payload is the contract between the server-rendered HTML and Mountly's client runtime.
+
+```ts
+interface IslandPayload {
+  schemaVersion?: 1;
+  id: string;
+  moduleId: string;
+  targetSelector?: string;
+  props?: Record<string, unknown>;
+  trigger?: 'click' | 'hover' | 'focus' | 'viewport' | 'idle' | 'media' | 'url-change' | 'never';
+  preloadOn?: 'hover' | 'viewport' | 'idle' | 'media' | false;
+  skipIfHydrated?: boolean;
+  forceRemount?: boolean;
+  hydratedAttr?: string;
+  once?: boolean;
+  waitForParent?: boolean;
+  retry?: number;
+  retryDelayMs?: number;
+  requireSsrMarker?: boolean;
+  ssrMarkerAttr?: string;
+  version?: string;
+  moduleUrl?: string;
+  cssUrl?: string;
+}
+```
+
+| Option | Default | What it controls |
+|--------|---------|------------------|
+| `schemaVersion` | `1` when generated by helpers | Payload format version. |
+| `id` | Required | Stable island instance ID for events, warnings, and diagnostics. |
+| `moduleId` | Required | Loader key used to resolve the widget module. |
+| `targetSelector` | Island element | Child selector to mount into instead of replacing/mounting on the island root. |
+| `props` | `{}` | Props forwarded to the widget module. |
+| `trigger` | `click` in the feature layer | Activation trigger; `never` intentionally leaves the SSR island inert. |
+| `preloadOn` | Trigger-dependent | Preload trigger; use `false` to disable preloading. |
+| `skipIfHydrated` | `true` | If the hydrated marker is present, keep SSR content and skip client remount. |
+| `forceRemount` | `false` | Remount even when SSR content is marked hydrated. |
+| `hydratedAttr` | `data-mountly-hydrated` | Attribute used to detect SSR/hydrated content. |
+| `once` | `false` | Activate only once. |
+| `waitForParent` | `true` | For nested islands, wait for a parent island before activating the child. |
+| `retry` | `0` | Number of module-load retries after the first failure. |
+| `retryDelayMs` | `0` | Delay between retries. |
+| `requireSsrMarker` | `false` | Do not activate unless the SSR marker attribute exists. |
+| `ssrMarkerAttr` | `ssr` | Attribute checked when `requireSsrMarker` is true. |
+| `version` | Unused by runtime | Optional application/version metadata. |
+| `moduleUrl` | None | Widget bundle URL forwarded to adapters so CSS can be derived automatically. |
+| `cssUrl` | Derived from `moduleUrl` by adapters | Explicit stylesheet URL forwarded to adapters. |
+
+`mountIslandFeature(element, loaders, options)` can override runtime behavior for a whole mount call:
+
+| Runtime option | What it controls |
+|----------------|------------------|
+| `forceRemount` | Override payload `forceRemount`. |
+| `skipIfHydrated` | Override payload `skipIfHydrated`. |
+| `hydratedAttr` | Override payload `hydratedAttr`. |
+| `once` | Override payload `once`. |
+| `waitForParent` | Override payload `waitForParent`. |
+| `retry` | Override payload `retry`. |
+| `retryDelayMs` | Override payload `retryDelayMs`. |
+| `unmountEvent` | Event name that unmounts the island; set `false` to disable. |
+| `refreshEvent` | Event name that refreshes the island; set `false` to disable. |
+| `warnOnHydrationMismatch` | Enable/disable mismatch warnings when force-remounting hydrated content. |
+| `perfMarks` | Emit `performance.mark()` entries for island load/mount phases. |
+| `pauseOnHidden` | Pause behavior when document visibility changes. |
+| `requireSsrMarker` | Override payload `requireSsrMarker`. |
+| `ssrMarkerAttr` | Override payload `ssrMarkerAttr`. |
+
+For many islands at once, `mountAllIslands(document, loaders, { selector, forceRemount, skipIfHydrated, hydratedAttr })` scans the page and applies the same hydration policy to every matched payload.
+
+## Three activation strategies
+
+### Strategy 1: Preserve SSR content (default when marked hydrated)
+
+If the element has the hydrated marker and `skipIfHydrated` is not changed, Mountly leaves the server HTML alone.
+
+```html
+<div
+  id="island"
+  data-mountly-hydrated="true"
+  data-mountly-island='{"schemaVersion":1,"id":"product","moduleId":"product-card","trigger":"click"}'
+>
+  <a class="product-card" href="/products/42">View product</a>
+</div>
+
+<script type="module">
+  mountIslandFeature(island, loaders);
+  island.click(); // No client remount: SSR content is already marked hydrated.
+</script>
+```
+
+**Use when:** Server-rendered HTML is complete and functional, such as product cards, links, summary panels, or read-only content.
+
+### Strategy 2: Replace SSR on activation
+
+Set `skipIfHydrated: false` when the server output is only a placeholder and the client component must take over on the trigger.
+
+```html
+<div
+  id="island"
+  data-mountly-hydrated="true"
+  data-mountly-island='{
+    "schemaVersion":1,
+    "id":"counter",
+    "moduleId":"counter-widget",
+    "trigger":"click",
+    "skipIfHydrated":false
+  }'
+>
+  <button>Open counter</button>
+</div>
+
+<script type="module">
+  mountIslandFeature(island, loaders);
+  island.click(); // Client render replaces the SSR placeholder.
+</script>
+```
+
+**Use when:** The client needs state, event listeners, animation setup, browser APIs, or a different DOM shape from the server fallback.
+
+### Strategy 3: Force remount over SSR
+
+Set `forceRemount: true` when the island is marked hydrated but you explicitly want a client remount anyway.
+
+```html
+<div
+  id="island"
+  data-mountly-hydrated="true"
+  data-mountly-island='{
+    "schemaVersion":1,
+    "id":"counter",
+    "moduleId":"counter-widget",
+    "trigger":"click",
+    "forceRemount":true
+  }'
+>
+  <div class="ssr">Loading counter...</div>
+</div>
+
+<script type="module">
+  mountIslandFeature(island, loaders);
+  island.click();
+</script>
+```
+
+**Use when:** You want the payload to say “this has SSR content” while still forcing the client version to replace it. Mountly warns about this path because mismatched server/client output can cause flicker.
+
+## No-JS fallback
+
+Mountly islands can degrade without JavaScript. The server-rendered HTML remains visible even if the JS bundle fails to load or execute.
+
+This requires one key pattern:
+
+```html
+<head>
+  <!-- Global stylesheet for no-JS fallback -->
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+
+<body>
+  <div id="island" data-mountly-island="...">
+    <span class="styled-widget">Server-rendered content</span>
+  </div>
+
+  <!-- Host script that mounts islands when JS is available -->
+  <script type="module" src="...">
+  </script>
+</body>
+```
+
+When JS is **on**, Mountly can load the component and pass CSS hints through to adapters that adopt styles into the shadow root. When JS is **off**, the global stylesheet keeps the SSR content readable.
+
+This is similar in spirit to a `<noscript>` fallback, but the fallback is the actual server-rendered island content.
+
+## Honest tradeoffs
+
+### Mountly islands advantages
+
+- **Small activation API**: one function call around a server-rendered region
+- **Framework-agnostic widgets**: build islands in React, Vue, Svelte, TSRX, Solid-compatible modules, or plain widget modules
+- **Host-framework agnostic**: works with Astro, Next.js, Remix, server templates, CMS pages, and plain HTML
+- **Gradual adoption**: mix islands and full-page apps on the same site
+- **No-JS fallback path**: keep meaningful HTML in the page before Mountly activates anything
+
+### Mountly islands real constraints
+
+- **Shadow DOM is the default, but light DOM is available** — shadow DOM provides style isolation (good for independent islands); light DOM (`shadow: false`) integrates with global styles and form APIs. Pick based on your needs, not as a limitation.
+- **Islands are mostly independent** — sharing React Context, query clients, or routers across multiple islands requires manual coordination (event bus, URL state, external store). This is by design, not a limitation.
+- **Custom elements have form constraints (custom element approach only)** — if you use `defineMountlyFeature()` to register custom elements, form integration is different. Use the dependency approach with direct `mountIslandFeature()` calls if you need native form behavior.
+- **Islands architecture does not address team ownership or independent deployment** — if you need team-driven boundaries, separate CI/CD pipelines, or cross-team ownership, microfrontends are a better fit.
+
+### When to use Mountly islands
+
+- Your backend already renders HTML and you need selective client activation
+- You want portable islands without moving the whole site to a new framework
+- You are shipping components to unknown hosts, CMS pages, or third-party pages
+- You want Astro-like partial hydration behavior in places that are not Astro apps
+- You want something that can also compose with Astro rather than replace it
+
+### Islands architecture vs. microfrontends
+
+A common confusion: islands architecture is often compared to microfrontends, but they solve different problems.
+
+**Islands architecture** focuses on optimizing rendering and hydration within a single application. It controls *how* regions become interactive and when JavaScript loads, but assumes unified ownership and deployment.
+
+**Microfrontends** focus on independently developed and deployed application boundaries. They solve team autonomy, separate CI/CD pipelines, and cross-team ownership concerns—islands do not.
+
+If you need team-driven boundaries and independent deployments, consider microfrontends. If you want to optimize JavaScript loading and hydration within one app, islands are the fit.
+
+### When to reach for a full islands framework instead
+
+| Scenario | Consider | Why |
+|----------|----------|-----|
+| **Content-first site (blogs, marketing, docs)** | Astro | Built-in SSR, content collections, auto island generation, and integrated routing make this much simpler |
+| **Deno ecosystem** | Fresh | Native islands runtime support; no separate activation layer needed |
+| **Every region shares app state** | Full-page app (React, Next.js, Remix) | If Context, stores, and routers cross island boundaries, one app tree is simpler than coordinating independent islands |
+| **Custom element form integration** | Full-page app or `shadow: false` | If you need native form submission or deep form API integration, full-page apps handle this natively |
+| **Team autonomy & independent deployment** | Microfrontends | Islands architecture does not inherently solve team boundaries, deployment independence, or cross-team ownership concerns |
+
+## Size comparison
+
+Representative outcomes for a React island:
+
+| Build | Size impact | Includes |
+|-------|-------------|----------|
+| Self-contained | Largest | React + ReactDOM + adapter + component |
+| Peer build | Smaller | Component + adapter, with framework runtime provided by host |
+| SSR-only fallback | No client JS for that island | Server-rendered HTML + CSS |
+
+The exact numbers depend on your bundler, framework version, component code, and whether dependencies are externalized. Islands make sense when some regions can avoid JavaScript or load it later. If every region needs immediate shared client state, full-page hydration may be simpler.
+
+## How it compares to alternatives
+
+| Feature | Mountly Islands | Astro | Fresh | Full-page SPA |
+|---------|-----------------|-------|-------|---------------|
+| Server-side rendering | You provide it | Built in | Built in | Usually separate |
+| Selective hydration | Yes | Yes | Yes | No |
+| Works without JS | Yes, if SSR fallback is meaningful | Yes | Yes | Usually no |
+| UI framework choice | Adapter-based | Multi-framework integrations | Preact-first | App choice |
+| Host/build-tool agnostic | Yes | No | No | Depends |
+| Automatic island generation | No | Yes | Yes | N/A |
+| Best fit | Portable activation layer | Content sites | Deno islands apps | Deep client apps |
+
+## Next steps
+
+- Read about **triggers** in detail: [Triggers](/mountly/concepts/triggers/)
+- See a complete example: [Plain HTML host](/mountly/frameworks/plain-html/)
+- API reference: [`mountIslandFeature()` in source](https://github.com/jreehal/mountly/blob/main/packages/mountly/src/island.ts)

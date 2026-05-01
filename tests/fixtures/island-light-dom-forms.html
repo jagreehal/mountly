@@ -1,0 +1,65 @@
+<!doctype html>
+<html><body>
+  <div id="form-container" data-mountly-island='{"schemaVersion":1,"id":"form-test","moduleId":"form","trigger":"click","shadow":false}'>
+    <span>Click to load form</span>
+  </div>
+  <script type="module">
+    import { mountIslandFeature } from "/packages/mountly/dist/index.js";
+    const container = document.getElementById("form-container");
+
+    const formWidget = {
+      mount(target) {
+        const form = document.createElement("form");
+        form.className = "widget-form";
+
+        const input = document.createElement("input");
+        input.type = "text";
+        input.name = "test-field";
+        input.className = "test-input";
+        input.value = "test-value";
+
+        const button = document.createElement("button");
+        button.type = "submit";
+        button.textContent = "Submit";
+
+        form.appendChild(input);
+        form.appendChild(button);
+
+        form.addEventListener("submit", (e) => {
+          e.preventDefault();
+          window.__formSubmitted = true;
+          window.__formValue = input.value;
+        });
+
+        target.appendChild(form);
+      },
+      unmount() {},
+    };
+
+    mountIslandFeature(container, { form: async () => ({ default: formWidget }) });
+
+    // Trigger mount
+    setTimeout(() => {
+      container.click();
+    }, 50);
+
+    // Test form functionality
+    setTimeout(() => {
+      const form = document.querySelector('.widget-form');
+      const input = document.querySelector('.test-input');
+
+      window.__result = {
+        formLoaded: !!form,
+        inputAccessible: !!input,
+        inputValue: input?.value ?? '',
+        hasShadowRoot: !!container.shadowRoot,
+      };
+
+      // Submit the form to verify it works
+      if (form) {
+        const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
+        form.dispatchEvent(submitEvent);
+      }
+    }, 200);
+  </script>
+</body></html>

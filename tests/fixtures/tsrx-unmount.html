@@ -1,0 +1,46 @@
+<!doctype html>
+<html><body>
+  <div id="c"></div>
+  <script type="importmap">
+    {"imports":{"mountly":"/packages/mountly/dist/index.js"}}
+  </script>
+  <script type="module">
+    import { createWidget } from "/packages/adapters/mountly-tsrx/dist/index.js";
+
+    let unmountCalls = 0;
+    const c = document.getElementById("c");
+    const w = createWidget({
+      render(target, props) {
+        const root = document.createElement("div");
+        root.setAttribute("data-mountly-root", "");
+        root.textContent = props.msg;
+        target.appendChild(root);
+
+        return {
+          destroy() {
+            unmountCalls += 1;
+            root.remove();
+          },
+        };
+      },
+    });
+
+    w.mount(c, { msg: "alive" });
+    await new Promise(r => setTimeout(r, 50));
+    const before = c.shadowRoot?.querySelector("[data-mountly-root]")?.textContent ?? "";
+
+    w.unmount(c);
+    const textAfter = c.shadowRoot?.querySelector("[data-mountly-root]")?.textContent ?? "";
+
+    w.mount(c, { msg: "reborn" });
+    await new Promise(r => setTimeout(r, 50));
+    const textAfterRemount = c.shadowRoot?.querySelector("[data-mountly-root]")?.textContent ?? "";
+
+    window.__result = {
+      before,
+      textAfter,
+      textAfterRemount,
+      unmountCalls,
+    };
+  </script>
+</body></html>
