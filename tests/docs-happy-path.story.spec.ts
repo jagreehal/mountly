@@ -1,13 +1,13 @@
 import { expect, test } from "@playwright/test";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { given, story, then, when } from "executable-stories-playwright";
+import { story } from "executable-stories-playwright";
 
 const REPO_ROOT = join(__dirname, "..");
 
 test("README Quick Start story: documented URL mounts a widget", async ({ page }, testInfo) => {
   story.init(testInfo, { tags: ["docs", "quickstart"], ticket: "MOUNTLY-DOCS-1" });
-  given("README Quick Start contains a host URL and source link");
+  story.given("README Quick Start contains a host URL and source link");
   const readme = readFileSync(join(REPO_ROOT, "README.md"), "utf8");
   const quickStartIdx = readme.indexOf("## Quick Start");
   expect(quickStartIdx, "README.md must contain a '## Quick Start' section").toBeGreaterThan(-1);
@@ -28,12 +28,12 @@ test("README Quick Start story: documented URL mounts a widget", async ({ page }
   );
   story.kv({ label: "Quick Start URL", value: hostUrl });
 
-  when("the documented host URL is opened and View payment is clicked");
+  story.when("the documented host URL is opened and View payment is clicked");
   await page.goto(hostUrl);
   await page.waitForLoadState("networkidle");
   await page.getByRole("button", { name: "View payment" }).click();
 
-  then("the payment dialog mounts with expected text");
+  story.then("the payment dialog mounts with expected text");
   await page.waitForFunction(() => {
     const mount = document.getElementById("mount");
     const dialog = mount?.shadowRoot?.querySelector("[role='dialog']");

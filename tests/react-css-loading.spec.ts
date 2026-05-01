@@ -13,29 +13,52 @@ async function readResult(page: import("@playwright/test").Page) {
   return page.evaluate(() => (window as any).__result);
 }
 
-test("React adapter applies styles passed as a literal `styles` option (shadow DOM)", async ({ page }) => {
+test("React adapter applies styles passed as a literal `styles` option (shadow DOM)", async ({ page }, testInfo) => {
+  story.given("the react-css-styles-option fixture is loaded");
   await page.goto(`${HOST}/tests/fixtures/react-css-styles-option.html`);
+  story.when("the component mounts");
   const result = await readResult(page);
+  story.then("there is a shadow root");
   expect(result.hasShadowRoot).toBe(true);
+  story.then("the text renders");
   expect(result.text).toBe("literal");
+  story.then("styles are applied");
   expect(result.computedColor).toBe("rgb(11, 22, 33)");
+  const screenshotPath = testInfo.outputPath("react-css-styles-option.png");
+  await page.screenshot({ path: screenshotPath, fullPage: true });
+  story.screenshot({ path: screenshotPath, alt: "React CSS styles option" });
 });
 
-test("React adapter fetches CSS via `cssUrl` option and adopts it into the shadow root", async ({ page }) => {
+test("React adapter fetches CSS via `cssUrl` option and adopts it into the shadow root", async ({ page }, testInfo) => {
+  story.given("the react-css-cssurl-option fixture is loaded");
   await page.goto(`${HOST}/tests/fixtures/react-css-cssurl-option.html`);
+  story.when("the component mounts");
   const result = await readResult(page);
+  story.then("CSS rules are present");
   expect(result.adoptedRuleCount).toBeGreaterThan(0);
+  story.then("styles are applied");
   expect(result.computedColor).toBe("rgb(11, 22, 33)");
+  const screenshotPath = testInfo.outputPath("react-css-cssurl-option.png");
+  await page.screenshot({ path: screenshotPath, fullPage: true });
+  story.screenshot({ path: screenshotPath, alt: "React CSS url option" });
 });
 
-test("React adapter derives CSS from `moduleUrl` passed via mount() props", async ({ page }) => {
+test("React adapter derives CSS from `moduleUrl` passed via mount() props", async ({ page }, testInfo) => {
+  story.given("the react-css-moduleurl-prop fixture is loaded");
   await page.goto(`${HOST}/tests/fixtures/react-css-moduleurl-prop.html`);
+  story.when("the component mounts");
   const result = await readResult(page);
+  story.then("CSS rules are present");
   expect(result.adoptedRuleCount).toBeGreaterThan(0);
+  story.then("styles are applied");
   expect(result.computedColor).toBe("rgb(11, 22, 33)");
+  const screenshotPath = testInfo.outputPath("react-css-moduleurl-prop.png");
+  await page.screenshot({ path: screenshotPath, fullPage: true });
+  story.screenshot({ path: screenshotPath, alt: "React CSS moduleUrl prop" });
 });
 
-test("React adapter sends `Accept: text/css` so dev servers return raw CSS, not JS-wrapped modules", async ({ page }) => {
+test("React adapter sends `Accept: text/css` so dev servers return raw CSS, not JS-wrapped modules", async ({ page }, testInfo) => {
+  story.given("a mock Vite-like server is set up");
   await page.route("**/__vite_mock__/widget.css", async (route, request) => {
     const accept = request.headers()["accept"] ?? "";
     if (accept.includes("text/css")) {
@@ -52,10 +75,17 @@ test("React adapter sends `Accept: text/css` so dev servers return raw CSS, not 
       });
     }
   });
+  story.and("the react-css-vite-like-server fixture is loaded");
   await page.goto(`${HOST}/tests/fixtures/react-css-vite-like-server.html`);
+  story.when("the component mounts");
   const result = await readResult(page);
+  story.then("CSS rules are present");
   expect(result.adoptedRuleCount).toBeGreaterThan(0);
+  story.then("styles are applied");
   expect(result.computedColor).toBe("rgb(11, 22, 33)");
+  const screenshotPath = testInfo.outputPath("react-css-vite-like-server.png");
+  await page.screenshot({ path: screenshotPath, fullPage: true });
+  story.screenshot({ path: screenshotPath, alt: "React CSS Vite-like server" });
 });
 
 test("React adapter scopes CSS-Modules class names through the shadow root (decoy global rule does NOT leak in)", async ({ page }) => {

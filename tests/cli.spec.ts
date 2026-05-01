@@ -15,32 +15,43 @@ const REPO_ROOT = join(__dirname, "..");
 const CLI = join(REPO_ROOT, "packages", "mountly", "cli", "index.js");
 
 test("cli prints help and exits 0", () => {
+  story.given("the CLI is invoked");
   const out = execSync(`node ${CLI} --help`, { encoding: "utf8" });
+  story.then("the output contains mountly");
   expect(out).toContain("mountly");
+  story.then("the output contains init");
   expect(out).toContain("init");
 });
 
 test("cli init scaffolds a react widget package", () => {
+  story.given("a temporary directory is created");
   const dir = mkdtempSync(join(tmpdir(), "mountly-cli-"));
   try {
+    story.and("the CLI init command is run");
     const out = execSync(
       `node ${CLI} init my-widget --framework react --dir ${dir}/my-widget`,
       { encoding: "utf8" },
     );
+    story.then("the scaffolded directory has package.json");
     const files = readdirSync(`${dir}/my-widget`);
     expect(files).toContain("package.json");
+    story.then("the src directory exists");
     expect(files).toContain("src");
+    story.then("Component.tsx was created");
     expect(existsSync(`${dir}/my-widget/src/Component.tsx`)).toBe(true);
+    story.then("styles.css was created");
     expect(existsSync(`${dir}/my-widget/src/styles.css`)).toBe(true);
+    story.then("index.ts was created");
     expect(existsSync(`${dir}/my-widget/src/index.ts`)).toBe(true);
-    // Templates should be rendered, not left as .tmpl
+    story.then("templates are rendered");
     expect(existsSync(`${dir}/my-widget/src/Component.tsx.tmpl`)).toBe(false);
-
-    // Post-init output must give the user next commands + a host snippet —
-    // without these, scaffolds leave a "what now?" gap.
+    story.then("output contains cd command");
     expect(out).toContain(`cd ${dir}/my-widget`);
+    story.then("output contains install command");
     expect(out).toContain("pnpm install");
+    story.then("output contains build command");
     expect(out).toContain("pnpm build");
+    story.then("output contains widget.mount");
     expect(out).toContain("widget.mount");
   } finally {
     rmSync(dir, { recursive: true, force: true });

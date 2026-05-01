@@ -7,9 +7,10 @@ test.beforeEach(({ page }, testInfo) => {
 });
 
 
-test("registerBuiltInPlugins includes url-change and media", async ({ page }) => {
+test("registerBuiltInPlugins includes url-change and media", async ({ page }, testInfo) => {
+  story.given("the empty fixture is loaded");
   await page.goto("http://localhost:5175/tests/fixtures/empty.html");
-
+  story.when("plugins are registered");
   const hasPlugin = await page.evaluate(async () => {
     const {
       registerBuiltInPlugins,
@@ -22,13 +23,19 @@ test("registerBuiltInPlugins includes url-change and media", async ({ page }) =>
     };
   });
 
+  story.then("url-change plugin exists");
   expect(hasPlugin.urlChange).toBe(true);
+  story.then("media plugin exists");
   expect(hasPlugin.media).toBe(true);
+  const screenshotPath = testInfo.outputPath("built-in-plugins.png");
+  await page.screenshot({ path: screenshotPath, fullPage: true });
+  story.screenshot({ path: screenshotPath, alt: "Built-in plugins" });
 });
 
-test("url-change plugin listens to popstate/hashchange by default", async ({ page }) => {
+test("url-change plugin listens to popstate/hashchange by default", async ({ page }, testInfo) => {
+  story.given("the empty fixture is loaded");
   await page.goto("http://localhost:5175/tests/fixtures/empty.html");
-
+  story.when("popstate and hashchange events are dispatched");
   const events = await page.evaluate(async () => {
     const {
       registerBuiltInPlugins,
@@ -58,12 +65,17 @@ test("url-change plugin listens to popstate/hashchange by default", async ({ pag
     return seen;
   });
 
+  story.then("both events are seen");
   expect(events).toEqual(["popstate", "hashchange"]);
+  const screenshotPath = testInfo.outputPath("url-change-plugin.png");
+  await page.screenshot({ path: screenshotPath, fullPage: true });
+  story.screenshot({ path: screenshotPath, alt: "URL change plugin" });
 });
 
-test("url-change plugin can subscribe to pushState/replaceState", async ({ page }) => {
+test("url-change plugin can subscribe to pushState/replaceState", async ({ page }, testInfo) => {
+  story.given("the empty fixture is loaded");
   await page.goto("http://localhost:5175/tests/fixtures/empty.html");
-
+  story.when("history.pushState and replaceState are called");
   const result = await page.evaluate(async () => {
     const {
       registerBuiltInPlugins,
@@ -92,12 +104,17 @@ test("url-change plugin can subscribe to pushState/replaceState", async ({ page 
     return seen;
   });
 
+  story.then("pushstate and replacestate events are seen");
   expect(result).toEqual(["pushstate", "replacestate"]);
+  const screenshotPath = testInfo.outputPath("pushstate-plugin.png");
+  await page.screenshot({ path: screenshotPath, fullPage: true });
+  story.screenshot({ path: screenshotPath, alt: "PushState plugin" });
 });
 
-test("media plugin triggers immediately when query already matches", async ({ page }) => {
+test("media plugin triggers immediately when query already matches", async ({ page }, testInfo) => {
+  story.given("the empty fixture is loaded");
   await page.goto("http://localhost:5175/tests/fixtures/empty.html");
-
+  story.when("the media query matches");
   const result = await page.evaluate(async () => {
     const {
       registerBuiltInPlugins,
@@ -122,5 +139,9 @@ test("media plugin triggers immediately when query already matches", async ({ pa
     return seen;
   });
 
+  story.then("the media trigger fires immediately");
   expect(result).toEqual(["media"]);
+  const screenshotPath = testInfo.outputPath("media-plugin.png");
+  await page.screenshot({ path: screenshotPath, fullPage: true });
+  story.screenshot({ path: screenshotPath, alt: "Media plugin" });
 });
