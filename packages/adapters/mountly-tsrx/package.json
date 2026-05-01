@@ -1,6 +1,6 @@
 {
   "name": "mountly-tsrx",
-  "version": "0.1.3",
+  "version": "1.0.0",
   "description": "TSRX adapter utilities for mountly widgets",
   "license": "Apache-2.0",
   "repository": {
@@ -35,10 +35,10 @@
     "postpack": "rm -f LICENSE && ln -s ../../../LICENSE LICENSE"
   },
   "peerDependencies": {
-    "mountly": "^0.1.3"
+    "mountly": "^0.2.0"
   },
   "devDependencies": {
-    "mountly": "^0.1.3",
+    "mountly": "^0.2.0",
     "tsup": "^8.5.1",
     "typescript": "^6.0.3"
   }
