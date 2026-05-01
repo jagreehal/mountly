@@ -1,5 +1,13 @@
 # mountly-react
 
+## 0.1.3
+
+### Patch Changes
+
+- 5695dd8: Updated tests
+- Updated dependencies [5695dd8]
+  - mountly@0.1.3
+
 ## 0.1.2
 
 ### Patch Changes

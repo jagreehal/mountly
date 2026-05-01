@@ -1,5 +1,11 @@
 # mountly
 
+## 0.1.3
+
+### Patch Changes
+
+- 5695dd8: Updated tests
+
 ## 0.1.2
 
 ### Patch Changes
