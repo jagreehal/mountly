@@ -1,6 +1,6 @@
 {
   "name": "mountly-tailwind",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Design tokens and Tailwind v4 preset for mountly widgets",
   "license": "Apache-2.0",
   "repository": {
@@ -20,7 +20,9 @@
     "./tokens": "./dist/tokens.css",
     "./package.json": "./package.json"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "publishConfig": {
     "access": "public"
   },
