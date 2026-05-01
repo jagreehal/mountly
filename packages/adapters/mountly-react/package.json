@@ -35,8 +35,8 @@
     "postpack": "rm -f LICENSE && ln -s ../../../LICENSE LICENSE"
   },
   "peerDependencies": {
-    "react": "^19.2.5",
-    "react-dom": "^19.2.5",
+    "react": ">=18 <20",
+    "react-dom": ">=18 <20",
     "mountly": "^0.1.4"
   },
   "devDependencies": {

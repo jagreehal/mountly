@@ -8,67 +8,99 @@ For hosts that drop in HTML — CMS pages, marketing sites, partner integrations
 ## In one example
 
 ```html
-<mountly-feature
-  module-id="signup-card"
-  trigger="viewport"
-  props='{"plan":"pro"}'
-></mountly-feature>
+<signup-card trigger="viewport" props='{"plan":"pro"}'></signup-card>
+
+<script type="module">
+  import { defineMountlyFeature } from 'mountly';
+
+  defineMountlyFeature('/widgets/dist/index.js');
+</script>
 ```
 
-That's the whole API surface. The element handles attach, mount, prop updates, and unmount on disconnect.
+That's the common path. Mountly scans the page, defines `<signup-card>`, registers it as a feature, and loads it from the shared source. The element handles attach, mount, prop updates, and unmount on disconnect.
 
 ## Wire it once
 
-Custom elements need two things: a registered factory for each `module-id`, and a `customElements.define()` call.
+If all widgets live in one bundle, pass that bundle once:
 
 ```ts
-import { registerCustomElement, defineMountlyFeature, createOnDemandFeature } from "mountly";
-
-registerCustomElement("signup-card", () =>
-  createOnDemandFeature({
-    moduleId: "signup-card",
-    loadModule: () => import("./signup-card.js"),
-    render: ({ mod, container, props }) => mod.mount(container, props),
-  }),
-);
-
-defineMountlyFeature();   // registers <mountly-feature>
+defineMountlyFeature('/widgets/dist/index.js');
 ```
 
-Call this once per page, before any `<mountly-feature>` is parsed (or before it scrolls/hovers into life — the element is forgiving).
+If the host page needs namespaced tags, add a prefix:
 
-You can rename the tag if `mountly-feature` collides with something:
+```html
+<acme-signup-card trigger="viewport" props='{"plan":"pro"}'></acme-signup-card>
+```
 
 ```ts
-defineMountlyFeature("widget-island");
+defineMountlyFeature({
+  source: '/widgets/dist/index.js',
+  prefix: 'acme',
+});
 ```
+
+The prefix only affects the browser tag. Mountly still uses `signup-card` as the module ID and `signupCard` as the named export in a shared bundle.
+
+For per-widget bundles, give Mountly a base URL and limit the allowed modules:
+
+```ts
+defineMountlyFeature({
+  baseUrl: '/widgets',
+  modules: ['signup-card', 'payment-breakdown'],
+});
+```
+
+That registers only those modules and resolves `/widgets/signup-card/dist/index.js`, `/widgets/payment-breakdown/dist/index.js`, and so on. This saves bytes when components are split into separate bundles.
+
+You can also stay explicit:
+
+```ts
+defineMountlyFeature({
+  modules: {
+    'signup-card': '/widgets/signup-card.js',
+    'payment-breakdown': '/widgets/payment-breakdown.js',
+  },
+});
+```
+
+The lower-level `registerCustomElement()` API is still available when a feature needs custom loading, data, or analytics wiring.
 
 ## Attributes
 
-| Attribute | Type | Default | Notes |
-|---|---|---|---|
-| `module-id` | string | required | Must match a `registerCustomElement` factory. |
-| `trigger` | `"hover"` · `"click"` · `"focus"` · `"viewport"` · `"idle"` · `"media"` · `"url-change"` | `"click"` | High-level trigger preset. |
-| `trigger-delay` | number ms | trigger default | Hover delay override. |
-| `preload-on` | `"hover"` · `"viewport"` · `"idle"` · `"media"` · `"false"` | mapped from `trigger` | Explicit `attach().preloadOn` override. |
-| `activate-on` | `"click"` · `"hover"` · `"focus"` · `"viewport"` · `"idle"` · `"media"` · `"url-change"` | mapped from `trigger` | Explicit `attach().activateOn` override. |
-| `preload-media-query` | string | — | Required with `preload-on="media"`. |
-| `activate-media-query` | string | — | Required with `activate-on="media"` or `trigger="media"`. |
-| `idle-timeout` | number ms | — | Used by idle triggers. |
-| `viewport-root-margin` | string | `"0px"` | Forwarded to `IntersectionObserver`. |
-| `url-events` | comma list (`popstate,hashchange,pushstate,replacestate`) | all four | Used with `activate-on="url-change"` / `trigger="url-change"`. |
-| `data-url` | string | — | If set, the element fetches JSON from this URL as `loadData`. |
-| `data-method` | `"GET"` · `"POST"` etc | `"GET"` | Used with `data-url`. |
-| `props` | JSON string | `{}` | Passed to `render()`. Live-updates via `update()`. |
-| `mount-selector` | CSS selector | self | Render target other than the element itself. |
+| Attribute              | Type                                                                                     | Default                | Notes                                                           |
+| ---------------------- | ---------------------------------------------------------------------------------------- | ---------------------- | --------------------------------------------------------------- |
+| `module-id`            | string                                                                                   | inferred on alias tags | Must match a registered feature. Alias tags use their tag name. |
+| `trigger`              | `"hover"` · `"click"` · `"focus"` · `"viewport"` · `"idle"` · `"media"` · `"url-change"` | `"click"`              | High-level trigger preset.                                      |
+| `trigger-delay`        | number ms                                                                                | trigger default        | Hover delay override.                                           |
+| `preload-on`           | `"hover"` · `"viewport"` · `"idle"` · `"media"` · `"false"`                              | mapped from `trigger`  | Explicit `attach().preloadOn` override.                         |
+| `activate-on`          | `"click"` · `"hover"` · `"focus"` · `"viewport"` · `"idle"` · `"media"` · `"url-change"` | mapped from `trigger`  | Explicit `attach().activateOn` override.                        |
+| `preload-media-query`  | string                                                                                   | —                      | Required with `preload-on="media"`.                             |
+| `activate-media-query` | string                                                                                   | —                      | Required with `activate-on="media"` or `trigger="media"`.       |
+| `idle-timeout`         | number ms                                                                                | —                      | Used by idle triggers.                                          |
+| `viewport-root-margin` | string                                                                                   | `"0px"`                | Forwarded to `IntersectionObserver`.                            |
+| `url-events`           | comma list (`popstate,hashchange,pushstate,replacestate`)                                | all four               | Used with `activate-on="url-change"` / `trigger="url-change"`.  |
+| `data-url`             | string                                                                                   | —                      | If set, the element fetches JSON from this URL as `loadData`.   |
+| `data-method`          | `"GET"` · `"POST"` etc                                                                   | `"GET"`                | Used with `data-url`.                                           |
+| `props`                | JSON string                                                                              | `{}`                   | Passed to `render()`. Live-updates via `update()`.              |
+| `mount-selector`       | CSS selector                                                                             | self                   | Render target other than the element itself.                    |
+
+Custom element alias tags must contain a hyphen because the browser requires it. If your internal module ID is `signup`, use `<mountly-feature module-id="signup">` or map a valid alias:
+
+```ts
+defineMountlyFeature({
+  modules: { signup: '/widgets/signup.js' },
+  aliases: { 'signup-card': 'signup' },
+});
+```
 
 ## Live prop updates
 
 Change the `props` attribute and the element calls `feature.update(...)`. If the widget exposes `update(container, props)` (React adapter does, others can opt in), framework-internal state is preserved. Otherwise it falls back to a re-render in the same container.
 
 ```ts
-const el = document.querySelector("mountly-feature");
-el.setAttribute("props", JSON.stringify({ plan: "enterprise" }));
+const el = document.querySelector('mountly-feature');
+el.setAttribute('props', JSON.stringify({ plan: 'enterprise' }));
 ```
 
 ## Mount target

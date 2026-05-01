@@ -1,15 +1,15 @@
-import { moduleCache, dataCache } from "./cache.js";
-import { createModuleLoader, type CssAutoLoadOptions } from "./assets.js";
+import { moduleCache, dataCache } from './cache.js';
+import { createModuleLoader, type CssAutoLoadOptions } from './assets.js';
 import {
   setupTrigger,
   type TriggerType,
   type TriggerOptions,
-} from "./triggers.js";
-import { createFeatureTimingTracker } from "./analytics.js";
+} from './triggers.js';
+import { createFeatureTimingTracker } from './analytics.js';
 import {
   createUrlChangeTrigger,
   type UrlChangeTriggerOptions,
-} from "./plugins.js";
+} from './plugins.js';
 
 export interface FeatureContext {
   element: HTMLElement;
@@ -33,6 +33,11 @@ export interface FeatureModule {
 
 export interface CreateOnDemandFeatureOptions {
   moduleId: string;
+  /**
+   * Optional named export to read from the loaded module before falling back
+   * to `default` or the module object itself.
+   */
+  moduleExport?: string;
   /**
    * URL to the widget's JavaScript bundle. Pass this and mountly handles the
    * rest: it builds a `loadModule` for you, threads the URL through to the
@@ -66,6 +71,15 @@ export interface CreateOnDemandFeatureOptions {
   }) => void;
 }
 
+export interface CreateFeatureFromModuleOptions {
+  moduleId: string;
+  moduleUrl: string;
+  moduleExport?: string;
+  assetOptions?: CssAutoLoadOptions;
+  loadData?: (context: FeatureContext) => Promise<unknown>;
+  getCacheKey?: (context: FeatureContext) => string;
+}
+
 export interface AttachOptions {
   /** Element the user interacts with (hover/click target). */
   trigger: HTMLElement;
@@ -78,21 +92,21 @@ export interface AttachOptions {
   /** Extra props forwarded to `render`. A getter is called at each mount. */
   props?: Record<string, unknown> | (() => Record<string, unknown>);
   /** When to start preloading. `false` to disable. Default `"hover"`. */
-  preloadOn?: "hover" | "viewport" | "idle" | "media" | false;
+  preloadOn?: 'hover' | 'viewport' | 'idle' | 'media' | false;
   /** When to mount. Default `"click"`. */
   activateOn?:
-    | "click"
-    | "hover"
-    | "focus"
-    | "viewport"
-    | "idle"
-    | "media"
-    | "url-change";
+    | 'click'
+    | 'hover'
+    | 'focus'
+    | 'viewport'
+    | 'idle'
+    | 'media'
+    | 'url-change';
   /**
    * URL events to listen for when `activateOn` is `"url-change"`.
    * Defaults to all: `popstate`, `hashchange`, `pushstate`, `replacestate`.
    */
-  activateOnUrlEvents?: UrlChangeTriggerOptions["events"];
+  activateOnUrlEvents?: UrlChangeTriggerOptions['events'];
   /** Media query string used when `preloadOn` is `"media"`. */
   preloadOnMediaQuery?: string;
   /** Media query string used when `activateOn` is `"media"`. */
@@ -142,51 +156,66 @@ export interface OnDemandFeature {
   getMounts: () => ReadonlyArray<HTMLElement>;
 }
 
-function resolveFeatureModule(moduleId: string, value: unknown): FeatureModule {
-  const candidate = (value as { default?: unknown })?.default ?? value;
+function resolveFeatureModule(
+  moduleId: string,
+  value: unknown,
+  moduleExport?: string
+): FeatureModule {
+  const exports = value as Record<string, unknown> | null;
+  const candidate =
+    moduleExport &&
+    exports &&
+    typeof exports === 'object' &&
+    moduleExport in exports
+      ? exports[moduleExport]
+      : (value as { default?: unknown })?.default ?? value;
   if (
     candidate &&
-    typeof candidate === "object" &&
-    typeof (candidate as { mount?: unknown }).mount === "function"
+    typeof candidate === 'object' &&
+    typeof (candidate as { mount?: unknown }).mount === 'function'
   ) {
     return candidate as FeatureModule;
   }
+  const keys =
+    value && typeof value === 'object'
+      ? Object.keys(value as Record<string, unknown>)
+      : [];
   throw new Error(
-    `[mountly] loadModule for "${moduleId}" must resolve to a widget module with mount(container, props). ` +
-      `Tip: return the module's default export or the widget object directly.`,
+    `[mountly:MNTX001] invalid widget module for "${moduleId}". ` +
+      `Expected \`mount(container, props)\` on module${
+        moduleExport ? `, module.${moduleExport},` : ''
+      } or module.default. ` +
+      `Received type=${typeof value}, keys=[${keys.join(', ')}].`
   );
 }
 
 export type FeatureState =
-  | "idle"
-  | "preloading"
-  | "preloaded"
-  | "activating"
-  | "activated"
-  | "mounted"
-  | "aborted";
+  | 'idle'
+  | 'preloading'
+  | 'preloaded'
+  | 'activating'
+  | 'activated'
+  | 'mounted'
+  | 'aborted';
 
 function stableStringify(value: unknown): string {
   if (value === null || value === undefined) return JSON.stringify(value);
-  if (typeof value !== "object") return JSON.stringify(value);
+  if (typeof value !== 'object') return JSON.stringify(value);
   if (Array.isArray(value)) {
-    return "[" + value.map(stableStringify).join(",") + "]";
+    return '[' + value.map(stableStringify).join(',') + ']';
   }
   const obj = value as Record<string, unknown>;
   const keys = Object.keys(obj).sort();
   return (
-    "{" +
+    '{' +
     keys
-      .map((k) => JSON.stringify(k) + ":" + stableStringify(obj[k]))
-      .join(",") +
-    "}"
+      .map((k) => JSON.stringify(k) + ':' + stableStringify(obj[k]))
+      .join(',') +
+    '}'
   );
 }
 
-function defaultCacheKey(
-  moduleId: string,
-  context: FeatureContext
-): string {
+function defaultCacheKey(moduleId: string, context: FeatureContext): string {
   const { element: _e, event: _ev, ...rest } = context;
   void _e;
   void _ev;
@@ -194,11 +223,11 @@ function defaultCacheKey(
 }
 
 const isAbortError = (e: unknown): boolean =>
-  e instanceof DOMException && e.name === "AbortError";
+  e instanceof DOMException && e.name === 'AbortError';
 
 function describeArg(value: unknown): string {
-  if (value === null) return "null";
-  if (value === undefined) return "undefined";
+  if (value === null) return 'null';
+  if (value === undefined) return 'undefined';
   return typeof value;
 }
 
@@ -209,11 +238,11 @@ const isModuleResolutionError = (e: unknown): boolean => {
   if (!(e instanceof Error)) return false;
   const msg = e.message;
   return (
-    msg.includes("Failed to fetch dynamically imported module") ||
-    msg.includes("Failed to resolve module specifier") ||
-    msg.includes("bare specifier") ||
-    msg.includes("Cannot find module") ||
-    msg.includes("does not provide an export")
+    msg.includes('Failed to fetch dynamically imported module') ||
+    msg.includes('Failed to resolve module specifier') ||
+    msg.includes('bare specifier') ||
+    msg.includes('Cannot find module') ||
+    msg.includes('does not provide an export')
   );
 };
 
@@ -224,7 +253,7 @@ function wrapModuleLoadError(moduleId: string, err: unknown): Error {
     `[mountly] loadModule for "${moduleId}" failed to resolve. ` +
       `If you're in plain HTML, check that your <script type="importmap"> maps the bare specifier — ` +
       `e.g. { "imports": { "${moduleId}": "/path/to/${moduleId}/dist/index.js" } } — and that installRuntime() runs before any module imports. ` +
-      `Original: ${original.message}`,
+      `Original: ${original.message}`
   );
   (wrapped as Error & { cause?: unknown }).cause = original;
   return wrapped;
@@ -233,10 +262,10 @@ function wrapModuleLoadError(moduleId: string, err: unknown): Error {
 export function createOnDemandFeature(
   options: CreateOnDemandFeatureOptions
 ): OnDemandFeature {
-  const { moduleId, moduleUrl, assetOptions, loadData } = options;
+  const { moduleId, moduleUrl, moduleExport, assetOptions, loadData } = options;
   if (!options.loadModule && !moduleUrl) {
     throw new Error(
-      `[mountly] createOnDemandFeature("${moduleId}"): provide either \`moduleUrl\` (recommended) or \`loadModule\`.`,
+      `[mountly] createOnDemandFeature("${moduleId}"): provide either \`moduleUrl\` (recommended) or \`loadModule\`.`
     );
   }
   // Default loadModule: createModuleLoader with css:"none" so we don't append
@@ -245,7 +274,7 @@ export function createOnDemandFeature(
   // Light-DOM users can opt in with `assetOptions: { css: "auto" }`.
   const loadModule =
     options.loadModule ||
-    createModuleLoader(moduleUrl as string, assetOptions ?? { css: "none" });
+    createModuleLoader(moduleUrl as string, assetOptions ?? { css: 'none' });
   // Default render: forwards props plus moduleUrl so adapters can resolve CSS.
   // Users who supply their own render keep full control.
   const render =
@@ -258,7 +287,7 @@ export function createOnDemandFeature(
     ? options.getCacheKey
     : (ctx: FeatureContext) => defaultCacheKey(moduleId, ctx);
 
-  let state: FeatureState = "idle";
+  let state: FeatureState = 'idle';
   let loadedModule: FeatureModule | null = null;
   let modulePromise: Promise<FeatureModule> | null = null;
   let abortController: AbortController | null = null;
@@ -281,16 +310,16 @@ export function createOnDemandFeature(
     if (loadedModule) return loadedModule;
     if (!modulePromise) {
       const signal = getAbortSignal();
-      modulePromise = (moduleCache
+      modulePromise = moduleCache
         .resolve(
           moduleId,
           async () => {
             if (signal.aborted) {
-              throw new DOMException("Aborted", "AbortError");
+              throw new DOMException('Aborted', 'AbortError');
             }
             try {
               const mod = await loadModule();
-              return resolveFeatureModule(moduleId, mod);
+              return resolveFeatureModule(moduleId, mod, moduleExport);
             } catch (err) {
               if (isAbortError(err)) throw err;
               throw wrapModuleLoadError(moduleId, err);
@@ -304,7 +333,7 @@ export function createOnDemandFeature(
             modulePromise = null;
             throw err;
           }
-        )) as Promise<FeatureModule>;
+        ) as Promise<FeatureModule>;
     }
     loadedModule = await modulePromise;
     return loadedModule!;
@@ -318,7 +347,7 @@ export function createOnDemandFeature(
       key,
       async () => {
         if (signal.aborted) {
-          throw new DOMException("Aborted", "AbortError");
+          throw new DOMException('Aborted', 'AbortError');
         }
         return loadData(context);
       },
@@ -334,16 +363,16 @@ export function createOnDemandFeature(
       element:
         partial?.element ??
         fallbackElement ??
-        (typeof document !== "undefined" ? document.body : (null as never)),
-      triggerType: (partial?.triggerType ?? "programmatic") as TriggerType,
+        (typeof document !== 'undefined' ? document.body : (null as never)),
+      triggerType: (partial?.triggerType ?? 'programmatic') as TriggerType,
       ...partial,
     } as FeatureContext;
   };
 
   const recoverFromAborted = () => {
-    if (state === "aborted") {
+    if (state === 'aborted') {
       abortController = null;
-      setState("idle");
+      setState('idle');
     }
   };
 
@@ -351,16 +380,16 @@ export function createOnDemandFeature(
     contextInput?: Partial<FeatureContext>
   ): Promise<void> => {
     if (
-      state === "preloading" ||
-      state === "preloaded" ||
-      state === "activated" ||
-      state === "mounted"
+      state === 'preloading' ||
+      state === 'preloaded' ||
+      state === 'activated' ||
+      state === 'mounted'
     ) {
       return;
     }
     recoverFromAborted();
-    tracker.recordPhase("preload_start");
-    setState("preloading");
+    tracker.recordPhase('preload_start');
+    setState('preloading');
     try {
       await ensureModule();
       if (contextInput) {
@@ -368,16 +397,16 @@ export function createOnDemandFeature(
       }
       // Only advance to "preloaded" if no other path moved us forward.
       // (Cast through `string` because the early-return narrows TS's view.)
-      if ((state as string) === "preloading") setState("preloaded");
-      tracker.recordPhase("preload_end");
+      if ((state as string) === 'preloading') setState('preloaded');
+      tracker.recordPhase('preload_end');
     } catch (error) {
       if (isAbortError(error)) {
-        if ((state as string) === "preloading") setState("aborted");
-        tracker.recordPhase("preload_end", { error: "Aborted" });
+        if ((state as string) === 'preloading') setState('aborted');
+        tracker.recordPhase('preload_end', { error: 'Aborted' });
         return;
       }
-      if ((state as string) === "preloading") setState("idle");
-      tracker.recordPhase("preload_end", {
+      if ((state as string) === 'preloading') setState('idle');
+      tracker.recordPhase('preload_end', {
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;
@@ -389,22 +418,22 @@ export function createOnDemandFeature(
   ): Promise<void> => {
     recoverFromAborted();
     const context = buildContext(contextInput);
-    const wasMounted = state === "mounted";
-    if (!wasMounted) setState("activating");
-    tracker.recordPhase("activate_start");
+    const wasMounted = state === 'mounted';
+    if (!wasMounted) setState('activating');
+    tracker.recordPhase('activate_start');
     try {
       await ensureModule();
       await ensureData(context);
-      if (!wasMounted) setState("activated");
-      tracker.recordPhase("activate_end");
+      if (!wasMounted) setState('activated');
+      tracker.recordPhase('activate_end');
     } catch (error) {
       if (isAbortError(error)) {
-        if (!wasMounted) setState("aborted");
-        tracker.recordPhase("activate_end", { error: "Aborted" });
+        if (!wasMounted) setState('aborted');
+        tracker.recordPhase('activate_end', { error: 'Aborted' });
         return;
       }
-      if (!wasMounted) setState("idle");
-      tracker.recordPhase("activate_end", {
+      if (!wasMounted) setState('idle');
+      tracker.recordPhase('activate_end', {
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;
@@ -418,13 +447,13 @@ export function createOnDemandFeature(
   ): Promise<{ unmount: () => void }> => {
     recoverFromAborted();
     const context = buildContext(contextInput, container);
-    tracker.recordPhase("mount_start");
+    tracker.recordPhase('mount_start');
 
     try {
       await ensureModule();
       await ensureData(context);
     } catch (error) {
-      tracker.recordPhase("mount_end", {
+      tracker.recordPhase('mount_end', {
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;
@@ -432,6 +461,14 @@ export function createOnDemandFeature(
 
     const mod = loadedModule!;
     const data = loadData ? dataCache.get(getCacheKey(context)) : null;
+
+    if (mounts.has(container)) {
+      try {
+        mod.unmount?.(container);
+      } catch (err) {
+        console.error(`[mountly] remount(${moduleId}) cleanup failed:`, err);
+      }
+    }
 
     render({
       mod,
@@ -442,8 +479,8 @@ export function createOnDemandFeature(
     });
 
     mounts.set(container, context);
-    setState("mounted");
-    tracker.recordPhase("mount_end");
+    setState('mounted');
+    tracker.recordPhase('mount_end');
 
     let unmounted = false;
     // Expose the feature-owned unmount on the container so helpers like
@@ -462,9 +499,9 @@ export function createOnDemandFeature(
       }
       mounts.delete(container);
       if (mounts.size === 0) {
-        setState(loadedModule ? "activated" : "idle");
+        setState(loadedModule ? 'activated' : 'idle');
       }
-      tracker.recordPhase("unmount");
+      tracker.recordPhase('unmount');
     };
 
     return { unmount };
@@ -518,21 +555,25 @@ export function createOnDemandFeature(
   const attach = (opts: AttachOptions): (() => void) => {
     if (!(opts?.trigger instanceof Element)) {
       throw new Error(
-        `[mountly] attach({ trigger }) for "${moduleId}" got ${describeArg(opts?.trigger)} ` +
+        `[mountly] attach({ trigger }) for "${moduleId}" got ${describeArg(
+          opts?.trigger
+        )} ` +
           `instead of an Element. Common cause: document.getElementById("...") returned null. ` +
-          `Check the element exists in the DOM at the time attach() runs (e.g. defer until DOMContentLoaded).`,
+          `Check the element exists in the DOM at the time attach() runs (e.g. defer until DOMContentLoaded).`
       );
     }
-    const hasMount = Object.prototype.hasOwnProperty.call(opts, "mount");
+    const hasMount = Object.prototype.hasOwnProperty.call(opts, 'mount');
     const hasMountContainer = Object.prototype.hasOwnProperty.call(
       opts,
-      "mountContainer",
+      'mountContainer'
     );
     const mountTarget = hasMount ? opts.mount : opts.mountContainer;
     if ((hasMount || hasMountContainer) && !(mountTarget instanceof Element)) {
       throw new Error(
-        `[mountly] attach({ mount | mountContainer }) for "${moduleId}" got ${describeArg(mountTarget)} ` +
-          `instead of an Element. Pass an HTMLElement to mount into, or omit the option to mount inside the trigger.`,
+        `[mountly] attach({ mount | mountContainer }) for "${moduleId}" got ${describeArg(
+          mountTarget
+        )} ` +
+          `instead of an Element. Pass an HTMLElement to mount into, or omit the option to mount inside the trigger.`
       );
     }
 
@@ -542,8 +583,8 @@ export function createOnDemandFeature(
       mountContainer,
       context,
       props,
-      preloadOn = "hover",
-      activateOn = "click",
+      preloadOn = 'hover',
+      activateOn = 'click',
       activateOnUrlEvents,
       preloadOnMediaQuery,
       activateOnMediaQuery,
@@ -561,38 +602,39 @@ export function createOnDemandFeature(
     let pending = false;
 
     const resolveContext = (): Partial<FeatureContext> => {
-      if (typeof context === "function") return context();
+      if (typeof context === 'function') return context();
       return context ?? {};
     };
 
     const resolveProps = (): Record<string, unknown> | undefined => {
-      if (typeof props === "function") return props();
+      if (typeof props === 'function') return props();
       return props;
     };
 
     if (preloadOn) {
-      if (preloadOn === "media" && !preloadOnMediaQuery) {
+      if (preloadOn === 'media' && !preloadOnMediaQuery) {
         throw new Error(
-          `[mountly] attach({ preloadOn: "media" }) for "${moduleId}" requires preloadOnMediaQuery.`,
+          `[mountly] attach({ preloadOn: "media" }) for "${moduleId}" requires preloadOnMediaQuery.`
         );
       }
-      const preloadType: TriggerOptions["type"] =
-        preloadOn === "hover"
-          ? "hover"
-          : preloadOn === "viewport"
-            ? "viewport"
-            : preloadOn === "idle"
-              ? "idle"
-              : "media";
+      const preloadType: TriggerOptions['type'] =
+        preloadOn === 'hover'
+          ? 'hover'
+          : preloadOn === 'viewport'
+          ? 'viewport'
+          : preloadOn === 'idle'
+          ? 'idle'
+          : 'media';
       cleanups.push(
         setupTrigger(
           {
             type: preloadType,
             element: trigger,
-            delay: preloadOn === "hover" ? 100 : 0,
-            idleTimeout: preloadOn === "idle" ? idleTimeout : undefined,
-            rootMargin: preloadOn === "viewport" ? viewportRootMargin : undefined,
-            mediaQuery: preloadOn === "media" ? preloadOnMediaQuery : undefined,
+            delay: preloadOn === 'hover' ? 100 : 0,
+            idleTimeout: preloadOn === 'idle' ? idleTimeout : undefined,
+            rootMargin:
+              preloadOn === 'viewport' ? viewportRootMargin : undefined,
+            mediaQuery: preloadOn === 'media' ? preloadOnMediaQuery : undefined,
             once: true,
           },
           () => {
@@ -633,22 +675,21 @@ export function createOnDemandFeature(
         });
     };
 
-    if (activateOn === "url-change") {
+    if (activateOn === 'url-change') {
       cleanups.push(
         createUrlChangeTrigger(trigger, onActivate, {
-          events:
-            activateOnUrlEvents ?? [
-              "popstate",
-              "hashchange",
-              "pushstate",
-              "replacestate",
-            ],
-        }),
+          events: activateOnUrlEvents ?? [
+            'popstate',
+            'hashchange',
+            'pushstate',
+            'replacestate',
+          ],
+        })
       );
     } else {
-      if (activateOn === "media" && !activateOnMediaQuery) {
+      if (activateOn === 'media' && !activateOnMediaQuery) {
         throw new Error(
-          `[mountly] attach({ activateOn: "media" }) for "${moduleId}" requires activateOnMediaQuery.`,
+          `[mountly] attach({ activateOn: "media" }) for "${moduleId}" requires activateOnMediaQuery.`
         );
       }
       cleanups.push(
@@ -656,13 +697,15 @@ export function createOnDemandFeature(
           {
             type: activateOn,
             element: trigger,
-            idleTimeout: activateOn === "idle" ? idleTimeout : undefined,
-            rootMargin: activateOn === "viewport" ? viewportRootMargin : undefined,
-            mediaQuery: activateOn === "media" ? activateOnMediaQuery : undefined,
+            idleTimeout: activateOn === 'idle' ? idleTimeout : undefined,
+            rootMargin:
+              activateOn === 'viewport' ? viewportRootMargin : undefined,
+            mediaQuery:
+              activateOn === 'media' ? activateOnMediaQuery : undefined,
             once: false,
           },
-          onActivate,
-        ),
+          onActivate
+        )
       );
     }
 
@@ -675,15 +718,15 @@ export function createOnDemandFeature(
   const abort = (): void => {
     if (abortController) abortController.abort();
     abortController = null;
-    if (state === "preloading" || state === "activating") {
-      setState("aborted");
-      tracker.recordPhase("preload_end", { error: "Aborted" });
+    if (state === 'preloading' || state === 'activating') {
+      setState('aborted');
+      tracker.recordPhase('preload_end', { error: 'Aborted' });
     }
     modulePromise = null;
   };
 
   const getState = (): FeatureState => state;
-  const isAborted = (): boolean => state === "aborted";
+  const isAborted = (): boolean => state === 'aborted';
   const getMounts = (): ReadonlyArray<HTMLElement> => Array.from(mounts.keys());
 
   return {
@@ -699,4 +742,25 @@ export function createOnDemandFeature(
     isAborted,
     getMounts,
   };
+}
+
+export function createFeatureFromModule(
+  options: CreateFeatureFromModuleOptions
+): OnDemandFeature {
+  const {
+    moduleId,
+    moduleUrl,
+    moduleExport,
+    assetOptions,
+    loadData,
+    getCacheKey,
+  } = options;
+  return createOnDemandFeature({
+    moduleId,
+    moduleUrl,
+    moduleExport,
+    assetOptions,
+    loadData,
+    getCacheKey,
+  });
 }

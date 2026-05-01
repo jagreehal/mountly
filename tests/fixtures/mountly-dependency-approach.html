@@ -1,0 +1,52 @@
+<!doctype html>
+<html><body>
+  <div id="widget-a"></div>
+  <div id="widget-b"></div>
+  <script type="module">
+    import { mountIslandFeature } from "/packages/mountly/dist/index.js";
+
+    const widgetA = {
+      mount(container) {
+        const div = document.createElement("div");
+        div.className = "widget-a";
+        div.textContent = "Widget A (mounted directly)";
+        container.appendChild(div);
+      },
+      unmount() {},
+    };
+
+    const widgetB = {
+      mount(container) {
+        const div = document.createElement("div");
+        div.className = "widget-b";
+        div.textContent = "Widget B (mounted directly)";
+        container.appendChild(div);
+      },
+      unmount() {},
+    };
+
+    const loaders = {
+      widgetA: async () => ({ default: widgetA }),
+      widgetB: async () => ({ default: widgetB }),
+    };
+
+    // Direct mounting approach - no custom elements, no island payloads
+    // Just call mountIslandFeature on DOM nodes directly
+    const containerA = document.getElementById("widget-a");
+    const containerB = document.getElementById("widget-b");
+
+    mountIslandFeature(containerA, loaders, { trigger: "immediately" });
+    mountIslandFeature(containerB, loaders, { trigger: "immediately" });
+
+    // Simulate the module loading by manually specifying the module to use
+    setTimeout(() => {
+      // In real usage, you'd structure this differently, but this demonstrates
+      // that Mountly can mount components without custom elements
+      window.__result = {
+        widgetALoaded: !!containerA.querySelector(".widget-a"),
+        widgetBLoaded: !!containerB.querySelector(".widget-b"),
+        noCustomElements: !document.querySelector("checkout-card") && !document.querySelector("hero-card"),
+      };
+    }, 100);
+  </script>
+</body></html>

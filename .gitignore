@@ -1,5 +1,6 @@
 node_modules
 dist
+!tests/fixtures/**/dist
 *.log
 .DS_Store
 packages/*/src/styles.generated.css

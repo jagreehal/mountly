@@ -1,0 +1,35 @@
+<!doctype html>
+<html><body>
+  <div id="c"></div>
+  <script type="importmap">
+    {"imports":{"mountly":"/packages/mountly/dist/index.js"}}
+  </script>
+  <script type="module">
+    import { createWidget } from "/packages/adapters/mountly-tsrx/dist/index.js";
+
+    const c = document.getElementById("c");
+    const w = createWidget({
+      mount(target, props) {
+        target.textContent = props.msg;
+      },
+      unmount(target) {
+        target.textContent = "";
+      },
+    }, { styles: ".x{}" });
+
+    w.mount(c, { msg: "first" });
+    await new Promise(r => setTimeout(r, 50));
+    const initialSheetCount = c.shadowRoot?.adoptedStyleSheets?.length ?? 0;
+
+    w.unmount(c);
+    w.mount(c, { msg: "second" });
+    await new Promise(r => setTimeout(r, 50));
+
+    const finalSheetCount = c.shadowRoot?.adoptedStyleSheets?.length ?? 0;
+    const styleStillPresent = finalSheetCount > 0 || !!c.shadowRoot?.querySelector("style");
+
+    window.__result = {
+      styleStillPresent,
+    };
+  </script>
+</body></html>

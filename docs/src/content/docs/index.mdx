@@ -1,6 +1,6 @@
 ---
 title: mountly
-description: Load rich UI only when the user actually needs it. Use your existing framework components and modernize legacy pages incrementally without rewriting the host app.
+description: Framework components. Any page. On demand. Ship React, Vue, Svelte, and TSRX components into HTML hosts without rewriting the page.
 template: splash
 hero:
   title: mountly
@@ -16,12 +16,12 @@ pagefind: false
   <div class="hero-copy">
     <span class="eyebrow">v0.1 · 9 KB gzipped runtime</span>
     <h1 class="hero-title">
-      Load rich UI <em>only</em> when the user actually needs it.
+      Framework components. Any page. <em>On demand.</em>
     </h1>
     <p class="hero-lead">
-      A small frontend runtime that splits code at the <strong>feature</strong> level
-      and activates widgets on intent — hover, click, focus, viewport, or idle.
-      No microfrontend orchestrator. No new component model. No host-app rewrite.
+      mountly turns React, Vue, Svelte, and TSRX components into lazy, isolated,
+      HTML-addressable features. Drop them into CMS pages, marketing sites, legacy apps,
+      partner embeds, or framework migrations without a host-app rewrite.
     </p>
     <div class="hero-actions">
       <a class="action primary" href="/mountly/getting-started/quick-start/">
@@ -37,12 +37,12 @@ pagefind: false
         <span>core gzipped</span>
       </div>
       <div class="hero-stat">
-        <span class="value">5</span>
-        <span>trigger types</span>
+        <span class="value">7</span>
+        <span>activation triggers</span>
       </div>
       <div class="hero-stat">
-        <span class="value">3</span>
-        <span>frameworks supported</span>
+        <span class="value">4</span>
+        <span>adapter packages</span>
       </div>
       <div class="hero-stat">
         <span class="value">0</span>
@@ -90,42 +90,92 @@ pagefind: false
   </div>
 </section>
 
-{/* ─── The problem ─── */}
+{/* ─── Positioning ─── */}
 
 <section class="section">
   <div class="section-head">
-    <span class="eyebrow">01 · The problem</span>
+    <span class="eyebrow">01 · Positioning</span>
     <h2 class="section-title">
-      Modern web apps ship too much JavaScript upfront.
+      One primitive. Several high-value jobs.
     </h2>
   </div>
   <p class="section-lead" style="max-width: 70ch;">
-    Component libraries load everything at once. Microfrontends are operationally heavy.
-    Framework lazy-loading lacks standardised interaction patterns. There's no unified system for
-    <em style="color: var(--text-strong); font-style: normal;"> "load rich UI only when the user actually needs it"</em>.
+    The core idea is simple: a component becomes a mountable widget, then mountly
+    loads and activates it from plain HTML when the page says it is time.
+    Marketing reuse, strangler-fig migration, island-style UI, and embeds are all
+    applications of the same runtime.
   </p>
 
   <div class="before-after sl-markdown-no-margin">
     <div class="before">
-      <h3>Before mountly</h3>
+      <h3>What you keep</h3>
       <ul>
-        <li>Payment widget</li>
-        <li>Video player</li>
-        <li>Image lightbox</li>
-        <li>Analytics panel</li>
-        <li>Chat widget</li>
+        <li>Normal React, Vue, Svelte, or TSRX components</li>
+        <li>Existing CMS, static, legacy, or app host pages</li>
+        <li>Current routing, query-string state, and deployment model</li>
+        <li>Per-widget ownership by the component team</li>
       </ul>
-      <p class="result">All shipped on first paint. Slow TTI, heavy bundle.</p>
+      <p class="result">No new component authoring model. No full app rewrite.</p>
     </div>
     <div class="after">
-      <h3>After mountly</h3>
+      <h3>What mountly adds</h3>
       <ul>
-        <li>Page shell (light)</li>
-        <li>User hovers → load module</li>
-        <li>→ fetch data in parallel</li>
-        <li>→ mount into shadow DOM</li>
+        <li>HTML tags like <code>&lt;signup-card&gt;</code></li>
+        <li>Activation on idle, viewport, click, hover, media, or URL change</li>
+        <li>Shadow-DOM style isolation and automatic CSS loading</li>
+        <li>Module/data caching, teardown, and prop updates</li>
       </ul>
-      <p class="result">Fast TTI. Each widget pays only on intent.</p>
+      <p class="result">A small runtime for component delivery, not an app platform.</p>
+    </div>
+  </div>
+</section>
+
+{/* ─── Use cases ─── */}
+
+<section class="section">
+  <div class="section-head">
+    <span class="eyebrow">02 · Use cases</span>
+    <h2 class="section-title">
+      Where the primitive pays off.
+    </h2>
+  </div>
+
+  <div class="trigger-grid sl-markdown-no-margin">
+    <div class="trigger-cell">
+      <span class="index">01</span>
+      <span class="label">marketing</span>
+      <span class="name">Real product components</span>
+      <span class="desc">Reuse checkout, pricing, signup, calculator, and lead-capture components on fast campaign pages.</span>
+    </div>
+    <div class="trigger-cell">
+      <span class="index">02</span>
+      <span class="label">migration</span>
+      <span class="name">Strangler fig UI</span>
+      <span class="desc">Replace legacy surfaces one widget at a time while the existing host keeps its routing and release process.</span>
+    </div>
+    <div class="trigger-cell">
+      <span class="index">03</span>
+      <span class="label">islands</span>
+      <span class="name">Runtime islands</span>
+      <span class="desc">Get Astro-like timing for HTML hosts, or compose with Astro when Astro owns the shell and mountly owns a portable widget.</span>
+    </div>
+    <div class="trigger-cell">
+      <span class="index">04</span>
+      <span class="label">embeds</span>
+      <span class="name">Partner and CMS drops</span>
+      <span class="desc">Expose a stable custom tag and let non-app teams place interactive UI without owning framework code.</span>
+    </div>
+    <div class="trigger-cell">
+      <span class="index">05</span>
+      <span class="label">performance</span>
+      <span class="name">Intent-paid JavaScript</span>
+      <span class="desc">Keep the page shell light, then load heavy UI when users scroll, click, hover, or match a route.</span>
+    </div>
+    <div class="trigger-cell">
+      <span class="index">06</span>
+      <span class="label">transition</span>
+      <span class="name">Multi-framework pages</span>
+      <span class="desc">Run React, Vue, Svelte, and TSRX widgets side by side while teams converge on the next architecture.</span>
     </div>
   </div>
 </section>
@@ -134,7 +184,7 @@ pagefind: false
 
 <section class="section">
   <div class="section-head">
-    <span class="eyebrow">02 · Triggers</span>
+    <span class="eyebrow">03 · Triggers</span>
     <h2 class="section-title">
       Six ways to say <em style="font-style: italic; color: var(--accent);">"now"</em>.
     </h2>
@@ -188,7 +238,7 @@ pagefind: false
 
 <section class="section">
   <div class="section-head">
-    <span class="eyebrow">03 · Lifecycle</span>
+    <span class="eyebrow">04 · Lifecycle</span>
     <h2 class="section-title">
       One state machine, five states. The same shape on every framework.
     </h2>
@@ -230,13 +280,14 @@ pagefind: false
 
 <section class="section">
   <div class="section-head">
-    <span class="eyebrow">04 · The whole API</span>
+    <span class="eyebrow">05 · The whole API</span>
     <h2 class="section-title">
       A widget. A feature. A trigger. Three lines you'll write.
     </h2>
   </div>
   <p class="section-lead">
-    Components stay components. The adapter wraps them as widgets. <code>createOnDemandFeature</code> adds the on-demand lifecycle. <code>attach</code> wires it to a DOM element.
+    Components stay components. The adapter wraps them as widgets. The host can wire a
+    feature imperatively, or declare it directly as HTML.
   </p>
 
 ```ts title="signup-card.ts"
@@ -268,15 +319,25 @@ signup.attach({
 
 > **Styling** — CSS is auto-loaded with the module, injected into the widget's shadow root, no FOUC.
 
+```html title="host.html"
+<signup-card trigger="viewport" props='{"plan":"pro"}'></signup-card>
+
+<script type="module">
+  import { defineMountlyFeature } from 'mountly';
+
+  defineMountlyFeature('/widgets/dist/index.js');
+</script>
+```
+
 </section>
 
 {/* ─── Comparison ─── */}
 
 <section class="section">
   <div class="section-head">
-    <span class="eyebrow">05 · How it compares</span>
+    <span class="eyebrow">06 · How it compares</span>
     <h2 class="section-title">
-      Performance benefits of microfrontends. None of the orchestration.
+      Composable with frameworks. Useful where framework boundaries end.
     </h2>
   </div>
 
@@ -285,34 +346,34 @@ signup.attach({
       <thead>
         <tr>
           <th>Approach</th>
-          <th>Initial bundle</th>
-          <th>User experience</th>
+          <th>Best at</th>
+          <th>Tradeoff</th>
           <th>Complexity</th>
         </tr>
       </thead>
       <tbody>
         <tr>
           <td>Traditional SPA</td>
-          <td>Large</td>
-          <td>Slow first paint, fast after</td>
+          <td>One app owns every surface</td>
+          <td>Poor fit for CMS, legacy, or partner-hosted UI</td>
           <td>Low</td>
         </tr>
         <tr>
           <td>Framework code-splitting</td>
-          <td>Medium</td>
-          <td>Better, but route-bound</td>
+          <td>Routes inside a single framework app</td>
+          <td>Does not standardize HTML drops or host-agnostic lifecycle</td>
           <td>Medium</td>
         </tr>
         <tr>
           <td>Microfrontend orchestrators</td>
-          <td>Variable</td>
-          <td>Good, runtime-coordinated</td>
+          <td>Independent apps with org-level ownership</td>
+          <td>Operationally heavy for component-sized features</td>
           <td>High</td>
         </tr>
         <tr class="highlight">
           <td>mountly</td>
-          <td>~9 KB core</td>
-          <td>Instant shell, features on intent</td>
+          <td>Component features in any HTML page</td>
+          <td>Not a router, SSR framework, or control plane</td>
           <td>Low</td>
         </tr>
       </tbody>
@@ -324,9 +385,9 @@ signup.attach({
 
 <section class="section">
   <div class="section-head">
-    <span class="eyebrow">06 · Packages</span>
+    <span class="eyebrow">07 · Packages</span>
     <h2 class="section-title">
-      One runtime, three adapters, one design preset.
+      One runtime, four adapters, one optional design preset.
     </h2>
   </div>
 
@@ -362,7 +423,7 @@ signup.attach({
 {/* ─── Footer ─── */}
 
 <div class="landing-foot">
-  <span>mountly · MIT · pre-1.0</span>
+  <span>mountly · Apache-2.0 · pre-1.0</span>
   <span>
     <a href="https://github.com/jagreehal/mountly">
       github.com/jagreehal/mountly

@@ -35,7 +35,7 @@
     "postpack": "rm -f LICENSE && ln -s ../../../LICENSE LICENSE"
   },
   "peerDependencies": {
-    "svelte": "^5.55.5",
+    "svelte": ">=4 <6",
     "mountly": "^0.1.4"
   },
   "devDependencies": {

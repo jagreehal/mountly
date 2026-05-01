@@ -1,0 +1,107 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      body { font-family: system-ui; margin: 20px; }
+      .counter { padding: 10px; border: 1px solid #ccc; }
+      .ssr-marker { color: blue; font-weight: bold; }
+      .client-marker { color: green; font-weight: bold; }
+    </style>
+    <!-- Global stylesheet for no-JS fallback -->
+    <style>
+      .counter-value { font-size: 24px; margin: 10px 0; }
+      .btn { padding: 8px 16px; }
+    </style>
+  </head>
+  <body>
+    <h1>Mountly Islands Architecture Complete Test</h1>
+
+    <!-- Island 1: SSR-only (no hydration) -->
+    <div id="island-ssr-only"
+         data-mountly-island='{"schemaVersion":1,"id":"ssr-only","moduleId":"counter","trigger":"never","props":{"initial":5}}'
+         data-mountly-hydrated="true">
+      <div class="counter">
+        <span class="ssr-marker">SSR-rendered counter: 5</span>
+        <div class="counter-value">5</div>
+        <button class="btn">Increment</button>
+      </div>
+    </div>
+
+    <!-- Island 2: SSR with optional client hydration (skip) -->
+    <div id="island-ssr-skip"
+         data-mountly-island='{"schemaVersion":1,"id":"ssr-skip","moduleId":"counter","trigger":"click","props":{"initial":10}}'
+         data-mountly-hydrated="true">
+      <div class="counter">
+        <span class="ssr-marker">SSR counter (skip hydration): 10</span>
+        <div class="counter-value">10</div>
+      </div>
+    </div>
+
+    <!-- Island 3: SSR with forced client remount -->
+    <div id="island-ssr-force"
+         data-mountly-island='{"schemaVersion":1,"id":"ssr-force","moduleId":"counter","trigger":"click","props":{"initial":3}}'
+         data-mountly-hydrated="true">
+      <div class="counter">
+        <span class="ssr-marker">SSR counter (force remount): 3</span>
+        <div class="counter-value">3</div>
+      </div>
+    </div>
+
+    <script type="module">
+      // Mock counter widget
+      const counterWidget = {
+        mount(container, props) {
+          const value = props?.initial ?? 0;
+          container.innerHTML = `
+            <div class="counter">
+              <span class="client-marker">Client-rendered counter: ${value}</span>
+              <div class="counter-value">${value}</div>
+              <button class="btn">Increment</button>
+            </div>
+          `;
+        },
+        unmount(container) {
+          container.innerHTML = '';
+        },
+      };
+
+      import { mountIslandFeature } from "/packages/mountly/dist/index.js";
+
+      const loaders = {
+        counter: async () => ({ default: counterWidget }),
+      };
+
+      // Island 1: SSR-only (never trigger)
+      const islandSSROnly = document.getElementById('island-ssr-only');
+      mountIslandFeature(islandSSROnly, loaders);
+
+      // Island 2: Skip hydration if SSR content present
+      const islandSSRSkip = document.getElementById('island-ssr-skip');
+      mountIslandFeature(islandSSRSkip, loaders, { skipIfHydrated: true });
+      islandSSRSkip.click();
+
+      // Island 3: Force remount over SSR content
+      const islandSSRForce = document.getElementById('island-ssr-force');
+      mountIslandFeature(islandSSRForce, loaders, { forceRemount: true });
+      islandSSRForce.click();
+
+      // Wait for all islands to settle
+      setTimeout(() => {
+        const result = {
+          ssrOnlyText: islandSSROnly?.querySelector('.ssr-marker')?.textContent ?? '',
+          ssrOnlyHasClient: !!islandSSROnly?.querySelector('.client-marker'),
+
+          ssrSkipText: islandSSRSkip?.querySelector('.ssr-marker')?.textContent ?? '',
+          ssrSkipHasClient: !!islandSSRSkip?.querySelector('.client-marker'),
+
+          ssrForceText: islandSSRForce?.querySelector('.client-marker')?.textContent ?? '',
+          ssrForceHasClient: !!islandSSRForce?.querySelector('.client-marker'),
+          ssrForceSSRGone: !islandSSRForce?.querySelector('.ssr-marker'),
+        };
+
+        window.__result = result;
+      }, 100);
+    </script>
+  </body>
+</html>

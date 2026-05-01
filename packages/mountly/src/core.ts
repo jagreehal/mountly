@@ -1,10 +1,12 @@
 export {
   createOnDemandFeature,
+  createFeatureFromModule,
   type OnDemandFeature,
   type FeatureContext,
   type FeatureModule,
   type FeatureState,
   type CreateOnDemandFeatureOptions,
+  type CreateFeatureFromModuleOptions,
 } from "./feature.js";
 
 export {
@@ -64,8 +66,13 @@ export {
 
 export {
   registerCustomElement,
+  registerFeatureModule,
+  autoRegisterFeatures,
   unregisterCustomElement,
   defineMountlyFeature,
+  type FeatureModuleManifest,
+  type DefineMountlyFeatureOptions,
+  type RegisterFeatureModuleOptions,
 } from "./custom-element.js";
 
 export type {

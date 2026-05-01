@@ -35,7 +35,7 @@
     "postpack": "rm -f LICENSE && ln -s ../../../LICENSE LICENSE"
   },
   "peerDependencies": {
-    "vue": "^3.5.33",
+    "vue": ">=3.3 <4",
     "mountly": "^0.1.4"
   },
   "devDependencies": {

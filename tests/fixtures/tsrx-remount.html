@@ -1,0 +1,39 @@
+<!doctype html>
+<html><body>
+  <div id="c"></div>
+  <script type="importmap">
+    {"imports":{"mountly":"/packages/mountly/dist/index.js"}}
+  </script>
+  <script type="module">
+    import { createWidget } from "/packages/adapters/mountly-tsrx/dist/index.js";
+
+    const c = document.getElementById("c");
+    const w = createWidget({
+      mount(target, props) {
+        target.textContent = props.msg;
+      },
+      unmount(target) {
+        target.textContent = "";
+      },
+    }, { styles: ".x{}" });
+
+    w.mount(c, { msg: "first" });
+    await new Promise(r => setTimeout(r, 50));
+    const firstMountNodes = c.shadowRoot?.querySelectorAll("[data-mountly-root]").length ?? 0;
+    const firstStylePresent = !!c.shadowRoot?.querySelector("style");
+
+    w.unmount(c);
+    w.mount(c, { msg: "second" });
+    await new Promise(r => setTimeout(r, 50));
+
+    const mountNodes = c.shadowRoot?.querySelectorAll("[data-mountly-root]").length ?? 0;
+    const stylePresent = (c.shadowRoot?.adoptedStyleSheets?.length ?? 0) > 0 || !!c.shadowRoot?.querySelector("style");
+    const text = c.shadowRoot?.querySelector("[data-mountly-root]")?.textContent ?? "";
+
+    window.__result = {
+      mountNodes,
+      stylePresent,
+      text,
+    };
+  </script>
+</body></html>

@@ -3,17 +3,17 @@ title: Introduction
 description: What mountly is, what problem it solves, and who it's for.
 ---
 
-mountly is a small frontend runtime that solves a single problem: **modern web apps ship too much JavaScript upfront.**
+mountly is an on-demand component runtime:
 
-Component libraries load everything at once. Microfrontends are operationally heavy. Framework lazy-loading lacks standardised interaction patterns. There's no unified system for _"load rich UI only when the user actually needs it."_
+**Framework components. Any page. On demand.**
 
-mountly is that system.
+It turns React, Vue, Svelte, and TSRX components into lazy, isolated, HTML-addressable features. The host can be a CMS page, marketing site, legacy app, static file, partner embed, or another framework app.
 
-It is built for incremental adoption: keep your current host app and drop in on-demand features without a full rewrite.
+The performance problem still matters: modern web apps ship too much JavaScript upfront. But mountly's deeper job is component delivery. It lets a page load a real component only when the user or route actually needs it, without forcing the host into a new app framework.
 
 ## The shape of it
 
-You write components the way you already do — React, Vue, or Svelte. The framework adapter wraps each component as a **widget**: a self-contained, mountable, framework-agnostic unit. `createOnDemandFeature` then adds a lifecycle around the widget — a trigger (hover, click, focus, viewport, idle, url-change), a module loader, optional data fetching, dual caching, and a standardised state machine.
+You write components the way you already do — React, Vue, Svelte, or TSRX. The framework adapter wraps each component as a **widget**: a self-contained, mountable, framework-agnostic unit. `createOnDemandFeature` or `defineMountlyFeature` then adds a lifecycle around the widget — a trigger (hover, click, focus, viewport, idle, media, url-change), a module loader, optional data fetching, dual caching, and a standardised state machine.
 
 The vocabulary is enforced in the docs because it pays off:
 
@@ -23,31 +23,35 @@ The vocabulary is enforced in the docs because it pays off:
 
 You write **components**, the adapter wraps them as **widgets**, and you ship them as **features**.
 
-## Why it matters
+## Where it fits
 
-- **Faster initial load** — less JS to download and parse before the page is interactive.
-- **Better on low-end devices** — the cost of a feature is paid only by users who use it.
-- **Reduced bandwidth on slow connections** — widgets stream in on demand.
-- **Improved Core Web Vitals** — directly addresses TTI and INP.
+- **Marketing surfaces** — reuse real product components on fast campaign pages.
+- **Legacy modernization** — replace old UI one feature at a time without rewriting the host.
+- **Runtime islands** — get island-style activation in HTML hosts without adopting a site framework.
+- **Partner and CMS embeds** — expose stable custom tags that non-app teams can place safely.
+- **Performance-sensitive pages** — pay for heavy UI on idle, viewport, click, hover, media, or URL change.
+- **Framework transitions** — run React, Vue, Svelte, and TSRX widgets side by side while migrating.
 
 ## Who it's for
 
 mountly is appropriate when:
 
-- You ship **embeddable widgets** onto static sites, CMS pages, or third-party hosts where bundle size and host conflicts matter.
-- You want **intent-based activation** with a shared module + data cache story.
-- You need **multiple widgets on one page** sharing a single React copy via the host's import map.
+- You need to ship **framework components into pages you do not fully own**.
+- You want **HTML-addressable components** like `<signup-card>` with minimal host wiring.
+- You need **intent-based activation** with a shared module and data cache story.
+- You want **style isolation** so the host page and component do not break each other.
+- You need **multiple widgets on one page**, potentially from different frameworks.
 
 It's the **wrong** tool when you have a single SPA where the bundler owns every surface, when you need SSR + hydration of server-rendered HTML, or when you actually want a microfrontend control plane. See [When not to use mountly](/mountly/concepts/when-not-to-use/) for the longer answer.
 
 ## How it compares
 
-| Approach                    | Initial bundle | User experience                       | Developer complexity |
-| --------------------------- | -------------- | ------------------------------------- | -------------------- |
-| Traditional SPA             | Large          | Slow first paint, fast after          | Low                  |
-| Framework code-splitting    | Medium         | Better, but route-bound               | Medium               |
-| Microfrontend orchestrators | Variable       | Good, runtime-coordinated             | High                 |
-| **mountly**                 | **~9 KB core** | **Instant shell, features on intent** | **Low**              |
+| Approach                    | Best at                                 | Tradeoff                                                        | Complexity |
+| --------------------------- | --------------------------------------- | --------------------------------------------------------------- | ---------- |
+| Traditional SPA             | One app owns every surface              | Poor fit for CMS, legacy, or partner-hosted UI                  | Low        |
+| Framework code-splitting    | Routes inside one framework app         | Does not standardize HTML drops or host-agnostic lifecycle      | Medium     |
+| Microfrontend orchestrators | Independent apps with team ownership    | Operationally heavy for component-sized features                | High       |
+| **mountly**                 | **Component features in any HTML page** | **Not a router, SSR framework, or microfrontend control plane** | **Low**    |
 
 ## Where to next
 

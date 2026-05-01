@@ -1,0 +1,71 @@
+<!doctype html>
+<html><body>
+  <!-- Island 1: checkout - no custom element wrapping -->
+  <div id="checkout" data-mountly-island='{"schemaVersion":1,"id":"checkout-island","moduleId":"checkout","trigger":"click"}'>
+    <span>Click to load checkout</span>
+  </div>
+
+  <!-- Island 2: hero - no custom element wrapping -->
+  <div id="hero" data-mountly-island='{"schemaVersion":1,"id":"hero-island","moduleId":"hero","trigger":"click"}'>
+    <span>Click to load hero</span>
+  </div>
+
+  <script type="module">
+    import { mountIslandFeature } from "/packages/mountly/dist/index.js";
+
+    // Demonstrate Mountly as a dependency library:
+    // No custom elements needed - just call mountIslandFeature on regular divs
+    // The payload is just data, not used to define a web component
+
+    const checkoutWidget = {
+      mount(target) {
+        const div = document.createElement("div");
+        div.className = "checkout-widget";
+        div.textContent = "Checkout Widget (no custom element needed)";
+        target.appendChild(div);
+      },
+      unmount() {},
+    };
+
+    const heroWidget = {
+      mount(target) {
+        const div = document.createElement("div");
+        div.className = "hero-widget";
+        div.textContent = "Hero Widget (no custom element needed)";
+        target.appendChild(div);
+      },
+      unmount() {},
+    };
+
+    const loaders = {
+      checkout: async () => ({ default: checkoutWidget }),
+      hero: async () => ({ default: heroWidget }),
+    };
+
+    // Mount islands by calling mountIslandFeature directly
+    // These are just regular divs, not custom element registrations
+    const checkoutContainer = document.getElementById('checkout');
+    const heroContainer = document.getElementById('hero');
+
+    mountIslandFeature(checkoutContainer, loaders);
+    mountIslandFeature(heroContainer, loaders);
+
+    // Trigger mounting
+    setTimeout(() => {
+      checkoutContainer.click();
+      heroContainer.click();
+    }, 50);
+
+    // Verify results
+    setTimeout(() => {
+      window.__result = {
+        checkoutLoaded: !!document.querySelector('.checkout-widget'),
+        heroLoaded: !!document.querySelector('.hero-widget'),
+        checkoutText: document.querySelector('.checkout-widget')?.textContent ?? '',
+        heroText: document.querySelector('.hero-widget')?.textContent ?? '',
+        // Verify no custom element tags were registered
+        hasNoCustomElements: !document.querySelector('checkout-card') && !document.querySelector('hero-card'),
+      };
+    }, 200);
+  </script>
+</body></html>

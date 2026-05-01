@@ -1,0 +1,33 @@
+<!doctype html>
+<html><body>
+  <div id="island" data-mountly-island='{"schemaVersion":1,"id":"hover-test","moduleId":"demo","trigger":"hover","props":{"msg":"loaded"}}'>
+    <span class="ssr">Hover me</span>
+  </div>
+  <script type="module">
+    import { mountIslandFeature } from "/packages/mountly/dist/index.js";
+    const island = document.getElementById("island");
+    const widgetModule = {
+      mount(container) {
+        const span = document.createElement("span");
+        span.className = "loaded";
+        span.textContent = "Loaded via hover";
+        container.appendChild(span);
+      },
+      unmount() {},
+    };
+    mountIslandFeature(island, { demo: async () => ({ default: widgetModule }) });
+
+    // Simulate hover
+    setTimeout(() => {
+      island.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
+    }, 50);
+
+    window.__result = {
+      hasLoaded: null
+    };
+
+    setTimeout(() => {
+      window.__result.hasLoaded = !!island.querySelector('.loaded');
+    }, 200);
+  </script>
+</body></html>
