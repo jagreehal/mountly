@@ -31,7 +31,7 @@
     "@playwright/test": "^1.59.1",
     "@types/node": "^25.6.0",
     "executable-stories-formatters": "^0.7.12",
-    "executable-stories-playwright": "^8.2.7",
+    "executable-stories-playwright": "^8.2.9",
     "executable-stories-vitest": "^8.1.13",
     "serve": "^14.2.6",
     "turbo": "^2.9.8",
