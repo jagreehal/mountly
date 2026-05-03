@@ -32,7 +32,7 @@
     "@types/node": "^25.6.0",
     "executable-stories-formatters": "^0.7.12",
     "executable-stories-playwright": "^8.2.7",
-    "executable-stories-vitest": "^8.1.10",
+    "executable-stories-vitest": "^8.1.13",
     "serve": "^14.2.6",
     "turbo": "^2.9.6",
     "typescript": "^6.0.3",
