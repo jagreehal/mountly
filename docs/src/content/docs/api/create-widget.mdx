@@ -29,8 +29,7 @@ function createWidget<P>(
 | `moduleUrl`      | `string`              | URL to the widget's JS bundle. The adapter derives the sibling `.css` (`/dist/index.js` → `/dist/index.css`) unless `cssUrl` is also set.                              |
 | `shadow`         | `boolean`             | Default `false` (light DOM). Set `shadow: true` to mount inside a shadow root, which scopes the widget's styles and stops host CSS from reaching in.                   |
 | `shadowMode`     | `"open"` · `"closed"` | Only used when `shadow: true`. Default `"open"`.                                                                                                                       |
-| `styleMode`      | `"global"` · `"isolated"` | Light-DOM only. `"global"` (default) appends a single `<style>` to `<head>`. `"isolated"` writes a `<style>` next to the mount point.                              |
-| `delegatesFocus` | `boolean`             | Forwarded to `attachShadow` when `shadow: true`.                                                                                                                       |
+| `styleMode`      | `"shared"` · `"isolated"` | Light-DOM only. `"shared"` (default) appends a single `<style>` to `<head>`. `"isolated"` writes a `<style>` next to the mount point.                              |
 | `reserveSize`    | `string`              | CSS applied to the container before render. Useful for preventing CLS while the widget loads.                                                                          |
 
 `cssUrl`, `moduleUrl`, and `shadow: true` apply to all three adapters (`mountly-react`, `mountly-vue`, `mountly-svelte`).
@@ -136,7 +135,7 @@ No manual CSS loading, no FOUC, no host conflicts. Every widget gets automatic c
 
 The adapter follows this resolution order on each `mount`:
 
-1. If a `cssUrl` or `moduleUrl` is set (in options or props), fetch the corresponding `.css` and adopt it into the shadow root via `adoptedStyleSheets`.
+1. If a `cssUrl` or `moduleUrl` is set (in options or props), fetch the corresponding `.css` before render. In light DOM it is injected via the normal `styles` path (shared `<head>` style or `styleMode: "isolated"`); with `shadow: true` it is adopted into the shadow root.
 2. Otherwise, use the literal `styles` option if one was provided.
 3. Otherwise, render unstyled. That's fine when the host page already wires a global stylesheet.
 
