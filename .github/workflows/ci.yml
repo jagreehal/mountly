@@ -75,14 +75,12 @@ jobs:
         with:
           report-dir: docs/evidence
           output-name: vitest-tests
+          raw-run: .executable-stories/vitest-raw-run.json
           artifact-name: executable-stories-vitest
           comment-title: Vitest Stories
 
       - name: Playwright tests
         run: pnpm run test:e2e
-
-      - name: Critical integration gate (shadow/no-shadow + cross-framework)
-        run: pnpm run test:e2e:critical
 
       - name: Playwright stories report
         if: always()
@@ -90,8 +88,12 @@ jobs:
         with:
           report-dir: docs/evidence
           output-name: playwright-tests
+          raw-run: .executable-stories/playwright-raw-run.json
           artifact-name: executable-stories-playwright
           comment-title: Playwright Stories
+
+      - name: Critical integration gate (shadow/no-shadow + cross-framework)
+        run: pnpm run test:e2e:critical
 
   dependabot-auto-merge:
     needs: build-and-test
