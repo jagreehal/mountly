@@ -7,7 +7,7 @@ description: Wrap a framework component as a mountly widget. Same surface across
 import { createWidget } from 'mountly-react'; // or "mountly-vue" / "mountly-svelte"
 ```
 
-Turns a component into a framework-agnostic **widget** — an object with `mount(container, props)` and `unmount(container)` that mountly's runtime can drive.
+Turns a component into a framework-agnostic **widget**, an object with `mount(container, props)` and `unmount(container)` that mountly's runtime can drive.
 
 ## Signature
 
@@ -24,16 +24,16 @@ function createWidget<P>(
 
 | Field            | Type                  | Notes                                                                                                                                                                  |
 | ---------------- | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `styles`         | `string`              | CSS to inject directly into the widget's shadow root. Use when the CSS is small or already a string at build time.                                                     |
+| `styles`         | `string`              | CSS string. In light DOM (default) it is injected once as a `<style data-mountly-fallback>` in `<head>` (or inline next to the mount with `styleMode:"isolated"`). In shadow DOM it is adopted into the shadow root. |
 | `cssUrl`         | `string`              | URL to fetch CSS from at mount time. Sent with `Accept: text/css` so Vite-style dev servers return raw CSS instead of an HMR-wrapped JS module.                        |
 | `moduleUrl`      | `string`              | URL to the widget's JS bundle. The adapter derives the sibling `.css` (`/dist/index.js` → `/dist/index.css`) unless `cssUrl` is also set.                              |
-| `shadow`         | `boolean`             | Default `true`. Set `false` to mount in light DOM; styles fall back to a `<style data-mountly-fallback>` injected into `<head>` (or inline with `styleMode:"isolated"`). |
-| `shadowMode`     | `"open"` · `"closed"` | Shadow root mode. Default `"open"`.                                                                                                                                    |
+| `shadow`         | `boolean`             | Default `false` (light DOM). Set `shadow: true` to mount inside a shadow root, which scopes the widget's styles and stops host CSS from reaching in.                   |
+| `shadowMode`     | `"open"` · `"closed"` | Only used when `shadow: true`. Default `"open"`.                                                                                                                       |
 | `styleMode`      | `"global"` · `"isolated"` | Light-DOM only. `"global"` (default) appends a single `<style>` to `<head>`. `"isolated"` writes a `<style>` next to the mount point.                              |
-| `delegatesFocus` | `boolean`             | Forwarded to `attachShadow`.                                                                                                                                           |
+| `delegatesFocus` | `boolean`             | Forwarded to `attachShadow` when `shadow: true`.                                                                                                                       |
 | `reserveSize`    | `string`              | CSS applied to the container before render. Useful for preventing CLS while the widget loads.                                                                          |
 
-`cssUrl`, `moduleUrl`, and `shadow:false` apply to all three adapters (`mountly-react`, `mountly-vue`, `mountly-svelte`).
+`cssUrl`, `moduleUrl`, and `shadow: true` apply to all three adapters (`mountly-react`, `mountly-vue`, `mountly-svelte`).
 
 ### CSS source resolution
 
@@ -83,7 +83,7 @@ import SignupCard from './SignupCard.tsx';
 export default createWidget(SignupCard);
 ```
 
-The React adapter exposes `update()` automatically. `feature.update(container, props)` reuses the same React root, preserving hooks state. **CSS Modules** pair naturally: the build emits hashed class names referenced from JSX, the shadow root provides the scoping React itself doesn't have. See [Styling](/mountly/concepts/styling/).
+The React adapter exposes `update()` automatically. `feature.update(container, props)` reuses the same React root, preserving hooks state. **CSS Modules** pair naturally with the default light-DOM mount: the build emits hashed class names referenced from JSX, and the host's design system can still reach in. If you want full isolation, add `shadow: true`. See [Styling](/mountly/concepts/styling/).
 
 If you'd rather inline the CSS at build time:
 
@@ -142,15 +142,26 @@ The adapter follows this resolution order on each `mount`:
 
 Fetched CSS is cached in-memory per URL, so repeated mounts of the same widget never refetch. See [Styling](/mountly/concepts/styling/) for the full matrix including light DOM, CSS Modules, and noscript fallback patterns.
 
-## Shadow DOM
+## Light DOM (default)
 
-All adapters call `attachShadow(container, options)` internally. This means:
+By default `createWidget` mounts in light DOM. The widget renders directly inside the container, the host's CSS reaches in, and the widget's `styles` are injected as a single `<style data-mountly-fallback>` in `<head>` (or inline next to the mount with `styleMode: "isolated"`). This is the right default for most product code, where you want your design system to apply naturally.
 
-- Styles in `options.styles` are injected into the shadow root and don't leak out.
-- The host's CSS doesn't bleed in (modulo CSS custom properties, which inherit through shadow roots intentionally).
-- The `container` itself stays as the shadow host; the widget renders into the shadow tree.
+## Shadow DOM (opt in with `shadow: true`)
 
-If you want to mount into a non-shadow element (advanced, breaks isolation), implement your own widget shape — `WidgetModule` is just an interface.
+```ts
+createWidget(Card, { shadow: true, styles });
+```
+
+When `shadow: true`:
+
+- The adapter calls `attachShadow(container, { mode: shadowMode ?? "open" })`.
+- `options.styles` is adopted into the shadow root via `adoptedStyleSheets` (shared across all roots that use the same CSS string).
+- The host's CSS doesn't bleed in, modulo CSS custom properties which inherit through shadow roots intentionally.
+- The `container` itself becomes the shadow host; the widget renders into the shadow tree.
+
+Reach for shadow DOM when the widget will be embedded in unknown hosts (CMS pages, third-party sites, legacy apps) and must look the same regardless of host CSS.
+
+If the container is a void element like `<img>` or `<input>`, `attachShadow` throws. The adapter falls back to light DOM in that case and logs a warning.
 
 ## Related
 

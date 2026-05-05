@@ -20,9 +20,7 @@
     // The test intercepts "/__vite_mock__/widget.css" via page.route() and
     // returns either a JS-wrapped CSS module (default) or raw CSS (when
     // Accept: text/css is sent), mirroring Vite's dev-server behaviour.
-    const widget = createWidget(HelloComponent, {
-      cssUrl: "/__vite_mock__/widget.css",
-    });
+    const widget = createWidget(HelloComponent, { shadow: true, cssUrl: "/__vite_mock__/widget.css", });
     const c = document.getElementById("c");
     await widget.mount(c, { msg: "vite-like" });
 

@@ -44,9 +44,9 @@ function PricingWidget({ plan = "Pro", price = 29 }) {
 
 // Each export is a fully-formed WidgetModule. The bundle's CSS file is
 // fetched once and adopted into every widget's shadow root.
-export const counter = createWidget(CounterWidget);
-export const status = createWidget(StatusWidget);
-export const pricing = createWidget(PricingWidget);
+export const counter = createWidget(CounterWidget, { shadow: true });
+export const status = createWidget(StatusWidget, { shadow: true });
+export const pricing = createWidget(PricingWidget, { shadow: true });
 
 // Re-exported so the test can confirm the workspace import resolved.
 export { __ui_lib_marker };

@@ -12,7 +12,7 @@
         target.textContent = props.msg;
         target.className = "tsrx-mounted";
       },
-    }, { styles: ".tsrx-mounted{color:rgb(12,34,56)}" });
+    }, { shadow: true, styles: ".tsrx-mounted{color:rgb(12,34,56)}" });
 
     w.mount(document.getElementById("c"), { msg: "hello world" });
   </script>

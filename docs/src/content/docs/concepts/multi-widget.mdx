@@ -78,27 +78,27 @@ The `?deps=react@19.2.5` query is important on esm.sh; without it, every package
 
 A test in the repo (`tests/fixtures/tanstack-table-widget.js` + spec) loads a non-trivial third-party package this way and proves it works through the mountly pipeline.
 
-## Shadow DOM vs light DOM for a bundle
+## Light DOM vs shadow DOM for a bundle
 
-A whole bundle should commit to **one mode**. Mixing shadow-rooted and light-DOM widgets within a single design system tends to confuse styling assumptions (does the host's Tailwind reach in? does the design token cascade work?).
+A whole bundle should commit to **one mode**. Mixing light-DOM and shadow-rooted widgets within a single design system tends to confuse styling assumptions (does the host's Tailwind reach in? does the design token cascade work?).
+
+### All light DOM (default)
+
+Default. Every widget renders inline; the host's global stylesheets reach in. Best when:
+
+- Widgets are styled by the host's design system (Tailwind, shadcn).
+- A library like Radix UI (used by shadcn) portals content to `document.body`, and you don't want to reconfigure each component's portal target.
+- You want Tailwind's `:root` tokens to flow through the document into every widget.
+
+The repo's `examples/shadcn-light-dom` and matching test (`shadcn-light-dom.html`) demonstrate three React widgets sharing a global Tailwind/tokens stylesheet through this approach.
 
 ### All shadow DOM
 
-Default. Each widget gets its own shadow root; the bundle's CSS is adopted into every root. Best when:
+Pass `shadow: true` on every widget in the bundle. Each widget gets its own shadow root and the bundle's CSS is adopted into every root. Best when:
 
-- Widgets must not be styled by the host page.
-- Component-scoped styles (Svelte hashes, Vue `<style scoped>`, CSS Modules) work without further isolation effort.
+- Widgets must not be styled by the host page (CMS, third-party hosts, partner sites).
 - The bundle owns its design language end-to-end.
-
-### All light DOM
-
-Set `shadow: false` on every widget in the bundle. The host's global stylesheets reach in. Best when:
-
-- The widgets are styled by the host's design system (Tailwind, shadcn).
-- A library like Radix UI (used by shadcn) portals content to `document.body` and you don't want to reconfigure each component's portal target.
-- You're fine with Tailwind's `:root` tokens flowing through the document, since shadow-rooted widgets don't see them by default.
-
-The repo's `examples/shadcn-light-dom` and matching test (`shadcn-light-dom.html`) demonstrate three React widgets sharing a global Tailwind/tokens stylesheet through this approach.
+- Component-scoped styles (Svelte hashes, Vue `<style scoped>`, CSS Modules) get an additional hard boundary on top of the framework's own scoping.
 
 ## Monorepo: shared UI library + widgets package
 
@@ -182,8 +182,8 @@ function HeroSurface({ headline, ctaLabel, ctaHref }) {
   );
 }
 
-export const hero = createWidget(HeroSurface, { shadow: false });
-// + pricing, newsletter, etc.
+export const hero = createWidget(HeroSurface);
+// + pricing, newsletter, etc. — all default light DOM
 ```
 
 That same `Button`, `Card`, `Stack` library renders unchanged inside the

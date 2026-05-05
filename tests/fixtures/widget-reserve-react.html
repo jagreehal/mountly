@@ -6,7 +6,7 @@
     import { createElement } from 'react';
     import { createWidget } from '/packages/adapters/mountly-react/dist/index.js';
     const C = () => createElement('div', { style: { height: '20px' } }, 'r');
-    const w = createWidget(C, { reserveSize: 'min-height: 40px;' });
+    const w = createWidget(C, { shadow: true, reserveSize: 'min-height: 40px;' });
     const c = document.getElementById('c');
     w.mount(c, {});
     window.__result = { h: c.offsetHeight };

@@ -15,7 +15,7 @@
       render() { return h("span", { class: "styled-widget" }, this.msg); },
     };
 
-    const widget = createWidget(Hello, {});
+    const widget = createWidget(Hello, { shadow: true });
     const c = document.getElementById("c");
     await widget.mount(c, {
       msg: "cssUrl-prop",

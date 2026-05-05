@@ -20,7 +20,7 @@
       }
     }
 
-    const w = createWidget(HelloComponent, { styles: ".x{}" });
+    const w = createWidget(HelloComponent, { shadow: true, styles: ".x{}" });
     const c = document.getElementById("c");
     w.mount(c, { msg: "alive" });
 

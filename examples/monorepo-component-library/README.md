@@ -260,7 +260,7 @@ that doesn't rely on `:root` tokens, no portals), shadow DOM gives you
 true isolation:
 
 ```ts
-export const counter = createWidget(Counter); // shadow:true is default
+export const counter = createWidget(Counter, { shadow: true }); // shadow is opt-in
 ```
 
 See [Multi-widget bundles](https://jagreehal.github.io/mountly/concepts/multi-widget/)

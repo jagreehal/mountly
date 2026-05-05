@@ -17,7 +17,7 @@
       $destroy() { this.el?.remove(); }
     }
 
-    const w = createWidget(HelloComponent, { styles: ".svelte-light{}" });
+    const w = createWidget(HelloComponent, { shadow: true, styles: ".svelte-light{}" });
     const img = document.getElementById("c");
     w.mount(img, { msg: "fallback" });
 

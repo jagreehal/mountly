@@ -6,8 +6,8 @@
     const c = document.getElementById("container");
     let error = null, m1, m2;
     try {
-      m1 = attachShadow(c, { styles: ".x{}", shadowMode: "closed" });
-      m2 = attachShadow(c, { styles: ".x{}", shadowMode: "closed" });
+      m1 = attachShadow(c, { shadow: true, styles: ".x{}", shadowMode: "closed" });
+      m2 = attachShadow(c, { shadow: true, styles: ".x{}", shadowMode: "closed" });
     } catch (e) {
       error = String(e);
     }

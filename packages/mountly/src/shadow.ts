@@ -42,17 +42,23 @@ export function attachShadow(
   const existing = mountNodes.get(container);
   if (existing) return existing;
 
-  if (options.shadow === false) {
+  if (options.shadow !== true) {
     if (options.styles) {
       if (options.styleMode === "isolated") {
-        const existingInline = container.querySelector(
-          'style[data-mountly-inline="true"]',
-        );
-        if (!existingInline) {
-          const inlineStyle = document.createElement("style");
-          inlineStyle.setAttribute("data-mountly-inline", "true");
-          inlineStyle.textContent = options.styles;
-          container.appendChild(inlineStyle);
+        try {
+          const existingInline = container.querySelector(
+            'style[data-mountly-inline="true"]',
+          );
+          if (!existingInline) {
+            const inlineStyle = document.createElement("style");
+            inlineStyle.setAttribute("data-mountly-inline", "true");
+            inlineStyle.textContent = options.styles;
+            container.appendChild(inlineStyle);
+          }
+        } catch {
+          // Void elements (<img>, <input>, etc.) cannot host children.
+          // Fall back to a single document-level style.
+          injectGlobalStyles(container, options.styles);
         }
       } else {
         injectGlobalStyles(container, options.styles);
@@ -60,7 +66,14 @@ export function attachShadow(
     }
     const mount = document.createElement("div");
     mount.setAttribute(MOUNT_ATTR, "");
-    container.appendChild(mount);
+    try {
+      container.appendChild(mount);
+    } catch {
+      // Void elements cannot host children. Insert the mount as a sibling
+      // immediately after the container instead.
+      const inserted = container.insertAdjacentElement("afterend", mount);
+      if (!inserted) return mount;
+    }
     mountNodes.set(container, mount);
     return mount;
   }

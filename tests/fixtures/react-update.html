@@ -9,7 +9,7 @@
     import { createWidget } from "/packages/adapters/mountly-react/dist/index.js";
 
     const C = ({ msg }) => React.createElement("span", null, msg);
-    const w = createWidget(C, { styles: ".x{}" });
+    const w = createWidget(C, { shadow: true, styles: ".x{}" });
     const c = document.getElementById("c");
     w.mount(c, { msg: "a" });
     w.update?.(c, { msg: "b" });

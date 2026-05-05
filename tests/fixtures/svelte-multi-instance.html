@@ -18,7 +18,7 @@
       $destroy() { this.el?.remove(); }
     }
 
-    const w = createWidget(HelloComponent, { styles: ".shared{}" });
+    const w = createWidget(HelloComponent, { shadow: true, styles: ".shared{}" });
     const a = document.getElementById("a");
     const b = document.getElementById("b");
     w.mount(a, { msg: "alpha" });

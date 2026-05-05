@@ -4,8 +4,8 @@
   <script type="module">
     import { attachShadow } from "/packages/mountly/dist/index.js";
     const c = document.getElementById("container");
-    const m1 = attachShadow(c, { styles: ".x{}", shadowMode: "open" });
-    const m2 = attachShadow(c, { styles: ".x{}", shadowMode: "open" });
+    const m1 = attachShadow(c, { shadow: true, styles: ".x{}", shadowMode: "open" });
+    const m2 = attachShadow(c, { shadow: true, styles: ".x{}", shadowMode: "open" });
     const root = c.shadowRoot;
     window.__result = {
       shadowRoots: c.shadowRoot ? 1 : 0,

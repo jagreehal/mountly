@@ -7,7 +7,7 @@ mountly is an on-demand component runtime:
 
 **Framework components. Any page. On demand.**
 
-It turns React, Vue, Svelte, and TSRX components into lazy, isolated, HTML-addressable features. The host can be a CMS page, marketing site, legacy app, static file, partner embed, or another framework app.
+It turns React, Vue, Svelte, and TSRX components into lazy, HTML-addressable features (light DOM by default; `shadow: true` for isolation). The host can be a CMS page, marketing site, legacy app, static file, partner embed, or another framework app.
 
 The performance problem still matters: modern web apps ship too much JavaScript upfront. But mountly's deeper job is component delivery. It lets a page load a real component only when the user or route actually needs it, without forcing the host into a new app framework.
 
@@ -39,7 +39,7 @@ mountly is appropriate when:
 - You need to ship **framework components into pages you do not fully own**.
 - You want **HTML-addressable components** like `<signup-card>` with minimal host wiring.
 - You need **intent-based activation** with a shared module and data cache story.
-- You want **style isolation** so the host page and component do not break each other.
+- You want **style isolation when needed** (`shadow: true`) so the host page and component do not break each other in unknown hosts.
 - You need **multiple widgets on one page**, potentially from different frameworks.
 
 It's the **wrong** tool when you have a single SPA where the bundler owns every surface, when you need SSR + hydration of server-rendered HTML, or when you actually want a microfrontend control plane. See [When not to use mountly](/mountly/concepts/when-not-to-use/) for the longer answer.

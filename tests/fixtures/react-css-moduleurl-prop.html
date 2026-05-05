@@ -11,7 +11,7 @@
     __clearCssTextCache();
 
     const Hello = (props) => createElement("span", { className: "styled-widget" }, props.msg);
-    const widget = createWidget(Hello, {});
+    const widget = createWidget(Hello, { shadow: true });
     const c = document.getElementById("c");
     await widget.mount(c, {
       msg: "moduleUrl-prop",

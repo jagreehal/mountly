@@ -43,7 +43,7 @@ See [Distribution](/mountly/concepts/distribution/) for which one to ship.
 </script>
 ```
 
-The widget mounts inside its own shadow root. Styles load automatically.
+The widget mounts inside the container in light DOM and the host's CSS reaches in. If you need full style isolation, pass `shadow: true` to `createWidget`.
 
 ## 3b. Lowest-ceremony host (recommended for plain HTML)
 
@@ -85,7 +85,7 @@ signup.attach({
 });
 ```
 
-mountly synthesises the loader and a default render that threads `moduleUrl` through to the adapter, so the sibling `dist/index.css` is fetched and adopted into the shadow root automatically. The widget code is fetched on first hover and mounted on click. Open DevTools → Network and watch.
+mountly synthesises the loader and a default render that threads `moduleUrl` through to the adapter, so the sibling `dist/index.css` is fetched and applied automatically. The widget code is fetched on first hover and mounted on click. Open DevTools → Network and watch.
 
 Need bespoke loading or rendering? `loadModule` and `render` are still available and override the auto-derived defaults.
 

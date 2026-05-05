@@ -7,4 +7,4 @@ const Hello = {
   render() { return h("span", { class: "styled-widget" }, this.msg ?? ""); },
 };
 
-export default createWidget(Hello);
+export default createWidget(Hello, { shadow: true });

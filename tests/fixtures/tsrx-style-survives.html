@@ -15,7 +15,7 @@
       unmount(target) {
         target.textContent = "";
       },
-    }, { styles: ".x{}" });
+    }, { shadow: true, styles: ".x{}" });
 
     w.mount(c, { msg: "first" });
     await new Promise(r => setTimeout(r, 50));

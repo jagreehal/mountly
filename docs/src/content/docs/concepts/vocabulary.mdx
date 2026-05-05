@@ -26,7 +26,7 @@ const widget = createWidget(Component, { styles });
 // → { mount(container, props), unmount(container) }
 ```
 
-A widget knows nothing about *when* it loads. It knows how to render into a container and how to clean itself up. It always mounts inside a shadow root, so styles are scoped both ways.
+A widget knows nothing about *when* it loads. It knows how to render into a container and how to clean itself up. By default it mounts in light DOM so the host's design system applies; pass `shadow: true` to mount inside a shadow root for hard style isolation.
 
 A widget is **the framework-agnostic output**.
 

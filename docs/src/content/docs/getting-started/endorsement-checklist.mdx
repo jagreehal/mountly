@@ -8,7 +8,7 @@ Use this as the release gate for framework-grade DX.
 ## API and Defaults
 
 - One obvious happy path per framework (React, Vue, Svelte).
-- Sensible defaults: shadow DOM on; optional `shadow: false`.
+- Sensible defaults: light DOM by default; optional `shadow: true` for hard isolation.
 - Clear canonical naming (`mount` as primary; aliases documented as compatibility only).
 - Errors must be actionable and include exact next step.
 
@@ -35,11 +35,11 @@ Use this as the release gate for framework-grade DX.
 - Every framework doc includes:
   - no Tailwind path
   - Tailwind path
-- Tailwind usage in shadow DOM is explicit about CSS string injection.
+- Tailwind usage explains both default light-DOM (host stylesheet) and shadow-DOM (CSS string injection) paths.
 
 ## Testing and CI
 
-- Required e2e matrix: mount, remount, unmount, shadow/light DOM fallback, multi-instance.
+- Required e2e matrix: mount, remount, unmount, light/shadow DOM, multi-instance.
 - Required docs smoke: framework quickstart snippets.
 - Required compatibility table: versions tested for React, Vue, Svelte.
 

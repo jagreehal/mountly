@@ -22,7 +22,7 @@ import SignupCard from "./SignupCard.tsx";
 export default createWidget(SignupCard);
 ```
 
-That's it for the widget side. When the host wires `moduleUrl`, the adapter fetches the sibling `dist/index.css` (whatever your build emits: plain CSS, CSS Modules, Tailwind output) and adopts it into the shadow root before React renders. No FOUC.
+That's it for the widget side. When the host wires `moduleUrl`, the adapter fetches the sibling `dist/index.css` (whatever your build emits: plain CSS, CSS Modules, Tailwind output) and applies it before React renders. No FOUC. By default the widget mounts in light DOM so the host's design system applies; pass `shadow: true` for full isolation.
 
 The string-based path still works if you'd rather inline:
 
@@ -33,9 +33,12 @@ export default createWidget(SignupCard, { styles });
 
 ## Scoped styles in React (the framework that doesn't have them)
 
-React itself has no native style scoping. **The shadow root is the scoping mechanism.** Whatever class names your build emits (plain, BEM, hashed) only apply inside the widget's shadow tree. A global `.button { color: red }` rule on the host page cannot reach in. Conversely, your component's CSS cannot leak out.
+React itself has no native style scoping. Two paths work well with mountly:
 
-This means you can use any styling approach React supports and get true isolation for free:
+- **Default light DOM + CSS Modules.** The build emits hashed class names that practically never collide with host CSS. The host's design system continues to apply, which is usually what you want for product code.
+- **`shadow: true` for hard isolation.** Whatever class names your build emits only apply inside the widget's shadow tree. A global `.button { color: red }` rule on the host page cannot reach in. Conversely, your component's CSS cannot leak out. Reach for this when the widget is embedded in unknown hosts.
+
+You can use any styling approach React supports with either mode:
 
 ### CSS Modules
 
@@ -51,7 +54,7 @@ export default function SignupCard({ msg }: { msg: string }) {
 }
 ```
 
-The build emits hashed selectors like `.button_h_4f9c1` in `dist/index.css` and `{ button: "button_h_4f9c1" }` in the JS bundle. Both live inside the shadow root. Mountly's repo includes a Playwright test (`react-css-modules.html`) that proves a colliding global `.button { color: red !important }` rule does **not** pierce the shadow root.
+The build emits hashed selectors like `.button_h_4f9c1` in `dist/index.css` and `{ button: "button_h_4f9c1" }` in the JS bundle. In light DOM the hashed names already prevent host conflicts in practice; with `shadow: true` Mountly's repo includes a Playwright test (`react-css-modules.html`) that proves a colliding global `.button { color: red !important }` rule does **not** pierce the shadow root.
 
 ### Plain CSS files
 
@@ -59,29 +62,21 @@ The build emits hashed selectors like `.button_h_4f9c1` in `dist/index.css` and 
 import "./SignupCard.css"; // build emits dist/index.css
 ```
 
-Works the same way: the adapter fetches the sibling stylesheet and adopts it into the shadow root.
+Works the same way: the adapter fetches the sibling stylesheet and applies it before render.
 
 ### CSS-in-JS (styled-components, emotion, etc.)
 
-These libraries inject `<style>` tags at runtime. By default they target `document.head`, which the shadow root can't see. Most have a "shadow root mode" or styleSheet manager you can configure to inject into a specific root. Pass the shadow root via React Context if you go this route. For most cases, though, CSS Modules or plain CSS is simpler.
+These libraries inject `<style>` tags at runtime targeting `document.head`. In light DOM (the default) they work as designed. With `shadow: true` the shadow root can't see those tags, so configure the library's shadow-root mode or stylesheet manager and pass the shadow root via React Context. For most cases, CSS Modules or plain CSS is simpler than CSS-in-JS inside a shadow root.
 
 ## shadcn / Tailwind
 
-shadcn pairs Tailwind tokens with Radix UI primitives. Two friction points appear inside a shadow root:
-
-1. **`:root` tokens don't apply.** shadcn's `bg-background` resolves to `hsl(var(--background))`; `--background` is set on `:root` (the document `<html>`). Inside a shadow root, `:root` matches nothing, so every shadcn token comes out empty.
-2. **Radix portals target `document.body`.** Dialog, Popover, DropdownMenu, etc. portal their content outside the component tree. From inside a shadow root, that portal lands outside the shadow boundary, so the styles don't reach it.
-
-You can fight both: compile Tailwind targeting `:host`, wrap every Radix-using component to pass a `Portal container` from inside the shadow root via context. It's a lot of plumbing.
-
-The pragmatic alternative: **light DOM**. Set `shadow: false` on every widget that uses shadcn primitives, ship one global Tailwind stylesheet through a `<link>` in the host's `<head>`, and let things work the way Radix and shadcn were designed for.
+shadcn pairs Tailwind tokens with Radix UI primitives, and it works out of the box on the default light-DOM mount. Ship one global Tailwind stylesheet through a `<link>` in the host's `<head>` and let Radix portal content to `document.body` the way it was designed.
 
 ```ts
-// All widgets in this bundle commit to light DOM.
-const lightDom = { shadow: false };
-export const hero = createWidget(Hero, lightDom);
-export const pricing = createWidget(Pricing, lightDom);
-export const newsletter = createWidget(Newsletter, lightDom);
+// Default light DOM — nothing extra to configure.
+export const hero = createWidget(Hero);
+export const pricing = createWidget(Pricing);
+export const newsletter = createWidget(Newsletter);
 ```
 
 ```html
@@ -96,7 +91,12 @@ The repo demonstrates this end-to-end:
 - `tests/fixtures/shadcn-light-dom-tokens.css`: stand-in for `app/globals.css` with `:root` tokens and utility classes.
 - `tests/multi-widget-bundles.spec.ts`: proves all three widgets pick up the same primary color from the global stylesheet.
 
-For more on the choice, see [Multi-widget bundles](/mountly/concepts/multi-widget/).
+If you genuinely want shadow DOM with shadcn, expect two friction points and plan for them:
+
+1. **`:root` tokens don't apply.** `bg-background` resolves to `hsl(var(--background))`; `--background` is set on `:root` (the document `<html>`). Inside a shadow root, `:root` matches nothing, so every shadcn token comes out empty. Compile Tailwind targeting `:host` instead.
+2. **Radix portals target `document.body`.** Dialog, Popover, DropdownMenu, etc. portal their content outside the component tree. From inside a shadow root, that portal lands outside the shadow boundary. Wrap each Radix-using component to pass a `Portal container` from inside the shadow root via context.
+
+For most teams, the default light-DOM path is the right answer. For more on the choice, see [Multi-widget bundles](/mountly/concepts/multi-widget/).
 
 ## External npm packages
 
@@ -152,7 +152,7 @@ signup.attach({
 });
 ```
 
-mountly threads `moduleUrl` through to the adapter, which fetches `dist/index.css` and adopts it into the shadow root before React renders.
+mountly threads `moduleUrl` through to the adapter, which fetches `dist/index.css` and applies it before React renders.
 
 ## Live updates without remounting
 

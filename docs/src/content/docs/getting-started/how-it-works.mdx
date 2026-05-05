@@ -38,7 +38,7 @@ import styles from "./SignupCard.css?inline";
 export default createWidget(SignupCard, { styles });
 ```
 
-Each adapter ([React](/mountly/frameworks/react/), [Vue](/mountly/frameworks/vue/), [Svelte](/mountly/frameworks/svelte/)) exposes the **same** `createWidget(Component, { styles })` signature. The widget always mounts into a shadow root, so styles are scoped and the host can't bleed in.
+Each adapter ([React](/mountly/frameworks/react/), [Vue](/mountly/frameworks/vue/), [Svelte](/mountly/frameworks/svelte/)) exposes the **same** `createWidget(Component, { styles })` signature. By default the widget mounts in light DOM so the host's design system applies naturally. Pass `shadow: true` when you need a hard style boundary (CMS embeds, third-party hosts).
 
 ### 3. Features — the on-demand lifecycle
 
@@ -68,7 +68,7 @@ idle → preload → activate → mount → unmount
 - **idle** — nothing loaded. Waiting for a trigger.
 - **preload** — module is fetched. Optionally, data fetch begins in parallel.
 - **activate** — commitment signal received (e.g. click). Finalise data fetch, prepare to mount.
-- **mount** — widget rendered into the container's shadow root.
+- **mount** — widget rendered into the container (light DOM by default; shadow root if `shadow: true`).
 - **unmount** — DOM removed. Module + data caches are retained, so re-mounting is free.
 
 You can hook any phase, abort in flight (`feature.abort()`), and inspect the current state (`feature.getState()`). See [Lifecycle](/mountly/concepts/lifecycle/) for the full state diagram.

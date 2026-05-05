@@ -13,7 +13,7 @@
       render() { return h("span", this.msg); },
     };
 
-    const w = createWidget(T, { styles: ".x{}" });
+    const w = createWidget(T, { shadow: true, styles: ".x{}" });
     const c = document.getElementById("c");
     w.mount(c, { msg: "alive" });
 
