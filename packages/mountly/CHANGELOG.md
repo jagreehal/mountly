@@ -1,5 +1,11 @@
 # mountly
 
+## 0.2.1
+
+### Patch Changes
+
+- b3f8290: shadow now opt-in
+
 ## 0.2.0
 
 ### Minor Changes
