@@ -14,7 +14,7 @@
       render() { return h("span", this.msg); },
     };
 
-    const w = createWidget(T, { styles: ".shared{}" });
+    const w = createWidget(T, { shadow: true, styles: ".shared{}" });
     const a = document.getElementById("a");
     const b = document.getElementById("b");
     w.mount(a, { msg: "alpha" });

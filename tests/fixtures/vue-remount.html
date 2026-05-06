@@ -13,7 +13,7 @@
         return h("div", this.msg);
       },
     };
-    const w = createWidget(T, { styles: ".x{}" });
+    const w = createWidget(T, { shadow: true, styles: ".x{}" });
     const c = document.getElementById("c");
     w.mount(c, { msg: "first" });
     w.mount(c, { msg: "second" });

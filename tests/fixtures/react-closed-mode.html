@@ -12,7 +12,7 @@
 
     let error = null;
     try {
-      const w = createWidget(Hello, { styles: ".x{}", shadowMode: "closed" });
+      const w = createWidget(Hello, { shadow: true, styles: ".x{}", shadowMode: "closed" });
       const c = document.getElementById("c");
       w.mount(c, { msg: "closed" });
       window.__result = {

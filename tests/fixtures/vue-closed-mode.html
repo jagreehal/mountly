@@ -16,7 +16,7 @@
     let error = null;
     let mounted = false;
     try {
-      const w = createWidget(T, { styles: ".x{}", shadowMode: "closed" });
+      const w = createWidget(T, { shadow: true, styles: ".x{}", shadowMode: "closed" });
       const c = document.getElementById("c");
       w.mount(c, { msg: "closed" });
       // closed shadowRoots aren't exposed as element.shadowRoot

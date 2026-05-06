@@ -16,7 +16,7 @@
       }
     }
 
-    const w = createWidget(TComponent, { styles: ".x{}" });
+    const w = createWidget(TComponent, { shadow: true, styles: ".x{}" });
     const c = document.getElementById("c");
     w.mount(c, { msg: "first" });
     w.mount(c, { msg: "second" });

@@ -18,9 +18,7 @@
     }
 
     // 404 CSS must not break mount — component should still render unstyled.
-    const widget = createWidget(HelloComponent, {
-      cssUrl: "/tests/fixtures/this-file-does-not-exist.css",
-    });
+    const widget = createWidget(HelloComponent, { shadow: true, cssUrl: "/tests/fixtures/this-file-does-not-exist.css", });
     const c = document.getElementById("c");
     let mountError = null;
     try {

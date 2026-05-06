@@ -15,9 +15,7 @@
       render() { return h("span", { class: "styled-widget" }, this.msg); },
     };
 
-    const widget = createWidget(Hello, {
-      cssUrl: "/tests/fixtures/this-file-does-not-exist.css",
-    });
+    const widget = createWidget(Hello, { shadow: true, cssUrl: "/tests/fixtures/this-file-does-not-exist.css", });
     const c = document.getElementById("c");
     let mountError = null;
     try {

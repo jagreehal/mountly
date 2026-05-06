@@ -7,7 +7,7 @@
     import { createWidget } from "/packages/adapters/mountly-vue/dist/index.js";
 
     const C = { props:["msg"], render(){ return h("span", this.msg); } };
-    const w = createWidget(C, { styles: ".x{}" });
+    const w = createWidget(C, { shadow: true, styles: ".x{}" });
     const c = document.getElementById("c");
     w.mount(c, { msg: "a" });
     w.update?.(c, { msg: "b" });

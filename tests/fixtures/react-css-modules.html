@@ -20,6 +20,7 @@
         createElement("span", { className: styles.label }, props.msg ?? ""));
 
     const widget = createWidget(Hello, {
+      shadow: true,
       // moduleUrl auto-derives the sibling .css file (CSS-Modules output).
       moduleUrl: "/tests/fixtures/react-css-css-modules.js",
     });

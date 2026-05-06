@@ -14,7 +14,7 @@
       });
       return createElement("span", null, String(n));
     };
-    const w = createWidget(Counter, { styles: ".x{ color: red }" });
+    const w = createWidget(Counter, { shadow: true, styles: ".x{ color: red }" });
     w.mount(document.getElementById("c"), {});
     await new Promise((r) => setTimeout(r, 200));
     const root = document.getElementById("c").shadowRoot;

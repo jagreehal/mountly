@@ -15,7 +15,7 @@
       $destroy(){ this.el?.remove(); }
     }
 
-    const w = createWidget(C, { styles: ".x{}" });
+    const w = createWidget(C, { shadow: true, styles: ".x{}" });
     const c = document.getElementById("c");
     w.mount(c, { msg: "a" });
     w.update?.(c, { msg: "b" });

@@ -141,7 +141,7 @@ Returns a read-only array of currently-mounted containers. Useful for debugging 
 
 ## Zero-config (recommended)
 
-For the common case (load a widget bundle and let its companion CSS adopt into the shadow root), pass `moduleUrl` and you're done:
+For the common case (load a widget bundle and let its companion CSS apply automatically), pass `moduleUrl` and you're done:
 
 ```ts
 import { createOnDemandFeature } from "mountly";
@@ -154,7 +154,7 @@ const signup = createOnDemandFeature({
 signup.attach({ trigger: btn, preloadOn: "hover", activateOn: "click" });
 ```
 
-mountly synthesises `loadModule` (via `createModuleLoader`) and a default `render` that forwards `moduleUrl` into the adapter's mount props. The adapter fetches `dist/index.css` (sibling of the JS bundle), sends `Accept: text/css` so dev servers like Vite return raw CSS rather than HMR-wrapped JS, and adopts it into the shadow root. See [Styling](/mountly/concepts/styling/) for the full picture.
+mountly synthesises `loadModule` (via `createModuleLoader`) and a default `render` that forwards `moduleUrl` into the adapter's mount props. The adapter fetches `dist/index.css` (sibling of the JS bundle), sends `Accept: text/css` so dev servers like Vite return raw CSS rather than HMR-wrapped JS, and applies it before render (injected globally for the default light-DOM mount, or adopted into the shadow root when `shadow: true`). See [Styling](/mountly/concepts/styling/) for the full picture.
 
 ## Worked example with overrides
 
@@ -233,9 +233,9 @@ const clock   = dashboard.feature({ moduleId: "clock",   export: "clock"   });
 | Field         | Type                  | Notes                                                                                        |
 | ------------- | --------------------- | -------------------------------------------------------------------------------------------- |
 | `moduleUrl`   | `string` (required)   | URL of the bundle's JS entry. Loaded once; shared across every `feature(...)` call.          |
-| `assetOptions`| `CssAutoLoadOptions`  | Default `{ css: "none" }`. Set `{ css: "auto" }` for light-DOM bundles (global `<link>`).    |
+| `assetOptions`| `CssAutoLoadOptions`  | Default `{ css: "none" }`. Set `{ css: "auto" }` to inject the bundle's CSS via a global `<link>` (useful for default light-DOM bundles served from a different origin). |
 
-`feature(opts)` accepts the same fields as `createOnDemandFeature` (minus `moduleUrl`/`loadModule`) plus an `export` name. The bundle's URL is automatically threaded into mount props so framework adapters adopt the sibling `.css` into the shadow root.
+`feature(opts)` accepts the same fields as `createOnDemandFeature` (minus `moduleUrl`/`loadModule`) plus an `export` name. The bundle's URL is automatically threaded into mount props so framework adapters apply the sibling `.css` (injected globally in default light DOM, or adopted into the shadow root when `shadow: true`).
 
 See [Multi-widget bundles](/mountly/concepts/multi-widget/) for when to use it and the test suite (`tests/multi-widget-bundles.spec.ts`) for the asserted guarantees: one JS fetch, one CSS fetch, one shared `CSSStyleSheet` instance across all features.
 

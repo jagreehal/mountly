@@ -20,7 +20,7 @@ import SignupCard from "./SignupCard.vue";
 export default createWidget(SignupCard);
 ```
 
-The widget always mounts inside its own shadow root. The adapter fetches the sibling `dist/index.css` (extracted by Vite's Vue plugin from `<style scoped>`) and adopts it into the shadow root, so styles are scoped twice: once by Vue's `data-v-…` hash and once by the shadow root. No leakage in either direction.
+By default the widget mounts in light DOM. The adapter fetches the sibling `dist/index.css` (extracted by Vite's Vue plugin from `<style scoped>`) and applies it before render. Vue's `data-v-…` hash already scopes the styles per component, so collisions are rare. Pass `shadow: true` if you need a hard boundary (CMS embeds, third-party hosts) — styles are then scoped twice, once by Vue and once by the shadow root.
 
 Want to inline the CSS string instead? That's still fine:
 
@@ -42,7 +42,7 @@ widget.mount(document.querySelector("#cta-mount"), {
 
 Each `mount()` unmounts any existing Vue app in the same container first.
 
-Under the hood, the adapter calls `createApp({ render: () => h(Component, props) })` and mounts that into the shadow root. There is one Vue app per container.
+Under the hood, the adapter calls `createApp({ render: () => h(Component, props) })` and mounts that into the container (shadow root if `shadow: true`, otherwise light DOM). There is one Vue app per container.
 
 ## On-demand lifecycle (zero-config)
 
@@ -57,7 +57,7 @@ const signup = createOnDemandFeature({
 signup.attach({ trigger: btn, preloadOn: "hover", activateOn: "click" });
 ```
 
-mountly threads `moduleUrl` through to the adapter, which fetches `dist/index.css` (sibling) and adopts it into the shadow root before render. Use `loadModule` / `render` only when you need bespoke behaviour.
+mountly threads `moduleUrl` through to the adapter, which fetches `dist/index.css` (sibling) and applies it before render. Use `loadModule` / `render` only when you need bespoke behaviour.
 
 ## Composition API and Options API
 
@@ -83,7 +83,7 @@ Multi-widget hosts should use the peer build to share one Vue copy. See [Distrib
 
 ### Style leakage
 
-Vue SFC `<style scoped>` works inside the widget — the shadow root adds another layer of isolation. If you're using global utility classes (Tailwind), those go into `styles` so the shadow root has them.
+Vue SFC `<style scoped>` works inside the widget. With `shadow: true` the shadow root adds another layer of isolation; without it, Vue's `data-v-…` hash is usually enough. If you're using global utility classes (Tailwind), those go into `styles` (or a host `<link>`) so the widget can reach them.
 
 ### Two Vue copies
 

@@ -8,7 +8,7 @@
     import { createElement } from "react";
     import { createWidget } from "/packages/adapters/mountly-react/dist/index.js";
     const T = (props) => createElement("span", null, props.label);
-    const w = createWidget(T, { styles: ".x{}" });
+    const w = createWidget(T, { shadow: true, styles: ".x{}" });
     const c = document.getElementById("c");
     w.mount(c, { label: "first" });
     await new Promise((r) => requestAnimationFrame(r));

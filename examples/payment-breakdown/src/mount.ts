@@ -16,7 +16,7 @@ import styles from "./styles.generated.css";
  * This is an acceptable trade-off for an example package.
  */
 
-const widget = createWidget(PaymentBreakdown, { styles });
+const widget = createWidget(PaymentBreakdown, { shadow: true, styles });
 
 interface State {
   previousFocus: HTMLElement | null;

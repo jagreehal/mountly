@@ -1,6 +1,6 @@
 ---
 title: Microfrontends
-description: Multiple teams, independent deployments, shared websites. How Mountly supports MFE-style composition without federation infrastructure.
+description: Multiple teams, independent deployments, shared websites. How mountly supports MFE-style composition without federation infrastructure.
 ---
 
 Microfrontends (MFE) let different teams ship independently owned UI into the same product surface. Each team can build and deploy its feature in isolation, then the host composes those features at runtime.
@@ -14,7 +14,7 @@ This solves real organizational problems:
 - Parallel development: fewer merge conflicts across unrelated features
 - Incremental migration: move one region at a time instead of rewriting the whole app
 
-MFE platforms can also add real complexity. Mountly offers a smaller path for many cases: standard ES modules, custom elements, and framework adapters.
+MFE platforms can also add real complexity. mountly offers a smaller path for many cases: standard ES modules, custom elements, and framework adapters.
 
 ## Traditional MFE: Module Federation
 
@@ -62,11 +62,11 @@ The runtime uses `singleton`, `requiredVersion`, and `strictVersion` options to 
 - **Runtime behavior can be opaque**: duplicated dependencies or version fallback paths are hard to debug
 - **Platform cost**: teams need conventions, release discipline, and shared ownership of the shell
 
-## Mountly's simpler approach
+## mountly's simpler approach
 
-Mountly is not a module federation runtime. It is a **component mounting library** that works well for MFE-like composition when the features are mostly independent.
+mountly is not a module federation runtime. It is a **component mounting library** that works well for MFE-like composition when the features are mostly independent.
 
-Module Federation solves problems that only appear at larger scale: coordinating many teams, shared runtime dependency resolution, and negotiating versions at load time. Mountly avoids that complexity when those problems don't exist—simpler composition at the cost of upfront version agreement.
+Module Federation solves problems that only appear at larger scale: coordinating many teams, shared runtime dependency resolution, and negotiating versions at load time. mountly avoids that complexity when those problems don't exist—simpler composition at the cost of upfront version agreement.
 
 ### Option 1: As an npm dependency (in your app)
 
@@ -205,9 +205,9 @@ The `trigger` preset maps to lower-level `attach()` options:
 
 ## Honest comparison
 
-### Module Federation vs Mountly
+### Module Federation vs mountly
 
-| Aspect | Module Federation | Mountly |
+| Aspect | Module Federation | mountly |
 |--------|-------------------|---------|
 | Setup complexity | Higher: host/remote/shared dependency config | Lower: register a source URL or manifest |
 | Learning curve | Host/remote platform model | Widget module + trigger model |
@@ -222,18 +222,18 @@ The `trigger` preset maps to lower-level `attach()` options:
 
 A widget can be packaged in two broad ways:
 
-| Scenario | Mountly implication | Notes |
+| Scenario | mountly implication | Notes |
 |----------|---------------------|-------|
 | Host provides framework runtime | Small peer-style widget bundle | Good when the host controls React/Vue/Svelte versions |
 | Widget carries its own runtime | Larger self-contained bundle | Good for unknown hosts or third-party embeds |
 | Multiple teams use one framework | Host provides via importmap; teams agree on versions upfront | Federation can resolve versions at runtime according to `singleton`, `requiredVersion`, and semver rules |
-| Mixed frameworks | Each widget owns its adapter/runtime strategy | Mountly treats React, Vue, Svelte, and plain widgets the same at the host boundary |
+| Mixed frameworks | Each widget owns its adapter/runtime strategy | mountly treats React, Vue, Svelte, and plain widgets the same at the host boundary |
 
-Exact byte counts depend on bundler config, framework versions, and whether dependencies are externalized. Mountly's advantage is simpler composition, not automatic dependency optimization.
+Exact byte counts depend on bundler config, framework versions, and whether dependencies are externalized. mountly's advantage is simpler composition, not automatic dependency optimization.
 
 ### The reality of version coordination
 
-Both Federation and Mountly require teams to agree on shared dependency versions. The difference is **how** that agreement is enforced:
+Both Federation and mountly require teams to agree on shared dependency versions. The difference is **how** that agreement is enforced:
 
 **Module Federation:**
 ```javascript
@@ -252,7 +252,7 @@ new ModuleFederationPlugin({
 // → Result: Teams must ultimately agree on versions
 ```
 
-**Mountly (with externalized/peer dependencies):**
+**mountly (with externalized/peer dependencies):**
 ```html
 <!-- Host provides React 18.2 via importmap -->
 <script type="importmap">
@@ -265,16 +265,16 @@ new ModuleFederationPlugin({
 <!-- → Result: Teams must agree upfront on externalized dependencies -->
 ```
 
-**In practice:** Both approaches benefit from version agreement. Federation enforces it through config and runtime rules; Mountly often requires upfront coordination when using shared or externalized dependencies.
+**In practice:** Both approaches benefit from version agreement. Federation enforces it through config and runtime rules; mountly often requires upfront coordination when using shared or externalized dependencies.
 
 If a team needs React 18.1 while the host uses 18.2:
 - **Federation with `singleton: true`** (the intent): attempts to use a single shared version; the config determines which version wins based on `requiredVersion` and semver rules
 - **Federation with misconfigured sharing**: can result in multiple React copies in the same component tree, breaking Context propagation, hook boundaries, refs, and singletons
-- **Mountly (with peer dependencies)**: makes dependency boundaries explicit, which can make mismatches easier to detect during development when dependencies are shared or externalized; self-contained widgets that bundle React are unaffected
+- **mountly (with peer dependencies)**: makes dependency boundaries explicit, which can make mismatches easier to detect during development when dependencies are shared or externalized; self-contained widgets that bundle React are unaffected
 
 The core issue isn't that two React versions can't exist—isolated widgets in separate trees can coexist. The problem is that **two React instances in a shared component tree break assumptions** like Context propagation, useContext hooks, and singleton patterns. Both approaches can still result in multiple framework instances if misconfigured. Most real-world setups use policy ("we all use React 18") rather than relying on automatic version resolution.
 
-## When to use Mountly for MFE-style composition
+## When to use mountly for MFE-style composition
 
 ### Good fit
 
@@ -287,17 +287,17 @@ The core issue isn't that two React versions can't exist—isolated widgets in s
 
 ### Poor fit
 
-**Mountly is not the right tool if:**
+**mountly is not the right tool if:**
 
 - **Every region needs to share live app state** — if your entire UI is deeply coupled through one Router context, one Query client, or one Redux store, a single app shell or federation platform is simpler than coordinating independent regions.
-- **You need runtime version negotiation and fallback behavior** — Mountly does not provide built-in guarantees around shared dependency consistency across independently developed features. Teams must agree on versions upfront; mismatches surface during development and testing, not resolved automatically at runtime.
+- **You need runtime version negotiation and fallback behavior** — mountly does not provide built-in guarantees around shared dependency consistency across independently developed features. Teams must agree on versions upfront; mismatches surface during development and testing, not resolved automatically at runtime.
 
-**Mountly is just a different tool (not worse) for:**
+**mountly is just a different tool (not worse) for:**
 
-- **Dense, tightly coupled app shells** — Federation excels here; Mountly assumes regions are more independent. If your teams own separate features, Mountly works fine.
-- **Aggressive bundle optimization** — Federation's automatic dependency deduplication and chunk planning is valuable when savings are critical. Mountly's simpler model trades some bytes for simplicity.
+- **Dense, tightly coupled app shells** — Federation excels here; mountly assumes regions are more independent. If your teams own separate features, mountly works fine.
+- **Aggressive bundle optimization** — Federation's automatic dependency deduplication and chunk planning is valuable when savings are critical. mountly's simpler model trades some bytes for simplicity.
 
-The real question: Are your UI regions independent enough that teams can own them end-to-end (data, state, lifecycle)? If yes, Mountly. If no—if they're all intertwined in one app graph—then one app shell or federation is more honest.
+The real question: Are your UI regions independent enough that teams can own them end-to-end (data, state, lifecycle)? If yes, mountly. If no—if they're all intertwined in one app graph—then one app shell or federation is more honest.
 
 ## Real-world example: Payment + Marketing teams
 
@@ -305,18 +305,39 @@ The real question: Are your UI regions independent enough that teams can own the
 
 ```typescript
 // host-app/src/main.ts
-import { mountIslandFeature } from 'mountly';
+import { createOnDemandFeature } from 'mountly';
 import { checkoutCard } from '@payments/widgets';
 import { heroCard } from '@marketing/widgets';
 
 const checkoutContainer = document.getElementById('checkout');
 const heroContainer = document.getElementById('hero');
 
-mountIslandFeature(checkoutContainer, checkoutCard, { trigger: 'viewport' });
-mountIslandFeature(heroContainer, heroCard, { trigger: 'idle' });
+const checkout = createOnDemandFeature({
+  moduleId: 'checkout-widget',
+  loadModule: async () => checkoutCard,
+});
+
+const hero = createOnDemandFeature({
+  moduleId: 'hero-widget',
+  loadModule: async () => heroCard,
+});
+
+checkout.attach({
+  trigger: checkoutContainer,
+  mount: checkoutContainer,
+  activateOn: 'viewport',
+  preloadOn: 'viewport',
+});
+
+hero.attach({
+  trigger: heroContainer,
+  mount: heroContainer,
+  activateOn: 'idle',
+  preloadOn: 'idle',
+});
 ```
 
-Simple: just import and mount, like any other library.
+Simple: import your widget module and attach it like any other library.
 
 ### Scenario B: Host is vanilla HTML, CMS, or third-party (use custom elements)
 
@@ -371,7 +392,7 @@ export const heroCard = createWidget(HeroSection);
 **Why custom elements approach is simpler than federation:**
 
 1. Each team publishes a browser-loadable ESM bundle.
-2. The host points Mountly at the bundle URL.
+2. The host points mountly at the bundle URL.
 3. The host can namespace tags with `prefix` to avoid collisions.
 4. Version changes: just update the source URL.
 5. No federation plugin, no bundler config.
@@ -390,20 +411,20 @@ If your org hits these points, federation or a dedicated MFE platform may be the
 
 ## Hybrid approach
 
-Mountly is composable with other architectures:
+mountly is composable with other architectures:
 
-- Use **Astro** for a content site and Mountly for portable widgets that must also run outside Astro.
-- Use **Module Federation** for core product remotes and Mountly for independent embeds.
-- Use **Next.js, Remix, Rails, or Django** for routing/SSR and Mountly for isolated client regions.
+- Use **Astro** for a content site and mountly for portable widgets that must also run outside Astro.
+- Use **Module Federation** for core product remotes and mountly for independent embeds.
+- Use **Next.js, Remix, Rails, or Django** for routing/SSR and mountly for isolated client regions.
 - Use **plain HTML or CMS templates** when there is no app shell at all.
 
-This is the positioning: Mountly is not trying to replace every framework. It gives you a small, portable boundary for activating components wherever the host allows JavaScript.
+This is the positioning: mountly is not trying to replace every framework. It gives you a small, portable boundary for activating components wherever the host allows JavaScript.
 
 ## Size and performance
 
 ### Bundle overhead
 
-A Mountly widget can be built as:
+A mountly widget can be built as:
 
 - **Self-contained**: includes its framework runtime; easiest for unknown hosts, largest bundle
 - **Peer/runtime-provided**: externalizes framework runtime; smaller bundle, requires host/import map coordination
@@ -411,13 +432,13 @@ A Mountly widget can be built as:
 
 ### Runtime cost
 
-Mountly adds a small amount of runtime work: custom element registration, trigger setup, module loading, optional data loading, and adapter mount. For most independent widgets, the dominant cost is still the framework/component bundle you choose to load.
+mountly adds a small amount of runtime work: custom element registration, trigger setup, module loading, optional data loading, and adapter mount. For most independent widgets, the dominant cost is still the framework/component bundle you choose to load.
 
 Federation adds different runtime work: remote container initialization, dependency resolution, and shared-version negotiation. That cost is worthwhile when it replaces duplicated dependencies or centralizes many remotes.
 
 ## Honest assessment
 
-**Mountly shines for:**
+**mountly shines for:**
 
 - Teams that want simpler MFE composition without federation infrastructure overhead
 - Mixed-framework widgets where the host shouldn't care about implementation details
@@ -426,7 +447,7 @@ Federation adds different runtime work: remote container initialization, depende
 - Progressive migration from one framework to another
 - Islands-style activation outside a dedicated islands framework
 
-Mountly's advantage is **simpler composition and portable mounting**, not automatic dependency governance.
+mountly's advantage is **simpler composition and portable mounting**, not automatic dependency governance.
 
 **Federation is better for:**
 
@@ -436,9 +457,9 @@ Mountly's advantage is **simpler composition and portable mounting**, not automa
 - Aggressive shared dependency optimization at scale
 - Mature orgs with dedicated platform teams
 
-Most teams should start by asking how coupled the UI regions really are. If a region can own its data fetching, state, and lifecycle, Mountly is a strong fit. If every region depends on the same live app graph, federation or one app shell is usually more honest.
+Most teams should start by asking how coupled the UI regions really are. If a region can own its data fetching, state, and lifecycle, mountly is a strong fit. If every region depends on the same live app graph, federation or one app shell is usually more honest.
 
-**In short:** Module Federation optimizes for runtime flexibility and shared dependency management at scale. Mountly prioritizes explicit composition and predictable mounting behavior. Choose based on how independent your regions are.
+**In short:** Module Federation optimizes for runtime flexibility and shared dependency management at scale. mountly prioritizes explicit composition and predictable mounting behavior. Choose based on how independent your regions are.
 
 ---
 

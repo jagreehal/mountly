@@ -63,7 +63,7 @@ const signup = createOnDemandFeature({
 signup.attach({ trigger: btn, preloadOn: "hover", activateOn: "click" });
 ```
 
-mountly threads `moduleUrl` through to the adapter, which fetches `dist/index.css` (sibling) and adopts it into the shadow root before render. No FOUC, no manual loader.
+mountly threads `moduleUrl` through to the adapter, which fetches `dist/index.css` (sibling) and applies it before render. No FOUC, no manual loader. Default light DOM lets the host's design system reach in; pass `shadow: true` for hard isolation.
 
 Need to override? `loadModule` / `render` still work and trump the auto-derived defaults.
 
@@ -79,7 +79,7 @@ Same risk as React/Vue. Use the peer build pattern for multi-widget pages — ex
 
 ### Style isolation
 
-Svelte's component-scoped styles compose nicely with the shadow root — both work, both isolate. Global styles (`:global(...)`) inside a Svelte component still respect the shadow root boundary because they're injected into the shadow tree, not the document.
+Svelte's component-scoped styles already isolate via Svelte's hash. With `shadow: true` they get an additional hard boundary. Global styles (`:global(...)`) inside a Svelte component land inside the shadow tree when `shadow: true` (so they don't leak to the document); in default light DOM they reach the document, which is usually what you want.
 
 ## Reference
 

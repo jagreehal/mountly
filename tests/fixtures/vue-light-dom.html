@@ -13,7 +13,7 @@
       render() { return h("span", this.msg); },
     };
 
-    const w = createWidget(T, { styles: ".vue-light{}" });
+    const w = createWidget(T, { shadow: true, styles: ".vue-light{}" });
     const img = document.getElementById("c");
     w.mount(img, { msg: "fallback" });
 

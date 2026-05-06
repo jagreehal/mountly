@@ -15,13 +15,13 @@ They communicate through a host-level event bus and publish counter updates.
 
 - No framework coupling between widgets.
 - Incremental adoption on legacy pages.
-- Works with `shadow: false` or default shadow mode.
+- Works in default light DOM and with `shadow: true`.
 
 ## Example location
 
 - `examples/cross-framework-bus`
 
-For new code, use Mountly's typed helper:
+For new code, use mountly's typed helper:
 
 ```ts
 import { createEventBus } from "mountly/bus";

@@ -1,19 +1,18 @@
 ---
 title: Styling
-description: How mountly loads, scopes, and isolates CSS across all three adapters, both in shadow DOM and in light DOM, and the noscript story.
+description: How mountly loads, scopes, and isolates CSS across all three adapters, both in light DOM (default) and in shadow DOM, and the noscript story.
 ---
 
-mountly's styling model has one design goal: **make the right thing the easy thing.** The default path is zero-config, scoped, and works the same way for React, Vue, and Svelte. Overrides are available when you need them.
+mountly's styling model has one design goal: **make the right thing the easy thing.** The default path is zero-config and works the same way for React, Vue, and Svelte. Overrides are available when you need them.
 
-## The default: shadow DOM + auto-fetched companion CSS
+## The default: light DOM + auto-fetched companion CSS
 
 When you wire a feature with `moduleUrl`, the adapter:
 
-1. Calls `attachShadow()` on the container.
-2. Fetches the sibling stylesheet (`/widget.js` → `/widget.css`).
-3. Sends `Accept: text/css` so dev servers (Vite, etc.) return raw CSS rather than the JS module they emit by default for HMR.
-4. Adopts the stylesheet into the shadow root via `adoptedStyleSheets` (a single `CSSStyleSheet` instance is shared across all roots that need the same CSS).
-5. Renders the component.
+1. Fetches the sibling stylesheet (`/widget.js` → `/widget.css`).
+2. Sends `Accept: text/css` so dev servers (Vite, etc.) return raw CSS rather than the JS module they emit by default for HMR.
+3. Injects the stylesheet once as a `<style data-mountly-fallback>` in `<head>`, deduplicated by CSS string.
+4. Renders the component directly into the container.
 
 ```ts
 // host page
@@ -33,7 +32,7 @@ import Card from "./Card.svelte";
 export default createWidget(Card);
 ```
 
-That's the entire pipeline. The host doesn't write a `render` function. The widget doesn't manually load CSS. Vite's library build emits the sibling `.css` automatically. No FOUC, no leakage in either direction.
+That's the entire pipeline. The host doesn't write a `render` function. The widget doesn't manually load CSS. Vite's library build emits the sibling `.css` automatically. The widget renders inline so the host's design system reaches in naturally.
 
 ## CSS source resolution
 
@@ -49,26 +48,36 @@ When the adapter is asked to mount, it picks **one** stylesheet source in this o
 
 If a fetch fails (404, network error, CORS), the mount **still succeeds**: the widget renders unstyled rather than throwing. Failures are logged silently; if you want hard failures, validate the asset at build time.
 
-## Light DOM (`shadow: false`)
+## Light DOM scoping options
 
-Sometimes you need the host's design system to reach into the widget. Usually because you're using utility classes like Tailwind defined globally, or your team's CSS architecture relies on global selectors. Set `shadow: false`:
+Without a shadow root there is no real isolation, only convention. Two strategies for the `styles` payload:
+
+- **Default (`styleMode: "global"`)**: appends a `<style data-mountly-fallback>` to `<head>` once per unique CSS string. Subsequent mounts of the same widget reuse it.
+- **`styleMode: "isolated"`**: writes a `<style data-mountly-inline="true">` next to the mount node. Each container gets its own copy, useful when you want the styles to live with the markup rather than at the document level.
+
+For real isolation, see the next section.
+
+## Shadow DOM (`shadow: true`)
+
+When the widget will be embedded in unknown hosts (CMS pages, third-party sites, legacy apps with conflicting CSS) opt into shadow DOM:
 
 ```ts
-createWidget(Card, { shadow: false, cssUrl: "/widgets/card.css" });
+createWidget(Card, { shadow: true, cssUrl: "/widgets/card.css" });
 ```
 
-There is no shadow root, so `adoptedStyleSheets` doesn't apply. The adapter falls back to one of two strategies:
+With `shadow: true` the adapter:
 
-- **Default (`styleMode: "global"`)**: appends a `<style data-mountly-fallback>` to `<head>` once per unique CSS string. Subsequent mounts reuse it.
-- **`styleMode: "isolated"`**: writes a `<style data-mountly-inline="true">` next to the mount node. Each container gets its own copy, but the styles are scoped by being adjacent to the markup.
+1. Calls `attachShadow()` on the container with `mode: shadowMode ?? "open"`.
+2. Adopts the stylesheet into the shadow root via `adoptedStyleSheets` (a single `CSSStyleSheet` instance is shared across all roots that need the same CSS).
+3. Renders the component inside the shadow tree.
 
-Both are best-effort. Without a shadow root there is no real isolation, only convention.
+The host's CSS does not reach in (modulo CSS custom properties, which inherit through shadow roots intentionally). Whatever class names your build emits stay scoped inside the widget.
 
-## CSS Modules + React (and Vue, and Svelte)
+If the container is a void element like `<img>` or `<input>`, `attachShadow` throws. The adapter falls back to light DOM in that case and logs a warning.
 
-React has no native style scoping. Vue's `<style scoped>` and Svelte's component styles do, but only within the framework's own boundary. Mountly's shadow root is the **universal** scoping mechanism: whatever class names your build emits, they're trapped inside the widget's tree.
+## CSS Modules across React, Vue, and Svelte
 
-The natural pairing is CSS Modules: hashed class names plus shadow-root isolation gives you double protection at no extra cost.
+CSS Modules pair naturally with both modes. The build emits hashed class names; the JSX/template references them; mountly does the wiring.
 
 ```tsx title="Card.tsx"
 import styles from "./Card.module.css";
@@ -82,7 +91,7 @@ export default function Card({ msg }: { msg: string }) {
 .button { color: rgb(7, 7, 7); background: rgb(255, 200, 100); }
 ```
 
-The build emits `dist/index.css` containing rules like `.button_h_4f9c1 { ... }` and `dist/index.js` referencing `styles.button === "button_h_4f9c1"`. Both land inside the shadow root. A global `.button { color: red !important }` rule on the host page **does not** reach in. The repo has a Playwright test (`react-css-modules.html`) that proves this with a deliberate decoy rule.
+In light DOM the hashed class names already prevent host conflicts in most cases. Add `shadow: true` if you also need the host's CSS not to reach in. The repo has a Playwright test (`react-css-modules.html`) that proves the shadow case with a deliberate decoy rule.
 
 The same trick works for Svelte's component styles (already scoped via Svelte's hash) and Vue's `<style scoped>` (already scoped via `data-v-…` attributes). Shadow-DOM scoping is additive: you still get whatever your framework gives you, plus a hard boundary.
 
@@ -102,11 +111,11 @@ Pass that to `replaceSync()` and you get an empty stylesheet. The fix, and the r
 fetch(url, { headers: { Accept: "text/css" } })
 ```
 
-Vite's content-negotiation returns raw CSS for that header, so `replaceSync()` produces real rules. You only ever need to think about this if you're putting a custom proxy or service worker between the page and Vite.
+Vite's content-negotiation returns raw CSS for that header, so the stylesheet parses correctly. You only ever need to think about this if you're putting a custom proxy or service worker between the page and Vite.
 
 ## Islands and noscript
 
-When JavaScript is disabled, no adapter runs. There is no shadow root, no `adoptedStyleSheets`. The browser simply renders whatever HTML and `<link>` tags the server sent.
+When JavaScript is disabled, no adapter runs. There is no shadow root, no `adoptedStyleSheets`, no injected `<style>`. The browser simply renders whatever HTML and `<link>` tags the server sent.
 
 For an island to remain styled with JS off, you need a document-level stylesheet, typically a `<link rel="stylesheet">` in the `<head>`:
 
@@ -133,7 +142,7 @@ For an island to remain styled with JS off, you need a document-level stylesheet
 What you get:
 
 - **JS off**: the `<link>` styles the server-rendered span. The script never runs. The user sees correctly styled content.
-- **JS on**: the host bootstraps. On click, the island hydrates into a shadow root. The adapter adopts the same CSS (via `moduleUrl` on the payload) into the shadow root, where it scopes correctly. The document-level `<link>` is harmless duplication; it can't reach in to conflict.
+- **JS on**: the host bootstraps. On click, the island hydrates. By default it mounts in light DOM and the document `<link>` continues to apply. If the island also passes `shadow: true`, the adapter adopts the same CSS into the shadow root, where it scopes correctly; the document-level `<link>` is then harmless duplication.
 
 The repo has a test (`tests/island-nojs-styling.spec.ts`) that runs the same fixture with `javaScriptEnabled: false` and `true` and verifies the same final color in both cases.
 
@@ -143,23 +152,26 @@ Adding a `<link>` requires JavaScript. If JS is off, no script (including mountl
 
 ## Caching
 
-Two layers:
+Two layers, both keyed for deduplication:
 
 1. **`loadCssText` cache** (in-memory `Map<url, string>`). Keyed by URL. Fetching the same URL twice in the same page-load returns the cached string, no network. Test code can call `__clearCssTextCache()` to reset between fixtures.
-2. **`adoptedStyleSheets` cache** (in `mountly`'s `shadow.ts`). Keyed by CSS string. The browser keeps one `CSSStyleSheet` instance per unique CSS payload, so 100 widgets that share the same stylesheet share one parsed sheet, with no duplicate CSSOM allocations.
+2. **CSS-string deduplication in `shadow.ts`**:
+   - **Light DOM**: an `injectedCss` Set tracks every unique CSS string that has been added to `<head>`. The hundredth widget mounted with the same CSS reuses the existing `<style>` tag.
+   - **Shadow DOM**: a `sheetCache` keeps one `CSSStyleSheet` per unique CSS string. 100 widgets that share the same stylesheet share one parsed sheet, no duplicate CSSOM allocations.
 
-Combined: a widget mounted in 50 places fetches CSS once, parses once, holds one `CSSStyleSheet` in memory.
+Combined: a widget mounted in 50 places fetches CSS once, parses once, holds one stylesheet in memory.
 
 ## Picking a strategy
 
 | You want…                                               | Use                                     |
 | ------------------------------------------------------- | --------------------------------------- |
-| Zero-config, scoped, works in all three frameworks      | `moduleUrl` only (the default path)     |
+| Zero-config, host design system reaches in              | `moduleUrl` only (the default path)     |
 | Inline CSS at build time (small components, no fetch)   | `styles: "..."`                         |
 | Manual CSS path (asset hosted elsewhere)                | `cssUrl: "https://cdn.example.com/..."` |
-| Tailwind / utility-first global classes inside widget   | `shadow: false` + global `<link>`       |
-| Tailwind layer **inside** scoped widget                 | Compile Tailwind into the widget's `dist/index.css`, default path |
-| CSS-in-JS (styled-components, emotion)                  | Configure the library to inject into the shadow root via context |
+| Tailwind / utility-first global classes inside widget   | default light DOM + global `<link>`     |
+| Hard isolation from host CSS (CMS, third-party hosts)   | `shadow: true` + `moduleUrl` or `cssUrl` |
+| Tailwind layer **inside** scoped widget                 | `shadow: true` and compile Tailwind into the widget's `dist/index.css` |
+| CSS-in-JS (styled-components, emotion)                  | Default light DOM, or configure the library to inject into the shadow root via context when `shadow: true` |
 | Server-rendered island readable when JS is off          | SSR markup + `<link>` in `<head>` + island payload `moduleUrl`    |
 
 ## Related

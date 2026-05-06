@@ -20,7 +20,7 @@ If your situation is "I want a button that lazy-loads a modal in my Next app", u
 
 ## You need SSR plus hydration
 
-mountly mounts widget modules **on demand into a shadow root**. It is not a hydration runtime.
+mountly mounts widget modules **on demand**, in light DOM by default and in a shadow root when `shadow: true`. It is not a hydration runtime.
 
 If you need:
 

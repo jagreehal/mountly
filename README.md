@@ -8,27 +8,11 @@ Modernize legacy pages incrementally without rewriting the host app.
 
 **Documentation:** <https://jagreehal.github.io/mountly>
 
-## Docs screenshots
-
-- Gallery page in docs: [docs/src/content/docs/evidence/screenshots.mdx](docs/src/content/docs/evidence/screenshots.mdx)
-- Generated originals: [docs/screenshots](docs/screenshots)
-- Site-served copies: [docs/public/screenshots](docs/public/screenshots)
-
 ## The Problem
 
 Modern web apps ship too much JavaScript upfront. Component libraries load everything at once. Microfrontends are operationally heavy. Framework lazy-loading lacks standardized interaction patterns.
 
 There's no unified system for: **"Load rich UI only when the user actually needs it."**
-
-## Vocabulary
-
-mountly has two layers and uses one term for each — they are not synonyms.
-
-- **Component** — your normal React, Vue, or Svelte component. mountly never asks you to learn a new component model; you write components the way you already do.
-- **Widget** — a Component wrapped by a framework adapter into a self-contained, mountable, framework-agnostic unit. React, Vue, and Svelte adapters all expose `createWidget(Component, { styles })` which returns `{ mount, unmount }`. A Widget knows nothing about how or when it's loaded.
-- **Feature** — an *on-demand* Widget: it adds a trigger (hover / click / focus / viewport / idle), a module loader, optional data fetching, caching, and a standardized lifecycle. Built with `createOnDemandFeature(...)` or declared with `<mountly-feature>`.
-
-Rule of thumb: **you write Components, the adapter wraps them as Widgets, and you ship them as Features.** Don't substitute the terms in code, docs, or examples — `Component` is the input, `Widget` is the framework-agnostic output, `Feature` adds the lazy-load lifecycle on top.
 
 ## What mountly Does
 
@@ -90,7 +74,7 @@ Drop the built widget into any HTML page:
 </script>
 ```
 
-The widget mounts inside its own shadow root with bundled styles. That's the whole flow.
+The widget mounts inside the container in light DOM by default, with bundled styles applied. Pass `shadow: true` to `createWidget` when you need a hard style boundary. That's the whole flow.
 
 **See it running first:** clone the repo, run `pnpm install && pnpm -r build && cd examples/plain-html && pnpm dev`, then open <http://localhost:5175/examples/quickstart/host.html> ([source](examples/quickstart/host.html)).
 

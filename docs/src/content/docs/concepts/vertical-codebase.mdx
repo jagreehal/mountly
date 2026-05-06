@@ -1,0 +1,87 @@
+---
+title: Vertical codebase
+description: "How mountly Features fit the vertical codebase pattern: code grouped by what it does, not what it is."
+---
+
+[TkDodo's *The Vertical Codebase*](https://tkdodo.eu/blog/the-vertical-codebase) makes a familiar argument: splitting a frontend by technical layer (`components/`, `hooks/`, `utils/`, `types/`) breaks down at scale. Code that changes together gets scattered, ownership blurs, and finding anything turns into a treasure hunt. The fix is to group by what the code *does*. Verticals.
+
+mountly is shaped for that world. A Feature can be your whole vertical.
+
+## A Feature can be the whole vertical
+
+A vertical doesn't have to be small. The reviews section of a product page is a vertical. So is checkout. So is the dashboard's billing widget. Each one is a sensible mountly Feature: one entry point, one trigger, one lifecycle, one team that owns it. Internally, it's composed of as many components as it needs.
+
+```
+src/features/reviews/
+  index.ts            // createOnDemandFeature(...), the only export consumers see
+  reviews-card.tsx    // top-level component
+  components/         // internal sub-components, never imported from outside
+    review-item.tsx
+    rating-stars.tsx
+    review-form.tsx
+  query.ts            // data fetching, cache key
+  styles.css
+  types.ts
+```
+
+The Feature is the public runtime surface. The host calls `mount(container, props)` and `unmount(container)`, and that contract is stable even as internals change.
+
+This is the kind of boundary TkDodo describes enforcing with `eslint-plugin-boundaries`. mountly gives you the runtime contract; source-level import boundaries still need package exports and lint rules.
+
+## Polyglot product teams
+
+The blog post argues for teams that own a slice top to bottom: frontend, backend, design, all in one team. mountly fits this directly and pushes one step further. The *framework* can also be a team choice.
+
+The reviews team can ship React. The pricing team can ship Svelte. The host doesn't know or care:
+
+```html
+<reviews-card props='{"productId":"sku_123"}'></reviews-card>
+<pricing-table props='{"plan":"pro"}'></pricing-table>
+```
+
+A team can own the data, the UI, the styles, the deploy, and, when useful, the framework. Same boundary, whatever stack they prefer.
+
+## Boundaries hold without shadow DOM
+
+mountly mounts in light DOM by default because most product code wants the host's design system, Tailwind, and form APIs to work. The vertical doesn't depend on shadow DOM. The Feature is what makes the vertical.
+
+When the widget will be embedded in unknown hosts (CMS pages, third-party sites, legacy apps with conflicting CSS) opt into a hard style boundary by passing `shadow: true` on [`createWidget`](/mountly/concepts/styling/#shadow-dom-shadow-true). The vertical is unchanged. The public surface is still `mount` and `unmount`, props are still the contract, and internal components are still unreachable from outside the folder.
+
+Shadow DOM is a tool. The vertical is the discipline.
+
+## Verticals as packages
+
+When a Feature stabilises and gets reused, promote it to its own package. The usage shape stays the same:
+
+```ts
+// before, local feature
+import { reviews } from './features/reviews';
+
+// after, workspace or published package
+import { reviews } from '@acme/reviews';
+```
+
+Same public shape, same runtime usage. pnpm workspaces and `package.json` `exports` give you the boundary at the source level; mountly already gave it to you at runtime. Together they make reuse cheap.
+
+`eslint-plugin-boundaries` still earns its keep here, especially for stopping deep imports into another vertical's internals. Use it.
+
+## Where shared code goes
+
+The post gives two useful answers.
+
+A design system covers buttons, inputs, layout primitives, and tokens. Put it in `src/design-system/` or its own package, and every Feature can depend on it.
+
+If two Features end up reaching for the same domain logic (currency formatting that knows your pricing rules, a cart store, an auth context) that's a vertical of its own. Give it a folder and a public surface, just like a Feature.
+
+What it isn't: a `utils/` folder. The moment a util is shared between two Features without a clear home, you're back to the horizontal sprawl the post argues against.
+
+## A short checklist
+
+- One folder per Feature under `src/features/<name>/`.
+- The folder's `index.ts` is the public surface: usually one `createOnDemandFeature(...)` or `createWidget(...)` export, plus any public prop types.
+- Sub-components, hooks, queries, types, and styles live inside the folder. Nothing leaks into a top-level `hooks/` or `utils/` if it's only used here.
+- Shared primitives live in `src/design-system/` or their own vertical, never in a generic `utils/`.
+- When a Feature stabilises and gets two or more consumers, promote it to a workspace package. The host usage doesn't change.
+- Add `eslint-plugin-boundaries` early. It's cheaper than untangling deep imports later.
+
+The vertical codebase is a layout discipline. mountly makes that discipline executable: one public surface, one runtime contract, and internals that stay internal.

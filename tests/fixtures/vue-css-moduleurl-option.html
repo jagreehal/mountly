@@ -15,9 +15,7 @@
       render() { return h("span", { class: "styled-widget" }, this.msg); },
     };
 
-    const widget = createWidget(Hello, {
-      moduleUrl: "/tests/fixtures/css-loader-asset.js",
-    });
+    const widget = createWidget(Hello, { shadow: true, moduleUrl: "/tests/fixtures/css-loader-asset.js", });
     const c = document.getElementById("c");
     await widget.mount(c, { msg: "moduleUrl-opt" });
 

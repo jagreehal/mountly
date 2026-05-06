@@ -72,6 +72,7 @@ function PeopleTable({ rows }) {
 }
 
 export default createWidget(PeopleTable, {
+  shadow: true,
   styles: `
     .tanstack-table { border-collapse: collapse; font-family: system-ui, sans-serif; }
     .tanstack-table th, .tanstack-table td {

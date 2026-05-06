@@ -58,7 +58,7 @@ If no `update()` is available, Mountly falls back to unmounting and mounting aga
 
 ## Styling
 
-The TSRX adapter follows the same CSS rules as the React, Vue, and Svelte adapters. When the host passes `moduleUrl`, the adapter derives the sibling stylesheet and adopts it into the shadow root:
+The TSRX adapter follows the same CSS rules as the React, Vue, and Svelte adapters. When the host passes `moduleUrl`, the adapter derives the sibling stylesheet and applies it before render (light DOM by default; adopted into the shadow root with `shadow: true`):
 
 ```ts
 const feature = createOnDemandFeature({
@@ -83,10 +83,10 @@ export default createWidget(Component, {
 });
 ```
 
-The repo includes Playwright coverage proving both component shapes work and CSS is applied inside the shadow root.
+The repo includes Playwright coverage proving both component shapes work and CSS is applied correctly in light DOM and shadow DOM.
 
 ## When to use it
 
-Use `mountly-tsrx` when your TSRX compiler emits DOM-facing render/lifecycle code and you want the same host integration as the first-party framework adapters: shadow DOM, CSS loading, `mount/update/unmount`, and on-demand activation.
+Use `mountly-tsrx` when your TSRX compiler emits DOM-facing render/lifecycle code and you want the same host integration as the first-party framework adapters: light DOM by default with optional shadow DOM, CSS loading, `mount/update/unmount`, and on-demand activation.
 
 If your TSRX output targets React, Vue, or Svelte components directly, use that framework's adapter instead.

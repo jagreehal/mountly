@@ -13,4 +13,4 @@ class HelloComponent {
   $destroy() { this.el?.remove(); }
 }
 
-export default createWidget(HelloComponent);
+export default createWidget(HelloComponent, { shadow: true });

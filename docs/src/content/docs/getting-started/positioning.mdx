@@ -11,7 +11,7 @@ Short version:
 
 Longer version:
 
-> mountly turns React, Vue, Svelte, and TSRX components into lazy, isolated, HTML-addressable features that can be dropped into CMS pages, marketing sites, legacy apps, partner embeds, and framework migrations.
+> mountly turns React, Vue, Svelte, and TSRX components into lazy, HTML-addressable features (light DOM by default; `shadow: true` for isolation) that can be dropped into CMS pages, marketing sites, legacy apps, partner embeds, and framework migrations.
 
 ## The center
 
@@ -21,7 +21,8 @@ The core primitive is not an app, route, page, or microfrontend. It is a **featu
 - Wrapped as a mountable widget.
 - Addressed from HTML.
 - Loaded and mounted when a trigger says "now".
-- Isolated from host styles by default.
+- Exposed through a stable runtime contract (`mount` / `unmount`).
+- Mounted in light DOM by default, with opt-in isolation via `shadow: true`.
 
 Everything else is a use case built on that primitive.
 
@@ -33,7 +34,7 @@ Everything else is a use case built on that primitive.
 | CMS and static hosts  | Custom tags plus one host script instead of a full app shell.             |
 | Legacy modernization  | Replace old UI one feature at a time while the host remains in place.     |
 | Runtime islands       | Island-style activation for HTML hosts without adopting a site framework. |
-| Partner embeds        | Stable HTML tags that load isolated interactive UI on demand.             |
+| Partner embeds        | Stable HTML tags that load interactive UI on demand, with optional `shadow: true` isolation. |
 | Framework transitions | React, Vue, Svelte, and TSRX widgets can coexist during migration.        |
 | Performance work      | Heavy UI loads on intent, viewport, idle, media query, or URL change.     |
 
@@ -69,7 +70,7 @@ mountly uses custom elements as a delivery mechanism, not as the authoring model
 
 ### Module Federation
 
-Module Federation is for sharing modules across separately built applications. mountly is smaller and more page-oriented: "put this component here, load it on demand, isolate it from the host."
+Module Federation is for sharing modules across separately built applications. mountly is smaller and more page-oriented: "put this component here, load it on demand, and opt into isolation when needed."
 
 ### Framework lazy loading
 

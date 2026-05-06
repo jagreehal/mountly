@@ -19,7 +19,7 @@
 
     // Regression: moduleUrl passed via PROPS used to be fetched verbatim
     // (yielding the JS file as "CSS"). It must now derive .css.
-    const widget = createWidget(HelloComponent, {});
+    const widget = createWidget(HelloComponent, { shadow: true });
     const c = document.getElementById("c");
     await widget.mount(c, {
       msg: "moduleUrl-prop",

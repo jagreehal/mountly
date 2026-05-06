@@ -22,7 +22,7 @@ const renderWidget = createWidget({
       },
     };
   },
-}, { cssUrl: "/tests/fixtures/tsrx-adapter.css" });
+}, { shadow: true, cssUrl: "/tests/fixtures/tsrx-adapter.css" });
 
 let lifecycleMounts = 0;
 let lifecycleUnmounts = 0;
@@ -38,7 +38,7 @@ const lifecycleWidget = createWidget({
     lifecycleUnmounts += 1;
     target.textContent = "";
   },
-});
+}, { shadow: true });
 
 await renderWidget.mount(renderHost, { text: "render-a" });
 renderWidget.update(renderHost, { text: "render-b" });

@@ -10,10 +10,10 @@ This matrix defines parity guarantees for `mountly-react`, `mountly-vue`, and `m
 - `mount(container, props)` mounts widget UI.
 - `unmount(container)` tears down widget UI.
 - `update(container, props)` is available on all three adapters.
-- Shadow root mounting by default.
+- Light DOM mounting by default.
+- Opt-in shadow DOM via `shadow: true`.
 - `shadowMode: "open" | "closed"` support.
-- Light-DOM fallback when shadow root is not available.
-- Explicit `shadow: false` support with style injection.
+- Automatic light-DOM fallback when a container can't host a shadow root.
 
 ## Notes by framework
 

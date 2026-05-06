@@ -66,6 +66,7 @@ export default defineConfig({
             { label: 'Distribution', slug: 'concepts/distribution' },
             { label: 'Islands architecture', slug: 'concepts/islands' },
             { label: 'Microfrontends', slug: 'concepts/microfrontends' },
+            { label: 'Vertical codebase', slug: 'concepts/vertical-codebase' },
             { label: 'Custom element', slug: 'concepts/custom-element' },
             { label: 'Predictive prefetch', slug: 'concepts/prefetch' },
             { label: 'Devtools panel', slug: 'concepts/devtools' },

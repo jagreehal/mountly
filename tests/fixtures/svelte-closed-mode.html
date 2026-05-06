@@ -18,7 +18,7 @@
     }
 
     try {
-      const w = createWidget(HelloComponent, { styles: ".x{}", shadowMode: "closed" });
+      const w = createWidget(HelloComponent, { shadow: true, styles: ".x{}", shadowMode: "closed" });
       const c = document.getElementById("c");
       w.mount(c, { msg: "closed" });
       window.__result = {

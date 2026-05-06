@@ -9,5 +9,6 @@ const View = {
 };
 
 export default createWidget(View, {
+  shadow: true,
   styles: ".vue-loader-widget { color: rgb(66, 55, 44); border-top: 2px solid rgb(66, 55, 44); }",
 });

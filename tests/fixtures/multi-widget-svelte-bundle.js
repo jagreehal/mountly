@@ -56,6 +56,6 @@ class StatusCard {
 
 // Each export is a fully-formed WidgetModule. Sharing one bundle means
 // shared bytes for the `badge` helper and any future utility additions.
-export const counter = createWidget(CounterCard);
-export const clock = createWidget(ClockCard);
-export const status = createWidget(StatusCard);
+export const counter = createWidget(CounterCard, { shadow: true });
+export const clock = createWidget(ClockCard, { shadow: true });
+export const status = createWidget(StatusCard, { shadow: true });

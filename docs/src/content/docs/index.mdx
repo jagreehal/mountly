@@ -19,9 +19,10 @@ pagefind: false
       Framework components. Any page. <em>On demand.</em>
     </h1>
     <p class="hero-lead">
-      mountly turns React, Vue, Svelte, and TSRX components into lazy, isolated,
+      mountly turns React, Vue, Svelte, and TSRX components into lazy,
       HTML-addressable features. Drop them into CMS pages, marketing sites, legacy apps,
-      partner embeds, or framework migrations without a host-app rewrite.
+      partner embeds, or framework migrations without a host-app rewrite. Light DOM is the default;
+      use <code>shadow: true</code> when you need hard style isolation.
     </p>
     <div class="hero-actions">
       <a class="action primary" href="/mountly/getting-started/quick-start/">
@@ -76,7 +77,7 @@ pagefind: false
       </div>
       <div class="row r4">
         <span class="num">04</span>
-        <span class="state"><em>mount</em> — widget rendered into shadow DOM</span>
+        <span class="state"><em>mount</em> — widget rendered into the container</span>
         <span class="timing">+12ms</span>
       </div>
     </div>
@@ -266,7 +267,7 @@ pagefind: false
     <div class="lifecycle-step">
       <span class="step-num">04</span>
       <span class="step-name">mount</span>
-      <span class="step-desc">Widget rendered into the container's shadow root.</span>
+      <span class="step-desc">Widget rendered into the container (light DOM by default; shadow root with `shadow: true`).</span>
     </div>
     <div class="lifecycle-step">
       <span class="step-num">05</span>
@@ -317,7 +318,7 @@ signup.attach({
 });
 ```
 
-> **Styling** — CSS is auto-loaded with the module, injected into the widget's shadow root, no FOUC.
+> **Styling** — CSS is auto-loaded with the module and applied before render. No FOUC. Default light DOM lets the host's design system reach in; pass `shadow: true` for full isolation.
 
 ```html title="host.html"
 <signup-card trigger="viewport" props='{"plan":"pro"}'></signup-card>

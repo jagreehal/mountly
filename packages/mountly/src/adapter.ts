@@ -8,6 +8,12 @@ export interface AdapterOptions {
   styles?: string;
   styleMode?: "shared" | "isolated";
   reserveSize?: string;
+  /**
+   * Mount inside a shadow root for full style isolation.
+   *
+   * Default: `false` (light DOM). Set `shadow: true` to opt in to shadow DOM,
+   * which scopes the widget's styles and prevents host CSS from reaching in.
+   */
   shadow?: boolean;
   shadowMode?: "open" | "closed";
 }

@@ -4,4 +4,4 @@ import { createWidget } from "/packages/adapters/mountly-react/dist/index.js";
 const Hello = (props) =>
   createElement("span", { className: "styled-widget" }, props.msg ?? "");
 
-export default createWidget(Hello);
+export default createWidget(Hello, { shadow: true });

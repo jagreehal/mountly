@@ -16,7 +16,7 @@
       return { el };
     }
 
-    const w = createWidget(HelloComponent, { styles: ".x{}" });
+    const w = createWidget(HelloComponent, { shadow: true, styles: ".x{}" });
     let caught = "";
     try {
       await w.mount(document.getElementById("c"), { msg: "x" });
