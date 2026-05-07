@@ -13,7 +13,7 @@ Outputs `dist/index.js` (React inlined) and `dist/peer.js` (React external).
 
 ## Embed
 
-Use an [import map](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/script/type/importmap) so the browser can resolve bare specifiers. Map `mountly` to the runtime build and `signup-card` to this package’s `dist/peer.js` (with `react` / `react-dom/client` mapped too) when using the peer build.
+Use an [import map](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/script/type/importmap) so the browser can resolve bare specifiers. Map `mountly` and used `mountly/*` subpaths to concrete runtime files, and map `signup-card` to this package’s `dist/peer.js` (with `react` / `react-dom/client` mapped too) when using the peer build.
 
 ```html
 <script type="importmap">
@@ -22,6 +22,11 @@ Use an [import map](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/
       "react": "https://esm.sh/react@18.3.1",
       "react-dom/client": "https://esm.sh/react-dom@18.3.1/client",
       "mountly": "/packages/mountly/dist/index.js",
+      "mountly/elements": "/packages/mountly/dist/elements.js",
+      "mountly/attach": "/packages/mountly/dist/attach.js",
+      "mountly/shadow": "/packages/mountly/dist/shadow.js",
+      "mountly/assets": "/packages/mountly/dist/assets.js",
+      "mountly/adapter": "/packages/mountly/dist/adapter.js",
       "signup-card": "/examples/signup-card/dist/peer.js"
     }
   }

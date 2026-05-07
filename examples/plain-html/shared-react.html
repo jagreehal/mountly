@@ -81,6 +81,19 @@
           "react/jsx-runtime": "https://esm.sh/react@18.3.1/jsx-runtime",
           "react-dom/client": "https://esm.sh/react-dom@18.3.1/client",
           "mountly": "/packages/mountly/dist/index.js",
+          "mountly/shadow": "/packages/mountly/dist/shadow.js",
+          "mountly/assets": "/packages/mountly/dist/assets.js",
+          "mountly/adapter": "/packages/mountly/dist/adapter.js",
+          "mountly/attach": "/packages/mountly/dist/attach.js",
+          "mountly/elements": "/packages/mountly/dist/elements.js",
+          "mountly/bundle": "/packages/mountly/dist/bundle.js",
+          "mountly/island": "/packages/mountly/dist/island.js",
+          "mountly/mount": "/packages/mountly/dist/mount.js",
+          "mountly/runtime": "/packages/mountly/dist/runtime.js",
+          "mountly/triggers": "/packages/mountly/dist/triggers.js",
+          "mountly/url": "/packages/mountly/dist/url-state.js",
+          "mountly/data": "/packages/mountly/dist/data-source.js",
+          "mountly/bus": "/packages/mountly/dist/bus.js",
           "mountly-react": "/packages/adapters/mountly-react/dist/index.js",
           "payment-breakdown": "/examples/payment-breakdown/dist/peer.js",
           "image-lightbox": "/examples/image-lightbox/dist/peer.js"
@@ -149,7 +162,8 @@
       import {
         defineMountlyFeature,
         registerCustomElement,
-      } from "mountly";
+      } from "mountly/elements";
+      import { attach, onTrigger } from "mountly/attach";
       import { paymentBreakdown } from "payment-breakdown";
       import { imageLightbox } from "image-lightbox";
 
@@ -193,22 +207,29 @@
         return originalFetch(url, init);
       };
 
-      paymentBreakdown.attach({
-        trigger: document.getElementById("trigger-a"),
+      const triggerA = document.getElementById("trigger-a");
+      attach(paymentBreakdown, {
+        trigger: triggerA,
         mount: document.getElementById("slot-a"),
+        preloadOn: onTrigger.hover(triggerA, { delay: 100 }),
+        activateOn: onTrigger.click(triggerA),
         context: { paymentId: "pay_123" },
       });
 
-      paymentBreakdown.attach({
-        trigger: document.getElementById("trigger-b"),
+      const triggerB = document.getElementById("trigger-b");
+      attach(paymentBreakdown, {
+        trigger: triggerB,
         mount: document.getElementById("slot-b"),
+        preloadOn: onTrigger.hover(triggerB, { delay: 100 }),
+        activateOn: onTrigger.click(triggerB),
         context: { paymentId: "pay_456" },
       });
 
-      imageLightbox.attach({
-        trigger: document.getElementById("trigger-c"),
+      const triggerC = document.getElementById("trigger-c");
+      attach(imageLightbox, {
+        trigger: triggerC,
         mount: document.getElementById("slot-c"),
-        activateOn: "click",
+        activateOn: onTrigger.click(triggerC),
         props: {
           data: {
             src:

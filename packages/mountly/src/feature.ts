@@ -1,15 +1,7 @@
 import { moduleCache, dataCache } from './cache.js';
 import { createModuleLoader, type CssAutoLoadOptions } from './assets.js';
-import {
-  setupTrigger,
-  type TriggerType,
-  type TriggerOptions,
-} from './triggers.js';
+import type { TriggerType } from './triggers.js';
 import { createFeatureTimingTracker } from './analytics.js';
-import {
-  createUrlChangeTrigger,
-  type UrlChangeTriggerOptions,
-} from './plugins.js';
 
 export interface FeatureContext {
   element: HTMLElement;
@@ -21,11 +13,6 @@ export interface FeatureContext {
 export interface FeatureModule {
   mount: (container: HTMLElement, props: Record<string, unknown>) => void;
   unmount?: (container: HTMLElement) => void;
-  /**
-   * Optional: update an already-mounted container with new props, preserving
-   * internal state (e.g. React reconciliation). If omitted, `feature.update`
-   * falls back to remounting.
-   */
   update?: (container: HTMLElement, props: Record<string, unknown>) => void;
   refresh?: (container: HTMLElement, props: Record<string, unknown>) => void;
   [key: string]: unknown;
@@ -33,34 +20,11 @@ export interface FeatureModule {
 
 export interface CreateOnDemandFeatureOptions {
   moduleId: string;
-  /**
-   * Optional named export to read from the loaded module before falling back
-   * to `default` or the module object itself.
-   */
   moduleExport?: string;
-  /**
-   * URL to the widget's JavaScript bundle. Pass this and mountly handles the
-   * rest: it builds a `loadModule` for you, threads the URL through to the
-   * adapter so framework-specific CSS auto-loading (shadow-DOM `<style>`
-   * adoption) works out of the box, and uses a sensible default `render`.
-   *
-   * For light-DOM mounts where you want the core to also append a global
-   * `<link rel="stylesheet">`, pass `assetOptions: { css: "auto" }`.
-   *
-   * Override `loadModule` and/or `render` if you need bespoke behaviour;
-   * either explicit option wins over the `moduleUrl` shortcut.
-   */
   moduleUrl?: string;
-  /** Forwarded to `createModuleLoader` when `moduleUrl` is used. */
   assetOptions?: CssAutoLoadOptions;
   loadModule?: () => Promise<unknown>;
   loadData?: (context: FeatureContext) => Promise<unknown>;
-  /**
-   * Build a stable cache key for `loadData` from a context. The default
-   * excludes `element` and `event` (non-serializable) and uses sorted JSON
-   * of the remaining fields. Override if you want coarser caching or your
-   * context includes non-serializable values.
-   */
   getCacheKey?: (context: FeatureContext) => string;
   render?: (args: {
     mod: FeatureModule;
@@ -71,59 +35,16 @@ export interface CreateOnDemandFeatureOptions {
   }) => void;
 }
 
-export interface CreateFeatureFromModuleOptions {
-  moduleId: string;
-  moduleUrl: string;
-  moduleExport?: string;
-  assetOptions?: CssAutoLoadOptions;
-  loadData?: (context: FeatureContext) => Promise<unknown>;
-  getCacheKey?: (context: FeatureContext) => string;
-}
-
-export interface AttachOptions {
-  /** Element the user interacts with (hover/click target). */
-  trigger: HTMLElement;
-  /** Container to render into. Defaults to `trigger`. */
-  mount?: HTMLElement;
-  /** Alias for `mount` (DX convenience for early adopters). */
-  mountContainer?: HTMLElement;
-  /** Static context or a getter called at activation time. */
-  context?: Partial<FeatureContext> | (() => Partial<FeatureContext>);
-  /** Extra props forwarded to `render`. A getter is called at each mount. */
-  props?: Record<string, unknown> | (() => Record<string, unknown>);
-  /** When to start preloading. `false` to disable. Default `"hover"`. */
-  preloadOn?: 'hover' | 'viewport' | 'idle' | 'media' | false;
-  /** When to mount. Default `"click"`. */
-  activateOn?:
-    | 'click'
-    | 'hover'
-    | 'focus'
-    | 'viewport'
-    | 'idle'
-    | 'media'
-    | 'url-change';
-  /**
-   * URL events to listen for when `activateOn` is `"url-change"`.
-   * Defaults to all: `popstate`, `hashchange`, `pushstate`, `replacestate`.
-   */
-  activateOnUrlEvents?: UrlChangeTriggerOptions['events'];
-  /** Media query string used when `preloadOn` is `"media"`. */
-  preloadOnMediaQuery?: string;
-  /** Media query string used when `activateOn` is `"media"`. */
-  activateOnMediaQuery?: string;
-  /** `requestIdleCallback` timeout used when `preloadOn`/`activateOn` is `"idle"`. */
-  idleTimeout?: number;
-  /** Optional viewport root margin used for viewport-based triggers. */
-  viewportRootMargin?: string;
-  /** If true (default), a second `activateOn` event unmounts the feature. */
-  toggle?: boolean;
-  onMount?: (api: { unmount: () => void }) => void;
-  onUnmount?: () => void;
-  onError?: (err: unknown) => void;
-}
+export type FeatureState =
+  | 'idle'
+  | 'preloading'
+  | 'preloaded'
+  | 'activating'
+  | 'activated'
+  | 'mounted'
+  | 'aborted';
 
 export interface OnDemandFeature {
-  /** The `moduleId` this feature was created with. */
   readonly id: string;
   preload: (context?: Partial<FeatureContext>) => Promise<void>;
   activate: (context?: Partial<FeatureContext>) => Promise<void>;
@@ -132,11 +53,6 @@ export interface OnDemandFeature {
     context?: Partial<FeatureContext>,
     props?: Record<string, unknown>
   ) => Promise<{ unmount: () => void }>;
-  /**
-   * Update props for an already-mounted container, preserving internal state
-   * when the widget's module exposes `update()`. If not mounted, this is a
-   * no-op; if the module has no `update`, it remounts as a fallback.
-   */
   update: (
     container: HTMLElement,
     props: Record<string, unknown>,
@@ -147,12 +63,9 @@ export interface OnDemandFeature {
     context?: Partial<FeatureContext>,
     props?: Record<string, unknown>
   ) => Promise<void>;
-  /** Wire trigger + mount in one call. Returns a cleanup function. */
-  attach: (options: AttachOptions) => () => void;
   abort: () => void;
   getState: () => FeatureState;
   isAborted: () => boolean;
-  /** Currently active mount containers. */
   getMounts: () => ReadonlyArray<HTMLElement>;
 }
 
@@ -189,15 +102,6 @@ function resolveFeatureModule(
   );
 }
 
-export type FeatureState =
-  | 'idle'
-  | 'preloading'
-  | 'preloaded'
-  | 'activating'
-  | 'activated'
-  | 'mounted'
-  | 'aborted';
-
 function stableStringify(value: unknown): string {
   if (value === null || value === undefined) return JSON.stringify(value);
   if (typeof value !== 'object') return JSON.stringify(value);
@@ -225,15 +129,6 @@ function defaultCacheKey(moduleId: string, context: FeatureContext): string {
 const isAbortError = (e: unknown): boolean =>
   e instanceof DOMException && e.name === 'AbortError';
 
-function describeArg(value: unknown): string {
-  if (value === null) return 'null';
-  if (value === undefined) return 'undefined';
-  return typeof value;
-}
-
-// Common dynamic-import failure modes the browser throws when an import map
-// is missing or wrong. Catching the message text is brittle long-term but
-// the alternative is silent confusion for first-time users.
 const isModuleResolutionError = (e: unknown): boolean => {
   if (!(e instanceof Error)) return false;
   const msg = e.message;
@@ -268,15 +163,9 @@ export function createOnDemandFeature(
       `[mountly] createOnDemandFeature("${moduleId}"): provide either \`moduleUrl\` (recommended) or \`loadModule\`.`
     );
   }
-  // Default loadModule: createModuleLoader with css:"none" so we don't append
-  // a global <link>. Shadow-DOM widgets need their CSS adopted into the root,
-  // which the framework adapters handle via `moduleUrl` we thread into props.
-  // Light-DOM users can opt in with `assetOptions: { css: "auto" }`.
   const loadModule =
     options.loadModule ||
     createModuleLoader(moduleUrl as string, assetOptions ?? { css: 'none' });
-  // Default render: forwards props plus moduleUrl so adapters can resolve CSS.
-  // Users who supply their own render keep full control.
   const render =
     options.render ||
     (({ mod, container, props }) => {
@@ -395,8 +284,6 @@ export function createOnDemandFeature(
       if (contextInput) {
         await ensureData(buildContext(contextInput));
       }
-      // Only advance to "preloaded" if no other path moved us forward.
-      // (Cast through `string` because the early-return narrows TS's view.)
       if ((state as string) === 'preloading') setState('preloaded');
       tracker.recordPhase('preload_end');
     } catch (error) {
@@ -483,12 +370,6 @@ export function createOnDemandFeature(
     tracker.recordPhase('mount_end');
 
     let unmounted = false;
-    // Expose the feature-owned unmount on the container so helpers like
-    // `safeUnmount()` (and widget onClose handlers) route through the
-    // feature's full teardown: widget unmount → focus restore → state transition.
-    (container as HTMLElement & { _unmount?: () => void })._unmount = () => {
-      unmount();
-    };
     const unmount = () => {
       if (unmounted) return;
       unmounted = true;
@@ -503,6 +384,9 @@ export function createOnDemandFeature(
       }
       tracker.recordPhase('unmount');
     };
+    // Expose feature-owned unmount on the container so safeUnmount() and
+    // widget onClose handlers route through full teardown.
+    (container as HTMLElement & { _unmount?: () => void })._unmount = unmount;
 
     return { unmount };
   };
@@ -522,7 +406,6 @@ export function createOnDemandFeature(
       }
       return;
     }
-    // Fallback: remount in place. Preserves container, loses widget-internal state.
     const context = buildContext(contextInput, container);
     const data = loadData ? dataCache.get(getCacheKey(context)) : null;
     render({
@@ -552,169 +435,6 @@ export function createOnDemandFeature(
     await update(container, props ?? {}, contextInput);
   };
 
-  const attach = (opts: AttachOptions): (() => void) => {
-    if (!(opts?.trigger instanceof Element)) {
-      throw new Error(
-        `[mountly] attach({ trigger }) for "${moduleId}" got ${describeArg(
-          opts?.trigger
-        )} ` +
-          `instead of an Element. Common cause: document.getElementById("...") returned null. ` +
-          `Check the element exists in the DOM at the time attach() runs (e.g. defer until DOMContentLoaded).`
-      );
-    }
-    const hasMount = Object.prototype.hasOwnProperty.call(opts, 'mount');
-    const hasMountContainer = Object.prototype.hasOwnProperty.call(
-      opts,
-      'mountContainer'
-    );
-    const mountTarget = hasMount ? opts.mount : opts.mountContainer;
-    if ((hasMount || hasMountContainer) && !(mountTarget instanceof Element)) {
-      throw new Error(
-        `[mountly] attach({ mount | mountContainer }) for "${moduleId}" got ${describeArg(
-          mountTarget
-        )} ` +
-          `instead of an Element. Pass an HTMLElement to mount into, or omit the option to mount inside the trigger.`
-      );
-    }
-
-    const {
-      trigger,
-      mount: mountOpt,
-      mountContainer,
-      context,
-      props,
-      preloadOn = 'hover',
-      activateOn = 'click',
-      activateOnUrlEvents,
-      preloadOnMediaQuery,
-      activateOnMediaQuery,
-      idleTimeout,
-      viewportRootMargin,
-      toggle = true,
-      onMount,
-      onUnmount,
-      onError,
-    } = opts;
-    const mountEl = mountOpt ?? mountContainer ?? trigger;
-
-    const cleanups: Array<() => void> = [];
-    let active: { unmount: () => void } | null = null;
-    let pending = false;
-
-    const resolveContext = (): Partial<FeatureContext> => {
-      if (typeof context === 'function') return context();
-      return context ?? {};
-    };
-
-    const resolveProps = (): Record<string, unknown> | undefined => {
-      if (typeof props === 'function') return props();
-      return props;
-    };
-
-    if (preloadOn) {
-      if (preloadOn === 'media' && !preloadOnMediaQuery) {
-        throw new Error(
-          `[mountly] attach({ preloadOn: "media" }) for "${moduleId}" requires preloadOnMediaQuery.`
-        );
-      }
-      const preloadType: TriggerOptions['type'] =
-        preloadOn === 'hover'
-          ? 'hover'
-          : preloadOn === 'viewport'
-          ? 'viewport'
-          : preloadOn === 'idle'
-          ? 'idle'
-          : 'media';
-      cleanups.push(
-        setupTrigger(
-          {
-            type: preloadType,
-            element: trigger,
-            delay: preloadOn === 'hover' ? 100 : 0,
-            idleTimeout: preloadOn === 'idle' ? idleTimeout : undefined,
-            rootMargin:
-              preloadOn === 'viewport' ? viewportRootMargin : undefined,
-            mediaQuery: preloadOn === 'media' ? preloadOnMediaQuery : undefined,
-            once: true,
-          },
-          () => {
-            preload(resolveContext()).catch((e) => onError?.(e));
-          }
-        )
-      );
-    }
-
-    const onActivate = () => {
-      if (pending) return;
-      if (active) {
-        if (toggle) {
-          active.unmount();
-          active = null;
-          onUnmount?.();
-        }
-        return;
-      }
-      pending = true;
-      mount(mountEl, resolveContext(), resolveProps())
-        .then((handle) => {
-          const wrapped = {
-            unmount: () => {
-              handle.unmount();
-              if (active === wrapped) {
-                active = null;
-                onUnmount?.();
-              }
-            },
-          };
-          active = wrapped;
-          onMount?.(wrapped);
-        })
-        .catch((e) => onError?.(e))
-        .finally(() => {
-          pending = false;
-        });
-    };
-
-    if (activateOn === 'url-change') {
-      cleanups.push(
-        createUrlChangeTrigger(trigger, onActivate, {
-          events: activateOnUrlEvents ?? [
-            'popstate',
-            'hashchange',
-            'pushstate',
-            'replacestate',
-          ],
-        })
-      );
-    } else {
-      if (activateOn === 'media' && !activateOnMediaQuery) {
-        throw new Error(
-          `[mountly] attach({ activateOn: "media" }) for "${moduleId}" requires activateOnMediaQuery.`
-        );
-      }
-      cleanups.push(
-        setupTrigger(
-          {
-            type: activateOn,
-            element: trigger,
-            idleTimeout: activateOn === 'idle' ? idleTimeout : undefined,
-            rootMargin:
-              activateOn === 'viewport' ? viewportRootMargin : undefined,
-            mediaQuery:
-              activateOn === 'media' ? activateOnMediaQuery : undefined,
-            once: false,
-          },
-          onActivate
-        )
-      );
-    }
-
-    return () => {
-      for (const c of cleanups) c();
-      if (active) active.unmount();
-    };
-  };
-
   const abort = (): void => {
     if (abortController) abortController.abort();
     abortController = null;
@@ -736,31 +456,9 @@ export function createOnDemandFeature(
     mount,
     update,
     refresh,
-    attach,
     abort,
     getState,
     isAborted,
     getMounts,
   };
-}
-
-export function createFeatureFromModule(
-  options: CreateFeatureFromModuleOptions
-): OnDemandFeature {
-  const {
-    moduleId,
-    moduleUrl,
-    moduleExport,
-    assetOptions,
-    loadData,
-    getCacheKey,
-  } = options;
-  return createOnDemandFeature({
-    moduleId,
-    moduleUrl,
-    moduleExport,
-    assetOptions,
-    loadData,
-    getCacheKey,
-  });
 }

@@ -39,6 +39,19 @@
       {
         "imports": {
           "mountly": "/packages/mountly/dist/index.js",
+          "mountly/shadow": "/packages/mountly/dist/shadow.js",
+          "mountly/assets": "/packages/mountly/dist/assets.js",
+          "mountly/adapter": "/packages/mountly/dist/adapter.js",
+          "mountly/attach": "/packages/mountly/dist/attach.js",
+          "mountly/elements": "/packages/mountly/dist/elements.js",
+          "mountly/bundle": "/packages/mountly/dist/bundle.js",
+          "mountly/island": "/packages/mountly/dist/island.js",
+          "mountly/mount": "/packages/mountly/dist/mount.js",
+          "mountly/runtime": "/packages/mountly/dist/runtime.js",
+          "mountly/triggers": "/packages/mountly/dist/triggers.js",
+          "mountly/url": "/packages/mountly/dist/url-state.js",
+          "mountly/data": "/packages/mountly/dist/data-source.js",
+          "mountly/bus": "/packages/mountly/dist/bus.js",
           "payment-breakdown": "/examples/payment-breakdown/dist/index.js"
         }
       }
@@ -51,11 +64,15 @@
     <div id="mount"></div>
 
     <script type="module">
+      import { attach, onTrigger } from "mountly/attach";
       import { paymentBreakdown } from "payment-breakdown";
 
-      paymentBreakdown.attach({
-        trigger: document.getElementById("trigger"),
+      const triggerEl = document.getElementById("trigger");
+      attach(paymentBreakdown, {
+        trigger: triggerEl,
         mount: document.getElementById("mount"),
+        preloadOn: onTrigger.hover(triggerEl, { delay: 100 }),
+        activateOn: onTrigger.click(triggerEl),
         props: {
           data: {
             total: 99,

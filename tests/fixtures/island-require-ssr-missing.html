@@ -2,7 +2,7 @@
 <html><body>
   <button id="island" data-mountly-island='{"id":"sm1","moduleId":"demo","trigger":"click","preloadOn":false,"schemaVersion":1,"requireSsrMarker":true}'></button>
   <script type="module">
-    import { mountIslandFeature } from "/packages/mountly/dist/index.js";
+    import { mountIslandFeature } from "/packages/mountly/dist/island.js";
     const island = document.getElementById("island");
     let calls = 0;
     const mod = { mount(c){ const s=document.createElement('span'); s.textContent='x'; c.appendChild(s); }, unmount(){} };

@@ -6,11 +6,13 @@ test.beforeEach(({ page }, testInfo) => {
   story.init(testInfo);
 });
 
-test("mountly test helpers mount, unmount, and exercise triggers", async ({ page }) => {
+test("mountly test helpers mount and unmount widgets", async ({ page }) => {
   await page.goto("http://localhost:5175/tests/fixtures/empty.html");
 
   const result = await page.evaluate(async () => {
-    const { mountWidgetFixture, triggerFixture } = await import("/packages/mountly/dist/test-entry.js");
+    const { mountWidgetFixture } = await import(
+      "/packages/mountly/dist/test-utils.js"
+    );
     const widget = {
       mount(container: HTMLElement, props: { label?: string }) {
         container.textContent = props.label ?? "mounted";
@@ -24,18 +26,17 @@ test("mountly test helpers mount, unmount, and exercise triggers", async ({ page
     const mountedText = fixture.container.textContent;
     await fixture.unmount();
 
+    const { eachClick } = await import("/packages/mountly/dist/triggers.js");
+
     const button = document.createElement("button");
     document.body.appendChild(button);
     let triggered = 0;
-    const trigger = triggerFixture(
-      { type: "click", element: button, once: true },
-      () => {
-        triggered += 1;
-      },
-    );
-    trigger.fire(new MouseEvent("click", { bubbles: true }));
-    trigger.fire(new MouseEvent("click", { bubbles: true }));
-    trigger.cleanup();
+    const stop = eachClick(button, () => {
+      triggered += 1;
+      stop();
+    });
+    button.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    button.dispatchEvent(new MouseEvent("click", { bubbles: true }));
 
     return {
       mountedText,

@@ -2,7 +2,7 @@
 <html><body>
   <button id="island" data-mountly-island='{"id":"once-1","moduleId":"demo","props":{"msg":"hello-once"},"trigger":"click","preloadOn":false,"schemaVersion":1,"once":true}'></button>
   <script type="module">
-    import { mountIslandFeature } from "/packages/mountly/dist/index.js";
+    import { mountIslandFeature } from "/packages/mountly/dist/island.js";
     const island = document.getElementById("island");
     const widgetModule = {
       mount(container, props) {

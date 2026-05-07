@@ -88,6 +88,8 @@ For prototyping or static hosts, you can load mountly directly:
 
 For multi-widget pages, set up an import map so several widgets share one runtime — see [`installRuntime`](/mountly/api/install-runtime/).
 
+If the browser host imports `mountly/*` subpaths directly, map those subpaths too (for example `mountly/attach`, `mountly/elements`, `mountly/shadow`, `mountly/assets`, `mountly/adapter`) to concrete `.js` files.
+
 ## Via the CLI
 
 The fastest path is the scaffolder, which lays down the runtime, the React adapter, the build pipeline, and a working host page:

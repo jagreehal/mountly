@@ -1,13 +1,85 @@
 import type {
   OnDemandFeature,
   FeatureContext,
-  AttachOptions,
+  CreateOnDemandFeatureOptions,
 } from './feature.js';
-import {
-  createFeatureFromModule,
-  type CreateFeatureFromModuleOptions,
-} from './feature.js';
-import type { TriggerType } from './triggers.js';
+import { createOnDemandFeature } from './feature.js';
+import { attach, onTrigger, type TriggerSource } from './attach.js';
+import type { TriggerType, UrlChangeEventType } from './triggers.js';
+
+type PreloadKind = 'hover' | 'viewport' | 'idle' | 'media';
+type ActivateKind =
+  | 'click'
+  | 'hover'
+  | 'focus'
+  | 'viewport'
+  | 'idle'
+  | 'media'
+  | 'url-change';
+
+function defaultPreloadKind(
+  triggerType: string | null
+): PreloadKind | null {
+  if (
+    triggerType === 'hover' ||
+    triggerType === 'viewport' ||
+    triggerType === 'idle'
+  ) {
+    return triggerType;
+  }
+  return null;
+}
+
+function defaultActivateKind(triggerType: string | null): ActivateKind {
+  if (
+    triggerType === 'focus' ||
+    triggerType === 'hover' ||
+    triggerType === 'viewport' ||
+    triggerType === 'url-change' ||
+    triggerType === 'idle' ||
+    triggerType === 'media'
+  ) {
+    return triggerType;
+  }
+  return 'click';
+}
+
+interface BuildTriggerSourceParams {
+  idleTimeout?: number;
+  viewportRootMargin?: string;
+  mediaQuery?: string;
+  hoverDelay?: number;
+  urlEvents?: UrlChangeEventType[];
+}
+
+function buildTriggerSource(
+  kind: ActivateKind,
+  el: HTMLElement,
+  params: BuildTriggerSourceParams
+): TriggerSource {
+  switch (kind) {
+    case 'click':
+      return onTrigger.click(el);
+    case 'hover':
+      return onTrigger.hover(el, { delay: params.hoverDelay });
+    case 'focus':
+      return onTrigger.focus(el);
+    case 'viewport':
+      return onTrigger.viewport(el, { rootMargin: params.viewportRootMargin });
+    case 'idle':
+      return onTrigger.idle({ timeout: params.idleTimeout });
+    case 'media': {
+      if (!params.mediaQuery) {
+        throw new Error(
+          `[mountly] activate-on="media" requires activate-media-query attribute.`
+        );
+      }
+      return onTrigger.media(params.mediaQuery);
+    }
+    case 'url-change':
+      return onTrigger.urlChange({ events: params.urlEvents });
+  }
+}
 
 interface FeatureRegistry {
   [moduleId: string]: () => OnDemandFeature | Promise<OnDemandFeature>;
@@ -27,7 +99,10 @@ export function unregisterCustomElement(moduleId: string): void {
 }
 
 export interface RegisterFeatureModuleOptions
-  extends Omit<CreateFeatureFromModuleOptions, 'moduleId'> {}
+  extends Omit<CreateOnDemandFeatureOptions, 'moduleId'> {
+  /** Required: URL to the widget's JavaScript bundle. */
+  moduleUrl: string;
+}
 
 export type FeatureModuleManifest =
   | Record<string, string | RegisterFeatureModuleOptions>
@@ -75,7 +150,7 @@ export function registerFeatureModule(
   options: RegisterFeatureModuleOptions
 ): void {
   registerCustomElement(moduleId, () =>
-    createFeatureFromModule({
+    createOnDemandFeature({
       moduleId,
       ...options,
     })
@@ -507,32 +582,6 @@ export function defineMountlyFeature(
           const target = this.getTriggerElement();
           const mountTarget = this.getMountElement();
 
-          const mappedPreloadOn: AttachOptions['preloadOn'] =
-            triggerType === 'hover'
-              ? 'hover'
-              : triggerType === 'viewport'
-              ? 'viewport'
-              : triggerType === 'idle'
-              ? 'idle'
-              : false;
-
-          const mappedActivateOn: AttachOptions['activateOn'] =
-            triggerType === 'focus'
-              ? 'focus'
-              : triggerType === 'hover'
-              ? 'hover'
-              : triggerType === 'viewport'
-              ? 'viewport'
-              : triggerType === 'url-change'
-              ? 'url-change'
-              : triggerType === 'idle'
-              ? 'idle'
-              : triggerType === 'media'
-              ? 'media'
-              : 'click';
-
-          const preloadOn = this.parsePreloadOnAttr() ?? mappedPreloadOn;
-          const activateOn = this.parseActivateOnAttr() ?? mappedActivateOn;
           const idleTimeout = this.parseNumberAttr('idle-timeout');
           const viewportRootMargin =
             this.getAttribute('viewport-root-margin') ?? undefined;
@@ -542,16 +591,34 @@ export function defineMountlyFeature(
             this.getAttribute('activate-media-query') ?? undefined;
           const activateOnUrlEvents = this.parseUrlEvents();
 
-          this.detach = this.feature.attach({
+          const preloadAttr = this.parsePreloadOnAttr();
+          const preloadKind: PreloadKind | null =
+            preloadAttr === undefined
+              ? defaultPreloadKind(triggerType)
+              : preloadAttr;
+          const activateKind =
+            this.parseActivateOnAttr() ?? defaultActivateKind(triggerType);
+
+          const preloadOn = preloadKind
+            ? buildTriggerSource(preloadKind, target, {
+                idleTimeout,
+                viewportRootMargin,
+                mediaQuery: preloadOnMediaQuery,
+                hoverDelay: 100,
+              })
+            : undefined;
+          const activateOn = buildTriggerSource(activateKind, target, {
+            idleTimeout,
+            viewportRootMargin,
+            mediaQuery: activateOnMediaQuery,
+            urlEvents: activateOnUrlEvents,
+          });
+
+          this.detach = attach(this.feature, {
             trigger: target,
             mount: mountTarget,
             preloadOn,
             activateOn,
-            preloadOnMediaQuery,
-            activateOnMediaQuery,
-            activateOnUrlEvents,
-            idleTimeout,
-            viewportRootMargin,
             props: () => this.parseProps(),
             context: () => this.buildContext(),
             onError: (err) =>
@@ -636,10 +703,10 @@ export function defineMountlyFeature(
         return Number.isFinite(parsed) ? parsed : undefined;
       }
 
-      private parsePreloadOnAttr(): AttachOptions['preloadOn'] | undefined {
+      private parsePreloadOnAttr(): PreloadKind | undefined | null {
         const raw = this.getAttribute('preload-on');
         if (!raw) return undefined;
-        if (raw === 'false' || raw === 'none') return false;
+        if (raw === 'false' || raw === 'none') return null;
         if (
           raw === 'hover' ||
           raw === 'viewport' ||
@@ -651,7 +718,7 @@ export function defineMountlyFeature(
         return undefined;
       }
 
-      private parseActivateOnAttr(): AttachOptions['activateOn'] | undefined {
+      private parseActivateOnAttr(): ActivateKind | undefined {
         const raw = this.getAttribute('activate-on');
         if (!raw) return undefined;
         if (
@@ -668,13 +735,13 @@ export function defineMountlyFeature(
         return undefined;
       }
 
-      private parseUrlEvents(): AttachOptions['activateOnUrlEvents'] {
+      private parseUrlEvents(): UrlChangeEventType[] | undefined {
         const raw = this.getAttribute('url-events');
         if (!raw) return undefined;
         const values = raw
           .split(',')
           .map((v) => v.trim())
-          .filter(Boolean) as NonNullable<AttachOptions['activateOnUrlEvents']>;
+          .filter(Boolean) as UrlChangeEventType[];
         return values.length > 0 ? values : undefined;
       }
 

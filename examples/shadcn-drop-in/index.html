@@ -68,6 +68,19 @@
           "react/jsx-runtime": "https://esm.sh/react@18.3.1/jsx-runtime",
           "react-dom/client": "https://esm.sh/react-dom@18.3.1/client",
           "mountly": "/packages/mountly/dist/index.js",
+          "mountly/shadow": "/packages/mountly/dist/shadow.js",
+          "mountly/assets": "/packages/mountly/dist/assets.js",
+          "mountly/adapter": "/packages/mountly/dist/adapter.js",
+          "mountly/attach": "/packages/mountly/dist/attach.js",
+          "mountly/elements": "/packages/mountly/dist/elements.js",
+          "mountly/bundle": "/packages/mountly/dist/bundle.js",
+          "mountly/island": "/packages/mountly/dist/island.js",
+          "mountly/mount": "/packages/mountly/dist/mount.js",
+          "mountly/runtime": "/packages/mountly/dist/runtime.js",
+          "mountly/triggers": "/packages/mountly/dist/triggers.js",
+          "mountly/url": "/packages/mountly/dist/url-state.js",
+          "mountly/data": "/packages/mountly/dist/data-source.js",
+          "mountly/bus": "/packages/mountly/dist/bus.js",
           "mountly-react": "/packages/adapters/mountly-react/dist/index.js",
           "signup-card": "/examples/signup-card/dist/peer.js"
         }
@@ -106,17 +119,19 @@
     </main>
 
     <script type="module">
-      import { defineMountlyFeature, registerCustomElement } from "mountly";
+      import { defineMountlyFeature, registerCustomElement } from "mountly/elements";
+      import { attach, onTrigger } from "mountly/attach";
       import { signupCard } from "signup-card";
 
       registerCustomElement("signup-card", () => signupCard);
       defineMountlyFeature();
 
-      signupCard.attach({
-        trigger: document.getElementById("hero-trigger"),
+      const heroTrigger = document.getElementById("hero-trigger");
+      attach(signupCard, {
+        trigger: heroTrigger,
         mount: document.getElementById("hero-mount"),
-        preloadOn: "hover",
-        activateOn: "click",
+        preloadOn: onTrigger.hover(heroTrigger, { delay: 100 }),
+        activateOn: onTrigger.click(heroTrigger),
         props: {
           data: {
             headline: "Drop in a signup card",

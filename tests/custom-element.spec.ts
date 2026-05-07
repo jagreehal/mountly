@@ -17,12 +17,12 @@ test('custom element warns on invalid props JSON and falls back to empty props',
   await page.goto('http://localhost:5175/tests/fixtures/empty.html');
 
   const result = await page.evaluate(async () => {
+    const { createOnDemandFeature } = await import('/packages/mountly/dist/index.js');
     const {
-      createOnDemandFeature,
       defineMountlyFeature,
       registerCustomElement,
       unregisterCustomElement,
-    } = await import('/packages/mountly/dist/index.js');
+    } = await import('/packages/mountly/dist/elements.js');
 
     defineMountlyFeature();
     const moduleId = 'ce-invalid-props';
@@ -67,12 +67,12 @@ test('changing module-id tears down previous feature and mounts the new feature'
   await page.goto('http://localhost:5175/tests/fixtures/empty.html');
 
   const result = await page.evaluate(async () => {
+    const { createOnDemandFeature } = await import('/packages/mountly/dist/index.js');
     const {
-      createOnDemandFeature,
       defineMountlyFeature,
       registerCustomElement,
       unregisterCustomElement,
-    } = await import('/packages/mountly/dist/index.js');
+    } = await import('/packages/mountly/dist/elements.js');
 
     defineMountlyFeature();
     const oldId = 'ce-module-a';
@@ -138,12 +138,12 @@ test('disconnectedCallback detaches and unmounts active custom-element feature',
   await page.goto('http://localhost:5175/tests/fixtures/empty.html');
 
   const result = await page.evaluate(async () => {
+    const { createOnDemandFeature } = await import('/packages/mountly/dist/index.js');
     const {
-      createOnDemandFeature,
       defineMountlyFeature,
       registerCustomElement,
       unregisterCustomElement,
-    } = await import('/packages/mountly/dist/index.js');
+    } = await import('/packages/mountly/dist/elements.js');
 
     defineMountlyFeature();
     const moduleId = 'ce-disconnect';
@@ -193,12 +193,12 @@ test('custom element warns with actionable hint when module-id is unregistered',
   await page.goto('http://localhost:5175/tests/fixtures/empty.html');
 
   await page.evaluate(async () => {
+    const { createOnDemandFeature } = await import('/packages/mountly/dist/index.js');
     const {
-      createOnDemandFeature,
       defineMountlyFeature,
       registerCustomElement,
       unregisterCustomElement,
-    } = await import('/packages/mountly/dist/index.js');
+    } = await import('/packages/mountly/dist/elements.js');
 
     defineMountlyFeature();
     // Register one feature so the warning can list at least one known id.
@@ -229,12 +229,12 @@ test('custom element with trigger=viewport mounts automatically on visibility', 
   await page.goto('http://localhost:5175/tests/fixtures/empty.html');
 
   const result = await page.evaluate(async () => {
+    const { createOnDemandFeature } = await import('/packages/mountly/dist/index.js');
     const {
-      createOnDemandFeature,
       defineMountlyFeature,
       registerCustomElement,
       unregisterCustomElement,
-    } = await import('/packages/mountly/dist/index.js');
+    } = await import('/packages/mountly/dist/elements.js');
 
     defineMountlyFeature();
     const moduleId = 'ce-viewport';
@@ -275,12 +275,12 @@ test('custom element with trigger=url-change mounts on history updates', async (
   await page.goto('http://localhost:5175/tests/fixtures/empty.html');
 
   const result = await page.evaluate(async () => {
+    const { createOnDemandFeature } = await import('/packages/mountly/dist/index.js');
     const {
-      createOnDemandFeature,
       defineMountlyFeature,
       registerCustomElement,
       unregisterCustomElement,
-    } = await import('/packages/mountly/dist/index.js');
+    } = await import('/packages/mountly/dist/elements.js');
 
     defineMountlyFeature();
     const moduleId = 'ce-url-change';
@@ -323,12 +323,12 @@ test('custom element with trigger=idle mounts without interaction', async ({
   await page.goto('http://localhost:5175/tests/fixtures/empty.html');
 
   const result = await page.evaluate(async () => {
+    const { createOnDemandFeature } = await import('/packages/mountly/dist/index.js');
     const {
-      createOnDemandFeature,
       defineMountlyFeature,
       registerCustomElement,
       unregisterCustomElement,
-    } = await import('/packages/mountly/dist/index.js');
+    } = await import('/packages/mountly/dist/elements.js');
 
     defineMountlyFeature();
     const moduleId = 'ce-idle';
@@ -369,12 +369,12 @@ test('custom element with trigger=media mounts when media query matches', async 
   await page.goto('http://localhost:5175/tests/fixtures/empty.html');
 
   const result = await page.evaluate(async () => {
+    const { createOnDemandFeature } = await import('/packages/mountly/dist/index.js');
     const {
-      createOnDemandFeature,
       defineMountlyFeature,
       registerCustomElement,
       unregisterCustomElement,
-    } = await import('/packages/mountly/dist/index.js');
+    } = await import('/packages/mountly/dist/elements.js');
 
     defineMountlyFeature();
     const moduleId = 'ce-media';
@@ -422,7 +422,7 @@ test('defineMountlyFeature accepts one shared source and auto-defines alias tags
     `;
 
     const { defineMountlyFeature } = await import(
-      '/packages/mountly/dist/index.js'
+      '/packages/mountly/dist/elements.js'
     );
     defineMountlyFeature('/tests/fixtures/dx-shared-bundle.js');
 
@@ -464,7 +464,7 @@ test('prefix option namespaces alias tags without changing module ids', async ({
     `;
 
     const { defineMountlyFeature } = await import(
-      '/packages/mountly/dist/index.js'
+      '/packages/mountly/dist/elements.js'
     );
     defineMountlyFeature({
       source: '/tests/fixtures/dx-shared-bundle.js',
@@ -507,7 +507,7 @@ test('prefix option works with baseUrl and modules byte-control path', async ({
     `;
 
     const { defineMountlyFeature } = await import(
-      '/packages/mountly/dist/index.js'
+      '/packages/mountly/dist/elements.js'
     );
     defineMountlyFeature({
       baseUrl: '/tests/fixtures/dx-widgets',
@@ -553,7 +553,7 @@ test('defineMountlyFeature hydrates existing alias tags synchronously', async ({
     `;
 
     const { defineMountlyFeature } = await import(
-      '/packages/mountly/dist/index.js'
+      '/packages/mountly/dist/elements.js'
     );
     defineMountlyFeature({
       baseUrl: '/tests/fixtures/dx-widgets',
@@ -590,7 +590,7 @@ test('alias tags do not duplicate mounts during custom-element upgrade', async (
     `;
 
     const { defineMountlyFeature } = await import(
-      '/packages/mountly/dist/index.js'
+      '/packages/mountly/dist/elements.js'
     );
     defineMountlyFeature('/tests/fixtures/dx-shared-bundle.js');
 
@@ -624,7 +624,7 @@ test('modules array limits auto-registration for byte control', async ({
     `;
 
     const { defineMountlyFeature } = await import(
-      '/packages/mountly/dist/index.js'
+      '/packages/mountly/dist/elements.js'
     );
     defineMountlyFeature({
       baseUrl: '/tests/fixtures/dx-widgets',
@@ -668,7 +668,7 @@ test('alias map lets a valid custom tag mount a non-hyphen module id', async ({
     `;
 
     const { defineMountlyFeature } = await import(
-      '/packages/mountly/dist/index.js'
+      '/packages/mountly/dist/elements.js'
     );
     defineMountlyFeature({
       modules: {
@@ -708,7 +708,7 @@ test('explicit modules map supports per-component bundle URLs', async ({
     `;
 
     const { defineMountlyFeature } = await import(
-      '/packages/mountly/dist/index.js'
+      '/packages/mountly/dist/elements.js'
     );
     defineMountlyFeature({
       modules: {

@@ -3,6 +3,7 @@ import {
   type FeatureModule,
   type OnDemandFeature,
 } from "./feature.js";
+import { attach, onTrigger, type TriggerSource } from "./attach.js";
 
 export interface IslandPayload {
   schemaVersion?: 1;
@@ -166,7 +167,7 @@ function normalizeModule(mod: unknown, moduleId: string): FeatureModule {
     return candidate as FeatureModule;
   }
   throw new Error(
-    `[mountly] island module \"${moduleId}\" must resolve to a widget module with mount(container, props).`,
+    `[mountly] island module "${moduleId}" must resolve to a widget module with mount(container, props).`,
   );
 }
 
@@ -193,7 +194,7 @@ export function readIslandPayload(element: Element): IslandPayload {
   if (parsed.schemaVersion !== undefined && parsed.schemaVersion !== 1) {
     const err = islandError(
       "MNTI002",
-      `unsupported island schemaVersion \"${String(parsed.schemaVersion)}\"; expected 1`,
+      `unsupported island schemaVersion "${String(parsed.schemaVersion)}"; expected 1`,
     );
     emitMountlyError(element, {
       code: "MNTI002",
@@ -384,13 +385,41 @@ export function mountIslandFeature(
 
   const attachNow = () => {
     if (payload.trigger === "never") return () => {};
-    return feature.attach({
+    const activateKind = payload.trigger ?? "click";
+    const preloadKind = payload.preloadOn ?? "hover";
+
+    const buildSource = (
+      kind: "click" | "hover" | "focus" | "viewport" | "idle" | "media" | "url-change",
+      mediaQuery?: string,
+    ): TriggerSource => {
+      switch (kind) {
+        case "click":
+          return onTrigger.click(trigger);
+        case "hover":
+          return onTrigger.hover(trigger, { delay: 100 });
+        case "focus":
+          return onTrigger.focus(trigger);
+        case "viewport":
+          return onTrigger.viewport(trigger);
+        case "idle":
+          return onTrigger.idle();
+        case "media":
+          if (!mediaQuery) {
+            throw new Error(
+              `[mountly] island "${payload.id}" trigger="media" requires activateOnMediaQuery in the payload.`,
+            );
+          }
+          return onTrigger.media(mediaQuery);
+        case "url-change":
+          return onTrigger.urlChange();
+      }
+    };
+
+    return attach(feature, {
       trigger,
       mount: mountTarget,
-      preloadOn: payload.preloadOn ?? "hover",
-      preloadOnMediaQuery: payload.preloadOnMediaQuery,
-      activateOn: payload.trigger ?? "click",
-      activateOnMediaQuery: payload.activateOnMediaQuery,
+      preloadOn: preloadKind ? buildSource(preloadKind, payload.preloadOnMediaQuery) : undefined,
+      activateOn: buildSource(activateKind, payload.activateOnMediaQuery),
       props: payload.props ?? {},
       toggle: once ? false : true,
     });

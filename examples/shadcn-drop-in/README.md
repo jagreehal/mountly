@@ -35,6 +35,11 @@ Open <http://localhost:5177/examples/shadcn-drop-in/>.
       "react/jsx-runtime": "https://esm.sh/react@18.3.1/jsx-runtime",
       "react-dom/client": "https://esm.sh/react-dom@18.3.1/client",
       "mountly": "/packages/mountly/dist/index.js",
+      "mountly/elements": "/packages/mountly/dist/elements.js",
+      "mountly/attach": "/packages/mountly/dist/attach.js",
+      "mountly/shadow": "/packages/mountly/dist/shadow.js",
+      "mountly/assets": "/packages/mountly/dist/assets.js",
+      "mountly/adapter": "/packages/mountly/dist/adapter.js",
       "mountly-react": "/packages/adapters/mountly-react/dist/index.js",
       "signup-card": "/examples/signup-card/dist/peer.js"
     }

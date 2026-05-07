@@ -3,7 +3,7 @@
   <head>
     <link rel="stylesheet" href="/tests/fixtures/bridge-tokens.css" />
     <script type="importmap">
-      {"imports":{"mountly":"/packages/mountly/dist/index.js"}}
+      {"imports":{"mountly":"/packages/mountly/dist/index.js","mountly/shadow":"/packages/mountly/dist/shadow.js","mountly/assets":"/packages/mountly/dist/assets.js","mountly/adapter":"/packages/mountly/dist/adapter.js","mountly/attach":"/packages/mountly/dist/attach.js","mountly/bundle":"/packages/mountly/dist/bundle.js","mountly/elements":"/packages/mountly/dist/elements.js","mountly/island":"/packages/mountly/dist/island.js","mountly/mount":"/packages/mountly/dist/mount.js","mountly/runtime":"/packages/mountly/dist/runtime.js","mountly/triggers":"/packages/mountly/dist/triggers.js","mountly/url":"/packages/mountly/dist/url-state.js","mountly/data":"/packages/mountly/dist/data-source.js","mountly/bus":"/packages/mountly/dist/bus.js"}}
     </script>
   </head>
   <body>
@@ -16,10 +16,9 @@
     <div id="direct-svelte"></div>
 
     <script type="module">
-      import {
-        createWidgetBundle,
-        __clearCssTextCache,
-      } from "mountly";
+      import { createWidgetBundle } from "mountly/bundle";
+      import { __clearCssTextCache } from "mountly/assets";
+      import { attach, onTrigger } from "mountly/attach";
       __clearCssTextCache();
 
       // Path 1: consume the pure Svelte library DIRECTLY via the
@@ -46,30 +45,27 @@
         assetOptions: { css: "none" },
       });
 
-      widgets
-        .feature({ moduleId: "svelte-hero", export: "hero" })
-        .attach({
-          trigger: document.getElementById("t-hero"),
-          mountContainer: document.getElementById("m-hero"),
-          activateOn: "click",
-          props: { headline: "Same UI library, two ways.", ctaLabel: "Get started", ctaHref: "/start" },
-        });
-      widgets
-        .feature({ moduleId: "svelte-pricing", export: "pricing" })
-        .attach({
-          trigger: document.getElementById("t-pricing"),
-          mountContainer: document.getElementById("m-pricing"),
-          activateOn: "click",
-          props: { plan: "Pro", price: 29, blurb: "Everything in Free, plus" },
-        });
-      widgets
-        .feature({ moduleId: "svelte-newsletter", export: "newsletter" })
-        .attach({
-          trigger: document.getElementById("t-newsletter"),
-          mountContainer: document.getElementById("m-newsletter"),
-          activateOn: "click",
-          props: { buttonLabel: "Subscribe" },
-        });
+      const tHero = document.getElementById("t-hero");
+      const tPricing = document.getElementById("t-pricing");
+      const tNewsletter = document.getElementById("t-newsletter");
+      attach(widgets.feature({ moduleId: "svelte-hero", export: "hero" }), {
+        trigger: tHero,
+        mount: document.getElementById("m-hero"),
+        activateOn: onTrigger.click(tHero),
+        props: { headline: "Same UI library, two ways.", ctaLabel: "Get started", ctaHref: "/start" },
+      });
+      attach(widgets.feature({ moduleId: "svelte-pricing", export: "pricing" }), {
+        trigger: tPricing,
+        mount: document.getElementById("m-pricing"),
+        activateOn: onTrigger.click(tPricing),
+        props: { plan: "Pro", price: 29, blurb: "Everything in Free, plus" },
+      });
+      attach(widgets.feature({ moduleId: "svelte-newsletter", export: "newsletter" }), {
+        trigger: tNewsletter,
+        mount: document.getElementById("m-newsletter"),
+        activateOn: onTrigger.click(tNewsletter),
+        props: { buttonLabel: "Subscribe" },
+      });
 
       document.getElementById("t-hero").click();
       document.getElementById("t-pricing").click();

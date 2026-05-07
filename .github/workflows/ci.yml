@@ -70,12 +70,11 @@ jobs:
         run: pnpm run test:unit
 
       - name: Vitest stories report
-        if: always() && (hashFiles('docs/evidence/vitest-tests.html') != '' || hashFiles('.executable-stories/vitest-raw-run.json') != '')
+        if: always() && hashFiles('docs/evidence/vitest-tests.html') != ''
         uses: jagreehal/executable-stories-action@v1
         with:
           report-dir: docs/evidence
           output-name: vitest-tests
-          raw-run: .executable-stories/vitest-raw-run.json
           artifact-name: executable-stories-vitest
           comment-title: Vitest Stories
 
@@ -83,12 +82,11 @@ jobs:
         run: pnpm run test:e2e
 
       - name: Playwright stories report
-        if: always() && (hashFiles('docs/evidence/playwright-tests.html') != '' || hashFiles('.executable-stories/playwright-raw-run.json') != '')
+        if: always() && hashFiles('docs/evidence/playwright-tests.html') != ''
         uses: jagreehal/executable-stories-action@v1
         with:
           report-dir: docs/evidence
           output-name: playwright-tests
-          raw-run: .executable-stories/playwright-raw-run.json
           artifact-name: executable-stories-playwright
           comment-title: Playwright Stories
 

@@ -13,14 +13,13 @@
       "react/jsx-runtime":"https://esm.sh/react@19.2.5/jsx-runtime",
       "react-dom/client":"https://esm.sh/react-dom@19.2.5/client?deps=react@19.2.5",
       "react-dom":"https://esm.sh/react-dom@19.2.5?deps=react@19.2.5",
-      "mountly":"/packages/mountly/dist/index.js"
+      "mountly":"/packages/mountly/dist/index.js","mountly/shadow":"/packages/mountly/dist/shadow.js","mountly/assets":"/packages/mountly/dist/assets.js","mountly/adapter":"/packages/mountly/dist/adapter.js","mountly/attach":"/packages/mountly/dist/attach.js","mountly/bundle":"/packages/mountly/dist/bundle.js","mountly/elements":"/packages/mountly/dist/elements.js","mountly/island":"/packages/mountly/dist/island.js","mountly/mount":"/packages/mountly/dist/mount.js","mountly/runtime":"/packages/mountly/dist/runtime.js","mountly/triggers":"/packages/mountly/dist/triggers.js","mountly/url":"/packages/mountly/dist/url-state.js","mountly/data":"/packages/mountly/dist/data-source.js","mountly/bus":"/packages/mountly/dist/bus.js" 
     }}
   </script>
   <script type="module">
-    import {
-      createWidgetBundle,
-      __clearCssTextCache,
-    } from "/packages/mountly/dist/index.js";
+    import { createWidgetBundle } from "/packages/mountly/dist/bundle.js";
+    import { attach, onTrigger } from "/packages/mountly/dist/attach.js";
+    import { __clearCssTextCache } from "/packages/mountly/dist/assets.js";
     __clearCssTextCache();
 
     // Host wires the widgets package's bundle entry. In a real deployment
@@ -35,22 +34,22 @@
     const status  = widgets.feature({ moduleId: "status",  export: "status"  });
     const pricing = widgets.feature({ moduleId: "pricing", export: "pricing" });
 
-    counter.attach({
+    attach(counter, {
       trigger: document.getElementById("t-counter"),
-      mountContainer: document.getElementById("m-counter"),
-      activateOn: "click",
+      mount: document.getElementById("m-counter"),
+      activateOn: onTrigger.click(document.getElementById("t-counter")),
       props: { start: 5 },
     });
-    status.attach({
+    attach(status, {
       trigger: document.getElementById("t-status"),
-      mountContainer: document.getElementById("m-status"),
-      activateOn: "click",
+      mount: document.getElementById("m-status"),
+      activateOn: onTrigger.click(document.getElementById("t-status")),
       props: { message: "All systems nominal" },
     });
-    pricing.attach({
+    attach(pricing, {
       trigger: document.getElementById("t-pricing"),
-      mountContainer: document.getElementById("m-pricing"),
-      activateOn: "click",
+      mount: document.getElementById("m-pricing"),
+      activateOn: onTrigger.click(document.getElementById("t-pricing")),
       props: { plan: "Enterprise", price: 99 },
     });
 

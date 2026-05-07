@@ -1,9 +1,9 @@
 <!doctype html>
 <html><body>
   <div id="island" data-mountly-island='{"schemaVersion":1,"id":"hm","moduleId":"demo","forceRemount":true,"skipIfHydrated":false}' data-mountly-hydrated="true">ssr</div>
-  <script type="importmap">{"imports":{"mountly":"/packages/mountly/dist/index.js"}}</script>
+  <script type="importmap">{"imports":{"mountly":"/packages/mountly/dist/island.js"}}</script>
   <script type="module">
-    import { mountIslandFeature } from "/packages/mountly/dist/index.js";
+    import { mountIslandFeature } from "/packages/mountly/dist/island.js";
     const warns = [];
     const oldWarn = console.warn;
     console.warn = (...args) => { warns.push(args.join(' ')); oldWarn(...args); };

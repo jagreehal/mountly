@@ -12,8 +12,7 @@
     <span class="ssr">Resize to trigger (needs max-width: 600px)</span>
   </div>
   <script type="module">
-    import { mountIslandFeature, registerBuiltInPlugins } from "/packages/mountly/dist/index.js";
-    registerBuiltInPlugins();
+    import { mountIslandFeature } from "/packages/mountly/dist/island.js";
     const island = document.getElementById("island");
     const widgetModule = {
       mount(container) {

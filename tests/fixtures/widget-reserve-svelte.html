@@ -1,7 +1,7 @@
 <!doctype html>
 <html><body>
   <div id="c"></div>
-  <script type="importmap">{"imports":{"mountly":"/packages/mountly/dist/index.js"}}</script>
+  <script type="importmap">{"imports":{"mountly":"/packages/mountly/dist/index.js","mountly/shadow":"/packages/mountly/dist/shadow.js","mountly/assets":"/packages/mountly/dist/assets.js","mountly/adapter":"/packages/mountly/dist/adapter.js","mountly/attach":"/packages/mountly/dist/attach.js","mountly/bundle":"/packages/mountly/dist/bundle.js","mountly/elements":"/packages/mountly/dist/elements.js","mountly/island":"/packages/mountly/dist/island.js","mountly/mount":"/packages/mountly/dist/mount.js","mountly/runtime":"/packages/mountly/dist/runtime.js","mountly/triggers":"/packages/mountly/dist/triggers.js","mountly/url":"/packages/mountly/dist/url-state.js","mountly/data":"/packages/mountly/dist/data-source.js","mountly/bus":"/packages/mountly/dist/bus.js"}}</script>
   <script type="module">
     import { createWidget } from '/packages/adapters/mountly-svelte/dist/index.js';
     class C { constructor({target}){ const el=document.createElement('div'); el.style.height='20px'; el.textContent='s'; target.appendChild(el); this.el=el; } $destroy(){ this.el?.remove(); } }

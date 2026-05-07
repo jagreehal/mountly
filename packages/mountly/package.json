@@ -14,6 +14,9 @@
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "sideEffects": [
+    "./dist/host-entry.js"
+  ],
   "publishConfig": {
     "access": "public"
   },
@@ -29,49 +32,93 @@
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
     },
-    "./core": {
-      "import": "./dist/core.js",
-      "types": "./dist/core.d.ts"
+    "./triggers": {
+      "import": "./dist/triggers.js",
+      "types": "./dist/triggers.d.ts"
+    },
+    "./gestures": {
+      "import": "./dist/gestures.js",
+      "types": "./dist/gestures.d.ts"
+    },
+    "./attach": {
+      "import": "./dist/attach.js",
+      "types": "./dist/attach.d.ts"
+    },
+    "./elements": {
+      "import": "./dist/elements.js",
+      "types": "./dist/elements.d.ts"
+    },
+    "./island": {
+      "import": "./dist/island.js",
+      "types": "./dist/island.d.ts"
+    },
+    "./host": {
+      "import": "./dist/host.js",
+      "types": "./dist/host.d.ts"
+    },
+    "./host/auto": {
+      "import": "./dist/host-entry.js",
+      "types": "./dist/host-entry.d.ts"
+    },
+    "./bundle": {
+      "import": "./dist/bundle.js",
+      "types": "./dist/bundle.d.ts"
+    },
+    "./cache": {
+      "import": "./dist/cache.js",
+      "types": "./dist/cache.d.ts"
+    },
+    "./mount": {
+      "import": "./dist/mount.js",
+      "types": "./dist/mount.d.ts"
+    },
+    "./shadow": {
+      "import": "./dist/shadow.js",
+      "types": "./dist/shadow.d.ts"
+    },
+    "./assets": {
+      "import": "./dist/assets.js",
+      "types": "./dist/assets.d.ts"
+    },
+    "./adapter": {
+      "import": "./dist/adapter.js",
+      "types": "./dist/adapter.d.ts"
     },
     "./analytics": {
-      "import": "./dist/analytics-entry.js",
-      "types": "./dist/analytics-entry.d.ts"
+      "import": "./dist/analytics.js",
+      "types": "./dist/analytics.d.ts"
     },
     "./prefetch": {
-      "import": "./dist/prefetch-entry.js",
-      "types": "./dist/prefetch-entry.d.ts"
-    },
-    "./plugins": {
-      "import": "./dist/plugins-entry.js",
-      "types": "./dist/plugins-entry.d.ts"
+      "import": "./dist/prefetch.js",
+      "types": "./dist/prefetch.d.ts"
     },
     "./devtools": {
-      "import": "./dist/devtools-entry.js",
-      "types": "./dist/devtools-entry.d.ts"
+      "import": "./dist/devtools.js",
+      "types": "./dist/devtools.d.ts"
     },
     "./overlays": {
-      "import": "./dist/overlays-entry.js",
-      "types": "./dist/overlays-entry.d.ts"
-    },
-    "./runtime": {
-      "import": "./dist/runtime-entry.js",
-      "types": "./dist/runtime-entry.d.ts"
+      "import": "./dist/positioning.js",
+      "types": "./dist/positioning.d.ts"
     },
     "./data": {
-      "import": "./dist/data-entry.js",
-      "types": "./dist/data-entry.d.ts"
+      "import": "./dist/data-source.js",
+      "types": "./dist/data-source.d.ts"
     },
     "./url": {
-      "import": "./dist/url-entry.js",
-      "types": "./dist/url-entry.d.ts"
+      "import": "./dist/url-state.js",
+      "types": "./dist/url-state.d.ts"
     },
     "./bus": {
-      "import": "./dist/bus-entry.js",
-      "types": "./dist/bus-entry.d.ts"
+      "import": "./dist/bus.js",
+      "types": "./dist/bus.d.ts"
     },
     "./test": {
-      "import": "./dist/test-entry.js",
-      "types": "./dist/test-entry.d.ts"
+      "import": "./dist/test-utils.js",
+      "types": "./dist/test-utils.d.ts"
+    },
+    "./runtime": {
+      "import": "./dist/runtime.js",
+      "types": "./dist/runtime.d.ts"
     }
   },
   "scripts": {

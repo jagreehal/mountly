@@ -3,9 +3,9 @@
   <div id="island" data-mountly-island='{"id":"hero-cta","moduleId":"demo","props":{"msg":"hello-target"},"trigger":"click","preloadOn":false,"targetSelector":"[data-slot]","schemaVersion":1}'>
     <div data-slot></div>
   </div>
-  <script type="importmap">{"imports":{"mountly":"/packages/mountly/dist/index.js"}}</script>
+  <script type="importmap">{"imports":{"mountly":"/packages/mountly/dist/island.js"}}</script>
   <script type="module">
-    import { mountIslandFeature } from "/packages/mountly/dist/index.js";
+    import { mountIslandFeature } from "/packages/mountly/dist/island.js";
     const island = document.getElementById("island");
     const widgetModule = {
       mount(container, props) {

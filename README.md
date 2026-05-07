@@ -81,7 +81,7 @@ The widget mounts inside the container in light DOM by default, with bundled sty
 ### Going further
 
 - **Lazy load on user intent (Features)** — `createOnDemandFeature(...)` adds hover/click/viewport/idle triggers around a widget. See [examples/marketing-site](examples/marketing-site/README.md).
-- **Plain-HTML host (no bundler)** — `installRuntime({...})` injects a shared-React import map. See [examples/plain-html](examples/plain-html/README.md).
+- **Plain-HTML host (no bundler)** — `installRuntime({...})` injects a shared-React import map. For direct browser import maps, also map used `mountly/*` subpaths (for example `mountly/attach`, `mountly/elements`, `mountly/shadow`, `mountly/assets`, `mountly/adapter`). See [examples/plain-html](examples/plain-html/README.md).
 - **Pick a distribution (self-contained vs shared React)** — when to ship one widget vs many, when to share React. See [examples/README.md#choosing-a-distribution](examples/README.md#choosing-a-distribution).
 - **When *not* to use mountly** — single SPA, full SSR-hydration ownership, MFE orchestration. See [examples/README.md#when-not-to-use-it](examples/README.md#when-not-to-use-it).
 - **All runnable examples** — [examples/README.md](examples/README.md).

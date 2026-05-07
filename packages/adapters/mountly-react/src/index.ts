@@ -1,13 +1,9 @@
 import type { ComponentType } from "react";
 import React, { createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import {
-  attachShadow,
-  loadCssText,
-  resolveCssUrl,
-  type WidgetModule,
-  type AdapterOptions,
-} from "mountly";
+import { attachShadow } from "mountly/shadow";
+import { loadCssText, resolveCssUrl } from "mountly/assets";
+import type { AdapterOptions, WidgetModule } from "mountly/adapter";
 
 interface ReactWidgetOptions extends AdapterOptions {
   /**

@@ -12,7 +12,7 @@
         "react/jsx-runtime":"https://esm.sh/react@19.2.5/jsx-runtime",
         "react-dom":"https://esm.sh/react-dom@19.2.5?deps=react@19.2.5",
         "react-dom/client":"https://esm.sh/react-dom@19.2.5/client?deps=react@19.2.5",
-        "mountly":"/packages/mountly/dist/index.js"
+        "mountly":"/packages/mountly/dist/index.js","mountly/shadow":"/packages/mountly/dist/shadow.js","mountly/assets":"/packages/mountly/dist/assets.js","mountly/adapter":"/packages/mountly/dist/adapter.js","mountly/attach":"/packages/mountly/dist/attach.js","mountly/bundle":"/packages/mountly/dist/bundle.js","mountly/elements":"/packages/mountly/dist/elements.js","mountly/island":"/packages/mountly/dist/island.js","mountly/mount":"/packages/mountly/dist/mount.js","mountly/runtime":"/packages/mountly/dist/runtime.js","mountly/triggers":"/packages/mountly/dist/triggers.js","mountly/url":"/packages/mountly/dist/url-state.js","mountly/data":"/packages/mountly/dist/data-source.js","mountly/bus":"/packages/mountly/dist/bus.js" 
       }}
     </script>
   </head>
@@ -30,10 +30,9 @@
     <script type="module">
       import { createElement as h } from "react";
       import { createRoot } from "react-dom/client";
-      import {
-        createWidgetBundle,
-        __clearCssTextCache,
-      } from "mountly";
+      import { createWidgetBundle } from "mountly/bundle";
+      import { __clearCssTextCache } from "mountly/assets";
+      import { attach, onTrigger } from "mountly/attach";
       __clearCssTextCache();
 
       // Path 1: consume the pure-React library DIRECTLY. No bridge,
@@ -57,22 +56,22 @@
       const pricing = widgets.feature({ moduleId: "pricing", export: "pricing" });
       const newsletter = widgets.feature({ moduleId: "newsletter", export: "newsletter" });
 
-      hero.attach({
+      attach(hero, {
         trigger: document.getElementById("t-hero"),
-        mountContainer: document.getElementById("m-hero"),
-        activateOn: "click",
+        mount: document.getElementById("m-hero"),
+        activateOn: onTrigger.click(document.getElementById("t-hero")),
         props: { headline: "Ship the same UI library two ways.", ctaLabel: "Get started", ctaHref: "/start" },
       });
-      pricing.attach({
+      attach(pricing, {
         trigger: document.getElementById("t-pricing"),
-        mountContainer: document.getElementById("m-pricing"),
-        activateOn: "click",
+        mount: document.getElementById("m-pricing"),
+        activateOn: onTrigger.click(document.getElementById("t-pricing")),
         props: { plan: "Pro", price: 29, blurb: "Everything in Free, plus" },
       });
-      newsletter.attach({
+      attach(newsletter, {
         trigger: document.getElementById("t-newsletter"),
-        mountContainer: document.getElementById("m-newsletter"),
-        activateOn: "click",
+        mount: document.getElementById("m-newsletter"),
+        activateOn: onTrigger.click(document.getElementById("t-newsletter")),
         props: { buttonLabel: "Subscribe" },
       });
 
