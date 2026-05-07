@@ -1,5 +1,12 @@
 # pokemon-kitchen-sink
 
+## 0.0.8
+
+### Patch Changes
+
+- Updated dependencies [978694c]
+  - mountly@0.2.2
+
 ## 0.0.7
 
 ### Patch Changes
