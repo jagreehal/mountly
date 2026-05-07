@@ -77,6 +77,8 @@ That makes it a strong fit for legacy modernization: you can keep the existing h
 
 It writes a `<script type="importmap">` to `<head>` mapping `react`, `react/jsx-runtime`, `react-dom`, and `react-dom/client` to the URLs you pass. The widget's peer build imports `react` as a bare specifier; the import map resolves that bare specifier to the URL.
 
+`installRuntime` does **not** map `mountly/*` subpaths. If your host imports subpaths (for example `mountly/attach`, `mountly/elements`, `mountly/shadow`, `mountly/assets`, `mountly/adapter`), add those entries explicitly in your import map.
+
 Two rules:
 
 1. **Call it before any module imports start resolving.** The first inline `<script type="module">` is fine; later ones, after other modules have started, are too late and will warn.
@@ -167,6 +169,12 @@ For more than one framework widget, use peer builds and one import map for share
 <script type="importmap">
   {
     "imports": {
+      "mountly": "https://cdn.jsdelivr.net/npm/mountly@0.1/dist/index.js",
+      "mountly/attach": "https://cdn.jsdelivr.net/npm/mountly@0.1/dist/attach.js",
+      "mountly/elements": "https://cdn.jsdelivr.net/npm/mountly@0.1/dist/elements.js",
+      "mountly/shadow": "https://cdn.jsdelivr.net/npm/mountly@0.1/dist/shadow.js",
+      "mountly/assets": "https://cdn.jsdelivr.net/npm/mountly@0.1/dist/assets.js",
+      "mountly/adapter": "https://cdn.jsdelivr.net/npm/mountly@0.1/dist/adapter.js",
       "signup-card": "https://cdn.jsdelivr.net/npm/signup-card@1/dist/peer.js",
       "payment-breakdown": "https://cdn.jsdelivr.net/npm/payment-breakdown@1/dist/peer.js",
       "image-lightbox": "https://cdn.jsdelivr.net/npm/image-lightbox@1/dist/peer.js"

@@ -1,9 +1,8 @@
-export * from "./core.js";
-export * from "./island.js";
-export * from "./analytics-entry.js";
-export * from "./prefetch-entry.js";
-export * from "./plugins-entry.js";
-export * from "./devtools-entry.js";
-export * from "./overlays-entry.js";
-export * from "./runtime-entry.js";
-export * from "./host-entry.js";
+export {
+  createOnDemandFeature,
+  type OnDemandFeature,
+  type FeatureContext,
+  type FeatureModule,
+  type FeatureState,
+  type CreateOnDemandFeatureOptions,
+} from './feature.js';

@@ -10,7 +10,7 @@ test.describe("Mount utils story", () => {
     await page.goto("http://localhost:5175/tests/fixtures/empty.html");
 
     await page.evaluate(async () => {
-      const { safeUnmount } = await import("/packages/mountly/dist/index.js");
+      const { safeUnmount } = await import("/packages/mountly/dist/mount.js");
       const host = document.createElement("div");
       const container = document.createElement("div");
       container.id = "story-container";

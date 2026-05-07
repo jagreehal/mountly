@@ -55,6 +55,12 @@ The host's import map maps the bare specifier (e.g. `"signup-card"`) to one URL 
 <script type="importmap">
   {
     "imports": {
+      "mountly": "/packages/mountly/dist/index.js",
+      "mountly/attach": "/packages/mountly/dist/attach.js",
+      "mountly/elements": "/packages/mountly/dist/elements.js",
+      "mountly/shadow": "/packages/mountly/dist/shadow.js",
+      "mountly/assets": "/packages/mountly/dist/assets.js",
+      "mountly/adapter": "/packages/mountly/dist/adapter.js",
       "signup-card": "/widgets/signup-card/dist/peer.js",
       "payment-breakdown": "/widgets/payment-breakdown/dist/peer.js",
       "react": "https://esm.sh/react@18",
@@ -65,6 +71,8 @@ The host's import map maps the bare specifier (e.g. `"signup-card"`) to one URL 
   }
 </script>
 ```
+
+On plain browser hosts, any `mountly/*` subpath you import must be mapped explicitly to a `.js` file.
 
 Use [`installRuntime`](/mountly/api/install-runtime/) to inject that React block from JS instead of writing it by hand.
 

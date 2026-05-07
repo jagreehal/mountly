@@ -14,7 +14,7 @@ pagefind: false
 
 <section class="hero">
   <div class="hero-copy">
-    <span class="eyebrow">v0.1 · 9 KB gzipped runtime</span>
+    <span class="eyebrow">v0.1 · ~9 KB gzipped core entry</span>
     <h1 class="hero-title">
       Framework components. Any page. <em>On demand.</em>
     </h1>
@@ -35,7 +35,7 @@ pagefind: false
     <div class="hero-stats sl-markdown-no-margin">
       <div class="hero-stat">
         <span class="value">~9KB</span>
-        <span>core gzipped</span>
+        <span>core entry (gzipped)</span>
       </div>
       <div class="hero-stat">
         <span class="value">7</span>
@@ -89,6 +89,23 @@ pagefind: false
       <span class="marker">unmount</span>
     </div>
   </div>
+</section>
+
+{/* ─── Runtime shape note ─── */}
+
+<section class="section">
+  <div class="section-head">
+    <span class="eyebrow">0x · Runtime shape</span>
+    <h2 class="section-title">
+      Small core + explicit subpaths.
+    </h2>
+  </div>
+  <p class="section-lead" style="max-width: 72ch;">
+    mountly keeps a small top-level core entry and exposes focused subpath
+    imports (for example <code>mountly/attach</code>, <code>mountly/elements</code>,
+    <code>mountly/shadow</code>, <code>mountly/assets</code>). In browser import-map
+    hosts, map only the subpaths you use.
+  </p>
 </section>
 
 {/* ─── Positioning ─── */}

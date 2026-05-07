@@ -67,6 +67,19 @@
       {
         "imports": {
           "mountly": "/packages/mountly/dist/index.js",
+          "mountly/shadow": "/packages/mountly/dist/shadow.js",
+          "mountly/assets": "/packages/mountly/dist/assets.js",
+          "mountly/adapter": "/packages/mountly/dist/adapter.js",
+          "mountly/attach": "/packages/mountly/dist/attach.js",
+          "mountly/elements": "/packages/mountly/dist/elements.js",
+          "mountly/bundle": "/packages/mountly/dist/bundle.js",
+          "mountly/island": "/packages/mountly/dist/island.js",
+          "mountly/mount": "/packages/mountly/dist/mount.js",
+          "mountly/runtime": "/packages/mountly/dist/runtime.js",
+          "mountly/triggers": "/packages/mountly/dist/triggers.js",
+          "mountly/url": "/packages/mountly/dist/url-state.js",
+          "mountly/data": "/packages/mountly/dist/data-source.js",
+          "mountly/bus": "/packages/mountly/dist/bus.js",
           "payment-breakdown": "/examples/payment-breakdown/dist/index.js",
           "image-lightbox": "/examples/image-lightbox/dist/index.js"
         }
@@ -150,7 +163,8 @@
       import {
         defineMountlyFeature,
         registerCustomElement,
-      } from "mountly";
+      } from "mountly/elements";
+      import { attach, onTrigger } from "mountly/attach";
       import {
         paymentBreakdown,
         paymentBreakdownDimensions,
@@ -187,9 +201,12 @@
         return originalFetch(url, init);
       };
 
-      paymentBreakdown.attach({
-        trigger: document.getElementById("trigger-1"),
+      const trigger1 = document.getElementById("trigger-1");
+      attach(paymentBreakdown, {
+        trigger: trigger1,
         mount: document.getElementById("slot-1"),
+        preloadOn: onTrigger.hover(trigger1, { delay: 100 }),
+        activateOn: onTrigger.click(trigger1),
         context: { paymentId: "pay_123" },
       });
 
@@ -216,10 +233,11 @@
       console.log("Recommended widget dimensions:", paymentBreakdownDimensions);
 
       // Section 4 — second widget wired up the same way.
-      imageLightbox.attach({
-        trigger: document.getElementById("lightbox-trigger"),
+      const lightboxTrigger = document.getElementById("lightbox-trigger");
+      attach(imageLightbox, {
+        trigger: lightboxTrigger,
         mount: document.getElementById("lightbox-mount"),
-        activateOn: "click",
+        activateOn: onTrigger.click(lightboxTrigger),
         props: {
           data: {
             src:

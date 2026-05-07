@@ -74,7 +74,7 @@ export function createUrlState<S extends QueryState = QueryState>(
 
   const currentUrl = (): URL => memoryUrl ? new URL(memoryUrl.href) : normalizeUrl();
   const read = (): Partial<S> => ({
-    ...(options.defaults ?? {}),
+    ...options.defaults,
     ...parseQuery<S>(currentUrl().searchParams),
   }) as Partial<S>;
 

@@ -2,7 +2,7 @@
 <html><body>
   <button id="island" data-mountly-island='{"id":"se1","moduleId":"boom","trigger":"click","preloadOn":false,"schemaVersion":1}'></button>
   <script type="module">
-    import { mountIslandFeature } from "/packages/mountly/dist/index.js";
+    import { mountIslandFeature } from "/packages/mountly/dist/island.js";
     const island = document.getElementById("island");
     mountIslandFeature(island, {
       boom: async () => { throw new Error("boom"); },

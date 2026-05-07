@@ -9,7 +9,7 @@ test.beforeEach(({ page }, testInfo) => {
 const HOST = "http://localhost:5175";
 
 test.describe("Island styling with JavaScript disabled", () => {
-  test("SSR'd island content remains styled when JS is off (noscript pattern)", async ({ browser }, testInfo) => {
+  test("SSR'd island content remains styled when JS is off (noscript pattern)", async ({ browser }) => {
     story.given("a browser context with JS disabled");
     const context = await browser.newContext({ javaScriptEnabled: false });
     const page = await context.newPage();

@@ -9,6 +9,8 @@ import { installRuntime } from "mountly";
 
 Writes an `<script type="importmap">` to `<head>` mapping `react`, `react/jsx-runtime`, `react-dom`, and `react-dom/client` to the URLs you pass. Pair with peer-built widgets so the host ships **one** copy of React for many widgets.
 
+It does not create mappings for `mountly/*` subpaths. If your browser host imports subpaths directly, map them yourself in your import map.
+
 ## Signature
 
 ```ts

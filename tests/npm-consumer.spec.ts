@@ -264,7 +264,7 @@ test('packed npm packages install into a clean Vite consumer and render all adap
             <tsrx-card trigger="click" props='{"name":"Ken"}'></tsrx-card>
 
             <script type="module">
-              import { defineMountlyFeature } from "mountly";
+              import { defineMountlyFeature } from "mountly/elements";
 
               defineMountlyFeature({
                 modules: {

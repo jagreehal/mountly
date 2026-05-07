@@ -6,49 +6,18 @@ test.beforeEach(({ page }, testInfo) => {
   story.init(testInfo);
 });
 
-
-test("registerBuiltInPlugins includes url-change and media", async ({ page }, testInfo) => {
-  story.given("the empty fixture is loaded");
-  await page.goto("http://localhost:5175/tests/fixtures/empty.html");
-  story.when("plugins are registered");
-  const hasPlugin = await page.evaluate(async () => {
-    const {
-      registerBuiltInPlugins,
-      getTriggerPlugin,
-    } = await import("/packages/mountly/dist/index.js");
-    registerBuiltInPlugins();
-    return {
-      urlChange: Boolean(getTriggerPlugin("url-change")),
-      media: Boolean(getTriggerPlugin("media")),
-    };
-  });
-
-  story.then("url-change plugin exists");
-  expect(hasPlugin.urlChange).toBe(true);
-  story.then("media plugin exists");
-  expect(hasPlugin.media).toBe(true);
-  const screenshotPath = testInfo.outputPath("built-in-plugins.png");
-  await page.screenshot({ path: screenshotPath, fullPage: true });
-  story.screenshot({ path: screenshotPath, alt: "Built-in plugins" });
-});
-
-test("url-change plugin listens to popstate/hashchange by default", async ({ page }, testInfo) => {
+test("eachUrlChange listens to popstate/hashchange by default", async ({ page }, testInfo) => {
   story.given("the empty fixture is loaded");
   await page.goto("http://localhost:5175/tests/fixtures/empty.html");
   story.when("popstate and hashchange events are dispatched");
   const events = await page.evaluate(async () => {
-    const {
-      registerBuiltInPlugins,
-      createPluginTrigger,
-    } = await import("/packages/mountly/dist/index.js");
-    registerBuiltInPlugins();
-
-    const trigger = document.createElement("button");
-    document.body.appendChild(trigger);
+    const { eachUrlChange } = await import(
+      "/packages/mountly/dist/triggers.js"
+    );
 
     const seen: string[] = [];
-    const cleanup = createPluginTrigger("url-change", trigger, (ctx: { event?: Event }) => {
-      seen.push(ctx.event?.type ?? "unknown");
+    const cleanup = eachUrlChange((ev: { event?: Event }) => {
+      seen.push(ev.event?.type ?? "history");
     });
 
     window.dispatchEvent(new PopStateEvent("popstate"));
@@ -67,31 +36,24 @@ test("url-change plugin listens to popstate/hashchange by default", async ({ pag
 
   story.then("both events are seen");
   expect(events).toEqual(["popstate", "hashchange"]);
-  const screenshotPath = testInfo.outputPath("url-change-plugin.png");
+  const screenshotPath = testInfo.outputPath("url-change.png");
   await page.screenshot({ path: screenshotPath, fullPage: true });
-  story.screenshot({ path: screenshotPath, alt: "URL change plugin" });
+  story.screenshot({ path: screenshotPath, alt: "eachUrlChange" });
 });
 
-test("url-change plugin can subscribe to pushState/replaceState", async ({ page }, testInfo) => {
+test("eachUrlChange can subscribe to pushState/replaceState only", async ({ page }, testInfo) => {
   story.given("the empty fixture is loaded");
   await page.goto("http://localhost:5175/tests/fixtures/empty.html");
   story.when("history.pushState and replaceState are called");
   const result = await page.evaluate(async () => {
-    const {
-      registerBuiltInPlugins,
-      createPluginTrigger,
-    } = await import("/packages/mountly/dist/index.js");
-    registerBuiltInPlugins();
-
-    const trigger = document.createElement("button");
-    document.body.appendChild(trigger);
+    const { eachUrlChange } = await import(
+      "/packages/mountly/dist/triggers.js"
+    );
 
     const seen: string[] = [];
-    const cleanup = createPluginTrigger(
-      "url-change",
-      trigger,
-      (ctx: { event?: Event }) => {
-        seen.push(ctx.event?.type ?? "unknown");
+    const cleanup = eachUrlChange(
+      (ev: { type: string }) => {
+        seen.push(ev.type);
       },
       { events: ["pushstate", "replacestate"] },
     );
@@ -104,35 +66,26 @@ test("url-change plugin can subscribe to pushState/replaceState", async ({ page 
     return seen;
   });
 
-  story.then("pushstate and replacestate events are seen");
-  expect(result).toEqual(["pushstate", "replacestate"]);
-  const screenshotPath = testInfo.outputPath("pushstate-plugin.png");
+  story.then("two history events are seen");
+  expect(result).toEqual(["url-change", "url-change"]);
+  const screenshotPath = testInfo.outputPath("pushstate.png");
   await page.screenshot({ path: screenshotPath, fullPage: true });
-  story.screenshot({ path: screenshotPath, alt: "PushState plugin" });
+  story.screenshot({ path: screenshotPath, alt: "history triggers" });
 });
 
-test("media plugin triggers immediately when query already matches", async ({ page }, testInfo) => {
+test("eachMedia fires immediately when query already matches", async ({ page }, testInfo) => {
   story.given("the empty fixture is loaded");
   await page.goto("http://localhost:5175/tests/fixtures/empty.html");
   story.when("the media query matches");
   const result = await page.evaluate(async () => {
-    const {
-      registerBuiltInPlugins,
-      createPluginTrigger,
-    } = await import("/packages/mountly/dist/index.js");
-    registerBuiltInPlugins();
-
-    const trigger = document.createElement("button");
-    document.body.appendChild(trigger);
+    const { eachMedia } = await import("/packages/mountly/dist/triggers.js");
 
     const seen: string[] = [];
-    const cleanup = createPluginTrigger(
-      "media",
-      trigger,
-      (ctx: { triggerType: string }) => {
-        seen.push(ctx.triggerType);
+    const cleanup = eachMedia(
+      "(min-width: 1px)",
+      (ev: { type: string }) => {
+        seen.push(ev.type);
       },
-      { query: "(min-width: 1px)" },
     );
     await new Promise((resolve) => setTimeout(resolve, 0));
     cleanup();
@@ -141,7 +94,7 @@ test("media plugin triggers immediately when query already matches", async ({ pa
 
   story.then("the media trigger fires immediately");
   expect(result).toEqual(["media"]);
-  const screenshotPath = testInfo.outputPath("media-plugin.png");
+  const screenshotPath = testInfo.outputPath("media.png");
   await page.screenshot({ path: screenshotPath, fullPage: true });
-  story.screenshot({ path: screenshotPath, alt: "Media plugin" });
+  story.screenshot({ path: screenshotPath, alt: "eachMedia" });
 });

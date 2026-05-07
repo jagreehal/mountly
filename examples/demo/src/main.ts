@@ -1,15 +1,19 @@
 import {
   defineMountlyFeature,
   registerCustomElement,
-  createDevtoolsPanel,
+} from "mountly/elements";
+import { attach, onTrigger } from "mountly/attach";
+import { eachKeyboard, eachLongPress, eachSwipe } from "mountly/gestures";
+import { createDevtoolsPanel } from "mountly/devtools";
+import {
   onAnalyticsEvent,
+  getAnalyticsLog,
+} from "mountly/analytics";
+import {
   createPredictivePrefetcher,
   createScrollPrefetcher,
-  registerBuiltInPlugins,
-  createPluginTrigger,
-  getAnalyticsLog,
   recordInteraction,
-} from "mountly";
+} from "mountly/prefetch";
 import { paymentBreakdown } from "payment-breakdown";
 import { imageLightbox } from "image-lightbox";
 
@@ -25,22 +29,21 @@ function syncStateBadge() {
   stateBadge.className = `status-badge status-${state}`;
 }
 
-// Reflect state changes triggered anywhere in the app.
 onAnalyticsEvent(syncStateBadge);
 syncStateBadge();
 
-// ── 1. Canonical use case: feature.attach() ────────────────────────────
+// ── 1. Canonical use case: attach() ────────────────────────────────────
 // One call wires hover-preload + click-mount + click-again-unmount.
-paymentBreakdown.attach({
+attach(paymentBreakdown, {
   trigger: triggerEl,
   mount: popoverEl,
+  preloadOn: onTrigger.hover(triggerEl, { delay: 100 }),
   context: { paymentId: "pay_123" },
   onMount: () => recordInteraction(paymentBreakdown.id),
   onError: (err) => console.error("[demo] payment feature failed:", err),
 });
 
 // ── 1b. Multi-instance: same feature, different contexts ───────────────
-// Each trigger has its own paymentId; data cache keys keep them separate.
 const multiTrigger1 = document.querySelector<HTMLElement>(
   '[data-testid="multi-trigger-1"]'
 )!;
@@ -54,14 +57,16 @@ const multiPopover2 = document.querySelector<HTMLElement>(
   '[data-testid="multi-popover-2"]'
 )!;
 
-paymentBreakdown.attach({
+attach(paymentBreakdown, {
   trigger: multiTrigger1,
   mount: multiPopover1,
+  preloadOn: onTrigger.hover(multiTrigger1, { delay: 100 }),
   context: { paymentId: "pay_123" },
 });
-paymentBreakdown.attach({
+attach(paymentBreakdown, {
   trigger: multiTrigger2,
   mount: multiPopover2,
+  preloadOn: onTrigger.hover(multiTrigger2, { delay: 100 }),
   context: { paymentId: "pay_456" },
 });
 
@@ -72,9 +77,10 @@ const skeletonTrigger = document.querySelector<HTMLElement>(
 const skeletonPopover = document.querySelector<HTMLElement>(
   '[data-testid="skeleton-popover"]'
 )!;
-paymentBreakdown.attach({
+attach(paymentBreakdown, {
   trigger: skeletonTrigger,
   mount: skeletonPopover,
+  preloadOn: onTrigger.hover(skeletonTrigger, { delay: 100 }),
   context: { paymentId: "pay_123" },
 });
 
@@ -152,11 +158,10 @@ const SAMPLE_SVG =
        </text>
      </svg>`
   );
-imageLightbox.attach({
+attach(imageLightbox, {
   trigger: lightboxTrigger,
   mount: lightboxMount,
-  activateOn: "click",
-  preloadOn: "hover",
+  preloadOn: onTrigger.hover(lightboxTrigger, { delay: 100 }),
   props: {
     data: {
       src: SAMPLE_SVG,
@@ -170,8 +175,6 @@ imageLightbox.attach({
 });
 
 // ── 2. Custom element ─────────────────────────────────────────────────
-// Register the feature BEFORE defining the element, so the upgrade can
-// resolve `module-id` synchronously when connectedCallback fires.
 registerCustomElement("payment-breakdown", () => paymentBreakdown);
 registerCustomElement("image-lightbox", () => imageLightbox);
 defineMountlyFeature();
@@ -247,15 +250,13 @@ const scrollObserver = new IntersectionObserver(
 );
 scrollObserver.observe(scrollTarget);
 
-// ── 5. Trigger plugins ────────────────────────────────────────────────
-registerBuiltInPlugins();
-
+// ── 5. Trigger composition (gestures) ─────────────────────────────────
 const swipeTarget = document.getElementById("swipe-trigger")!;
 const swipeStatus = document.getElementById("swipe-status")!;
-createPluginTrigger(
-  "swipe",
+eachSwipe(
   swipeTarget,
-  () => {
+  (ev) => {
+    if (ev.direction !== "right") return;
     swipeStatus.textContent = "Swipe detected!";
     swipeStatus.className = "status-badge status-mounted";
     setTimeout(() => {
@@ -263,13 +264,12 @@ createPluginTrigger(
       swipeStatus.className = "status-badge status-idle";
     }, 1500);
   },
-  { direction: "right", threshold: 30 }
+  { threshold: 30 }
 );
 
 const longpressTarget = document.getElementById("longpress-trigger")!;
 const longpressStatus = document.getElementById("longpress-status")!;
-createPluginTrigger(
-  "longpress",
+eachLongPress(
   longpressTarget,
   () => {
     longpressStatus.textContent = "Long press detected!";
@@ -284,8 +284,7 @@ createPluginTrigger(
 
 const keyboardTarget = document.getElementById("keyboard-trigger")!;
 const keyboardStatus = document.getElementById("keyboard-status")!;
-createPluginTrigger(
-  "keyboard",
+eachKeyboard(
   keyboardTarget,
   () => {
     keyboardStatus.textContent = "Key detected!";
@@ -317,8 +316,6 @@ onAnalyticsEvent((event) => {
 });
 
 // ── 7. Devtools ───────────────────────────────────────────────────────
-// Open by default in the demo so first-time visitors immediately see the
-// cache + lifecycle story. Click the panel header to collapse.
 createDevtoolsPanel({ position: "bottom-right", collapsed: false });
 
 // ── Log modal ─────────────────────────────────────────────────────────

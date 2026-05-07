@@ -114,6 +114,19 @@
           "react/jsx-runtime": "https://esm.sh/react@18.3.1/jsx-runtime",
           "react-dom/client": "https://esm.sh/react-dom@18.3.1/client",
           "mountly": "/packages/mountly/dist/index.js",
+          "mountly/shadow": "/packages/mountly/dist/shadow.js",
+          "mountly/assets": "/packages/mountly/dist/assets.js",
+          "mountly/adapter": "/packages/mountly/dist/adapter.js",
+          "mountly/attach": "/packages/mountly/dist/attach.js",
+          "mountly/elements": "/packages/mountly/dist/elements.js",
+          "mountly/bundle": "/packages/mountly/dist/bundle.js",
+          "mountly/island": "/packages/mountly/dist/island.js",
+          "mountly/mount": "/packages/mountly/dist/mount.js",
+          "mountly/runtime": "/packages/mountly/dist/runtime.js",
+          "mountly/triggers": "/packages/mountly/dist/triggers.js",
+          "mountly/url": "/packages/mountly/dist/url-state.js",
+          "mountly/data": "/packages/mountly/dist/data-source.js",
+          "mountly/bus": "/packages/mountly/dist/bus.js",
           "mountly-react": "/packages/adapters/mountly-react/dist/index.js",
           "signup-card": "/examples/signup-card/dist/peer.js"
         }
@@ -197,27 +210,24 @@
       import {
         defineMountlyFeature,
         registerCustomElement,
-      } from "mountly";
+      } from "mountly/elements";
+      import { attach, onTrigger } from "mountly/attach";
       import { signupCard } from "signup-card";
 
-      // Register the widget + define the <mountly-feature> element. Both
-      // required before the viewport-triggered widget below can upgrade.
       registerCustomElement("signup-card", () => signupCard);
       defineMountlyFeature();
 
-      // Hero subscribe button — imperative attach so we can pass an onSubmit
-      // callback that does a real network call (mocked here).
-      signupCard.attach({
-        trigger: document.getElementById("subscribe"),
+      const subscribeBtn = document.getElementById("subscribe");
+      attach(signupCard, {
+        trigger: subscribeBtn,
         mount: document.getElementById("subscribe-mount"),
-        preloadOn: "hover",
-        activateOn: "click",
+        preloadOn: onTrigger.hover(subscribeBtn, { delay: 100 }),
+        activateOn: onTrigger.click(subscribeBtn),
         props: {
           data: {
             headline: "Get the monthly digest",
             subline: "One email per month, the week's shipping roundup.",
             onSubmit: async (email) => {
-              // Pretend to POST to your backend.
               await new Promise((r) => setTimeout(r, 700));
               console.log("[acme] subscribed:", email);
             },

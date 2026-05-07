@@ -50,7 +50,7 @@ All Vite servers use `strictPort: true` — they fail loudly if the port is alre
 
 - **Programmatic `feature.mount(container, context, props)`** — Use when the host controls timing (e.g. after a route change, wizard step, or server-driven flag). Pair with `feature.update` / `unmount` when you need fine-grained lifecycle.
 
-Import maps in static HTML should map the bare specifier **`mountly`** to your built runtime, e.g. **`/packages/mountly/dist/index.js`** when serving the monorepo root. If you use peer widget builds (`dist/peer.js`), map **`react`**, **`react/jsx-runtime`**, and **`react-dom/client`** as well. Published hosts use the same specifier pattern with CDN URLs (see [plain-html/README.md](plain-html/README.md)).
+Import maps in static HTML should map **`mountly`** and any used **`mountly/*` subpaths** (for example `mountly/attach`, `mountly/elements`, `mountly/shadow`, `mountly/assets`, `mountly/adapter`) to concrete `.js` files under your runtime build. When using peer widget builds (`dist/peer.js`), map **`react`**, **`react/jsx-runtime`**, and **`react-dom/client`** as well. Published hosts use the same specifier pattern with CDN URLs (see [plain-html/README.md](plain-html/README.md)).
 
 ## Choosing a distribution
 

@@ -1,9 +1,9 @@
 <!doctype html>
 <html><body>
   <div id="island" data-mountly-island='{"id":"x","moduleId":"missing","schemaVersion":1}'></div>
-  <script type="importmap">{"imports":{"mountly":"/packages/mountly/dist/index.js"}}</script>
+  <script type="importmap">{"imports":{"mountly":"/packages/mountly/dist/island.js"}}</script>
   <script type="module">
-    import { mountIslandFeature } from "/packages/mountly/dist/index.js";
+    import { mountIslandFeature } from "/packages/mountly/dist/island.js";
     let caught = "";
     try {
       mountIslandFeature(document.getElementById("island"), {});

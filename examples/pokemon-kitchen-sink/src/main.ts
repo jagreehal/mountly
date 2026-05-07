@@ -1,10 +1,8 @@
-import {
-  createOnDemandFeature,
-  defineMountlyFeature,
-  registerCustomElement,
-  onAnalyticsEvent,
-  createDevtoolsPanel,
-} from "mountly";
+import { createOnDemandFeature } from "mountly";
+import { defineMountlyFeature, registerCustomElement } from "mountly/elements";
+import { attach, onTrigger } from "mountly/attach";
+import { onAnalyticsEvent } from "mountly/analytics";
+import { createDevtoolsPanel } from "mountly/devtools";
 
 type PokemonListItem = { name: string; url: string };
 type PokemonDetails = {
@@ -95,11 +93,11 @@ function createPokemonCard(item: PokemonListItem) {
   const trigger = card.querySelector("button") as HTMLButtonElement;
   const mount = card.querySelector(".mount") as HTMLDivElement;
 
-  pokemonFeature.attach({
+  attach(pokemonFeature, {
     trigger,
     mount,
-    preloadOn: "hover",
-    activateOn: "click",
+    preloadOn: onTrigger.hover(trigger, { delay: 100 }),
+    activateOn: onTrigger.click(trigger),
     context: { pokemonName: item.name },
     toggle: true,
     onError: (err) => {
@@ -137,11 +135,11 @@ document.getElementById("clear-mounts")!.addEventListener("click", () => {
 const viewportTrigger = document.getElementById("viewport-trigger")!;
 const viewportMount = document.getElementById("viewport-mount")!;
 const viewportActivate = document.getElementById("viewport-activate")!;
-pokemonFeature.attach({
+attach(pokemonFeature, {
   trigger: viewportTrigger,
   mount: viewportMount,
-  preloadOn: "viewport",
-  activateOn: "click",
+  preloadOn: onTrigger.viewport(viewportTrigger),
+  activateOn: onTrigger.click(viewportTrigger),
   context: { pokemonName: "pikachu" },
 });
 viewportActivate.addEventListener("click", () => {

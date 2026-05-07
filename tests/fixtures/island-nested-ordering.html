@@ -4,7 +4,7 @@
     <button id="child" data-mountly-island='{"id":"c","moduleId":"child","props":{"msg":"C"},"trigger":"click","preloadOn":false,"schemaVersion":1,"waitForParent":true}'></button>
   </button>
   <script type="module">
-    import { mountAllIslands } from "/packages/mountly/dist/index.js";
+    import { mountAllIslands } from "/packages/mountly/dist/island.js";
     const order = [];
     const parentMod = {
       mount(container, props) {

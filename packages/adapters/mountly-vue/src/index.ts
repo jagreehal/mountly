@@ -1,11 +1,7 @@
 import { createApp, h, type App, type Component } from "vue";
-import {
-  attachShadow,
-  loadCssText,
-  resolveCssUrl,
-  type AdapterOptions,
-  type WidgetModule,
-} from "mountly";
+import { attachShadow } from "mountly/shadow";
+import { loadCssText, resolveCssUrl } from "mountly/assets";
+import type { AdapterOptions, WidgetModule } from "mountly/adapter";
 
 interface VueWidgetOptions extends AdapterOptions {
   /**

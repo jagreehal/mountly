@@ -1,9 +1,9 @@
 <!doctype html>
 <html><body>
   <div id="island" data-mountly-island='{"id":"s1","moduleId":"demo","props":{"msg":"shadow"},"trigger":"click","preloadOn":false,"schemaVersion":1}'></div>
-  <script type="importmap">{"imports":{"mountly":"/packages/mountly/dist/index.js"}}</script>
+  <script type="importmap">{"imports":{"mountly":"/packages/mountly/dist/index.js","mountly/island":"/packages/mountly/dist/island.js","mountly/shadow":"/packages/mountly/dist/shadow.js","mountly/assets":"/packages/mountly/dist/assets.js","mountly/adapter":"/packages/mountly/dist/adapter.js"}}</script>
   <script type="module">
-    import { mountIslandFeature } from "/packages/mountly/dist/index.js";
+    import { mountIslandFeature } from "/packages/mountly/dist/island.js";
     import { createWidget } from "/packages/adapters/mountly-svelte/dist/index.js";
 
     class HelloComponent {

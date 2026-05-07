@@ -3,23 +3,22 @@
   <button id="trigger">load</button>
   <div id="mount"></div>
   <script type="importmap">
-    {"imports":{"vue":"https://esm.sh/vue@3","mountly":"/packages/mountly/dist/index.js"}}
+    {"imports":{"vue":"https://esm.sh/vue@3","mountly":"/packages/mountly/dist/index.js","mountly/shadow":"/packages/mountly/dist/shadow.js","mountly/assets":"/packages/mountly/dist/assets.js","mountly/adapter":"/packages/mountly/dist/adapter.js","mountly/attach":"/packages/mountly/dist/attach.js","mountly/bundle":"/packages/mountly/dist/bundle.js","mountly/elements":"/packages/mountly/dist/elements.js","mountly/island":"/packages/mountly/dist/island.js","mountly/mount":"/packages/mountly/dist/mount.js","mountly/runtime":"/packages/mountly/dist/runtime.js","mountly/triggers":"/packages/mountly/dist/triggers.js","mountly/url":"/packages/mountly/dist/url-state.js","mountly/data":"/packages/mountly/dist/data-source.js","mountly/bus":"/packages/mountly/dist/bus.js"}}
   </script>
   <script type="module">
-    import {
-      createOnDemandFeature,
-      __clearCssTextCache,
-    } from "/packages/mountly/dist/index.js";
+    import { createOnDemandFeature } from "/packages/mountly/dist/index.js";
+    import { attach, onTrigger } from "/packages/mountly/dist/attach.js";
+    import { __clearCssTextCache } from "/packages/mountly/dist/assets.js";
     __clearCssTextCache();
 
     const feature = createOnDemandFeature({
       moduleId: "vue-zc",
       moduleUrl: "/tests/fixtures/zero-config-vue-widget.js",
     });
-    feature.attach({
+    attach(feature, {
       trigger: document.getElementById("trigger"),
-      mountContainer: document.getElementById("mount"),
-      activateOn: "click",
+      mount: document.getElementById("mount"),
+      activateOn: onTrigger.click(document.getElementById("trigger")),
     });
     document.getElementById("trigger").click();
 

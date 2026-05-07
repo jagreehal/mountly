@@ -34,6 +34,11 @@ Each widget bundle inlines React. One widget on one page, zero host configuratio
   {
     "imports": {
       "mountly": "/packages/mountly/dist/index.js",
+      "mountly/attach": "/packages/mountly/dist/attach.js",
+      "mountly/elements": "/packages/mountly/dist/elements.js",
+      "mountly/shadow": "/packages/mountly/dist/shadow.js",
+      "mountly/assets": "/packages/mountly/dist/assets.js",
+      "mountly/adapter": "/packages/mountly/dist/adapter.js",
       "payment-breakdown": "/examples/payment-breakdown/dist/index.js"
     }
   }
@@ -54,6 +59,11 @@ Widgets use their `peer` entry (external React). Host supplies React once via th
       "react/jsx-runtime": "https://esm.sh/react@18.3.1/jsx-runtime",
       "react-dom/client": "https://esm.sh/react-dom@18.3.1/client",
       "mountly": "/packages/mountly/dist/index.js",
+      "mountly/attach": "/packages/mountly/dist/attach.js",
+      "mountly/elements": "/packages/mountly/dist/elements.js",
+      "mountly/shadow": "/packages/mountly/dist/shadow.js",
+      "mountly/assets": "/packages/mountly/dist/assets.js",
+      "mountly/adapter": "/packages/mountly/dist/adapter.js",
       "mountly-react": "/packages/adapters/mountly-react/dist/index.js",
       "payment-breakdown": "/examples/payment-breakdown/dist/peer.js",
       "image-lightbox": "/examples/image-lightbox/dist/peer.js"
@@ -81,6 +91,11 @@ If you publish the widget to a CDN like jsDelivr, the import map entries become 
   {
     "imports": {
       "mountly": "https://cdn.jsdelivr.net/npm/mountly@1/dist/index.js",
+      "mountly/attach": "https://cdn.jsdelivr.net/npm/mountly@1/dist/attach.js",
+      "mountly/elements": "https://cdn.jsdelivr.net/npm/mountly@1/dist/elements.js",
+      "mountly/shadow": "https://cdn.jsdelivr.net/npm/mountly@1/dist/shadow.js",
+      "mountly/assets": "https://cdn.jsdelivr.net/npm/mountly@1/dist/assets.js",
+      "mountly/adapter": "https://cdn.jsdelivr.net/npm/mountly@1/dist/adapter.js",
       "mountly-react": "https://cdn.jsdelivr.net/npm/mountly-react@1/dist/index.js",
       "payment-breakdown": "https://cdn.jsdelivr.net/npm/payment-breakdown@1/dist/peer.js",
       "react": "https://esm.sh/react@18.3.1",

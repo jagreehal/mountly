@@ -12,6 +12,7 @@ test("attach cleanup unmounts active instance and detaches listeners", async ({ 
 
   const result = await page.evaluate(async () => {
     const { createOnDemandFeature } = await import("/packages/mountly/dist/index.js");
+    const { attach, onTrigger } = await import("/packages/mountly/dist/attach.js");
     const trigger = document.createElement("button");
     const mount = document.createElement("div");
     document.body.appendChild(trigger);
@@ -34,11 +35,10 @@ test("attach cleanup unmounts active instance and detaches listeners", async ({ 
       render: ({ mod, container, props }) => mod.mount(container, props),
     });
 
-    const detach = feature.attach({
+    const detach = attach(feature, {
       trigger,
       mount,
-      preloadOn: false,
-      activateOn: "click",
+      activateOn: onTrigger.click(trigger),
       props: { label: "first" },
     });
 
@@ -68,6 +68,7 @@ test("attach with toggle=false keeps widget mounted on second activation click",
 
   const result = await page.evaluate(async () => {
     const { createOnDemandFeature } = await import("/packages/mountly/dist/index.js");
+    const { attach, onTrigger } = await import("/packages/mountly/dist/attach.js");
     const trigger = document.createElement("button");
     const mount = document.createElement("div");
     document.body.appendChild(trigger);
@@ -89,11 +90,10 @@ test("attach with toggle=false keeps widget mounted on second activation click",
       render: ({ mod, container, props }) => mod.mount(container, props),
     });
 
-    feature.attach({
+    attach(feature, {
       trigger,
       mount,
-      preloadOn: false,
-      activateOn: "click",
+      activateOn: onTrigger.click(trigger),
       toggle: false,
     });
 
@@ -126,59 +126,58 @@ test("update falls back to render remount when module has no update and getMount
     document.body.appendChild(c1);
     document.body.appendChild(c2);
 
-    let mountCalls = 0;
-    let unmountCalls = 0;
+    let renderCount = 0;
+    let mountCount = 0;
     const feature = createOnDemandFeature({
-      moduleId: "feature-update-fallback",
+      moduleId: "feature-update-remount",
       loadModule: async () => ({
         mount(container: HTMLElement, props: Record<string, unknown>) {
-          mountCalls += 1;
-          container.textContent = String(props.label ?? "");
+          mountCount += 1;
+          container.textContent = `mount ${String(props.value ?? "")}`;
         },
-        unmount() {
-          unmountCalls += 1;
+        unmount(container: HTMLElement) {
+          container.textContent = "";
         },
       }),
-      render: ({ mod, container, props }) => mod.mount(container, props),
+      render: ({ mod, container, props }) => {
+        renderCount += 1;
+        mod.mount(container, props);
+      },
     });
 
-    const h1 = await feature.mount(c1, undefined, { label: "one" });
-    const h2 = await feature.mount(c2, undefined, { label: "two" });
-    const mountsAfterMount = feature.getMounts().length;
+    await feature.mount(c1, undefined, { value: 1 });
+    await feature.mount(c2, undefined, { value: 2 });
 
-    await feature.update(c1, { label: "one-updated" });
-    const mountsAfterUpdate = feature.getMounts().length;
+    const mountsBefore = feature.getMounts().length;
 
-    h1.unmount();
-    const mountsAfterUnmount1 = feature.getMounts().length;
-    h2.unmount();
-    const mountsAfterUnmount2 = feature.getMounts().length;
+    await feature.update(c1, { value: 99 });
+
+    const mountsAfter = feature.getMounts().length;
 
     return {
-      mountCalls,
-      unmountCalls,
-      mountsAfterMount,
-      mountsAfterUpdate,
-      mountsAfterUnmount1,
-      mountsAfterUnmount2,
+      mountsBefore,
+      mountsAfter,
+      mountCount,
+      renderCount,
       c1Text: c1.textContent,
+      c2Text: c2.textContent,
     };
   });
 
-  expect(result.mountCalls).toBe(3);
-  expect(result.unmountCalls).toBe(2);
-  expect(result.mountsAfterMount).toBe(2);
-  expect(result.mountsAfterUpdate).toBe(2);
-  expect(result.mountsAfterUnmount1).toBe(1);
-  expect(result.mountsAfterUnmount2).toBe(0);
-  expect(result.c1Text).toBe("one-updated");
+  expect(result.mountsBefore).toBe(2);
+  expect(result.mountsAfter).toBe(2);
+  expect(result.mountCount).toBe(3);
+  expect(result.renderCount).toBe(3);
+  expect(result.c1Text).toBe("mount 99");
+  expect(result.c2Text).toBe("mount 2");
 });
 
-test("attach onError receives load failure without crashing", async ({ page }) => {
+test("attach onError reports loadModule failures from activation", async ({ page }) => {
   await page.goto("http://localhost:5175/tests/fixtures/empty.html");
 
   const result = await page.evaluate(async () => {
     const { createOnDemandFeature } = await import("/packages/mountly/dist/index.js");
+    const { attach, onTrigger } = await import("/packages/mountly/dist/attach.js");
     const trigger = document.createElement("button");
     const mount = document.createElement("div");
     document.body.appendChild(trigger);
@@ -193,11 +192,10 @@ test("attach onError receives load failure without crashing", async ({ page }) =
       render: () => {},
     });
 
-    feature.attach({
+    attach(feature, {
       trigger,
       mount,
-      preloadOn: false,
-      activateOn: "click",
+      activateOn: onTrigger.click(trigger),
       onError: (err) => {
         onErrorMessage =
           err instanceof Error ? err.message : String(err);
@@ -224,14 +222,14 @@ test("attach throws an actionable error when trigger is null", async ({ page }) 
 
   const result = await page.evaluate(async () => {
     const { createOnDemandFeature } = await import("/packages/mountly/dist/index.js");
+    const { attach } = await import("/packages/mountly/dist/attach.js");
     const feature = createOnDemandFeature({
       moduleId: "null-trigger-feature",
       loadModule: async () => ({ mount() {}, unmount() {} }),
       render: () => {},
     });
     try {
-      // Simulate the very common mistake: getElementById missed the element.
-      feature.attach({ trigger: null as unknown as HTMLElement });
+      attach(feature, { trigger: null as unknown as HTMLElement });
       return { threw: false, message: "" };
     } catch (e) {
       return {
@@ -252,6 +250,7 @@ test("attach throws an actionable error when mount is null", async ({ page }) =>
 
   const result = await page.evaluate(async () => {
     const { createOnDemandFeature } = await import("/packages/mountly/dist/index.js");
+    const { attach } = await import("/packages/mountly/dist/attach.js");
     const trigger = document.createElement("button");
     document.body.appendChild(trigger);
     const feature = createOnDemandFeature({
@@ -260,7 +259,7 @@ test("attach throws an actionable error when mount is null", async ({ page }) =>
       render: () => {},
     });
     try {
-      feature.attach({ trigger, mount: null as unknown as HTMLElement });
+      attach(feature, { trigger, mount: null as unknown as HTMLElement });
       return { threw: false, message: "" };
     } catch (e) {
       return {
@@ -280,6 +279,7 @@ test("loadModule resolution failure is wrapped with import-map hint", async ({ p
 
   const result = await page.evaluate(async () => {
     const { createOnDemandFeature } = await import("/packages/mountly/dist/index.js");
+    const { attach, onTrigger } = await import("/packages/mountly/dist/attach.js");
     const trigger = document.createElement("button");
     const mount = document.createElement("div");
     document.body.appendChild(trigger);
@@ -289,8 +289,6 @@ test("loadModule resolution failure is wrapped with import-map hint", async ({ p
     const feature = createOnDemandFeature({
       moduleId: "missing-importmap-widget",
       loadModule: async () => {
-        // Simulate the browser error a bare specifier import throws when the
-        // import map is missing. Real-world: `import "missing-importmap-widget"`.
         throw new Error(
           "Failed to resolve module specifier 'missing-importmap-widget'",
         );
@@ -298,11 +296,10 @@ test("loadModule resolution failure is wrapped with import-map hint", async ({ p
       render: () => {},
     });
 
-    feature.attach({
+    attach(feature, {
       trigger,
       mount,
-      preloadOn: false,
-      activateOn: "click",
+      activateOn: onTrigger.click(trigger),
       onError: (err) => {
         captured = err instanceof Error ? err.message : String(err);
       },
@@ -319,11 +316,12 @@ test("loadModule resolution failure is wrapped with import-map hint", async ({ p
   expect(result.captured).toContain("Original:");
 });
 
-test("attach with activateOn=url-change mounts on history updates and toggles on next update", async ({ page }) => {
+test("attach with activateOn=urlChange mounts on history updates and toggles on next update", async ({ page }) => {
   await page.goto("http://localhost:5175/tests/fixtures/empty.html");
 
   const result = await page.evaluate(async () => {
     const { createOnDemandFeature } = await import("/packages/mountly/dist/index.js");
+    const { attach, onTrigger } = await import("/packages/mountly/dist/attach.js");
     const trigger = document.createElement("button");
     const mountEl = document.createElement("div");
     document.body.appendChild(trigger);
@@ -347,11 +345,10 @@ test("attach with activateOn=url-change mounts on history updates and toggles on
       render: ({ mod, container }) => mod.mount(container, {}),
     });
 
-    const detach = feature.attach({
+    const detach = attach(feature, {
       trigger,
       mount: mountEl,
-      activateOn: "url-change",
-      activateOnUrlEvents: ["pushstate"],
+      activateOn: onTrigger.urlChange({ events: ["pushstate"] }),
     });
 
     history.pushState({ n: 1 }, "", "?n=1");
@@ -373,11 +370,12 @@ test("attach with activateOn=url-change mounts on history updates and toggles on
   expect(result.state).toBe("activated");
 });
 
-test("url-change attach cleanup detaches history listeners", async ({ page }) => {
+test("urlChange attach cleanup detaches history listeners", async ({ page }) => {
   await page.goto("http://localhost:5175/tests/fixtures/empty.html");
 
   const result = await page.evaluate(async () => {
     const { createOnDemandFeature } = await import("/packages/mountly/dist/index.js");
+    const { attach, onTrigger } = await import("/packages/mountly/dist/attach.js");
     const trigger = document.createElement("button");
     const mountEl = document.createElement("div");
     document.body.appendChild(trigger);
@@ -398,11 +396,10 @@ test("url-change attach cleanup detaches history listeners", async ({ page }) =>
       render: ({ mod, container }) => mod.mount(container, {}),
     });
 
-    const detach = feature.attach({
+    const detach = attach(feature, {
       trigger,
       mount: mountEl,
-      activateOn: "url-change",
-      activateOnUrlEvents: ["replacestate"],
+      activateOn: onTrigger.urlChange({ events: ["replacestate"] }),
       toggle: false,
     });
 
@@ -429,6 +426,7 @@ test("attach with activateOn=idle mounts without user interaction", async ({ pag
 
   const result = await page.evaluate(async () => {
     const { createOnDemandFeature } = await import("/packages/mountly/dist/index.js");
+    const { attach, onTrigger } = await import("/packages/mountly/dist/attach.js");
     const trigger = document.createElement("button");
     const mountEl = document.createElement("div");
     document.body.appendChild(trigger);
@@ -446,12 +444,10 @@ test("attach with activateOn=idle mounts without user interaction", async ({ pag
       render: ({ mod, container }) => mod.mount(container, {}),
     });
 
-    feature.attach({
+    attach(feature, {
       trigger,
       mount: mountEl,
-      preloadOn: false,
-      activateOn: "idle",
-      idleTimeout: 1,
+      activateOn: onTrigger.idle({ timeout: 1 }),
     });
 
     await new Promise((resolve) => setTimeout(resolve, 20));
@@ -472,6 +468,7 @@ test("attach with activateOn=media mounts when media query matches", async ({ pa
 
   const result = await page.evaluate(async () => {
     const { createOnDemandFeature } = await import("/packages/mountly/dist/index.js");
+    const { attach, onTrigger } = await import("/packages/mountly/dist/attach.js");
     const trigger = document.createElement("button");
     const mountEl = document.createElement("div");
     document.body.appendChild(trigger);
@@ -489,12 +486,10 @@ test("attach with activateOn=media mounts when media query matches", async ({ pa
       render: ({ mod, container }) => mod.mount(container, {}),
     });
 
-    feature.attach({
+    attach(feature, {
       trigger,
       mount: mountEl,
-      preloadOn: false,
-      activateOn: "media",
-      activateOnMediaQuery: "(min-width: 1px)",
+      activateOn: onTrigger.media("(min-width: 1px)"),
     });
 
     await new Promise((resolve) => setTimeout(resolve, 20));
@@ -515,6 +510,7 @@ test("attach with preloadOn=media preloads module before click activation", asyn
 
   const result = await page.evaluate(async () => {
     const { createOnDemandFeature } = await import("/packages/mountly/dist/index.js");
+    const { attach, onTrigger } = await import("/packages/mountly/dist/attach.js");
     const trigger = document.createElement("button");
     const mountEl = document.createElement("div");
     document.body.appendChild(trigger);
@@ -534,12 +530,11 @@ test("attach with preloadOn=media preloads module before click activation", asyn
       render: ({ mod, container }) => mod.mount(container, {}),
     });
 
-    feature.attach({
+    attach(feature, {
       trigger,
       mount: mountEl,
-      preloadOn: "media",
-      preloadOnMediaQuery: "(min-width: 1px)",
-      activateOn: "click",
+      preloadOn: onTrigger.media("(min-width: 1px)"),
+      activateOn: onTrigger.click(trigger),
     });
 
     await new Promise((resolve) => setTimeout(resolve, 20));
@@ -577,6 +572,7 @@ test("viewportRootMargin is forwarded to IntersectionObserver for viewport trigg
 
   const result = await page.evaluate(async () => {
     const { createOnDemandFeature } = await import("/packages/mountly/dist/index.js");
+    const { attach, onTrigger } = await import("/packages/mountly/dist/attach.js");
     const OriginalIO = window.IntersectionObserver;
     const captured: Array<{ threshold?: number | number[]; rootMargin?: string }> = [];
 
@@ -618,12 +614,11 @@ test("viewportRootMargin is forwarded to IntersectionObserver for viewport trigg
         render: ({ mod, container }) => mod.mount(container, {}),
       });
 
-      feature.attach({
+      attach(feature, {
         trigger,
         mount: mountEl,
-        preloadOn: "viewport",
-        activateOn: "viewport",
-        viewportRootMargin: "220px",
+        preloadOn: onTrigger.viewport(trigger, { rootMargin: "220px" }),
+        activateOn: onTrigger.viewport(trigger, { rootMargin: "220px" }),
       });
 
       await new Promise((resolve) => setTimeout(resolve, 0));

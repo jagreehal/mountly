@@ -53,6 +53,11 @@ The two widget instances share one React copy because both import-map entries po
          "react/jsx-runtime": "https://esm.sh/react@18.3.1/jsx-runtime",
          "react-dom/client": "https://esm.sh/react-dom@18.3.1/client",
          "mountly": "https://cdn.jsdelivr.net/npm/mountly@1/dist/index.js",
+         "mountly/elements": "https://cdn.jsdelivr.net/npm/mountly@1/dist/elements.js",
+         "mountly/attach": "https://cdn.jsdelivr.net/npm/mountly@1/dist/attach.js",
+         "mountly/shadow": "https://cdn.jsdelivr.net/npm/mountly@1/dist/shadow.js",
+         "mountly/assets": "https://cdn.jsdelivr.net/npm/mountly@1/dist/assets.js",
+         "mountly/adapter": "https://cdn.jsdelivr.net/npm/mountly@1/dist/adapter.js",
          "mountly-react": "https://cdn.jsdelivr.net/npm/mountly-react@1/dist/index.js",
          "signup-card": "https://cdn.jsdelivr.net/npm/signup-card@1/dist/peer.js"
        }
@@ -67,6 +72,6 @@ The two widget instances share one React copy because both import-map entries po
    </script>
    ```
 
-   In this monorepo during local dev, the import map in `index.html` points `mountly` and `signup-card` at `/packages/mountly/dist/index.js` and `/examples/signup-card/dist/peer.js` instead.
+   In this monorepo during local dev, the import map in `index.html` points those entries at `/packages/mountly/dist/*.js` and `/examples/signup-card/dist/peer.js` instead.
 
 That's it. Zero framework on the host page. Full React in the widget's shadow root.
