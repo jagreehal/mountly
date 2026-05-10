@@ -18,8 +18,8 @@ importers:
         specifier: ^25.6.0
         version: 25.6.0
       executable-stories-formatters:
-        specifier: ^0.7.12
-        version: 0.7.12
+        specifier: ^0.7.14
+        version: 0.7.14
       executable-stories-playwright:
         specifier: ^8.2.9
         version: 8.2.9(@playwright/test@1.59.1)
@@ -294,7 +294,7 @@ importers:
         specifier: ^19.2.3
         version: 19.2.3(@types/react@19.2.14)
       mountly:
-        specifier: ^0.2.0
+        specifier: ^0.2.2
         version: link:../../mountly
       react:
         specifier: ^19.2.5
@@ -312,7 +312,7 @@ importers:
   packages/adapters/mountly-svelte:
     devDependencies:
       mountly:
-        specifier: ^0.2.0
+        specifier: ^0.2.2
         version: link:../../mountly
       svelte:
         specifier: ^5.0.0
@@ -327,7 +327,7 @@ importers:
   packages/adapters/mountly-tsrx:
     devDependencies:
       mountly:
-        specifier: ^0.2.0
+        specifier: ^0.2.2
         version: link:../../mountly
       tsup:
         specifier: ^8.5.1
@@ -339,7 +339,7 @@ importers:
   packages/adapters/mountly-vue:
     devDependencies:
       mountly:
-        specifier: ^0.2.0
+        specifier: ^0.2.2
         version: link:../../mountly
       tsup:
         specifier: ^8.5.1
@@ -1833,6 +1833,7 @@ packages:
 
   '@ungap/structured-clone@1.3.0':
     resolution: {integrity: sha512-WmoN8qaIAo7WTYWbAZuG8PYEhn5fkz7dZrqTBZ7dtt//lL2Gwms1IcnQ5yHqjDfX8Ft5j4YzDM23f87zBfDe9g==}
+    deprecated: Potential CWE-502 - Update to 1.3.1 or higher
 
   '@vitejs/plugin-react@5.2.0':
     resolution: {integrity: sha512-YmKkfhOAi3wsB1PhJq5Scj3GXMn3WvtQ/JC0xoopuHoXSdmtdStOpFrYaT1kie2YgFBcIe64ROzMYRjCrYOdYw==}
@@ -2571,6 +2572,11 @@ packages:
     engines: {node: '>=22'}
     hasBin: true
 
+  executable-stories-formatters@0.7.14:
+    resolution: {integrity: sha512-FPEWHPIlBd7C+bntxvzldlUB73qJ2/W3CtvEW/6nwKJdW1MZ/RgX5bJLygKK3biB9SCGCnmatiU2IbA8153M0Q==}
+    engines: {node: '>=22'}
+    hasBin: true
+
   executable-stories-playwright@8.2.9:
     resolution: {integrity: sha512-j6nOWqLgPPPyN46mAE0LHNuADsDgxJ11ki94TdHas+k67BtGnXqQhs0XoItqDIKPiWJrMTOIueDLUbvqLcE5uA==}
     hasBin: true
@@ -2615,6 +2621,9 @@ packages:
 
   fast-uri@3.1.0:
     resolution: {integrity: sha512-iPeeDKJSWf4IEOasVVrknXpaBV0IApz/gp7S2bb7Z4Lljbl2MGJRqInZiUrQwV16cpzw/D3S5j5Julj/gT52AA==}
+
+  fast-uri@3.1.2:
+    resolution: {integrity: sha512-rVjf7ArG3LTk+FS6Yw81V1DLuZl1bRbNrev6Tmd/9RaroeeRRJhAt7jg/6YFxbvAQXUCavSoZhPPj6oOx+5KjQ==}
 
   fast-wrap-ansi@0.2.0:
     resolution: {integrity: sha512-rLV8JHxTyhVmFYhBJuMujcrHqOT2cnO5Zxj37qROj23CP39GXubJRBUFF0z8KFK77Uc0SukZUf7JZhsVEQ6n8w==}
@@ -5840,7 +5849,7 @@ snapshots:
   ajv@8.20.0:
     dependencies:
       fast-deep-equal: 3.1.3
-      fast-uri: 3.1.0
+      fast-uri: 3.1.2
       json-schema-traverse: 1.0.0
       require-from-string: 2.0.2
 
@@ -6389,6 +6398,12 @@ snapshots:
       '@cucumber/messages': 32.3.1
       ajv: 8.20.0
 
+  executable-stories-formatters@0.7.14:
+    dependencies:
+      '@cucumber/html-formatter': 23.1.0(@cucumber/messages@32.3.1)
+      '@cucumber/messages': 32.3.1
+      ajv: 8.20.0
+
   executable-stories-playwright@8.2.9(@playwright/test@1.59.1):
     dependencies:
       '@playwright/test': 1.59.1
@@ -6431,6 +6446,8 @@ snapshots:
       fast-string-truncated-width: 3.0.3
 
   fast-uri@3.1.0: {}
+
+  fast-uri@3.1.2: {}
 
   fast-wrap-ansi@0.2.0:
     dependencies:
