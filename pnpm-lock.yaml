@@ -69,8 +69,8 @@ importers:
         specifier: ^19.2.5
         version: 19.2.5
       react-dom:
-        specifier: ^19.2.5
-        version: 19.2.5(react@19.2.5)
+        specifier: ^19.2.6
+        version: 19.2.6(react@19.2.5)
       svelte:
         specifier: ^5.55.5
         version: 5.55.5(@typescript-eslint/types@8.59.1)
@@ -109,8 +109,8 @@ importers:
         specifier: ^19.2.5
         version: 19.2.5
       react-dom:
-        specifier: ^19.2.5
-        version: 19.2.5(react@19.2.5)
+        specifier: ^19.2.6
+        version: 19.2.6(react@19.2.5)
     devDependencies:
       '@types/react':
         specifier: ^19.2.14
@@ -153,8 +153,8 @@ importers:
         specifier: ^19.2.5
         version: 19.2.5
       react-dom:
-        specifier: ^19.2.5
-        version: 19.2.5(react@19.2.5)
+        specifier: ^19.2.6
+        version: 19.2.6(react@19.2.5)
       tailwindcss:
         specifier: ^4.2.4
         version: 4.2.4
@@ -196,8 +196,8 @@ importers:
         specifier: ^19.2.5
         version: 19.2.5
       react-dom:
-        specifier: ^19.2.5
-        version: 19.2.5(react@19.2.5)
+        specifier: ^19.2.6
+        version: 19.2.6(react@19.2.5)
       tailwindcss:
         specifier: ^4.2.4
         version: 4.2.4
@@ -223,8 +223,8 @@ importers:
         specifier: ^19.2.5
         version: 19.2.5
       react-dom:
-        specifier: ^19.2.5
-        version: 19.2.5(react@19.2.5)
+        specifier: ^19.2.6
+        version: 19.2.6(react@19.2.5)
     devDependencies:
       '@types/react':
         specifier: ^19.2.14
@@ -273,8 +273,8 @@ importers:
         specifier: ^19.2.5
         version: 19.2.5
       react-dom:
-        specifier: ^19.2.5
-        version: 19.2.5(react@19.2.5)
+        specifier: ^19.2.6
+        version: 19.2.6(react@19.2.5)
       tailwindcss:
         specifier: ^4.2.4
         version: 4.2.4
@@ -294,14 +294,14 @@ importers:
         specifier: ^19.2.3
         version: 19.2.3(@types/react@19.2.14)
       mountly:
-        specifier: ^0.2.0
+        specifier: ^0.2.2
         version: link:../../mountly
       react:
         specifier: ^19.2.5
         version: 19.2.5
       react-dom:
-        specifier: ^19.2.5
-        version: 19.2.5(react@19.2.5)
+        specifier: ^19.2.6
+        version: 19.2.6(react@19.2.5)
       tsup:
         specifier: ^8.5.1
         version: 8.5.1(jiti@2.6.1)(postcss@8.5.13)(typescript@6.0.3)
@@ -312,7 +312,7 @@ importers:
   packages/adapters/mountly-svelte:
     devDependencies:
       mountly:
-        specifier: ^0.2.0
+        specifier: ^0.2.2
         version: link:../../mountly
       svelte:
         specifier: ^5.0.0
@@ -327,7 +327,7 @@ importers:
   packages/adapters/mountly-tsrx:
     devDependencies:
       mountly:
-        specifier: ^0.2.0
+        specifier: ^0.2.2
         version: link:../../mountly
       tsup:
         specifier: ^8.5.1
@@ -339,7 +339,7 @@ importers:
   packages/adapters/mountly-vue:
     devDependencies:
       mountly:
-        specifier: ^0.2.0
+        specifier: ^0.2.2
         version: link:../../mountly
       tsup:
         specifier: ^8.5.1
@@ -1833,6 +1833,7 @@ packages:
 
   '@ungap/structured-clone@1.3.0':
     resolution: {integrity: sha512-WmoN8qaIAo7WTYWbAZuG8PYEhn5fkz7dZrqTBZ7dtt//lL2Gwms1IcnQ5yHqjDfX8Ft5j4YzDM23f87zBfDe9g==}
+    deprecated: Potential CWE-502 - Update to 1.3.1 or higher
 
   '@vitejs/plugin-react@5.2.0':
     resolution: {integrity: sha512-YmKkfhOAi3wsB1PhJq5Scj3GXMn3WvtQ/JC0xoopuHoXSdmtdStOpFrYaT1kie2YgFBcIe64ROzMYRjCrYOdYw==}
@@ -3529,10 +3530,10 @@ packages:
     resolution: {integrity: sha512-y3bGgqKj3QBdxLbLkomlohkvsA8gdAiUQlSBJnBhfn+BPxg4bc62d8TcBW15wavDfgexCgccckhcZvywyQYPOw==}
     hasBin: true
 
-  react-dom@19.2.5:
-    resolution: {integrity: sha512-J5bAZz+DXMMwW/wV3xzKke59Af6CHY7G4uYLN1OvBcKEsWOs4pQExj86BBKamxl/Ik5bx9whOrvBlSDfWzgSag==}
+  react-dom@19.2.6:
+    resolution: {integrity: sha512-0prMI+hvBbPjsWnxDLxlCGyM8PN6UuWjEUCYmZhO67xIV9Xasa/r/vDnq+Xyq4Lo27g8QSbO5YzARu0D1Sps3g==}
     peerDependencies:
-      react: ^19.2.5
+      react: ^19.2.6
 
   react-refresh@0.18.0:
     resolution: {integrity: sha512-QgT5//D3jfjJb6Gsjxv0Slpj23ip+HtOpnNgnb2S5zU3CB26G/IDPGoy4RJB42wzFE46DRsstbW6tKHoKbhAxw==}
@@ -7689,7 +7690,7 @@ snapshots:
       minimist: 1.2.8
       strip-json-comments: 2.0.1
 
-  react-dom@19.2.5(react@19.2.5):
+  react-dom@19.2.6(react@19.2.5):
     dependencies:
       react: 19.2.5
       scheduler: 0.27.0
