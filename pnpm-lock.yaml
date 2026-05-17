@@ -24,8 +24,8 @@ importers:
         specifier: ^8.2.12
         version: 8.2.12(@playwright/test@1.59.1)
       executable-stories-vitest:
-        specifier: ^8.1.13
-        version: 8.1.13(vitest@4.1.5(@types/node@25.6.0)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.7.0)))
+        specifier: ^8.1.18
+        version: 8.1.18(vitest@4.1.5(@types/node@25.6.0)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.7.0)))
       serve:
         specifier: ^14.2.6
         version: 14.2.6
@@ -2561,11 +2561,6 @@ packages:
     resolution: {integrity: sha512-8uSpZZocAZRBAPIEINJj3Lo9HyGitllczc27Eh5YYojjMFMn8yHMDMaUHE2Jqfq05D/wucwI4JGURyXt1vchyg==}
     engines: {node: '>=10'}
 
-  executable-stories-formatters@0.7.12:
-    resolution: {integrity: sha512-NaBFkpK/02fOCOY0JPh4amcSuiP9qOJDggQkKP2L9jIdtFlq3PATZPcM9grTJeXmuv2GYl9MI3G6zDZGucr13Q==}
-    engines: {node: '>=22'}
-    hasBin: true
-
   executable-stories-formatters@0.7.14:
     resolution: {integrity: sha512-FPEWHPIlBd7C+bntxvzldlUB73qJ2/W3CtvEW/6nwKJdW1MZ/RgX5bJLygKK3biB9SCGCnmatiU2IbA8153M0Q==}
     engines: {node: '>=22'}
@@ -2586,8 +2581,8 @@ packages:
       autotel:
         optional: true
 
-  executable-stories-vitest@8.1.13:
-    resolution: {integrity: sha512-LLO6ONA5KNVGv8IPJRCjvGimRGSF1r2R9LGlADHwk+U95luaEC75c/ol8jatKSD013qNHweP/tH6ym7m4E5wxw==}
+  executable-stories-vitest@8.1.18:
+    resolution: {integrity: sha512-kxhNOlejmQeRCls9cFABa0aPppErwW1xEnVj3dskQeiyw0Bps8bOACVK3auCIbnymA97EeRKXhgoNydZtXZ6Xw==}
     hasBin: true
     peerDependencies:
       vitest: '>=4.1.5'
@@ -6409,12 +6404,6 @@ snapshots:
       signal-exit: 3.0.7
       strip-final-newline: 2.0.0
 
-  executable-stories-formatters@0.7.12:
-    dependencies:
-      '@cucumber/html-formatter': 23.1.0(@cucumber/messages@32.3.1)
-      '@cucumber/messages': 32.3.1
-      ajv: 8.20.0
-
   executable-stories-formatters@0.7.14:
     dependencies:
       '@cucumber/html-formatter': 23.1.0(@cucumber/messages@32.3.1)
@@ -6432,9 +6421,9 @@ snapshots:
       '@playwright/test': 1.59.1
       executable-stories-formatters: 0.7.15
 
-  executable-stories-vitest@8.1.13(vitest@4.1.5(@types/node@25.6.0)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.7.0))):
+  executable-stories-vitest@8.1.18(vitest@4.1.5(@types/node@25.6.0)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.7.0))):
     dependencies:
-      executable-stories-formatters: 0.7.12
+      executable-stories-formatters: 0.7.15
       fast-glob: 3.3.3
       picomatch: 4.0.4
       vitest: 4.1.5(@types/node@25.6.0)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.7.0))
