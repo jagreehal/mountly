@@ -34,6 +34,6 @@
     "postpack": "rm -f LICENSE && ln -s ../../LICENSE LICENSE"
   },
   "dependencies": {
-    "tailwindcss": "^4.2.4"
+    "tailwindcss": "^4.3.0"
   }
 }
