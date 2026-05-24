@@ -24,8 +24,8 @@ importers:
         specifier: ^8.2.12
         version: 8.2.12(@playwright/test@1.60.0)
       executable-stories-vitest:
-        specifier: ^8.1.18
-        version: 8.1.18(vitest@4.1.6(@types/node@25.6.0)(vite@8.0.14(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.7.0)))
+        specifier: ^8.1.19
+        version: 8.1.19(vitest@4.1.6(@types/node@25.6.0)(vite@8.0.14(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.7.0)))
       serve:
         specifier: ^14.2.6
         version: 14.2.6
@@ -2692,8 +2692,8 @@ packages:
       autotel:
         optional: true
 
-  executable-stories-vitest@8.1.18:
-    resolution: {integrity: sha512-kxhNOlejmQeRCls9cFABa0aPppErwW1xEnVj3dskQeiyw0Bps8bOACVK3auCIbnymA97EeRKXhgoNydZtXZ6Xw==}
+  executable-stories-vitest@8.1.19:
+    resolution: {integrity: sha512-MV5r5cbHulZJfdaPeKop03bb/QqnRJCVtMWav0sKNAz+wu8SLiyPlkTrGdE2KQhfay9R1AT1jvRWNZsdPz2tsA==}
     hasBin: true
     peerDependencies:
       vitest: '>=4.1.5'
@@ -6559,9 +6559,9 @@ snapshots:
       '@playwright/test': 1.60.0
       executable-stories-formatters: 0.7.15
 
-  executable-stories-vitest@8.1.18(vitest@4.1.6(@types/node@25.6.0)(vite@8.0.14(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.7.0))):
+  executable-stories-vitest@8.1.19(vitest@4.1.6(@types/node@25.6.0)(vite@8.0.14(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.7.0))):
     dependencies:
-      executable-stories-formatters: 0.7.15
+      executable-stories-formatters: 0.8.0
       fast-glob: 3.3.3
       picomatch: 4.0.4
       vitest: 4.1.6(@types/node@25.6.0)(vite@8.0.14(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.7.0))
