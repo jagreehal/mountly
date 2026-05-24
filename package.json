@@ -36,7 +36,7 @@
     "serve": "^14.2.6",
     "turbo": "^2.9.14",
     "typescript": "^6.0.3",
-    "vite-plus": "^0.1.20",
+    "vite-plus": "^0.1.22",
     "vitest": "^4.1.6"
   },
   "engines": {
