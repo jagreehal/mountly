@@ -1,0 +1,37 @@
+{
+  "name": "mountly-mcp-server",
+  "version": "0.0.0",
+  "description": "Opinionated MCP server starter for serving mountly-mcp-built resources.",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jagreehal/mountly",
+    "directory": "packages/adapters/mountly-mcp-server"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": { "import": "./dist/index.js", "types": "./dist/index.d.ts" }
+  },
+  "files": ["dist"],
+  "publishConfig": { "access": "public" },
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "dev": "tsup --watch"
+  },
+  "peerDependencies": {
+    "mountly-mcp": "workspace:^",
+    "@modelcontextprotocol/sdk": "^1.29.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@modelcontextprotocol/ext-apps": "^1.7.1"
+  },
+  "devDependencies": {
+    "mountly-mcp": "workspace:^",
+    "tsup": "^8.5.1",
+    "typescript": "^6.0.3"
+  }
+}

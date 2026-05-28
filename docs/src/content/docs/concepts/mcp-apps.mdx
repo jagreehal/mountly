@@ -1,0 +1,69 @@
+---
+title: MCP Apps
+description: Build and serve mountly widgets as MCP Apps ui:// resources.
+---
+
+Mountly supports MCP Apps as a first-class distribution path.
+
+Use this path when you want a tool to return embeddable UI resources (`ui://...`) that MCP-capable hosts can render inline.
+
+## Packages
+
+- `mountly-mcp` — bridge runtime + build helpers (`buildMcpResource`, `runBridge`)
+- `mountly-mcp-react` — React widget wrapper (`createMcpWidget`) + context-bound hooks (`useMcpHost`, `useToolInput`, `useToolResult`, `useHostStyleVariables`, …)
+- `mountly-mcp-server` — server helper to register widget resources and tools with `@modelcontextprotocol/sdk`
+
+## End-to-end flow
+
+1. Build a widget bundle with your framework adapter and set `globalThis.__mountlyMcpWidget__ = createMcpWidget(...)`.
+2. Emit an MCP Apps resource with `buildMcpResource(...)` to create:
+- `widget.html`
+- `widget.html.meta.json`
+3. Register both on the server with `createMcpAppServer(...)`.
+4. MCP host calls your tool and receives `_meta.ui.resourceUri`.
+5. Host reads `ui://...` resource and renders the iframe.
+6. Bridge runs `ui/initialize`, then applies tool results via `ui/notifications/tool-result`.
+
+## Minimal build step
+
+```ts
+import { buildMcpResource } from "mountly-mcp/build";
+
+await buildMcpResource({
+  entry: "./dist/widget.js",
+  uri: "ui://example/demo",
+  name: "demo",
+  output: "./dist/demo.html",
+  awaitToolResult: true,
+});
+```
+
+## Minimal server registration
+
+```ts
+import { createMcpAppServer } from "mountly-mcp-server";
+
+const server = createMcpAppServer({
+  name: "demo-server",
+  version: "0.0.1",
+  widgets: [
+    {
+      uri: "ui://example/demo",
+      htmlPath: "./dist/demo.html",
+      tool: {
+        name: "show_demo",
+        inputSchema: { type: "object", properties: {} },
+        handler: async () => ({
+          structuredContent: { message: "Hello from MCP Apps" },
+        }),
+      },
+    },
+  ],
+});
+```
+
+## Verify
+
+- Practical runbook: [`docs/how-to-test.md`](https://github.com/jagreehal/mountly/blob/main/docs/how-to-test.md)
+- Runnable demo: [`examples/mcp-app-demo/README.md`](https://github.com/jagreehal/mountly/blob/main/examples/mcp-app-demo/README.md)
+

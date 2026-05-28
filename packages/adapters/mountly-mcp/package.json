@@ -1,0 +1,38 @@
+{
+  "name": "mountly-mcp",
+  "version": "0.0.0",
+  "description": "Publish a Mountly widget as an MCP Apps ui:// resource (SEP-1865).",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jagreehal/mountly",
+    "directory": "packages/adapters/mountly-mcp"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": { "import": "./dist/index.js", "types": "./dist/index.d.ts" },
+    "./build": { "import": "./dist/build/index.js", "types": "./dist/build/index.d.ts" },
+    "./bridge": { "import": "./dist/bridge/index.js", "types": "./dist/bridge/index.d.ts" },
+    "./bridge/iframe-entry.js": "./dist/bridge/iframe-entry.js"
+  },
+  "files": ["dist"],
+  "publishConfig": { "access": "public" },
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "dev": "tsup --watch"
+  },
+  "peerDependencies": {
+    "mountly": "^0.2.2"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/ext-apps": "^1.7.1"
+  },
+  "devDependencies": {
+    "mountly": "^0.2.2",
+    "tsup": "^8.5.1",
+    "typescript": "^6.0.3"
+  }
+}

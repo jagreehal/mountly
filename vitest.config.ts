@@ -6,8 +6,19 @@ const require = createRequire(import.meta.url);
 const { StoryReporter } = require("executable-stories-vitest/reporter");
 
 export default defineConfig({
+  resolve: {
+    // Svelte 5's package.json maps the default condition to its SSR entry.
+    // For jsdom-based unit tests we want the client/browser build so
+    // `mount()` works at runtime.
+    conditions: ["browser"],
+  },
   test: {
     include: ["tests/**/*.story.test.ts"],
+    server: {
+      deps: {
+        inline: ["svelte"],
+      },
+    },
     reporters: [
       "default",
       new StoryReporter({

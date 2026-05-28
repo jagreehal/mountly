@@ -60,6 +60,7 @@ export default defineConfig({
             },
             { label: 'Triggers', slug: 'concepts/triggers' },
             { label: 'Lifecycle', slug: 'concepts/lifecycle' },
+            { label: 'MCP Apps', slug: 'concepts/mcp-apps' },
             { label: 'Styling', slug: 'concepts/styling' },
             { label: 'Multi-widget bundles', slug: 'concepts/multi-widget' },
             { label: 'Caching', slug: 'concepts/caching' },
