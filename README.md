@@ -86,6 +86,9 @@ The widget mounts inside the container in light DOM by default, with bundled sty
 - **When *not* to use mountly** — single SPA, full SSR-hydration ownership, MFE orchestration. See [examples/README.md#when-not-to-use-it](examples/README.md#when-not-to-use-it).
 - **All runnable examples** — [examples/README.md](examples/README.md).
 - **Host runtime API** — [packages/mountly/README.md](packages/mountly/README.md).
+- **MCP Apps integration** — [docs/protocol-layering.md](docs/protocol-layering.md) and [docs/how-to-test.md](docs/how-to-test.md).
+- **MCP Apps runnable demo** — [`examples/mcp-app-demo`](examples/mcp-app-demo/README.md) for an end-to-end `ui://` resource + MCP server verification.
+- **MCP adapter package docs** — [`mountly-mcp`](packages/adapters/mountly-mcp/README.md), [`mountly-mcp-react`](packages/adapters/mountly-mcp-react/README.md), [`mountly-mcp-server`](packages/adapters/mountly-mcp-server/README.md). All three are thin wrappers around the official [`@modelcontextprotocol/ext-apps`](https://www.npmjs.com/package/@modelcontextprotocol/ext-apps) SDK (SEP-1865, 2026-01-26).
 
 ## API Stability
 

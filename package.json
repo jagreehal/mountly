@@ -25,22 +25,43 @@
     "version-packages": "changeset version && pnpm install --lockfile-only",
     "release": "pnpm build && changeset publish",
     "test:e2e:critical": "PLAYWRIGHT_HTML_OPEN=never playwright test \"tests/svelte-adapter.spec.ts\" \"tests/vue-adapter.spec.ts\" \"tests/island.spec.ts\" \"tests/loader-css.spec.ts\" \"tests/host-bootstrap.spec.ts\""
+    ,
+    "test:mcp:unit": "vitest run tests/mcp-*.story.test.ts",
+    "test:mcp:e2e": "PLAYWRIGHT_HTML_OPEN=never playwright test \"tests/bridge-pure-ui-libraries.spec.ts\" \"tests/mcp-demo-preview.story.spec.ts\"",
+    "test:mcp:verify": "pnpm run test:mcp:unit && pnpm run test:mcp:e2e",
+    "test:mcp:demo": "pnpm --filter mcp-app-demo verify"
   },
   "devDependencies": {
     "@changesets/cli": "^2.31.0",
     "@playwright/test": "^1.60.0",
+    "@testing-library/react": "^16.1.0",
     "@types/node": "^25.6.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vue/test-utils": "^2.4.6",
     "executable-stories-formatters": "^0.8.0",
     "executable-stories-playwright": "^8.2.13",
     "executable-stories-vitest": "^8.1.19",
+    "jsdom": "^25.0.0",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
     "serve": "^14.2.6",
+    "svelte": "^5.0.0",
     "turbo": "^2.9.14",
     "typescript": "^6.0.3",
     "vite-plus": "^0.1.22",
-    "vitest": "^4.1.6"
+    "vitest": "^4.1.6",
+    "vue": "^3.5.34",
+    "zod": "^4.4.3"
   },
   "engines": {
     "node": ">=22",
     "pnpm": ">=9"
+  },
+  "pnpm": {
+    "overrides": {
+      "react": "^19.2.6",
+      "react-dom": "^19.2.6"
+    }
   }
 }
