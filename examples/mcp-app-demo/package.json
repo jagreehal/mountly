@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
-    "@modelcontextprotocol/ext-apps": "^1.7.1",
+    "@modelcontextprotocol/ext-apps": "^1.7.2",
     "mountly-mcp": "workspace:*",
     "mountly-mcp-react": "workspace:*",
     "mountly-mcp-server": "workspace:*",
