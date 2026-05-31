@@ -33,7 +33,7 @@
   },
   "devDependencies": {
     "@testing-library/react": "^16.1.0",
-    "@types/react": "^19.2.14",
+    "@types/react": "^19.2.15",
     "@types/react-dom": "^19.2.3",
     "jsdom": "^25.0.0",
     "mountly": "^0.2.2",
