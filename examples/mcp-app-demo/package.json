@@ -16,12 +16,12 @@
     "mountly-mcp-react": "workspace:*",
     "mountly-mcp-server": "workspace:*",
     "payment-breakdown": "workspace:*",
-    "react": "^19.2.6",
+    "react": "^19.2.7",
     "react-dom": "^19.2.6",
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@types/react": "^19.2.15",
+    "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "esbuild": "^0.28.0",
     "serve": "^14.2.6",

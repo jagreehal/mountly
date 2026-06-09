@@ -33,13 +33,13 @@
   },
   "devDependencies": {
     "@testing-library/react": "^16.1.0",
-    "@types/react": "^19.2.15",
+    "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "jsdom": "^25.0.0",
     "mountly": "^0.2.2",
     "mountly-mcp": "workspace:^",
     "mountly-react": "workspace:^",
-    "react": "^19.2.6",
+    "react": "^19.2.7",
     "react-dom": "^19.2.6",
     "tsup": "^8.5.1",
     "typescript": "^6.0.3"
