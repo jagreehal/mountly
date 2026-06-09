@@ -38,7 +38,7 @@
     "@types/node": "^25.9.1",
     "@types/react": "^19.2.15",
     "@types/react-dom": "^19.2.3",
-    "@vue/test-utils": "^2.4.6",
+    "@vue/test-utils": "^2.4.11",
     "executable-stories-formatters": "^0.8.0",
     "executable-stories-playwright": "^8.2.14",
     "executable-stories-vitest": "^8.1.20",
