@@ -12,7 +12,7 @@
     "mountly-react": "workspace:*",
     "mountly-svelte": "workspace:*",
     "mountly-vue": "workspace:*",
-    "react": "^19.2.5",
+    "react": "^19.2.7",
     "react-dom": "^19.2.6",
     "svelte": "^5.56.0",
     "vue": "^3.5.34"
