@@ -1,6 +1,6 @@
 {
   "name": "mountly-vue",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Vue adapter for mountly widgets",
   "license": "Apache-2.0",
   "repository": {

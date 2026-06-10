@@ -1,5 +1,13 @@
 # mountly-vue
 
+## 1.0.2
+
+### Patch Changes
+
+- f98b83e: chore: update dependencies + migrate to vite 8
+
+  Minor/patch dependency refresh via npm-check-updates (--target minor, 3-day publish cooldown) — no major version bumps. Forced vite ^8 across the workspace via a pnpm override.
+
 ## 1.0.1
 
 ### Patch Changes

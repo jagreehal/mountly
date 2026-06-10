@@ -1,5 +1,12 @@
 # cross-framework-bus
 
+## 0.0.9
+
+### Patch Changes
+
+- Updated dependencies [f98b83e]
+  - mountly-vue@1.0.2
+
 ## 0.0.8
 
 ### Patch Changes
