@@ -35,7 +35,7 @@
     "@testing-library/react": "^16.1.0",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
-    "jsdom": "^25.0.0",
+    "jsdom": "^29.1.1",
     "mountly": "^0.2.2",
     "mountly-mcp": "workspace:^",
     "mountly-react": "workspace:^",
