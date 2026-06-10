@@ -28,7 +28,7 @@
     "mountly": "^0.2.2"
   },
   "dependencies": {
-    "@modelcontextprotocol/ext-apps": "^1.7.2"
+    "@modelcontextprotocol/ext-apps": "^1.7.4"
   },
   "devDependencies": {
     "mountly": "^0.2.2",
