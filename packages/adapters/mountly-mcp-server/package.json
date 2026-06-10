@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
-    "@modelcontextprotocol/ext-apps": "^1.7.2"
+    "@modelcontextprotocol/ext-apps": "^1.7.4"
   },
   "devDependencies": {
     "mountly-mcp": "workspace:^",
