@@ -40,7 +40,7 @@
     "mountly-mcp": "workspace:^",
     "mountly-react": "workspace:^",
     "react": "^19.2.7",
-    "react-dom": "^19.2.6",
+    "react-dom": "^19.2.7",
     "tsup": "^8.5.1",
     "typescript": "^6.0.3"
   }
