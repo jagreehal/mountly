@@ -1,6 +1,6 @@
 {
   "name": "mountly-json-render",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Generative UI for mountly: render @json-render specs as MCP Apps widgets, with the agent-action bridge. createGenerativeWidget + generateSpec.",
   "license": "Apache-2.0",
   "repository": {
@@ -12,11 +12,21 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
-    ".": { "import": "./dist/index.js", "types": "./dist/index.d.ts" },
-    "./server": { "import": "./dist/server.js", "types": "./dist/server.d.ts" }
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./server": {
+      "import": "./dist/server.js",
+      "types": "./dist/server.d.ts"
+    }
   },
-  "files": ["dist"],
-  "publishConfig": { "access": "public" },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsup",
     "typecheck": "tsc --noEmit",
@@ -33,7 +43,9 @@
     "react": ">=18 <20"
   },
   "peerDependenciesMeta": {
-    "ai": { "optional": true }
+    "ai": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@json-render/core": "0.19.0",
