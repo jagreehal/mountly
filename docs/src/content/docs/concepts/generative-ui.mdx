@@ -1,0 +1,171 @@
+---
+title: Generative UI
+description: Render @json-render specs as MCP Apps widgets, with the agent-action bridge — an AI emits a UI spec, mountly renders it as real native components inside an agent host.
+---
+
+`mountly-json-render` is the **generative UI** path for mountly. An AI emits a UI spec
+constrained to a typed catalog; mountly renders it as **real native components** inside an
+MCP host, and the rendered UI's actions call back into the **agent**.
+
+It is a thin wrapper over [`@json-render`](https://github.com/vercel-labs/json-render)
+(`@json-render/core` + `@json-render/react`), [`mountly-mcp-react`](/concepts/mcp-apps/),
+and the [`ai`](https://www.npmjs.com/package/ai) SDK. json-render decides *what* to render;
+mountly decides *where* it ends up (an agent host) and adds the one thing json-render has no
+concept of — **the agent loop**: a generated button → `App.sendMessage` → the model
+generates the next view.
+
+When to reach for this instead of a hand-built widget: you want the **UI itself to be
+generated** by a model, not just its data. The catalog is the contract — the model can only
+compose the types you allow, each validated by its Zod schema.
+
+## Install
+
+```bash
+npm i mountly-json-render @json-render/core @json-render/react mountly-mcp mountly-mcp-react mountly-react
+# server-side generation also needs the AI SDK:
+npm i ai
+```
+
+## The widget — one call
+
+`createGenerativeWidget` collapses catalog → registry → renderer → `$state` →
+action-bridge into a single call. It reads the spec from the tool result, resolves `$state`
+bindings from `spec.state`, and routes actions to the MCP host.
+
+```tsx
+import { createGenerativeWidget } from "mountly-json-render";
+import { catalog } from "./catalog";       // defineCatalog(schema, {...})
+import { components } from "./registry";    // { Card, Metric, Button, ... }
+import styles from "./styles.css";
+
+const widget = createGenerativeWidget({ catalog, components, styles, shadow: true });
+(globalThis as { __mountlyMcpWidget__?: unknown }).__mountlyMcpWidget__ = widget;
+```
+
+By default an `ask` action with a string `prompt` sends a follow-up turn via
+`App.sendMessage` — this is the agent loop. Override the routing with
+`onAction(name, params, mcp)`.
+
+The server tool returns the spec as the tool result, exactly like any other MCP Apps widget
+(see [MCP Apps](/concepts/mcp-apps/)):
+
+```ts
+handler: async ({ view }) => ({ structuredContent: { spec: SPECS[view] } });
+```
+
+## Generate a spec with any model — `streamSpec`
+
+`streamSpec` (the `mountly-json-render/server` entry) is **model-agnostic** — pass any AI SDK
+`LanguageModel`. It uses json-render's own pipeline (`catalog.prompt()` + JSONL patches +
+`autoFixSpec`), so no JSON-mode or tool-calling is required and a small local model can drive
+it. It returns one handle you can both **await** for the final spec and **iterate** for the
+live build — the same shape as the AI SDK's own `streamText`:
+
+```ts
+import { streamSpec } from "mountly-json-render/server";
+import { ollama } from "ai-sdk-ollama"; // or @ai-sdk/google, @ai-sdk/groq, …
+
+// Blocking — e.g. an MCP tool returning structuredContent:
+const { spec, issues } = await streamSpec({
+  catalog,
+  model: ollama("granite4.1:3b"),
+  prompt: "a revenue dashboard with 3 KPIs and an 'ask for Q3' button",
+}).result;
+// return as the tool result: { structuredContent: { spec } }
+
+// Live — watch the UI assemble itself, element by element:
+const ui = streamSpec({ catalog, model: ollama("granite4.1:3b"), prompt });
+for await (const partial of ui.partialSpecStream) render(partial);
+const { spec } = await ui.result;
+```
+
+The request starts immediately; `result` / `spec` resolve whether or not you touch the
+stream. Catalog clarity matters more than model size — one good paragraph of catalog
+`description` made a local 3B model, Gemini, and a 70B model all produce fully agent-wired
+UIs; keep prompts concise, since a tiny model wanders on long, multi-clause prompts.
+
+The underlying driver, `compileTextStreamToSpecs(textStream)`, is AI-SDK-free — point it at any
+`AsyncIterable<string>` (a model stream, a saved transcript, a custom transport).
+
+## Streaming on the client — replay vs live
+
+**Replay a known spec** (e.g. one an MCP tool already delivered as `structuredContent`):
+`useSpecStream` owns all the ceremony (json-render's compiler, the patch replay, the
+`loading` flag, and cancellation when the spec changes). Feed it a spec; render the result.
+A self-driving UI is just swapping the spec in `onAction`:
+
+```tsx
+import { createRenderer, useSpecStream } from "mountly-json-render";
+
+const Dashboard = createRenderer(catalog, components);
+
+function App({ specs }) {
+  const [view, setView] = useState("overview");
+  const { spec, state, loading } = useSpecStream(specs[view]); // streams it in
+  return (
+    <Dashboard
+      spec={spec}
+      state={state}
+      loading={loading}
+      onAction={(_, p) => setView(route(p.prompt))} // a generated button picks the next view
+    />
+  );
+}
+```
+
+The hook re-streams (and cancels the prior stream) whenever the spec changes. Use
+`specToPatchLines` (replay a known spec as a stream) and `createSpecStreamCompiler` (compile
+patches back into a spec) if you need the primitives directly.
+
+**Stream live from a model**: `useUIStream` / `useChatUI` are json-render's own client hooks,
+re-exported here. Point `useUIStream` at an endpoint that streams JSONL patches (your
+`streamSpec` route) and it renders the spec as it builds:
+
+```tsx
+import { useUIStream } from "mountly-json-render";
+
+const { spec, isStreaming, send } = useUIStream({ api: "/api/generate" });
+// send("a revenue dashboard with 3 KPIs"); then render <Dashboard spec={spec} />
+```
+
+## Native rendering (non-MCP)
+
+`createRenderer` is re-exported for previews, tests, or a plain mountly feature with no MCP
+host involved:
+
+```tsx
+import { createRenderer } from "mountly-json-render";
+const Dashboard = createRenderer(catalog, components);
+// <Dashboard spec={spec} state={spec.state} />
+```
+
+## API
+
+| Export | Entry | Purpose |
+|---|---|---|
+| `createGenerativeWidget(opts)` | `.` | catalog + components → MCP widget |
+| `defineComponents(catalog, map)` | `.` | type a components map once, reuse it |
+| `defaultActionRouter` / `ActionRouter` | `.` | the `ask` → `sendMessage` bridge (overridable) |
+| `useSpecStream(spec, opts?)` | `.` | **replay** a known spec progressively (compiler + cancellation, included) |
+| `useUIStream` / `useChatUI` | `.` | **live** client hooks — stream a spec from an endpoint (json-render's, re-exported) |
+| `compileTextStreamToSpecs(stream)` | `.` · `./server` | drive json-render's compiler from any text stream → progressive specs |
+| `specToPatchLines` / `createSpecStreamCompiler` / `createJsonRenderTransform` | `.` | streaming primitives (replay / compile / AI-SDK transform) |
+| `createRenderer` | `.` | native (non-MCP) renderer (re-export) |
+| `streamSpec(opts)` | `./server` | catalog + AI SDK model → a handle: `await .result` (final) or iterate `.partialSpecStream` (live) |
+
+## See it run
+
+The [`mcp-generative-demo`](https://github.com/jagreehal/mountly/blob/main/examples/mcp-generative-demo/README.md)
+example is a full, runnable build — local + hosted models, a browser preview, and a real
+two-origin MCP Apps host harness:
+
+```bash
+# build the streaming hero demo, then serve it
+pnpm --filter mcp-generative-demo preview:stream
+python3 -m http.server 5193 --directory examples/mcp-generative-demo/preview/stream-dist
+# open http://localhost:5193 — the dashboard streams in, then click "Break down Q3 by region →"
+
+pnpm --filter mcp-generative-demo verify        # in-process MCP loop + actions bridge
+pnpm --filter mcp-generative-demo test          # native render · $state · action bridge
+node examples/mcp-generative-demo/generate-live.mjs "..."  # a real model generates a spec
+```

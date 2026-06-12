@@ -70,5 +70,11 @@ export default defineConfig({
       reuseExistingServer: !process.env.CI,
       timeout: 60_000,
     },
+    {
+      command: "pnpm --filter mcp-generative-demo preview:stream:serve",
+      url: "http://localhost:5181",
+      reuseExistingServer: !process.env.CI,
+      timeout: 60_000,
+    },
   ],
 });

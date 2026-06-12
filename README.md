@@ -54,6 +54,7 @@ Before mountly:                    After mountly:
 | [`mountly-vue`](https://npmjs.com/package/mountly-vue) | Vue adapter — `createWidget(Component, { styles })` |
 | [`mountly-svelte`](https://npmjs.com/package/mountly-svelte) | Svelte adapter — `createWidget(Component, { styles })` |
 | [`mountly-tailwind`](https://npmjs.com/package/mountly-tailwind) | Tailwind v4 design preset (opt-in) |
+| [`mountly-json-render`](packages/adapters/mountly-json-render/README.md) | Generative UI — render [`@json-render`](https://github.com/vercel-labs/json-render) specs as MCP Apps widgets, with the agent-action bridge. `createGenerativeWidget` + `streamSpec` |
 
 ## Quick Start (60 seconds)
 
@@ -88,6 +89,7 @@ The widget mounts inside the container in light DOM by default, with bundled sty
 - **Host runtime API** — [packages/mountly/README.md](packages/mountly/README.md).
 - **MCP Apps integration** — [docs/protocol-layering.md](docs/protocol-layering.md) and [docs/how-to-test.md](docs/how-to-test.md).
 - **MCP Apps runnable demo** — [`examples/mcp-app-demo`](examples/mcp-app-demo/README.md) for an end-to-end `ui://` resource + MCP server verification.
+- **Generative UI (agent emits the UI)** — [`mountly-json-render`](packages/adapters/mountly-json-render/README.md) renders [`@json-render`](https://github.com/vercel-labs/json-render) specs as MCP widgets with an agent-action bridge; `createGenerativeWidget` + `streamSpec`. Self-driving streaming demo: [`examples/mcp-generative-demo`](examples/mcp-generative-demo/README.md).
 - **MCP adapter package docs** — [`mountly-mcp`](packages/adapters/mountly-mcp/README.md), [`mountly-mcp-react`](packages/adapters/mountly-mcp-react/README.md), [`mountly-mcp-server`](packages/adapters/mountly-mcp-server/README.md). All three are thin wrappers around the official [`@modelcontextprotocol/ext-apps`](https://www.npmjs.com/package/@modelcontextprotocol/ext-apps) SDK (SEP-1865, 2026-01-26).
 
 ## API Stability
