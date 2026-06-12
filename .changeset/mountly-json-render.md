@@ -1,0 +1,5 @@
+---
+"mountly-json-render": minor
+---
+
+Add `mountly-json-render`: generative UI for mountly. `createGenerativeWidget({ catalog, components })` renders [`@json-render`](https://github.com/vercel-labs/json-render) specs as MCP Apps widgets — reading the spec from the tool result, resolving `$state` bindings, and routing the rendered UI's actions back to the agent via `App.sendMessage` (the loop json-render alone cannot do). `streamSpec({ catalog, model, prompt })` (server entry, model-agnostic — any AI SDK `LanguageModel`) turns a prompt into UI. It returns one handle, AI-SDK `streamText`-style: `await .result` for the final validated spec (e.g. an MCP tool's `structuredContent`), or iterate `.partialSpecStream` to watch the UI build itself element by element (real token → JSONL patch → spec, via json-render's stream compiler). `useUIStream`/`useChatUI` (json-render's client hooks) and `compileTextStreamToSpecs` (the AI-SDK-free stream driver) are re-exported for the live path. See `examples/mcp-generative-demo`.

@@ -11,8 +11,12 @@ docs/evidence
 .playwright-cli
 .cursor
 .turbo
+.pnpm-store
 .impeccable.md
 docs-backup
 
 docs/.astro
 examples/mcp-app-demo/preview/
+examples/mcp-generative-demo/preview/dist/
+examples/mcp-generative-demo/preview-host/
+examples/mcp-generative-demo/preview/stream-dist/

@@ -25,6 +25,7 @@ Build output must exist under `packages/mountly/dist/` and each example widget�
 
 6. **`pokemon-kitchen-sink/`** — Stress-test of triggers, prefetch, custom elements, analytics. For **deep dives**, not first-day onboarding. Vite dev server on **port 5178** (distinct from `plain-html` so they can run side-by-side).
 7. **`mcp-app-demo/`** — MCP Apps reference demo: builds a `ui://` widget resource, registers it on `mountly-mcp-server`, and verifies the full MCP flow in-process (`listTools`, `listResources`, `readResource`, `callTool`). See [mcp-app-demo/README.md](mcp-app-demo/README.md).
+8. **`mcp-generative-demo/`** — Generative UI: an agent emits a JSON spec constrained to a [`@json-render`](https://github.com/vercel-labs/json-render) catalog, and mountly renders it as native components — through the MCP bridge and as a plain widget. See [mcp-generative-demo/README.md](mcp-generative-demo/README.md).
 
 Widget source packages live alongside hosts: **`payment-breakdown`**, **`image-lightbox`**, **`signup-card`** under `examples/<name>/`.
 
@@ -41,6 +42,7 @@ Each example has its own dedicated port — no collisions, all of them can run s
 | `shadcn-drop-in` (static) | **5177** | `cd examples/shadcn-drop-in && pnpm dev` | <http://localhost:5177/examples/shadcn-drop-in/> |
 | `pokemon-kitchen-sink` (Vite) | **5178** | `pnpm --filter pokemon-kitchen-sink dev` | <http://localhost:5178/> |
 | `mcp-app-demo` (CLI verify) | N/A | `pnpm --filter mcp-app-demo verify` | CLI output |
+| `mcp-generative-demo` (CLI verify) | N/A | `pnpm --filter mcp-generative-demo verify` | CLI output |
 
 All Vite servers use `strictPort: true` — they fail loudly if the port is already taken instead of silently picking another. Playwright reuses ports 5174 (demo) and 5175 (repo-root static server); `marketing-site` uses 5176 in its own webServer entry by design.
 
