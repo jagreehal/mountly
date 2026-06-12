@@ -69,7 +69,7 @@ test.describe("mcp-generative-demo streaming preview", () => {
       page.getByRole("heading", { name: "Q3 revenue by region" }),
     ).toBeVisible({ timeout: 10_000 });
     await expect(page.getByText("North America")).toBeVisible();
-    await expect(page.getByText("EMEA")).toBeVisible();
+    await expect(page.getByText("EMEA", { exact: true })).toBeVisible();
     await expect(page.getByText("APAC")).toBeVisible();
     story.screenshot({
       path: testInfo.outputPath("q3-by-region.png"),
