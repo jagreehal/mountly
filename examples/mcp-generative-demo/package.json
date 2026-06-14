@@ -19,7 +19,7 @@
     "ai": "6.0.194",
     "ai-sdk-ollama": "3.8.7",
     "@ai-sdk/google": "3.0.80",
-    "@ai-sdk/groq": "3.0.39",
+    "@ai-sdk/groq": "3.0.41",
     "@json-render/core": "0.19.0",
     "@json-render/react": "0.19.0",
     "@modelcontextprotocol/sdk": "^1.29.0",
