@@ -15,7 +15,7 @@
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "svelte": "^5.56.3",
-    "vue": "^3.5.35"
+    "vue": "^3.5.38"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^7.1.2",
