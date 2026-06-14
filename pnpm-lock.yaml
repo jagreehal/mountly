@@ -263,8 +263,8 @@ importers:
         specifier: 3.0.80
         version: 3.0.80(zod@4.4.3)
       '@ai-sdk/groq':
-        specifier: 3.0.39
-        version: 3.0.39(zod@4.4.3)
+        specifier: 3.0.41
+        version: 3.0.41(zod@4.4.3)
       '@json-render/core':
         specifier: 0.19.0
         version: 0.19.0(zod@4.4.3)
@@ -647,8 +647,8 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/groq@3.0.39':
-    resolution: {integrity: sha512-BZAr6DjCbzWQ0Qn1/TSsHo/bmCt4JaAMb4A7HCSUZBQCAcOjne/03D0sVjHnQhUC3TpwcmYiv7tHAviK7BluRw==}
+  '@ai-sdk/groq@3.0.41':
+    resolution: {integrity: sha512-J3zWdzUdSgE2B8e70i/4b5TGEzDc2Z2xN18AKUs9XCzPF7k6WHyaCCahDUB7JIhRN8Q2nWJ+LQQthl144vq9fg==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -661,6 +661,12 @@ packages:
 
   '@ai-sdk/provider-utils@4.0.28':
     resolution: {integrity: sha512-nCtGJY43Kqwoyk0rYLj80a3eyXxcaWwyu+lYZDHgY+U6JbYYyvRdRTSy+XCDIB91rFH0Ul0eMDHmDr+YMYtrSw==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
+
+  '@ai-sdk/provider-utils@4.0.29':
+    resolution: {integrity: sha512-uhukHaCBvqkwBHkT8C2PrnqKTCoLn3pdHXqtcR9I8ErH+flbzgW4o7VHSNIup9LRu+WBvZIZDQLsx6rwl2tiOA==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -3416,6 +3422,10 @@ packages:
     resolution: {integrity: sha512-70QWGkr4snxr0OXLRWsFLeRBIRPuQOvt4s8QYjmUlmlkyTZkRqS7EDVRZtzU3TiyDbXSzaOeF0XUKy8PchzukQ==}
     engines: {node: '>=18.0.0'}
 
+  eventsource-parser@3.1.0:
+    resolution: {integrity: sha512-kJezFj9YFAMLeORyi7aCLxLbD5/qWMQnoMVlVPyHIll7lgRJCc3JVln9Vgl9nwQi0YkMnhdGTMNn7CkRRAptMg==}
+    engines: {node: '>=18.0.0'}
+
   eventsource@3.0.7:
     resolution: {integrity: sha512-CRT1WTyuQoD771GW56XEZFQ/ZoSfWid1alKGDYMmkt2yl8UXrVR4pspqWNEcqKvVIzg6PAltWjxcSSPrboA4iA==}
     engines: {node: '>=18.0.0'}
@@ -5550,10 +5560,10 @@ snapshots:
       '@ai-sdk/provider-utils': 4.0.27(zod@4.4.3)
       zod: 4.4.3
 
-  '@ai-sdk/groq@3.0.39(zod@4.4.3)':
+  '@ai-sdk/groq@3.0.41(zod@4.4.3)':
     dependencies:
       '@ai-sdk/provider': 3.0.10
-      '@ai-sdk/provider-utils': 4.0.27(zod@4.4.3)
+      '@ai-sdk/provider-utils': 4.0.29(zod@4.4.3)
       zod: 4.4.3
 
   '@ai-sdk/provider-utils@4.0.27(zod@4.4.3)':
@@ -5568,6 +5578,13 @@ snapshots:
       '@ai-sdk/provider': 3.0.10
       '@standard-schema/spec': 1.1.0
       eventsource-parser: 3.0.8
+      zod: 4.4.3
+
+  '@ai-sdk/provider-utils@4.0.29(zod@4.4.3)':
+    dependencies:
+      '@ai-sdk/provider': 3.0.10
+      '@standard-schema/spec': 1.1.0
+      eventsource-parser: 3.1.0
       zod: 4.4.3
 
   '@ai-sdk/provider@3.0.10':
@@ -8113,6 +8130,8 @@ snapshots:
   eventemitter3@5.0.4: {}
 
   eventsource-parser@3.0.8: {}
+
+  eventsource-parser@3.1.0: {}
 
   eventsource@3.0.7:
     dependencies:
