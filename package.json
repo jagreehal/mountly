@@ -43,7 +43,7 @@
     "@vue/test-utils": "^2.4.11",
     "executable-stories-formatters": "^0.15.0",
     "executable-stories-playwright": "^8.5.3",
-    "executable-stories-vitest": "^8.4.1",
+    "executable-stories-vitest": "^8.4.3",
     "jsdom": "^25.0.1",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
