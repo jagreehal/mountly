@@ -16,7 +16,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "ai": "6.0.194",
+    "ai": "6.0.205",
     "ai-sdk-ollama": "3.8.7",
     "@ai-sdk/google": "3.0.80",
     "@ai-sdk/groq": "3.0.41",
