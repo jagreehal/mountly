@@ -43,8 +43,8 @@ importers:
         specifier: ^0.15.0
         version: 0.15.0
       executable-stories-playwright:
-        specifier: ^8.5.1
-        version: 8.5.1(@playwright/test@1.60.0)
+        specifier: ^8.5.3
+        version: 8.5.3(@playwright/test@1.60.0)
       executable-stories-vitest:
         specifier: ^8.4.1
         version: 8.4.1(vitest@4.1.8(@opentelemetry/api@1.9.1)(@types/node@25.9.3)(jsdom@25.0.1)(vite@8.0.16(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(yaml@2.9.0)))
@@ -3452,8 +3452,8 @@ packages:
     engines: {node: '>=22'}
     hasBin: true
 
-  executable-stories-playwright@8.5.1:
-    resolution: {integrity: sha512-FkMhnug89GJsZqT5UP+JT71xyQJjjTIPrYcABoEi3cTBZqUjWgCzvgQWi/w4BlCfcCGjy/9vOFq9037Jx0bXHQ==}
+  executable-stories-playwright@8.5.3:
+    resolution: {integrity: sha512-MeAuiXNPZ1vjBPvNTK9vep6tEMW0KISQTLbftSVPJet9ms4TfcFoBLi3/ord52ZcUkCdy+dzRR2yF0t6Zp7DCw==}
     peerDependencies:
       '@playwright/test': '>=1.60.0'
       autotel: '>=3.4.4'
@@ -8148,10 +8148,10 @@ snapshots:
       github-slugger: 2.0.0
       yaml: 2.9.0
 
-  executable-stories-playwright@8.5.1(@playwright/test@1.60.0):
+  executable-stories-playwright@8.5.3(@playwright/test@1.60.0):
     dependencies:
       '@playwright/test': 1.60.0
-      executable-stories-formatters: 0.13.0
+      executable-stories-formatters: 0.15.0
 
   executable-stories-vitest@8.4.1(vitest@4.1.8(@opentelemetry/api@1.9.1)(@types/node@25.9.3)(jsdom@25.0.1)(vite@8.0.16(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(yaml@2.9.0))):
     dependencies:
