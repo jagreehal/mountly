@@ -40,8 +40,8 @@ importers:
         specifier: ^2.4.11
         version: 2.4.11(@vue/compiler-dom@3.5.38)(@vue/server-renderer@3.5.38(vue@3.5.38(typescript@6.0.3)))(vue@3.5.38(typescript@6.0.3))
       executable-stories-formatters:
-        specifier: ^0.15.0
-        version: 0.15.0
+        specifier: ^0.16.0
+        version: 0.16.0
       executable-stories-playwright:
         specifier: ^8.5.3
         version: 8.5.3(@playwright/test@1.60.0)
