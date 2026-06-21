@@ -281,8 +281,8 @@ importers:
         specifier: 6.0.208
         version: 6.0.208(zod@4.4.3)
       ai-sdk-ollama:
-        specifier: 3.8.7
-        version: 3.8.7(ai@6.0.208(zod@4.4.3))(zod@4.4.3)
+        specifier: 3.8.8
+        version: 3.8.8(ai@6.0.208(zod@4.4.3))(zod@4.4.3)
       mountly-json-render:
         specifier: workspace:*
         version: link:../../packages/adapters/mountly-json-render
@@ -649,12 +649,6 @@ packages:
 
   '@ai-sdk/groq@3.0.41':
     resolution: {integrity: sha512-J3zWdzUdSgE2B8e70i/4b5TGEzDc2Z2xN18AKUs9XCzPF7k6WHyaCCahDUB7JIhRN8Q2nWJ+LQQthl144vq9fg==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      zod: ^3.25.76 || ^4.1.8
-
-  '@ai-sdk/provider-utils@4.0.28':
-    resolution: {integrity: sha512-nCtGJY43Kqwoyk0rYLj80a3eyXxcaWwyu+lYZDHgY+U6JbYYyvRdRTSy+XCDIB91rFH0Ul0eMDHmDr+YMYtrSw==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -2793,8 +2787,8 @@ packages:
     resolution: {integrity: sha512-MnA+YT8fwfJPgBx3m60MNqakm30XOkyIoH1y6huTQvC0PwZG7ki8NacLBcrPbNoo8vEZy7Jpuk7+jMO+CUovTQ==}
     engines: {node: '>= 14'}
 
-  ai-sdk-ollama@3.8.7:
-    resolution: {integrity: sha512-q4oN8gWc5fxnzXnc96sveE6vy4BoKOZQr8uAYywKzu3r5CR+jwwI7csmdzxMqhEdj5TUJ7OT5O9jTGZr5YDYng==}
+  ai-sdk-ollama@3.8.8:
+    resolution: {integrity: sha512-peWelPf6sVsRULQyYhfyu1dMZhwewRszsbQVfbuhNLflh+ncRXn6pe1BRE3NAcSsWd7JMRZAV5RzcuR3R9ZfaQ==}
     engines: {node: '>=22'}
     peerDependencies:
       ai: ^6.0.197
@@ -5579,13 +5573,6 @@ snapshots:
       '@ai-sdk/provider-utils': 4.0.29(zod@4.4.3)
       zod: 4.4.3
 
-  '@ai-sdk/provider-utils@4.0.28(zod@4.4.3)':
-    dependencies:
-      '@ai-sdk/provider': 3.0.10
-      '@standard-schema/spec': 1.1.0
-      eventsource-parser: 3.0.8
-      zod: 4.4.3
-
   '@ai-sdk/provider-utils@4.0.29(zod@4.4.3)':
     dependencies:
       '@ai-sdk/provider': 3.0.10
@@ -7409,10 +7396,10 @@ snapshots:
 
   agent-base@7.1.4: {}
 
-  ai-sdk-ollama@3.8.7(ai@6.0.208(zod@4.4.3))(zod@4.4.3):
+  ai-sdk-ollama@3.8.8(ai@6.0.208(zod@4.4.3))(zod@4.4.3):
     dependencies:
       '@ai-sdk/provider': 3.0.10
-      '@ai-sdk/provider-utils': 4.0.28(zod@4.4.3)
+      '@ai-sdk/provider-utils': 4.0.30(zod@4.4.3)
       ai: 6.0.208(zod@4.4.3)
       jsonrepair: 3.14.0
       ollama: 0.6.3
