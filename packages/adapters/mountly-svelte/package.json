@@ -40,7 +40,7 @@
   },
   "devDependencies": {
     "mountly": "^0.2.2",
-    "svelte": "^5.56.3",
+    "svelte": "^5.56.4",
     "tsup": "^8.5.1",
     "typescript": "^6.0.3"
   }
