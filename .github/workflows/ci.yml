@@ -71,7 +71,7 @@ jobs:
 
       - name: Vitest stories report
         if: always() && hashFiles('docs/evidence/vitest-tests.html') != ''
-        uses: jagreehal/executable-stories-action@v1
+        uses: jagreehal/executable-stories-action@v2
         with:
           report-dir: docs/evidence
           output-name: vitest-tests
@@ -83,7 +83,7 @@ jobs:
 
       - name: Playwright stories report
         if: always() && hashFiles('docs/evidence/playwright-tests.html') != ''
-        uses: jagreehal/executable-stories-action@v1
+        uses: jagreehal/executable-stories-action@v2
         with:
           report-dir: docs/evidence
           output-name: playwright-tests
