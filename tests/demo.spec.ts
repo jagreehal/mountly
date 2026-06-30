@@ -6,7 +6,6 @@ test.beforeEach(({ page }, testInfo) => {
   story.init(testInfo);
 });
 
-
 const STATE = '[data-testid="feature-state"]';
 const TRIGGER = '[data-testid="payment-trigger"]';
 const POPOVER = '[data-testid="payment-popover"]';
@@ -28,7 +27,10 @@ const LB_TRIGGER = '[data-testid="lightbox-trigger"]';
 const LB_MOUNT = '[data-testid="lightbox-mount"]';
 
 async function popoverHasContent(page: Page, selector: string): Promise<boolean> {
-  return page.locator(`${selector} > *`).count().then((n) => n > 0);
+  return page
+    .locator(`${selector} > *`)
+    .count()
+    .then((n) => n > 0);
 }
 
 test.describe("mountly demo", () => {
@@ -225,9 +227,7 @@ test.describe("mountly demo", () => {
     await expect(page.locator(`${LB_MOUNT} [role="dialog"]`)).toBeVisible({
       timeout: 5000,
     });
-    await expect(page.locator(LB_MOUNT)).toContainText(
-      "Widgets don't have to share"
-    );
+    await expect(page.locator(LB_MOUNT)).toContainText("Widgets don't have to share");
     await expect(page.locator(LB_MOUNT)).toContainText("Press");
 
     await page.keyboard.press("Escape");

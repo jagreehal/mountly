@@ -3,7 +3,7 @@ title: Styling
 description: How mountly loads, scopes, and isolates CSS across all three adapters, both in light DOM (default) and in shadow DOM, and the noscript story.
 ---
 
-mountly's styling model has one design goal: **make the right thing the easy thing.** The default path is zero-config and works the same way for React, Vue, and Svelte. Overrides are available when you need them.
+mountly's styling model has one design goal: **make the right thing the easy thing.** The default path takes zero config and works the same way for React, Vue, and Svelte. Reach for overrides when you need them.
 
 ## The default: light DOM + auto-fetched companion CSS
 
@@ -27,26 +27,26 @@ card.attach({ trigger: btn, activateOn: "click" });
 
 ```ts
 // widget bundle (built with Vite library mode, emits index.js + index.css)
-import { createWidget } from "mountly-svelte";  // or -vue / -react
+import { createWidget } from "mountly-svelte"; // or -vue / -react
 import Card from "./Card.svelte";
 export default createWidget(Card);
 ```
 
-That's the entire pipeline. The host doesn't write a `render` function. The widget doesn't manually load CSS. Vite's library build emits the sibling `.css` automatically. The widget renders inline so the host's design system reaches in naturally.
+That's the entire pipeline. The host writes no `render` function. The widget loads no CSS by hand. Vite's library build emits the sibling `.css` for you. The widget renders inline, so the host's design system reaches in.
 
 ## CSS source resolution
 
 When the adapter is asked to mount, it picks **one** stylesheet source in this order:
 
-| Priority | Source                                      | Where it's set                                                 |
-| -------- | ------------------------------------------- | -------------------------------------------------------------- |
-| 1        | `cssUrl` in mount props                     | `mod.mount(c, { cssUrl: "/foo.css" })`                         |
-| 2        | `cssUrl` in `createWidget` options          | `createWidget(C, { cssUrl: "/foo.css" })`                      |
-| 3        | `moduleUrl` in mount props → derived `.css` | `mod.mount(c, { moduleUrl: "/foo.js" })`                       |
-| 4        | `moduleUrl` in `createWidget` options       | `createWidget(C, { moduleUrl: "/foo.js" })`                    |
-| 5        | `styles` literal string                     | `createWidget(C, { styles: ".x { color: red }" })`             |
+| Priority | Source                                      | Where it's set                                     |
+| -------- | ------------------------------------------- | -------------------------------------------------- |
+| 1        | `cssUrl` in mount props                     | `mod.mount(c, { cssUrl: "/foo.css" })`             |
+| 2        | `cssUrl` in `createWidget` options          | `createWidget(C, { cssUrl: "/foo.css" })`          |
+| 3        | `moduleUrl` in mount props → derived `.css` | `mod.mount(c, { moduleUrl: "/foo.js" })`           |
+| 4        | `moduleUrl` in `createWidget` options       | `createWidget(C, { moduleUrl: "/foo.js" })`        |
+| 5        | `styles` literal string                     | `createWidget(C, { styles: ".x { color: red }" })` |
 
-If a fetch fails (404, network error, CORS), the mount **still succeeds**: the widget renders unstyled rather than throwing. Failures are logged silently; if you want hard failures, validate the asset at build time.
+If a fetch fails (404, network error, CORS), the mount **still succeeds**: the widget renders unstyled rather than throwing. mountly logs the failure without interrupting. If you want hard failures, validate the asset at build time.
 
 ## Light DOM scoping options
 
@@ -59,7 +59,7 @@ For real isolation, see the next section.
 
 ## Shadow DOM (`shadow: true`)
 
-When the widget will be embedded in unknown hosts (CMS pages, third-party sites, legacy apps with conflicting CSS) opt into shadow DOM:
+When you embed a widget in unknown hosts (CMS pages, third-party sites, legacy apps with conflicting CSS), opt into shadow DOM:
 
 ```ts
 createWidget(Card, { shadow: true, cssUrl: "/widgets/card.css" });
@@ -77,7 +77,7 @@ If the container is a void element like `<img>` or `<input>`, `attachShadow` thr
 
 ## CSS Modules across React, Vue, and Svelte
 
-CSS Modules pair naturally with both modes. The build emits hashed class names; the JSX/template references them; mountly does the wiring.
+CSS Modules pair with both modes. The build emits hashed class names, the JSX or template references them, and mountly does the wiring.
 
 ```tsx title="Card.tsx"
 import styles from "./Card.module.css";
@@ -88,16 +88,19 @@ export default function Card({ msg }: { msg: string }) {
 ```
 
 ```css title="Card.module.css"
-.button { color: rgb(7, 7, 7); background: rgb(255, 200, 100); }
+.button {
+  color: rgb(7, 7, 7);
+  background: rgb(255, 200, 100);
+}
 ```
 
-In light DOM the hashed class names already prevent host conflicts in most cases. Add `shadow: true` if you also need the host's CSS not to reach in. The repo has a Playwright test (`react-css-modules.html`) that proves the shadow case with a deliberate decoy rule.
+In light DOM the hashed class names prevent host conflicts in most cases. Add `shadow: true` if you also need to keep the host's CSS out. The repo has a Playwright test (`react-css-modules.html`) that proves the shadow case with a deliberate decoy rule.
 
 The same trick works for Svelte's component styles (already scoped via Svelte's hash) and Vue's `<style scoped>` (already scoped via `data-v-…` attributes). Shadow-DOM scoping is additive: you still get whatever your framework gives you, plus a hard boundary.
 
 ## Vite dev server gotcha
 
-Vite's dev server returns `.css` files as **JS modules** by default. The module exports a string of CSS *and* registers itself with HMR. If you `fetch("/widget.css")`, you get JavaScript:
+Vite's dev server returns `.css` files as **JS modules** by default. The module exports a string of CSS _and_ registers itself with HMR. If you `fetch("/widget.css")`, you get JavaScript:
 
 ```js
 import { createHotContext as __vite__createHotContext } from "/@vite/client";
@@ -108,14 +111,14 @@ export default ".button { color: red }";
 Pass that to `replaceSync()` and you get an empty stylesheet. The fix, and the reason mountly's adapter implementations all do it, is to send `Accept: text/css`:
 
 ```js
-fetch(url, { headers: { Accept: "text/css" } })
+fetch(url, { headers: { Accept: "text/css" } });
 ```
 
 Vite's content-negotiation returns raw CSS for that header, so the stylesheet parses correctly. You only ever need to think about this if you're putting a custom proxy or service worker between the page and Vite.
 
 ## Islands and noscript
 
-When JavaScript is disabled, no adapter runs. There is no shadow root, no `adoptedStyleSheets`, no injected `<style>`. The browser simply renders whatever HTML and `<link>` tags the server sent.
+When JavaScript is disabled, no adapter runs. There is no shadow root, no `adoptedStyleSheets`, no injected `<style>`. The browser renders whatever HTML and `<link>` tags the server sent.
 
 For an island to remain styled with JS off, you need a document-level stylesheet, typically a `<link rel="stylesheet">` in the `<head>`:
 
@@ -124,18 +127,23 @@ For an island to remain styled with JS off, you need a document-level stylesheet
   <link rel="stylesheet" href="/widgets/card/dist/index.css" />
 </head>
 <body>
-  <div data-mountly-island='{
+  <div
+    data-mountly-island='{
     "schemaVersion": 1,
     "id": "card",
     "moduleId": "card",
     "trigger": "click",
     "moduleUrl": "/widgets/card/dist/index.js"
-  }'>
+  }'
+  >
     <span class="styled-widget">server-rendered content</span>
   </div>
-  <script type="module" src="/packages/mountly/dist/host-entry.js"
+  <script
+    type="module"
+    src="/packages/mountly/dist/host-entry.js"
     data-mountly-host
-    data-mountly-loaders='{"card":"/widgets/card/dist/index.js"}'></script>
+    data-mountly-loaders='{"card":"/widgets/card/dist/index.js"}'
+  ></script>
 </body>
 ```
 
@@ -148,7 +156,7 @@ The repo has a test (`tests/island-nojs-styling.spec.ts`) that runs the same fix
 
 ### Why mountly can't do this for you automatically
 
-Adding a `<link>` requires JavaScript. If JS is off, no script (including mountly's host entry) ever runs. The only thing that works without JS is server-rendered HTML. So the noscript pattern is a **content-author** decision: ship the SSR markup *and* the `<link>` alongside it.
+Adding a `<link>` requires JavaScript. If JS is off, no script runs, including mountly's host entry. The only thing that works without JS is server-rendered HTML. The noscript pattern is a **content-author** decision: ship the SSR markup _and_ the `<link>` alongside it.
 
 ## Caching
 
@@ -163,16 +171,16 @@ Combined: a widget mounted in 50 places fetches CSS once, parses once, holds one
 
 ## Picking a strategy
 
-| You want…                                               | Use                                     |
-| ------------------------------------------------------- | --------------------------------------- |
-| Zero-config, host design system reaches in              | `moduleUrl` only (the default path)     |
-| Inline CSS at build time (small components, no fetch)   | `styles: "..."`                         |
-| Manual CSS path (asset hosted elsewhere)                | `cssUrl: "https://cdn.example.com/..."` |
-| Tailwind / utility-first global classes inside widget   | default light DOM + global `<link>`     |
-| Hard isolation from host CSS (CMS, third-party hosts)   | `shadow: true` + `moduleUrl` or `cssUrl` |
-| Tailwind layer **inside** scoped widget                 | `shadow: true` and compile Tailwind into the widget's `dist/index.css` |
-| CSS-in-JS (styled-components, emotion)                  | Default light DOM, or configure the library to inject into the shadow root via context when `shadow: true` |
-| Server-rendered island readable when JS is off          | SSR markup + `<link>` in `<head>` + island payload `moduleUrl`    |
+| You want…                                             | Use                                                                                                        |
+| ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Zero-config, host design system reaches in            | `moduleUrl` only (the default path)                                                                        |
+| Inline CSS at build time (small components, no fetch) | `styles: "..."`                                                                                            |
+| Manual CSS path (asset hosted elsewhere)              | `cssUrl: "https://cdn.example.com/..."`                                                                    |
+| Tailwind / utility-first global classes inside widget | default light DOM + global `<link>`                                                                        |
+| Hard isolation from host CSS (CMS, third-party hosts) | `shadow: true` + `moduleUrl` or `cssUrl`                                                                   |
+| Tailwind layer **inside** scoped widget               | `shadow: true` and compile Tailwind into the widget's `dist/index.css`                                     |
+| CSS-in-JS (styled-components, emotion)                | Default light DOM, or configure the library to inject into the shadow root via context when `shadow: true` |
+| Server-rendered island readable when JS is off        | SSR markup + `<link>` in `<head>` + island payload `moduleUrl`                                             |
 
 ## Related
 

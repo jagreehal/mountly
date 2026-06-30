@@ -13,12 +13,7 @@ import {
 } from "@modelcontextprotocol/ext-apps";
 import type { WidgetModule } from "mountly/adapter";
 import { MCP_ERROR_CODES } from "../schema.js";
-import type {
-  DisplayMode,
-  McpWidgetProps,
-  ToolInput,
-  ToolResult,
-} from "../types.js";
+import type { DisplayMode, McpWidgetProps, ToolInput, ToolResult } from "../types.js";
 
 export interface RunBridgeOptions {
   /** Pre-constructed App (used by jsdom tests); otherwise one is created here. */
@@ -93,7 +88,7 @@ export function runBridge(options: RunBridgeOptions): RunningBridge {
   function notifyError(code: string, error: unknown): void {
     const message = error instanceof Error ? error.message : String(error);
     try {
-      app.sendLog({ level: "error", data: { code, message } });
+      void app.sendLog({ level: "error", data: { code, message } });
     } catch {
       // ignore — log channel may not be ready
     }
@@ -111,7 +106,7 @@ export function runBridge(options: RunBridgeOptions): RunningBridge {
           const r = widget.update(container, props);
           if (r instanceof Promise) await r;
         } else {
-          widget.unmount(container);
+          void widget.unmount(container);
           const r = widget.mount(container, props);
           if (r instanceof Promise) await r;
           mounted = true;
@@ -150,7 +145,7 @@ export function runBridge(options: RunBridgeOptions): RunningBridge {
 
   app.onteardown = async () => {
     if (mounted) {
-      widget.unmount(container);
+      void widget.unmount(container);
       mounted = false;
     }
     return {};
@@ -175,12 +170,12 @@ export function runBridge(options: RunBridgeOptions): RunningBridge {
 
   const detachTeardown =
     options.onTeardown?.(() => {
-      if (mounted) widget.unmount(container);
+      if (mounted) void widget.unmount(container);
     }) ??
     (typeof window !== "undefined"
       ? (() => {
           const h = () => {
-            if (mounted) widget.unmount(container);
+            if (mounted) void widget.unmount(container);
           };
           window.addEventListener("beforeunload", h);
           return () => window.removeEventListener("beforeunload", h);
@@ -192,7 +187,7 @@ export function runBridge(options: RunBridgeOptions): RunningBridge {
     app,
     stop() {
       detachTeardown();
-      if (mounted) widget.unmount(container);
+      if (mounted) void widget.unmount(container);
     },
   };
 }

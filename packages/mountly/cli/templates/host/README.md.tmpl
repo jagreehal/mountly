@@ -1,0 +1,46 @@
+# {{name}}
+
+A mountly **host shell**: a static page that loads verticals on intent via an import map + `<mountly-feature>` elements.
+
+## Run
+
+```sh
+pnpm install
+pnpm dev        # serves this folder
+```
+
+Open the page and click the widget trigger. The vertical loads from the URL in
+`manifest.json`.
+
+## How it works
+
+1. `host.js` calls `bootstrapMountly("./manifest.json")` — fetch manifest → inject
+   import map → define `<mountly-feature>` elements, in the right order.
+2. `manifest.json` lists shared platform deps (React, mountly) and one entry per
+   vertical (team-owned widget published to a CDN).
+3. Each `<mountly-feature module-id="...">` mounts its vertical when its `trigger` fires.
+
+## Add a vertical
+
+1. A team scaffolds a widget: `npx mountly init their-widget` and publishes
+   `dist/peer.js` to a CDN.
+2. Add an entry to `manifest.json` `verticals`:
+   ```json
+   { "id": "their-widget", "url": "https://cdn.example.com/their-widget@1.0.0/dist/peer.js", "featureExport": "theirWidget" }
+   ```
+3. Drop `<mountly-feature module-id="their-widget" trigger="click">…</mountly-feature>`
+   into the HTML.
+
+## Validate before deploy
+
+```sh
+pnpm validate   # mountly manifest validate ./manifest.json
+```
+
+Catches duplicate React, version skew, and duplicate vertical ids. Wire it into CI.
+
+## Runtime verticals
+
+To register a vertical fetched after load (e.g. a per-user plugin list), use
+`setVertical` from `mountly-manifest`. See the
+[micro-frontends guide](https://github.com/jagreehal/mountly/blob/main/docs/micro-frontends.md).

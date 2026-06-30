@@ -1,5 +1,5 @@
 import { story } from "executable-stories-vitest";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import { DedupCache } from "../packages/mountly/src/cache";
 
 describe("DedupCache", () => {
@@ -16,7 +16,10 @@ describe("DedupCache", () => {
     };
 
     story.when("resolve is called twice concurrently for the same key");
-    const [first, second] = await Promise.all([cache.resolve("k", factory), cache.resolve("k", factory)]);
+    const [first, second] = await Promise.all([
+      cache.resolve("k", factory),
+      cache.resolve("k", factory),
+    ]);
 
     story.then("both callers get the same value and the factory runs once");
     expect(first).toBe(42);

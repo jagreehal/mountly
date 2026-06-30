@@ -1,13 +1,13 @@
 ---
 title: Custom element
-description: Reference for <mountly-feature> — the declarative way to drop a feature into HTML.
+description: Reference for <mountly-feature>, the declarative way to drop a feature into HTML.
 ---
 
 ```ts
-import { defineMountlyFeature } from 'mountly';
+import { defineMountlyFeature } from "mountly";
 ```
 
-Custom elements are the declarative path for HTML-first hosts — CMS pages, marketing sites, partner integrations, and static pages that should not own widget lifecycle code.
+Custom elements are the declarative path for HTML-first hosts: CMS pages, marketing sites, partner integrations, and static pages that should not own widget lifecycle code.
 
 ## Wire it up
 
@@ -15,15 +15,12 @@ For a shared widget bundle, put the tags in HTML and call `defineMountlyFeature(
 
 ```html
 <signup-card trigger="viewport" props='{"plan":"pro"}'></signup-card>
-<payment-breakdown
-  trigger="idle"
-  props='{"invoiceId":"inv_123"}'
-></payment-breakdown>
+<payment-breakdown trigger="idle" props='{"invoiceId":"inv_123"}'></payment-breakdown>
 
 <script type="module">
-  import { defineMountlyFeature } from 'mountly';
+  import { defineMountlyFeature } from "mountly";
 
-  defineMountlyFeature('/widgets/dist/index.js');
+  defineMountlyFeature("/widgets/dist/index.js");
 </script>
 ```
 
@@ -42,9 +39,7 @@ You can still use the wrapper tag directly:
 ## `defineMountlyFeature(input?)`
 
 ```ts
-function defineMountlyFeature(
-  input?: string | DefineMountlyFeatureOptions
-): void;
+function defineMountlyFeature(input?: string | DefineMountlyFeatureOptions): void;
 
 interface DefineMountlyFeatureOptions {
   tagName?: string;
@@ -69,15 +64,15 @@ defineMountlyFeature();
 Defines `<mountly-feature>` and scans for tags that already provide their own `module-url`, `src`, or `props.moduleUrl`.
 
 ```ts
-defineMountlyFeature('/widgets/dist/index.js');
+defineMountlyFeature("/widgets/dist/index.js");
 ```
 
 Uses one shared bundle for all discovered alias tags.
 
 ```ts
 defineMountlyFeature({
-  source: '/widgets/dist/index.js',
-  prefix: 'acme',
+  source: "/widgets/dist/index.js",
+  prefix: "acme",
 });
 ```
 
@@ -85,8 +80,8 @@ Defines tags such as `<acme-signup-card>` while keeping the module ID as `signup
 
 ```ts
 defineMountlyFeature({
-  baseUrl: '/widgets',
-  modules: ['signup-card', 'payment-breakdown'],
+  baseUrl: "/widgets",
+  modules: ["signup-card", "payment-breakdown"],
 });
 ```
 
@@ -95,8 +90,8 @@ Registers only listed modules and derives URLs such as `/widgets/signup-card/dis
 ```ts
 defineMountlyFeature({
   modules: {
-    'signup-card': '/widgets/signup-card.js',
-    'payment-breakdown': '/widgets/payment-breakdown.js',
+    "signup-card": "/widgets/signup-card.js",
+    "payment-breakdown": "/widgets/payment-breakdown.js",
   },
 });
 ```
@@ -108,10 +103,10 @@ For internal module IDs that cannot be browser custom element names, use an alia
 ```ts
 defineMountlyFeature({
   modules: {
-    signup: '/widgets/signup.js',
+    signup: "/widgets/signup.js",
   },
   aliases: {
-    'signup-card': 'signup',
+    "signup-card": "signup",
   },
 });
 ```
@@ -123,7 +118,7 @@ Browsers require custom element tag names to contain a hyphen, so `<signup>` can
 ```ts
 function registerCustomElement(
   moduleId: string,
-  factory: () => OnDemandFeature | Promise<OnDemandFeature>
+  factory: () => OnDemandFeature | Promise<OnDemandFeature>,
 ): void;
 ```
 
@@ -132,7 +127,7 @@ Low-level escape hatch. Maps a `module-id` attribute value to a factory that ret
 To unregister:
 
 ```ts
-unregisterCustomElement('signup-card');
+unregisterCustomElement("signup-card");
 ```
 
 ## Element attributes
@@ -187,11 +182,11 @@ Astro-specific compile-time/server directives (`client:only`, `server:defer`, `s
 
 ## Live prop updates
 
-Setting the `props` attribute on a connected element triggers `feature.update(container, parsedProps)` — preserving framework-internal state when the widget supports it.
+Setting the `props` attribute on a connected element triggers `feature.update(container, parsedProps)`, which preserves framework-internal state when the widget supports it.
 
 ```js
-const el = document.querySelector('mountly-feature');
-el.setAttribute('props', JSON.stringify({ plan: 'pro' }));
+const el = document.querySelector("mountly-feature");
+el.setAttribute("props", JSON.stringify({ plan: "pro" }));
 ```
 
 ## Errors
@@ -208,7 +203,7 @@ The element stays inert until the factory is registered. With alias tags, check 
 
 ## Lifecycle hooks
 
-The element does not expose `onMount` / `onUnmount` itself — for those, attach analytics handlers via the feature's [`onAnalyticsEvent`](/mountly/api/analytics/) or wire them inside the factory:
+The element does not expose `onMount` / `onUnmount` itself. For those, attach analytics handlers via the feature's [`onAnalyticsEvent`](/mountly/api/analytics/) or wire them inside the factory:
 
 ```ts
 registerCustomElement("signup-card", () => {
@@ -221,5 +216,5 @@ registerCustomElement("signup-card", () => {
 
 ## Related
 
-- [Custom element concept](/mountly/concepts/custom-element/) — the explainer.
-- [`createOnDemandFeature`](/mountly/api/create-on-demand-feature/) — what the factory returns.
+- [Custom element concept](/mountly/concepts/custom-element/): the explainer.
+- [`createOnDemandFeature`](/mountly/api/create-on-demand-feature/): what the factory returns.

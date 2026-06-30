@@ -49,6 +49,10 @@ pagefind: false
         <span class="value">0</span>
         <span>SPA required</span>
       </div>
+      <div class="hero-stat">
+        <span class="value">3</span>
+        <span>frameworks, one page</span>
+      </div>
     </div>
   </div>
 
@@ -62,22 +66,22 @@ pagefind: false
     <div class="demo-states sl-markdown-no-margin">
       <div class="row r1">
         <span class="num">01</span>
-        <span class="state"><em>idle</em> — nothing loaded, waiting on intent</span>
+        <span class="state"><em>idle</em>: nothing loaded, waiting on intent</span>
         <span class="timing">0ms</span>
       </div>
       <div class="row r2">
         <span class="num">02</span>
-        <span class="state"><em>preload</em> — user hovered, fetching module</span>
+        <span class="state"><em>preload</em>: user hovered, fetching module</span>
         <span class="timing">+128ms</span>
       </div>
       <div class="row r3">
         <span class="num">03</span>
-        <span class="state"><em>activate</em> — clicked, finalising data</span>
+        <span class="state"><em>activate</em>: clicked, finalising data</span>
         <span class="timing">+34ms</span>
       </div>
       <div class="row r4">
         <span class="num">04</span>
-        <span class="state"><em>mount</em> — widget rendered into the container</span>
+        <span class="state"><em>mount</em>: widget rendered into the container</span>
         <span class="timing">+12ms</span>
       </div>
     </div>
@@ -96,15 +100,12 @@ pagefind: false
 <section class="section">
   <div class="section-head">
     <span class="eyebrow">0x · Runtime shape</span>
-    <h2 class="section-title">
-      Small core + explicit subpaths.
-    </h2>
+    <h2 class="section-title">Small core + explicit subpaths.</h2>
   </div>
   <p class="section-lead" style="max-width: 72ch;">
-    mountly keeps a small top-level core entry and exposes focused subpath
-    imports (for example <code>mountly/attach</code>, <code>mountly/elements</code>,
-    <code>mountly/shadow</code>, <code>mountly/assets</code>). In browser import-map
-    hosts, map only the subpaths you use.
+    mountly keeps a small top-level core entry and exposes focused subpath imports (for example{" "}
+    <code>mountly/attach</code>, <code>mountly/elements</code>,<code>mountly/shadow</code>,{" "}
+    <code>mountly/assets</code>). In browser import-map hosts, map only the subpaths you use.
   </p>
 </section>
 
@@ -118,10 +119,9 @@ pagefind: false
     </h2>
   </div>
   <p class="section-lead" style="max-width: 70ch;">
-    The core idea is simple: a component becomes a mountable widget, then mountly
-    loads and activates it from plain HTML when the page says it is time.
-    Marketing reuse, strangler-fig migration, island-style UI, and embeds are all
-    applications of the same runtime.
+    You wrap a component as a mountable widget. mountly loads and activates it
+    from plain HTML when the page signals intent. Marketing reuse, strangler-fig
+    migration, island-style UI, and embeds run on this one runtime.
   </p>
 
   <div class="before-after sl-markdown-no-margin">
@@ -162,38 +162,38 @@ pagefind: false
     <div class="trigger-cell">
       <span class="index">01</span>
       <span class="label">marketing</span>
-      <span class="name">Real product components</span>
-      <span class="desc">Reuse checkout, pricing, signup, calculator, and lead-capture components on fast campaign pages.</span>
+      <span class="name">Real product components on campaign pages</span>
+      <span class="desc">Reuse checkout, pricing, signup, and calculator components on fast campaign pages without rewriting the CMS host.</span>
     </div>
     <div class="trigger-cell">
       <span class="index">02</span>
       <span class="label">migration</span>
-      <span class="name">Strangler fig UI</span>
-      <span class="desc">Replace legacy surfaces one widget at a time while the existing host keeps its routing and release process.</span>
+      <span class="name">Strangler fig, one widget at a time</span>
+      <span class="desc">Replace legacy surfaces incrementally. Each widget replaces one section. The host never rewrites. When all widgets are done, the legacy is gone.</span>
     </div>
     <div class="trigger-cell">
       <span class="index">03</span>
-      <span class="label">islands</span>
-      <span class="name">Runtime islands</span>
-      <span class="desc">Get Astro-like timing for HTML hosts, or compose with Astro when Astro owns the shell and mountly owns a portable widget.</span>
+      <span class="label">multi-team</span>
+      <span class="name">Independent verticals, shared host</span>
+      <span class="desc">Team A ships payments, Team B ships chat, Team C owns the host. No merge conflicts, no shared deploy, no shared config block. A typed event bus for cross-team events.</span>
     </div>
     <div class="trigger-cell">
       <span class="index">04</span>
-      <span class="label">embeds</span>
-      <span class="name">Partner and CMS drops</span>
-      <span class="desc">Expose a stable custom tag and let non-app teams place interactive UI without owning framework code.</span>
+      <span class="label">cross-framework</span>
+      <span class="name">React + Vue + Svelte on one page</span>
+      <span class="desc">Three teams, three frameworks, one page. Each widget is a bare specifier in the import map. Teams converge on the next architecture at their own pace.</span>
     </div>
     <div class="trigger-cell">
       <span class="index">05</span>
-      <span class="label">performance</span>
-      <span class="name">Intent-paid JavaScript</span>
-      <span class="desc">Keep the page shell light, then load heavy UI when users scroll, click, hover, or match a route.</span>
+      <span class="label">embeds</span>
+      <span class="name">Partner and CMS drops</span>
+      <span class="desc">Expose a stable custom tag and let non-app teams place interactive UI without owning framework code or managing a build step.</span>
     </div>
     <div class="trigger-cell">
       <span class="index">06</span>
-      <span class="label">transition</span>
-      <span class="name">Multi-framework pages</span>
-      <span class="desc">Run React, Vue, Svelte, and TSRX widgets side by side while teams converge on the next architecture.</span>
+      <span class="label">performance</span>
+      <span class="name">Intent-paid JavaScript</span>
+      <span class="desc">Keep the page shell light. Load heavy UI when users scroll, click, hover, or match a route. ~9KB core, widgets on demand.</span>
     </div>
   </div>
 </section>
@@ -209,7 +209,7 @@ pagefind: false
   </div>
   <p class="section-lead">
     A trigger is the signal that moves a feature from <code>idle</code> to <code>preload</code> to
-    <code>mount</code>. Pick the one that matches user intent — or compose your own with a plugin.
+    <code>mount</code>. Pick the one that matches user intent, or compose your own with a plugin.
   </p>
 
   <div class="trigger-grid sl-markdown-no-margin">
@@ -262,7 +262,7 @@ pagefind: false
     </h2>
   </div>
   <p class="section-lead">
-    Every feature moves through the same sequence regardless of trigger or framework. You can hook into any phase, abort in flight, and unmount cleanly.
+    Every feature moves through the same sequence regardless of trigger or framework. You hook into any phase, abort in flight, and unmount without leaks.
   </p>
 
   <div class="lifecycle sl-markdown-no-margin">
@@ -304,46 +304,46 @@ pagefind: false
     </h2>
   </div>
   <p class="section-lead">
-    Components stay components. The adapter wraps them as widgets. The host can wire a
-    feature imperatively, or declare it directly as HTML.
+    Components stay components. The adapter wraps them as widgets. You wire a
+    feature in code, or declare it as an HTML tag.
   </p>
 
 ```ts title="signup-card.ts"
-import { createWidget } from 'mountly-react';
-import SignupCard from './SignupCard.tsx';
-import styles from './SignupCard.css?inline';
+import { createWidget } from "mountly-react";
+import SignupCard from "./SignupCard.tsx";
+import styles from "./SignupCard.css?inline";
 
 // 1. Wrap a component as a framework-agnostic widget
 export default createWidget(SignupCard, { styles });
 ```
 
 ```ts title="page.ts"
-import { createOnDemandFeature } from 'mountly';
+import { createOnDemandFeature } from "mountly";
 
 // 2. Add the on-demand lifecycle around a widget
 const signup = createOnDemandFeature({
-  moduleId: 'signup-card',
-  loadModule: () => import('./signup-card.js'),
+  moduleId: "signup-card",
+  loadModule: () => import("./signup-card.js"),
   render: ({ mod, container, props }) => mod.mount(container, props),
 });
 
 // 3. Attach it to a DOM trigger — preload on hover, mount on click
 signup.attach({
-  trigger: document.querySelector('#cta')!,
-  preloadOn: 'hover',
-  activateOn: 'click',
+  trigger: document.querySelector("#cta")!,
+  preloadOn: "hover",
+  activateOn: "click",
 });
 ```
 
-> **Styling** — CSS is auto-loaded with the module and applied before render. No FOUC. Default light DOM lets the host's design system reach in; pass `shadow: true` for full isolation.
+> **Styling:** mountly loads CSS with the module and applies it before render, so no FOUC. Light DOM lets the host's design system reach in; pass `shadow: true` for full isolation.
 
 ```html title="host.html"
 <signup-card trigger="viewport" props='{"plan":"pro"}'></signup-card>
 
 <script type="module">
-  import { defineMountlyFeature } from 'mountly';
+  import { defineMountlyFeature } from "mountly";
 
-  defineMountlyFeature('/widgets/dist/index.js');
+  defineMountlyFeature("/widgets/dist/index.js");
 </script>
 ```
 
@@ -385,8 +385,14 @@ signup.attach({
         <tr>
           <td>Microfrontend orchestrators</td>
           <td>Independent apps with org-level ownership</td>
-          <td>Operationally heavy for component-sized features</td>
+          <td>Operationally heavy for component-sized features. Shared config blocks, runtime negotiation, build-time coupling.</td>
           <td>High</td>
+        </tr>
+        <tr>
+          <td>Import-map MFE (mountly model)</td>
+          <td>Team-scalable widgets with zero orchestration</td>
+          <td>All verticals must tolerate one shared React version. No SSR composition at the edge. You own the CDN/manifest workflow.</td>
+          <td>Low</td>
         </tr>
         <tr class="highlight">
           <td>mountly</td>
@@ -417,17 +423,17 @@ signup.attach({
     </a>
     <a class="package" href="/mountly/frameworks/react/">
       <span class="pkg-name">mountly-react</span>
-      <span class="pkg-desc">React adapter — <code>createWidget(Component, &#123; styles &#125;)</code>.</span>
+      <span class="pkg-desc">React adapter: <code>createWidget(Component, &#123; styles &#125;)</code>.</span>
       <span class="pkg-meta">React 18+</span>
     </a>
     <a class="package" href="/mountly/frameworks/vue/">
       <span class="pkg-name">mountly-vue</span>
-      <span class="pkg-desc">Vue adapter — same surface, <code>createApp</code> under the hood.</span>
+      <span class="pkg-desc">Vue adapter: <code>createWidget(Component)</code>, lightweight <code>createApp</code> per container.</span>
       <span class="pkg-meta">Vue 3</span>
     </a>
     <a class="package" href="/mountly/frameworks/svelte/">
       <span class="pkg-name">mountly-svelte</span>
-      <span class="pkg-desc">Svelte adapter — auto-detects v4 class API and v5 functional API.</span>
+      <span class="pkg-desc">Svelte adapter: auto-detects v4 class API and v5 functional <code>mount</code>/<code>unmount</code>.</span>
       <span class="pkg-meta">Svelte 4 / 5</span>
     </a>
     <a class="package" href="/mountly/frameworks/tailwind/">
@@ -443,9 +449,7 @@ signup.attach({
 <div class="landing-foot">
   <span>mountly · Apache-2.0 · pre-1.0</span>
   <span>
-    <a href="https://github.com/jagreehal/mountly">
-      github.com/jagreehal/mountly
-    </a>
+    <a href="https://github.com/jagreehal/mountly">github.com/jagreehal/mountly</a>
   </span>
   <span>
     see <code>./examples</code> in the repo

@@ -3,7 +3,7 @@ title: Custom element
 description: The <mountly-feature> custom element — declarative usage for hosts that drop in HTML rather than write JS.
 ---
 
-For hosts that drop in HTML — CMS pages, marketing sites, partner integrations — declarative is easier to maintain than imperative. mountly ships a custom element for that.
+Some hosts drop in HTML rather than write JS: CMS pages, marketing sites, partner integrations. For them, declarative markup is easier to maintain than imperative code. mountly ships a custom element for that.
 
 ## In one example
 
@@ -11,20 +11,20 @@ For hosts that drop in HTML — CMS pages, marketing sites, partner integrations
 <signup-card trigger="viewport" props='{"plan":"pro"}'></signup-card>
 
 <script type="module">
-  import { defineMountlyFeature } from 'mountly';
+  import { defineMountlyFeature } from "mountly";
 
-  defineMountlyFeature('/widgets/dist/index.js');
+  defineMountlyFeature("/widgets/dist/index.js");
 </script>
 ```
 
-That's the common path. Mountly scans the page, defines `<signup-card>`, registers it as a feature, and loads it from the shared source. The element handles attach, mount, prop updates, and unmount on disconnect.
+That's the common path. Mountly scans the page, defines `<signup-card>`, registers it as a feature, and loads it from the shared source. The element handles attach, mount, prop updates, and unmount on disconnect for you.
 
 ## Wire it once
 
 If all widgets live in one bundle, pass that bundle once:
 
 ```ts
-defineMountlyFeature('/widgets/dist/index.js');
+defineMountlyFeature("/widgets/dist/index.js");
 ```
 
 If the host page needs namespaced tags, add a prefix:
@@ -35,8 +35,8 @@ If the host page needs namespaced tags, add a prefix:
 
 ```ts
 defineMountlyFeature({
-  source: '/widgets/dist/index.js',
-  prefix: 'acme',
+  source: "/widgets/dist/index.js",
+  prefix: "acme",
 });
 ```
 
@@ -46,20 +46,20 @@ For per-widget bundles, give Mountly a base URL and limit the allowed modules:
 
 ```ts
 defineMountlyFeature({
-  baseUrl: '/widgets',
-  modules: ['signup-card', 'payment-breakdown'],
+  baseUrl: "/widgets",
+  modules: ["signup-card", "payment-breakdown"],
 });
 ```
 
-That registers only those modules and resolves `/widgets/signup-card/dist/index.js`, `/widgets/payment-breakdown/dist/index.js`, and so on. This saves bytes when components are split into separate bundles.
+That registers only those modules and resolves `/widgets/signup-card/dist/index.js`, `/widgets/payment-breakdown/dist/index.js`, and so on. You save bytes when components split into separate bundles.
 
 You can also stay explicit:
 
 ```ts
 defineMountlyFeature({
   modules: {
-    'signup-card': '/widgets/signup-card.js',
-    'payment-breakdown': '/widgets/payment-breakdown.js',
+    "signup-card": "/widgets/signup-card.js",
+    "payment-breakdown": "/widgets/payment-breakdown.js",
   },
 });
 ```
@@ -89,8 +89,8 @@ Custom element alias tags must contain a hyphen because the browser requires it.
 
 ```ts
 defineMountlyFeature({
-  modules: { signup: '/widgets/signup.js' },
-  aliases: { 'signup-card': 'signup' },
+  modules: { signup: "/widgets/signup.js" },
+  aliases: { "signup-card": "signup" },
 });
 ```
 
@@ -99,13 +99,13 @@ defineMountlyFeature({
 Change the `props` attribute and the element calls `feature.update(...)`. If the widget exposes `update(container, props)` (React adapter does, others can opt in), framework-internal state is preserved. Otherwise it falls back to a re-render in the same container.
 
 ```ts
-const el = document.querySelector('mountly-feature');
-el.setAttribute('props', JSON.stringify({ plan: 'enterprise' }));
+const el = document.querySelector("mountly-feature");
+el.setAttribute("props", JSON.stringify({ plan: "enterprise" }));
 ```
 
 ## Mount target
 
-By default, the widget mounts inside the element itself. To mount into a sibling instead — useful when the trigger element should stay tiny and the widget renders into a pre-positioned container — pass `mount-selector`:
+By default, the widget mounts inside the element itself. To mount into a sibling instead, pass `mount-selector`. This helps when the trigger element should stay tiny and the widget renders into a pre-positioned container:
 
 ```html
 <button id="cta">Buy</button>
@@ -121,7 +121,7 @@ The element's own DOM stays empty; the widget renders into `#modal-root`.
 
 ## Unknown `module-id`
 
-If the element connects with a `module-id` that has no registered factory, you get a console warning listing the registered IDs. The element stays inert until the factory is registered later — useful when the registration is split across code-split chunks.
+If the element connects with a `module-id` that has no registered factory, you get a console warning listing the registered IDs. The element stays inert until you register the factory later, which helps when the registration is split across code-split chunks.
 
 ## When to prefer the imperative API
 

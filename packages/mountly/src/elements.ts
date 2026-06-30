@@ -1,30 +1,13 @@
-import type {
-  OnDemandFeature,
-  FeatureContext,
-  CreateOnDemandFeatureOptions,
-} from './feature.js';
-import { createOnDemandFeature } from './feature.js';
-import { attach, onTrigger, type TriggerSource } from './attach.js';
-import type { TriggerType, UrlChangeEventType } from './triggers.js';
+import type { OnDemandFeature, FeatureContext, CreateOnDemandFeatureOptions } from "./feature.js";
+import { createOnDemandFeature } from "./feature.js";
+import { attach, onTrigger, type TriggerSource } from "./attach.js";
+import type { TriggerType, UrlChangeEventType } from "./triggers.js";
 
-type PreloadKind = 'hover' | 'viewport' | 'idle' | 'media';
-type ActivateKind =
-  | 'click'
-  | 'hover'
-  | 'focus'
-  | 'viewport'
-  | 'idle'
-  | 'media'
-  | 'url-change';
+type PreloadKind = "hover" | "viewport" | "idle" | "media";
+type ActivateKind = "click" | "hover" | "focus" | "viewport" | "idle" | "media" | "url-change";
 
-function defaultPreloadKind(
-  triggerType: string | null
-): PreloadKind | null {
-  if (
-    triggerType === 'hover' ||
-    triggerType === 'viewport' ||
-    triggerType === 'idle'
-  ) {
+function defaultPreloadKind(triggerType: string | null): PreloadKind | null {
+  if (triggerType === "hover" || triggerType === "viewport" || triggerType === "idle") {
     return triggerType;
   }
   return null;
@@ -32,16 +15,16 @@ function defaultPreloadKind(
 
 function defaultActivateKind(triggerType: string | null): ActivateKind {
   if (
-    triggerType === 'focus' ||
-    triggerType === 'hover' ||
-    triggerType === 'viewport' ||
-    triggerType === 'url-change' ||
-    triggerType === 'idle' ||
-    triggerType === 'media'
+    triggerType === "focus" ||
+    triggerType === "hover" ||
+    triggerType === "viewport" ||
+    triggerType === "url-change" ||
+    triggerType === "idle" ||
+    triggerType === "media"
   ) {
     return triggerType;
   }
-  return 'click';
+  return "click";
 }
 
 interface BuildTriggerSourceParams {
@@ -55,28 +38,26 @@ interface BuildTriggerSourceParams {
 function buildTriggerSource(
   kind: ActivateKind,
   el: HTMLElement,
-  params: BuildTriggerSourceParams
+  params: BuildTriggerSourceParams,
 ): TriggerSource {
   switch (kind) {
-    case 'click':
+    case "click":
       return onTrigger.click(el);
-    case 'hover':
+    case "hover":
       return onTrigger.hover(el, { delay: params.hoverDelay });
-    case 'focus':
+    case "focus":
       return onTrigger.focus(el);
-    case 'viewport':
+    case "viewport":
       return onTrigger.viewport(el, { rootMargin: params.viewportRootMargin });
-    case 'idle':
+    case "idle":
       return onTrigger.idle({ timeout: params.idleTimeout });
-    case 'media': {
+    case "media": {
       if (!params.mediaQuery) {
-        throw new Error(
-          `[mountly] activate-on="media" requires activate-media-query attribute.`
-        );
+        throw new Error(`[mountly] activate-on="media" requires activate-media-query attribute.`);
       }
       return onTrigger.media(params.mediaQuery);
     }
-    case 'url-change':
+    case "url-change":
       return onTrigger.urlChange({ events: params.urlEvents });
   }
 }
@@ -89,7 +70,7 @@ const registry: FeatureRegistry = {};
 
 export function registerCustomElement(
   moduleId: string,
-  factory: () => OnDemandFeature | Promise<OnDemandFeature>
+  factory: () => OnDemandFeature | Promise<OnDemandFeature>,
 ): void {
   registry[moduleId] = factory;
 }
@@ -98,8 +79,10 @@ export function unregisterCustomElement(moduleId: string): void {
   delete registry[moduleId];
 }
 
-export interface RegisterFeatureModuleOptions
-  extends Omit<CreateOnDemandFeatureOptions, 'moduleId'> {
+export interface RegisterFeatureModuleOptions extends Omit<
+  CreateOnDemandFeatureOptions,
+  "moduleId"
+> {
   /** Required: URL to the widget's JavaScript bundle. */
   moduleUrl: string;
 }
@@ -147,26 +130,26 @@ export interface DefineMountlyFeatureOptions {
 
 export function registerFeatureModule(
   moduleId: string,
-  options: RegisterFeatureModuleOptions
+  options: RegisterFeatureModuleOptions,
 ): void {
   registerCustomElement(moduleId, () =>
     createOnDemandFeature({
       moduleId,
       ...options,
-    })
+    }),
   );
 }
 
 export function autoRegisterFeatures(modules: FeatureModuleManifest): void {
   if (Array.isArray(modules)) {
     for (const entry of modules) {
-      if (typeof entry === 'string') {
+      if (typeof entry === "string") {
         const moduleId = entry;
         registerFeatureModule(moduleId, { moduleUrl: entry });
         continue;
       }
       const [moduleId, value] = entry;
-      if (typeof value === 'string') {
+      if (typeof value === "string") {
         registerFeatureModule(moduleId, { moduleUrl: value });
       } else {
         registerFeatureModule(moduleId, value);
@@ -176,7 +159,7 @@ export function autoRegisterFeatures(modules: FeatureModuleManifest): void {
   }
 
   for (const [moduleId, value] of Object.entries(modules)) {
-    if (typeof value === 'string') {
+    if (typeof value === "string") {
       registerFeatureModule(moduleId, { moduleUrl: value });
     } else {
       registerFeatureModule(moduleId, value);
@@ -185,68 +168,61 @@ export function autoRegisterFeatures(modules: FeatureModuleManifest): void {
 }
 
 function kebabToCamel(value: string): string {
-  return value.replace(/-([a-z0-9])/g, (_m, char: string) =>
-    char.toUpperCase()
-  );
+  return value.replace(/-([a-z0-9])/g, (_m, char: string) => char.toUpperCase());
 }
 
 function normalizeAliasPrefix(prefix: string | undefined): string | undefined {
-  const normalized = prefix?.trim().toLowerCase().replace(/-+$/, '');
+  const normalized = prefix?.trim().toLowerCase().replace(/-+$/, "");
   return normalized || undefined;
 }
 
-function aliasTagForModule(
-  moduleId: string,
-  options: DefineMountlyFeatureOptions
-): string {
+function aliasTagForModule(moduleId: string, options: DefineMountlyFeatureOptions): string {
   const prefix = normalizeAliasPrefix(options.prefix);
   return prefix ? `${prefix}-${moduleId}` : moduleId;
 }
 
 function moduleIdFromAliasTag(
   aliasTag: string,
-  options: DefineMountlyFeatureOptions
+  options: DefineMountlyFeatureOptions,
 ): string | null {
   const prefix = normalizeAliasPrefix(options.prefix);
   if (!prefix) return aliasTag;
   const expectedStart = `${prefix}-`;
-  return aliasTag.startsWith(expectedStart)
-    ? aliasTag.slice(expectedStart.length)
-    : null;
+  return aliasTag.startsWith(expectedStart) ? aliasTag.slice(expectedStart.length) : null;
 }
 
 function isLikelyUrl(value: string): boolean {
   return (
-    value.startsWith('/') ||
-    value.startsWith('./') ||
-    value.startsWith('../') ||
-    value.startsWith('http://') ||
-    value.startsWith('https://') ||
-    value.endsWith('.js')
+    value.startsWith("/") ||
+    value.startsWith("./") ||
+    value.startsWith("../") ||
+    value.startsWith("http://") ||
+    value.startsWith("https://") ||
+    value.endsWith(".js")
   );
 }
 
 function normalizeDefineOptions(
-  input: string | DefineMountlyFeatureOptions
+  input: string | DefineMountlyFeatureOptions,
 ): DefineMountlyFeatureOptions {
-  if (typeof input !== 'string') return input;
+  if (typeof input !== "string") return input;
   return isLikelyUrl(input) ? { source: input } : { tagName: input };
 }
 
 function scanAndRegisterFromDom(tagName: string): void {
   const nodes = document.querySelectorAll<HTMLElement>(tagName);
   for (const node of nodes) {
-    const moduleId = node.getAttribute('module-id');
+    const moduleId = node.getAttribute("module-id");
     if (!moduleId || registry[moduleId]) continue;
     const moduleUrl =
-      node.getAttribute('module-url') ||
-      node.getAttribute('src') ||
+      node.getAttribute("module-url") ||
+      node.getAttribute("src") ||
       (() => {
-        const raw = node.getAttribute('props');
+        const raw = node.getAttribute("props");
         if (!raw) return null;
         try {
           const parsed = JSON.parse(raw) as Record<string, unknown>;
-          return typeof parsed.moduleUrl === 'string' ? parsed.moduleUrl : null;
+          return typeof parsed.moduleUrl === "string" ? parsed.moduleUrl : null;
         } catch {
           return null;
         }
@@ -259,28 +235,23 @@ function scanAndRegisterFromDom(tagName: string): void {
 
 function resolveAutoModuleUrl(
   moduleId: string,
-  options: DefineMountlyFeatureOptions
+  options: DefineMountlyFeatureOptions,
 ): string | null {
   if (options.resolveModuleUrl) return options.resolveModuleUrl(moduleId);
-  if (options.source || options.moduleUrl)
-    return options.source ?? options.moduleUrl ?? null;
-  if (options.baseUrl)
-    return `${options.baseUrl.replace(/\/$/, '')}/${moduleId}/dist/index.js`;
+  if (options.source || options.moduleUrl) return options.source ?? options.moduleUrl ?? null;
+  if (options.baseUrl) return `${options.baseUrl.replace(/\/$/, "")}/${moduleId}/dist/index.js`;
   return null;
 }
 
 function resolveAutoModuleExport(
   moduleId: string,
-  options: DefineMountlyFeatureOptions
+  options: DefineMountlyFeatureOptions,
 ): string | undefined {
   if (options.source || options.moduleUrl) return kebabToCamel(moduleId);
   return undefined;
 }
 
-function registerAutoModule(
-  moduleId: string,
-  options: DefineMountlyFeatureOptions
-): void {
+function registerAutoModule(moduleId: string, options: DefineMountlyFeatureOptions): void {
   if (registry[moduleId]) return;
   const moduleUrl = resolveAutoModuleUrl(moduleId, options);
   if (!moduleUrl) return;
@@ -292,16 +263,14 @@ function registerAutoModule(
 
 function normalizeModuleIds(modules: FeatureModuleManifest): string[] {
   if (Array.isArray(modules)) {
-    return modules.map((entry) =>
-      typeof entry === 'string' ? entry : entry[0]
-    );
+    return modules.map((entry) => (typeof entry === "string" ? entry : entry[0]));
   }
   return Object.keys(modules);
 }
 
 function registerModuleList(
   modules: FeatureModuleManifest,
-  options: DefineMountlyFeatureOptions
+  options: DefineMountlyFeatureOptions,
 ): void {
   if (!Array.isArray(modules)) {
     autoRegisterFeatures(modules);
@@ -309,9 +278,9 @@ function registerModuleList(
   }
 
   for (const entry of modules) {
-    if (typeof entry !== 'string') {
+    if (typeof entry !== "string") {
       const [moduleId, value] = entry;
-      if (typeof value === 'string') {
+      if (typeof value === "string") {
         registerFeatureModule(moduleId, { moduleUrl: value });
       } else {
         registerFeatureModule(moduleId, value);
@@ -331,15 +300,13 @@ function registerModuleList(
 
 function scanAliasTags(
   options: DefineMountlyFeatureOptions,
-  allowedModuleIds?: Set<string>
+  allowedModuleIds?: Set<string>,
 ): string[] {
-  const tagName = options.tagName ?? 'mountly-feature';
+  const tagName = options.tagName ?? "mountly-feature";
   const seen = new Set<string>();
-  for (const node of Array.from(
-    document.body.querySelectorAll<HTMLElement>('*')
-  )) {
+  for (const node of Array.from(document.body.querySelectorAll<HTMLElement>("*"))) {
     const aliasTag = node.localName;
-    if (aliasTag === tagName || !aliasTag.includes('-')) continue;
+    if (aliasTag === tagName || !aliasTag.includes("-")) continue;
     const moduleId = moduleIdFromAliasTag(aliasTag, options);
     if (!moduleId) continue;
     if (allowedModuleIds && !allowedModuleIds.has(moduleId)) continue;
@@ -350,41 +317,33 @@ function scanAliasTags(
   return [...seen];
 }
 
-function defineAliasElement(
-  tagName: string,
-  aliasTag: string,
-  moduleId: string
-): void {
-  if (!aliasTag.includes('-')) return;
+function defineAliasElement(tagName: string, aliasTag: string, moduleId: string): void {
+  if (!aliasTag.includes("-")) return;
   if (customElements.get(aliasTag)) return;
 
   customElements.define(
     aliasTag,
     class MountlyAliasElement extends HTMLElement {
       static observedAttributes = [
-        'trigger',
-        'preload-on',
-        'activate-on',
-        'preload-media-query',
-        'activate-media-query',
-        'idle-timeout',
-        'viewport-root-margin',
-        'url-events',
-        'data-url',
-        'data-method',
-        'mount-selector',
-        'props',
+        "trigger",
+        "preload-on",
+        "activate-on",
+        "preload-media-query",
+        "activate-media-query",
+        "idle-timeout",
+        "viewport-root-margin",
+        "url-events",
+        "data-url",
+        "data-method",
+        "mount-selector",
+        "props",
       ];
 
       connectedCallback() {
         this.renderFeature();
       }
 
-      attributeChangedCallback(
-        _name: string,
-        oldValue: string | null,
-        newValue: string | null
-      ) {
+      attributeChangedCallback(_name: string, oldValue: string | null, newValue: string | null) {
         if (oldValue === newValue) return;
         if (!this.isConnected) return;
         this.renderFeature();
@@ -393,23 +352,18 @@ function defineAliasElement(
       private renderFeature() {
         syncAliasNodeFeature(this, tagName, moduleId);
       }
-    }
+    },
   );
 }
 
-function syncAliasNodeFeature(
-  aliasNode: HTMLElement,
-  tagName: string,
-  moduleId: string
-): void {
+function syncAliasNodeFeature(aliasNode: HTMLElement, tagName: string, moduleId: string): void {
   const feature =
-    aliasNode.querySelector<HTMLElement>(`:scope > ${tagName}`) ??
-    document.createElement(tagName);
-  if (feature.getAttribute('module-id') !== moduleId) {
-    feature.setAttribute('module-id', moduleId);
+    aliasNode.querySelector<HTMLElement>(`:scope > ${tagName}`) ?? document.createElement(tagName);
+  if (feature.getAttribute("module-id") !== moduleId) {
+    feature.setAttribute("module-id", moduleId);
   }
   for (const attr of aliasNode.getAttributeNames()) {
-    if (attr === 'module-id') continue;
+    if (attr === "module-id") continue;
     const value = aliasNode.getAttribute(attr);
     if (value !== null && feature.getAttribute(attr) !== value) {
       feature.setAttribute(attr, value);
@@ -424,10 +378,10 @@ function defineAliasElements(
   tagName: string,
   moduleIds: string[],
   options: DefineMountlyFeatureOptions,
-  aliases: DefineMountlyFeatureOptions['aliases']
+  aliases: DefineMountlyFeatureOptions["aliases"],
 ): void {
   const aliasMap = new Map<string, string>();
-  if (typeof aliases === 'object') {
+  if (typeof aliases === "object") {
     for (const [aliasTag, moduleId] of Object.entries(aliases)) {
       aliasMap.set(aliasTag, moduleId);
     }
@@ -453,22 +407,17 @@ function defineAliasElements(
   }
 }
 
-export function defineMountlyFeature(
-  input: string | DefineMountlyFeatureOptions = {}
-): void {
+export function defineMountlyFeature(input: string | DefineMountlyFeatureOptions = {}): void {
   const options = normalizeDefineOptions(input);
-  const tagName = options.tagName ?? 'mountly-feature';
+  const tagName = options.tagName ?? "mountly-feature";
   const scan = options.scan ?? options.auto ?? true;
   const aliases = options.aliases ?? true;
 
   if (options.modules) {
     registerModuleList(options.modules, options);
   }
-  const explicitIds = options.modules
-    ? normalizeModuleIds(options.modules)
-    : [];
-  const allowedModuleIds =
-    explicitIds.length > 0 ? new Set(explicitIds) : undefined;
+  const explicitIds = options.modules ? normalizeModuleIds(options.modules) : [];
+  const allowedModuleIds = explicitIds.length > 0 ? new Set(explicitIds) : undefined;
   const scannedAliases = scan ? scanAliasTags(options, allowedModuleIds) : [];
   if (scan) {
     scanAndRegisterFromDom(tagName);
@@ -476,15 +425,9 @@ export function defineMountlyFeature(
   if (aliases) {
     defineAliasElements(
       tagName,
-      [
-        ...new Set([
-          ...explicitIds,
-          ...Object.keys(registry),
-          ...scannedAliases,
-        ]),
-      ],
+      [...new Set([...explicitIds, ...Object.keys(registry), ...scannedAliases])],
       options,
-      aliases
+      aliases,
     );
   }
 
@@ -494,20 +437,20 @@ export function defineMountlyFeature(
     tagName,
     class MountlyFeatureElement extends HTMLElement {
       static observedAttributes = [
-        'module-id',
-        'trigger',
-        'trigger-delay',
-        'preload-on',
-        'activate-on',
-        'preload-media-query',
-        'activate-media-query',
-        'idle-timeout',
-        'viewport-root-margin',
-        'url-events',
-        'data-url',
-        'data-method',
-        'props',
-        'mount-selector',
+        "module-id",
+        "trigger",
+        "trigger-delay",
+        "preload-on",
+        "activate-on",
+        "preload-media-query",
+        "activate-media-query",
+        "idle-timeout",
+        "viewport-root-margin",
+        "url-events",
+        "data-url",
+        "data-method",
+        "props",
+        "mount-selector",
       ];
 
       private feature: OnDemandFeature | null = null;
@@ -517,26 +460,22 @@ export function defineMountlyFeature(
       private preInitClickListener: ((event: MouseEvent) => void) | null = null;
 
       connectedCallback() {
-        this.initialize();
+        void this.initialize();
       }
 
       disconnectedCallback() {
         this.teardown();
       }
 
-      attributeChangedCallback(
-        name: string,
-        oldValue: string | null,
-        newValue: string | null
-      ) {
+      attributeChangedCallback(name: string, oldValue: string | null, newValue: string | null) {
         if (oldValue === newValue) return;
         if (!this.isConnected) return;
-        if (name === 'module-id' && newValue) {
+        if (name === "module-id" && newValue) {
           this.teardown();
-          this.initialize();
+          void this.initialize();
           return;
         }
-        if (name === 'props' && this.feature) {
+        if (name === "props" && this.feature) {
           // Live update for an already-mounted widget. If not mounted, this
           // is a no-op — the next mount reads the current attribute via the
           // props getter we handed to attach().
@@ -551,30 +490,27 @@ export function defineMountlyFeature(
         this.pendingInitClick = false;
 
         try {
-          const moduleId = this.getAttribute('module-id');
+          const moduleId = this.getAttribute("module-id");
           if (!moduleId) return;
 
           const factory = registry[moduleId];
           if (!factory) {
             const known = Object.keys(registry);
-            const knownList =
-              known.length > 0
-                ? known.map((k) => `"${k}"`).join(', ')
-                : '(none)';
+            const knownList = known.length > 0 ? known.map((k) => `"${k}"`).join(", ") : "(none)";
             console.warn(
               `[mountly] <mountly-feature module-id="${moduleId}"> has no registered factory. ` +
                 `Call registerCustomElement("${moduleId}", () => yourFeature) before the element connects. ` +
-                `Currently registered: ${knownList}.`
+                `Currently registered: ${knownList}.`,
             );
             return;
           }
 
-          const triggerType = this.getAttribute('trigger') ?? 'click';
-          if (triggerType === 'click' && !this.preInitClickListener) {
+          const triggerType = this.getAttribute("trigger") ?? "click";
+          if (triggerType === "click" && !this.preInitClickListener) {
             this.preInitClickListener = () => {
               this.pendingInitClick = true;
             };
-            this.addEventListener('click', this.preInitClickListener);
+            this.addEventListener("click", this.preInitClickListener);
           }
 
           this.feature = await factory();
@@ -582,22 +518,16 @@ export function defineMountlyFeature(
           const target = this.getTriggerElement();
           const mountTarget = this.getMountElement();
 
-          const idleTimeout = this.parseNumberAttr('idle-timeout');
-          const viewportRootMargin =
-            this.getAttribute('viewport-root-margin') ?? undefined;
-          const preloadOnMediaQuery =
-            this.getAttribute('preload-media-query') ?? undefined;
-          const activateOnMediaQuery =
-            this.getAttribute('activate-media-query') ?? undefined;
+          const idleTimeout = this.parseNumberAttr("idle-timeout");
+          const viewportRootMargin = this.getAttribute("viewport-root-margin") ?? undefined;
+          const preloadOnMediaQuery = this.getAttribute("preload-media-query") ?? undefined;
+          const activateOnMediaQuery = this.getAttribute("activate-media-query") ?? undefined;
           const activateOnUrlEvents = this.parseUrlEvents();
 
           const preloadAttr = this.parsePreloadOnAttr();
           const preloadKind: PreloadKind | null =
-            preloadAttr === undefined
-              ? defaultPreloadKind(triggerType)
-              : preloadAttr;
-          const activateKind =
-            this.parseActivateOnAttr() ?? defaultActivateKind(triggerType);
+            preloadAttr === undefined ? defaultPreloadKind(triggerType) : preloadAttr;
+          const activateKind = this.parseActivateOnAttr() ?? defaultActivateKind(triggerType);
 
           const preloadOn = preloadKind
             ? buildTriggerSource(preloadKind, target, {
@@ -621,26 +551,23 @@ export function defineMountlyFeature(
             activateOn,
             props: () => this.parseProps(),
             context: () => this.buildContext(),
-            onError: (err) =>
-              console.error(`[mountly] feature "${moduleId}" failed:`, err),
+            onError: (err) => console.error(`[mountly] feature "${moduleId}" failed:`, err),
           });
 
           if (this.preInitClickListener) {
-            this.removeEventListener('click', this.preInitClickListener);
+            this.removeEventListener("click", this.preInitClickListener);
             this.preInitClickListener = null;
           }
 
           if (this.pendingInitClick) {
             this.pendingInitClick = false;
             queueMicrotask(() => {
-              target.dispatchEvent(
-                new MouseEvent('click', { bubbles: true, cancelable: true })
-              );
+              target.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
             });
           }
         } finally {
           if (this.preInitClickListener) {
-            this.removeEventListener('click', this.preInitClickListener);
+            this.removeEventListener("click", this.preInitClickListener);
             this.preInitClickListener = null;
           }
           this.initializing = false;
@@ -648,7 +575,7 @@ export function defineMountlyFeature(
       }
 
       private getTriggerElement(): HTMLElement {
-        const selector = this.getAttribute('mount-selector');
+        const selector = this.getAttribute("mount-selector");
         if (selector) {
           const el = this.querySelector(selector);
           if (el) return el as HTMLElement;
@@ -659,34 +586,34 @@ export function defineMountlyFeature(
       }
 
       private getMountElement(): HTMLElement {
-        const selector = this.getAttribute('mount-selector');
+        const selector = this.getAttribute("mount-selector");
         if (selector) {
           const el = this.querySelector(selector);
           if (el) return el as HTMLElement;
         }
 
-        const existing = this.querySelector('[data-mountly-mount]');
+        const existing = this.querySelector("[data-mountly-mount]");
         if (existing) return existing as HTMLElement;
 
-        const mount = document.createElement('div');
-        mount.setAttribute('data-mountly-mount', '');
+        const mount = document.createElement("div");
+        mount.setAttribute("data-mountly-mount", "");
         this.appendChild(mount);
         return mount;
       }
 
       private buildContext(): Partial<FeatureContext> {
-        const dataUrl = this.getAttribute('data-url');
-        const dataMethod = this.getAttribute('data-method') ?? 'GET';
+        const dataUrl = this.getAttribute("data-url");
+        const dataMethod = this.getAttribute("data-method") ?? "GET";
 
         return {
           element: this,
-          triggerType: (this.getAttribute('trigger') ?? 'click') as TriggerType,
+          triggerType: (this.getAttribute("trigger") ?? "click") as TriggerType,
           ...(dataUrl ? { dataUrl, dataMethod } : {}),
         };
       }
 
       private parseProps(): Record<string, unknown> {
-        const raw = this.getAttribute('props');
+        const raw = this.getAttribute("props");
         if (!raw) return {};
         try {
           return JSON.parse(raw);
@@ -704,31 +631,26 @@ export function defineMountlyFeature(
       }
 
       private parsePreloadOnAttr(): PreloadKind | undefined | null {
-        const raw = this.getAttribute('preload-on');
+        const raw = this.getAttribute("preload-on");
         if (!raw) return undefined;
-        if (raw === 'false' || raw === 'none') return null;
-        if (
-          raw === 'hover' ||
-          raw === 'viewport' ||
-          raw === 'idle' ||
-          raw === 'media'
-        ) {
+        if (raw === "false" || raw === "none") return null;
+        if (raw === "hover" || raw === "viewport" || raw === "idle" || raw === "media") {
           return raw;
         }
         return undefined;
       }
 
       private parseActivateOnAttr(): ActivateKind | undefined {
-        const raw = this.getAttribute('activate-on');
+        const raw = this.getAttribute("activate-on");
         if (!raw) return undefined;
         if (
-          raw === 'click' ||
-          raw === 'hover' ||
-          raw === 'focus' ||
-          raw === 'viewport' ||
-          raw === 'idle' ||
-          raw === 'media' ||
-          raw === 'url-change'
+          raw === "click" ||
+          raw === "hover" ||
+          raw === "focus" ||
+          raw === "viewport" ||
+          raw === "idle" ||
+          raw === "media" ||
+          raw === "url-change"
         ) {
           return raw;
         }
@@ -736,10 +658,10 @@ export function defineMountlyFeature(
       }
 
       private parseUrlEvents(): UrlChangeEventType[] | undefined {
-        const raw = this.getAttribute('url-events');
+        const raw = this.getAttribute("url-events");
         if (!raw) return undefined;
         const values = raw
-          .split(',')
+          .split(",")
           .map((v) => v.trim())
           .filter(Boolean) as UrlChangeEventType[];
         return values.length > 0 ? values : undefined;
@@ -747,7 +669,7 @@ export function defineMountlyFeature(
 
       private teardown() {
         if (this.preInitClickListener) {
-          this.removeEventListener('click', this.preInitClickListener);
+          this.removeEventListener("click", this.preInitClickListener);
           this.preInitClickListener = null;
         }
         this.pendingInitClick = false;
@@ -758,6 +680,6 @@ export function defineMountlyFeature(
         this.initializing = false;
         this.feature = null;
       }
-    }
+    },
   );
 }

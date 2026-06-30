@@ -1,0 +1,13 @@
+{
+  "version": "2",
+  "verticals": [
+    {
+      "id": "widget",
+      "url": "./peer.js",
+      "types": {
+        "declaration": "./types/",
+        "module": []
+      }
+    }
+  ]
+}

@@ -3,7 +3,7 @@ title: React
 description: Use mountly-react to wrap any React 18 or 19 component as a mountable widget.
 ---
 
-`mountly-react` is the React adapter. It turns any React component into a mountly **widget** — an object with `mount(container, props)` and `unmount(container)`, framework-agnostic at the boundary.
+`mountly-react` is the React adapter. It turns any React component into a mountly **widget**: an object with `mount(container, props)` and `unmount(container)` that stays framework-agnostic at the boundary.
 
 ## Install
 
@@ -22,7 +22,7 @@ import SignupCard from "./SignupCard.tsx";
 export default createWidget(SignupCard);
 ```
 
-That's it for the widget side. When the host wires `moduleUrl`, the adapter fetches the sibling `dist/index.css` (whatever your build emits: plain CSS, CSS Modules, Tailwind output) and applies it before React renders. No FOUC. By default the widget mounts in light DOM so the host's design system applies; pass `shadow: true` for full isolation.
+That covers the widget side. When the host wires `moduleUrl`, the adapter fetches the sibling `dist/index.css` (whatever your build emits: plain CSS, CSS Modules, Tailwind output) and applies it before React renders. No FOUC. By default the widget mounts in light DOM so the host's design system applies. Pass `shadow: true` for full isolation.
 
 The string-based path still works if you'd rather inline:
 
@@ -35,7 +35,7 @@ export default createWidget(SignupCard, { styles });
 
 React itself has no native style scoping. Two paths work well with mountly:
 
-- **Default light DOM + CSS Modules.** The build emits hashed class names that practically never collide with host CSS. The host's design system continues to apply, which is usually what you want for product code.
+- **Default light DOM + CSS Modules.** The build emits hashed class names that rarely collide with host CSS. The host's design system continues to apply, which is what you want for most product code.
 - **`shadow: true` for hard isolation.** Whatever class names your build emits only apply inside the widget's shadow tree. A global `.button { color: red }` rule on the host page cannot reach in. Conversely, your component's CSS cannot leak out. Reach for this when the widget is embedded in unknown hosts.
 
 You can use any styling approach React supports with either mode:
@@ -54,7 +54,7 @@ export default function SignupCard({ msg }: { msg: string }) {
 }
 ```
 
-The build emits hashed selectors like `.button_h_4f9c1` in `dist/index.css` and `{ button: "button_h_4f9c1" }` in the JS bundle. In light DOM the hashed names already prevent host conflicts in practice; with `shadow: true` Mountly's repo includes a Playwright test (`react-css-modules.html`) that proves a colliding global `.button { color: red !important }` rule does **not** pierce the shadow root.
+The build emits hashed selectors like `.button_h_4f9c1` in `dist/index.css` and `{ button: "button_h_4f9c1" }` in the JS bundle. In light DOM the hashed names prevent host conflicts. With `shadow: true`, a Playwright test in the repo (`react-css-modules.html`) proves a colliding global `.button { color: red !important }` rule does **not** pierce the shadow root.
 
 ### Plain CSS files
 
@@ -66,7 +66,7 @@ Works the same way: the adapter fetches the sibling stylesheet and applies it be
 
 ### CSS-in-JS (styled-components, emotion, etc.)
 
-These libraries inject `<style>` tags at runtime targeting `document.head`. In light DOM (the default) they work as designed. With `shadow: true` the shadow root can't see those tags, so configure the library's shadow-root mode or stylesheet manager and pass the shadow root via React Context. For most cases, CSS Modules or plain CSS is simpler than CSS-in-JS inside a shadow root.
+These libraries inject `<style>` tags at runtime targeting `document.head`. In light DOM (the default) they work as designed. With `shadow: true` the shadow root can't see those tags, so configure the library's shadow-root mode or stylesheet manager and pass the shadow root via React Context. CSS Modules or plain CSS beats CSS-in-JS inside a shadow root.
 
 ## shadcn / Tailwind
 
@@ -81,7 +81,8 @@ export const newsletter = createWidget(Newsletter);
 
 ```html
 <head>
-  <link rel="stylesheet" href="/app/dist/globals.css" /> <!-- Tailwind output -->
+  <link rel="stylesheet" href="/app/dist/globals.css" />
+  <!-- Tailwind output -->
 </head>
 ```
 
@@ -91,7 +92,7 @@ The repo demonstrates this end-to-end:
 - `tests/fixtures/shadcn-light-dom-tokens.css`: stand-in for `app/globals.css` with `:root` tokens and utility classes.
 - `tests/multi-widget-bundles.spec.ts`: proves all three widgets pick up the same primary color from the global stylesheet.
 
-If you genuinely want shadow DOM with shadcn, expect two friction points and plan for them:
+If you want shadow DOM with shadcn, expect two friction points and plan for them:
 
 1. **`:root` tokens don't apply.** `bg-background` resolves to `hsl(var(--background))`; `--background` is set on `:root` (the document `<html>`). Inside a shadow root, `:root` matches nothing, so every shadcn token comes out empty. Compile Tailwind targeting `:host` instead.
 2. **Radix portals target `document.body`.** Dialog, Popover, DropdownMenu, etc. portal their content outside the component tree. From inside a shadow root, that portal lands outside the shadow boundary. Wrap each Radix-using component to pass a `Portal container` from inside the shadow root via context.
@@ -100,11 +101,11 @@ For most teams, the default light-DOM path is the right answer. For more on the 
 
 ## External npm packages
 
-Components are free to import any npm package: `@tanstack/react-table`, `date-fns`, `lucide-react`, whatever. Two configurations:
+Components can import any npm package: `@tanstack/react-table`, `date-fns`, `lucide-react`, whatever. Two configurations:
 
 **Bundled** (default for Vite library mode): the build inlines the package. One JS file. No host setup needed.
 
-**Externalised**: mark the package `external` in your build config so the host import map provides it. Lets multiple widgets share one copy.
+**Externalised**: mark the package `external` in your build config so the host import map provides it. Multiple widgets then share one copy.
 
 ```html
 <script type="importmap">
@@ -118,7 +119,7 @@ Components are free to import any npm package: `@tanstack/react-table`, `date-fn
 </script>
 ```
 
-The `?deps=react@19.2.5` query is what tells esm.sh to align every package on one React copy. Without it you'll see "Invalid hook call" errors from React seeing two different runtime instances. The repo has a `tanstack-table` fixture and test that uses this pattern with React 19 and proves table rendering works through the mountly pipeline.
+The `?deps=react@19.2.5` query tells esm.sh to align every package on one React copy. Without it you'll see "Invalid hook call" errors from React seeing two different runtime instances. The repo has a `tanstack-table` fixture and test that uses this pattern with React 19 and proves table rendering works through the mountly pipeline.
 
 ## Mounting
 
@@ -156,7 +157,7 @@ mountly threads `moduleUrl` through to the adapter, which fetches `dist/index.cs
 
 ## Live updates without remounting
 
-The React adapter exposes `update()` automatically — it routes through React's reconciler so internal state survives:
+The React adapter exposes `update()` for you. It routes through React's reconciler so internal state survives:
 
 ```ts
 await signup.update(container, { plan: "enterprise" });
@@ -169,16 +170,16 @@ The custom element `<mountly-feature>` calls this for you when its `props` attri
 
 `mountly init` configures `tsup` to emit:
 
-- `dist/index.js` — bundles React + ReactDOM. Drop into any host.
-- `dist/peer.js` — externalises React. Pairs with the host's import map; one React for many widgets.
+- `dist/index.js`: bundles React + ReactDOM. Drop into any host.
+- `dist/peer.js`: externalises React. Pairs with the host's import map, one React for many widgets.
 
-You don't choose at build time — both are produced. The host's import map decides which to load. See [Distribution](/mountly/concepts/distribution/).
+You don't choose at build time. The build produces both, and the host's import map decides which to load. See [Distribution](/mountly/concepts/distribution/).
 
 ## Server components
 
-The React adapter mounts on the **client**. It assumes a `Component` that renders client-side. If you want React Server Components, you're outside mountly's design — the adapter calls `createRoot()` and `render()`, which only work in the browser.
+The React adapter mounts on the **client**. It assumes a `Component` that renders client-side. React Server Components sit outside mountly's design, since the adapter calls `createRoot()` and `render()`, which only work in the browser.
 
-You can still mount a client component that *fetches* server-rendered HTML and shows it; the framing is "client widget that consumes server data."
+You can still mount a client component that _fetches_ server-rendered HTML and shows it. Think of it as a client widget that consumes server data.
 
 ## Common pitfalls
 
@@ -191,7 +192,7 @@ If you ship two widgets, both with `dist/index.js`, you have two copies of React
 Three usual causes:
 
 1. **Wrong source.** If you're passing `styles`, it must be a CSS **string**, not a path. Vite needs `?inline`, esbuild needs `text` loader, etc.
-2. **Missing sibling .css.** If you're relying on `moduleUrl` auto-derivation, check that your build actually emits `dist/index.css` next to `dist/index.js`. Vite library mode does this whenever a component imports a stylesheet.
+2. **Missing sibling .css.** If you're relying on `moduleUrl` auto-derivation, check that your build emits `dist/index.css` next to `dist/index.js`. Vite library mode does this whenever a component imports a stylesheet.
 3. **Dev server returning JS instead of CSS.** Vite serves `.css` as an HMR-wrapped JS module unless `Accept: text/css` is sent. The adapter sends that header. If you've put a custom proxy or service worker in front, make sure it doesn't strip it.
 
 ### Hydration error in dev
@@ -200,10 +201,9 @@ The adapter mounts a fresh tree, not a hydrated one. If you mount into a `<div>`
 
 ## Reference
 
-- [`createWidget`](/mountly/api/create-widget/) — the adapter API.
-- [`createOnDemandFeature`](/mountly/api/create-on-demand-feature/) — the lifecycle wrapper.
-- `examples/signup-card`, `examples/payment-breakdown`, `examples/image-lightbox` in the repo are React widgets.
-
+- [`createWidget`](/mountly/api/create-widget/): the adapter API.
+- [`createOnDemandFeature`](/mountly/api/create-on-demand-feature/): the lifecycle wrapper.
+- `docs/examples/signup-card`, `docs/examples/payment-breakdown`, `docs/examples/image-lightbox` in the repo are React widgets.
 
 ## Tailwind and non-Tailwind defaults
 
@@ -211,7 +211,7 @@ The adapter mounts a fresh tree, not a hydrated one. If you mount into a `<div>`
 
 ```tsx
 import { createWidget } from "mountly-react";
-import "./Component.css";          // build emits dist/index.css
+import "./Component.css"; // build emits dist/index.css
 import Component from "./Component.tsx";
 
 export default createWidget(Component);

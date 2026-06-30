@@ -1,6 +1,6 @@
 # {{name}}
 
-A mountly widget scaffolded with `npx mountly init`.
+A mountly vertical widget scaffolded with `npx mountly init`.
 
 ## Develop
 
@@ -14,3 +14,21 @@ pnpm dev
 ```bash
 pnpm build
 ```
+
+Outputs:
+
+- `dist/index.js` — self-contained (React/Vue/Svelte bundled)
+- `dist/peer.js` — peer build (host supplies framework via import map)
+
+## Publish to your CDN
+
+Upload `dist/peer.js` (and source map) to your CDN, then register the URL in your host manifest:
+
+```json
+{
+  "id": "{{name}}",
+  "url": "https://cdn.example.com/{{name}}@1.0.0/dist/peer.js"
+}
+```
+
+See [mountly micro-frontends docs](https://github.com/jagreehal/mountly/blob/main/docs/micro-frontends.md).

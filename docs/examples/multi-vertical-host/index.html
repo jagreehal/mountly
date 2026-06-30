@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>mountly — Multi-vertical host</title>
+    <style>
+      :root {
+        --ink: oklch(0.18 0.01 260);
+        --paper: oklch(0.98 0.003 80);
+        --muted: oklch(0.55 0.01 260);
+        --rule: oklch(0.88 0.005 80);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+        background: var(--paper);
+        color: var(--ink);
+        line-height: 1.55;
+      }
+      .wrap {
+        max-width: 920px;
+        margin: 0 auto;
+        padding: 48px 24px 80px;
+      }
+      h1 {
+        font-size: clamp(28px, 4vw, 40px);
+        margin: 0 0 12px;
+      }
+      .lede {
+        color: var(--muted);
+        max-width: 60ch;
+        margin-bottom: 32px;
+      }
+      section {
+        border: 1px solid var(--rule);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+        background: #fff;
+      }
+      h2 {
+        margin: 0 0 8px;
+        font-size: 18px;
+      }
+      .desc {
+        color: var(--muted);
+        font-size: 14px;
+        margin-bottom: 16px;
+      }
+      button.trigger {
+        background: #2563eb;
+        color: #fff;
+        border: 0;
+        padding: 10px 16px;
+        border-radius: 8px;
+        font-weight: 500;
+        cursor: pointer;
+      }
+      button.trigger:hover {
+        background: #1d4ed8;
+      }
+      .bus-row {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+      }
+      .bus-log {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 12px;
+        background: #f8fafc;
+        border: 1px solid var(--rule);
+        border-radius: 8px;
+        padding: 12px;
+        min-height: 72px;
+        white-space: pre-wrap;
+      }
+      .team-tag {
+        display: inline-block;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+        margin-bottom: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>Multi-vertical host</h1>
+      <p class="lede">
+        Manifest-driven import map, platform runtime, and independent vertical bundles — the Vite +
+        CDN + import map model without Webpack federation.
+      </p>
+
+      <section>
+        <span class="team-tag">Team: payments</span>
+        <h2>Payment breakdown</h2>
+        <p class="desc">Loaded from <code>manifest.json</code> → CDN-style URL.</p>
+        <mountly-feature
+          module-id="payment-breakdown"
+          trigger="click"
+          props='{"paymentId":"pay_123","apiUrl":"/api/payments"}'
+        >
+          <button class="trigger" type="button">Show payment breakdown</button>
+          <div data-mountly-mount style="margin-top: 12px; min-height: 120px"></div>
+        </mountly-feature>
+      </section>
+
+      <section>
+        <span class="team-tag">Team: media</span>
+        <h2>Image lightbox</h2>
+        <p class="desc">Second vertical, same host shell, separate deploy artifact.</p>
+        <mountly-feature
+          module-id="image-lightbox"
+          trigger="click"
+          props='{"data":{"src":"https://picsum.photos/800/600","alt":"Demo photo","caption":"Manifest-loaded media vertical"}}'
+        >
+          <button class="trigger" type="button">Open gallery</button>
+          <div data-mountly-mount style="min-height: 80px"></div>
+        </mountly-feature>
+      </section>
+
+      <section>
+        <span class="team-tag">Platform: mountly/contracts</span>
+        <h2>Cross-vertical event bus</h2>
+        <p class="desc">Teams share typed events without importing each other's widget code.</p>
+        <div class="bus-row">
+          <button class="trigger" id="emit-payment" type="button">
+            Payments emits payment:selected
+          </button>
+          <button class="trigger" id="emit-cart" type="button">Media emits cart:updated</button>
+        </div>
+        <div class="bus-log" id="bus-log">Waiting for platform bus events…</div>
+      </section>
+    </div>
+
+    <script type="module" src="./host.js"></script>
+  </body>
+</html>

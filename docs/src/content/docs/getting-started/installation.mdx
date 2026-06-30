@@ -26,13 +26,12 @@ yarn add mountly
 | React     | `mountly-react`  | React 18 or 19.                                             |
 | Vue       | `mountly-vue`    | Vue 3.                                                      |
 | Svelte    | `mountly-svelte` | Auto-detects v4 (class) vs v5 (functional) component shape. |
-| TSRX      | `mountly-tsrx`   | Adapts TSRX render/lifecycle output.                        |
 
 ```bash
-pnpm add mountly-react   # or mountly-vue, mountly-svelte, mountly-tsrx
+pnpm add mountly-react   # or mountly-vue, mountly-svelte
 ```
 
-The adapter declares the framework as a peer dependency — install it yourself if it isn't already in the project:
+The adapter declares the framework as a peer dependency. Install it yourself if the project doesn't already have it:
 
 ```bash
 pnpm add react react-dom         # for mountly-react
@@ -40,13 +39,11 @@ pnpm add vue                     # for mountly-vue
 pnpm add svelte                  # for mountly-svelte
 ```
 
-`mountly-tsrx` has no framework peer dependency. It expects your TSRX compiler output to expose either a `render()` object or `mount/update/unmount` lifecycle object.
-
 Widget entry:
 
 ```ts
-import { createWidget } from 'mountly-react'; // or mountly-vue / mountly-svelte
-import Component from './Component';
+import { createWidget } from "mountly-react"; // or mountly-vue / mountly-svelte
+import Component from "./Component";
 
 export default createWidget(Component);
 ```
@@ -57,9 +54,9 @@ Host entry:
 <signup-card trigger="idle" props='{"plan":"pro"}'></signup-card>
 
 <script type="module">
-  import { defineMountlyFeature } from 'mountly';
+  import { defineMountlyFeature } from "mountly";
 
-  defineMountlyFeature('/widgets/signup-card/dist/index.js');
+  defineMountlyFeature("/widgets/signup-card/dist/index.js");
 </script>
 ```
 
@@ -77,22 +74,22 @@ See [Tailwind integration](/mountly/frameworks/tailwind/).
 
 ## CDN (no bundler)
 
-For prototyping or static hosts, you can load mountly directly:
+For prototyping or static hosts, load mountly directly:
 
 ```html
 <script type="module">
-  import { createOnDemandFeature } from 'https://cdn.jsdelivr.net/npm/mountly@0.1/dist/index.js';
+  import { createOnDemandFeature } from "https://cdn.jsdelivr.net/npm/mountly@0.1/dist/index.js";
   // …
 </script>
 ```
 
-For multi-widget pages, set up an import map so several widgets share one runtime — see [`installRuntime`](/mountly/api/install-runtime/).
+For multi-widget pages, set up an import map so several widgets share one runtime. See [`installRuntime`](/mountly/api/install-runtime/).
 
 If the browser host imports `mountly/*` subpaths directly, map those subpaths too (for example `mountly/attach`, `mountly/elements`, `mountly/shadow`, `mountly/assets`, `mountly/adapter`) to concrete `.js` files.
 
 ## Via the CLI
 
-The fastest path is the scaffolder, which lays down the runtime, the React adapter, the build pipeline, and a working host page:
+The scaffolder is the fastest path. It lays down the runtime, the React adapter, the build pipeline, and a working host page:
 
 ```bash
 npx mountly init my-widget
@@ -103,8 +100,8 @@ See [Quick start](/mountly/getting-started/quick-start/) for what it produces.
 ## Verify the install
 
 ```ts
-import { createOnDemandFeature } from 'mountly';
-import { createWidget } from 'mountly-react';
+import { createOnDemandFeature } from "mountly";
+import { createWidget } from "mountly-react";
 
 console.log(typeof createOnDemandFeature, typeof createWidget);
 // "function" "function"
@@ -118,6 +115,6 @@ The repo has an external-consumer Playwright test that packs the publish artifac
 
 ## Next
 
-- [**Quick start**](/mountly/getting-started/quick-start/) — scaffold your first widget.
-- [**React adapter**](/mountly/frameworks/react/) — `createWidget` patterns.
-- [**API reference**](/mountly/api/create-on-demand-feature/) — every exported symbol.
+- [**Quick start**](/mountly/getting-started/quick-start/): scaffold your first widget.
+- [**React adapter**](/mountly/frameworks/react/): `createWidget` patterns.
+- [**API reference**](/mountly/api/create-on-demand-feature/): every exported symbol.

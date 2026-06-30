@@ -3,7 +3,7 @@ title: Vue
 description: Use mountly-vue to wrap any Vue 3 component as a mountable widget.
 ---
 
-`mountly-vue` is the Vue 3 adapter. Same surface as the React adapter — `createWidget(Component, { styles })` — different rendering layer underneath.
+`mountly-vue` is the Vue 3 adapter. It exposes the same surface as the React adapter, `createWidget(Component, { styles })`, over a different rendering layer.
 
 ## Install
 
@@ -20,7 +20,7 @@ import SignupCard from "./SignupCard.vue";
 export default createWidget(SignupCard);
 ```
 
-By default the widget mounts in light DOM. The adapter fetches the sibling `dist/index.css` (extracted by Vite's Vue plugin from `<style scoped>`) and applies it before render. Vue's `data-v-…` hash already scopes the styles per component, so collisions are rare. Pass `shadow: true` if you need a hard boundary (CMS embeds, third-party hosts) — styles are then scoped twice, once by Vue and once by the shadow root.
+By default the widget mounts in light DOM. The adapter fetches the sibling `dist/index.css` (extracted by Vite's Vue plugin from `<style scoped>`) and applies it before render. Vue's `data-v-…` hash scopes the styles per component, so collisions are rare. Pass `shadow: true` if you need a hard boundary, such as CMS embeds or third-party hosts. The styles are then scoped twice, once by Vue and once by the shadow root.
 
 Want to inline the CSS string instead? That's still fine:
 
@@ -61,7 +61,7 @@ mountly threads `moduleUrl` through to the adapter, which fetches `dist/index.cs
 
 ## Composition API and Options API
 
-Both work. The adapter doesn't care which API style your component uses — it just calls `createApp` with the imported component.
+Both work. The adapter doesn't care which API style your component uses. It calls `createApp` with the imported component.
 
 ## Provide / inject
 
@@ -74,8 +74,8 @@ Each widget mount is its own Vue app. **Providers do not cross widgets.** If two
 
 `mountly init --vue` (when supported by the CLI version you have) configures `tsup` to emit:
 
-- `dist/index.js` — bundles Vue.
-- `dist/peer.js` — externalises Vue. Pairs with an import map.
+- `dist/index.js`: bundles Vue.
+- `dist/peer.js`: externalises Vue. Pairs with an import map.
 
 Multi-widget hosts should use the peer build to share one Vue copy. See [Distribution](/mountly/concepts/distribution/).
 
@@ -91,13 +91,12 @@ Same hazard as React: two widgets with `dist/index.js` give you two Vue runtimes
 
 ### Single-File Components
 
-Vite's Vue plugin handles `.vue` files in the widget build. If you're running `tsup` directly, install `unplugin-vue` or a similar SFC compiler — `mountly-vue` does **not** ship one.
+Vite's Vue plugin handles `.vue` files in the widget build. If you're running `tsup` directly, install `unplugin-vue` or a similar SFC compiler, since `mountly-vue` does **not** ship one.
 
 ## Reference
 
-- [`createWidget`](/mountly/api/create-widget/) — the adapter API.
-- [`createOnDemandFeature`](/mountly/api/create-on-demand-feature/) — the lifecycle wrapper.
-
+- [`createWidget`](/mountly/api/create-widget/): the adapter API.
+- [`createOnDemandFeature`](/mountly/api/create-on-demand-feature/): the lifecycle wrapper.
 
 ## Tailwind and non-Tailwind defaults
 
@@ -110,7 +109,7 @@ import Component from "./Component.vue";
 export default createWidget(Component);
 ```
 
-The Vite Vue plugin extracts `<style scoped>` blocks into `dist/index.css`. The adapter picks it up automatically when the host passes `moduleUrl`.
+The Vite Vue plugin extracts `<style scoped>` blocks into `dist/index.css`. The adapter picks it up when the host passes `moduleUrl`.
 
 ### With Tailwind
 

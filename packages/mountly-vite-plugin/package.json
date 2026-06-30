@@ -1,0 +1,46 @@
+{
+  "name": "mountly-vite-plugin",
+  "version": "0.1.0",
+  "description": "Vite lib build plugin for mountly vertical widgets (dual ESM output)",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jagreehal/mountly",
+    "directory": "packages/mountly-vite-plugin"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "dev": "tsup --watch",
+    "prepack": "rm -f LICENSE && cp ../../LICENSE LICENSE",
+    "postpack": "rm -f LICENSE && ln -s ../../LICENSE LICENSE"
+  },
+  "dependencies": {
+    "typescript": "^6.0.3"
+  },
+  "devDependencies": {
+    "mountly-manifest": "workspace:*",
+    "tsup": "^8.5.1",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.16"
+  },
+  "peerDependencies": {
+    "mountly-manifest": "workspace:*",
+    "vite": "^8.0.0"
+  }
+}

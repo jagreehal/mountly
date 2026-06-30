@@ -1,5 +1,5 @@
 import { story } from "executable-stories-vitest";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import { createEventBus } from "../packages/mountly/src/bus";
 import { createUrlState, parseQuery, serializeQuery } from "../packages/mountly/src/url-state";
 

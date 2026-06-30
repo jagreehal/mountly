@@ -3,12 +3,13 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "stage-examples": "node ./scripts/stage-examples.mjs",
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "pnpm run stage-examples && astro build",
     "preview": "astro preview"
   },
   "dependencies": {
-    "astro": "^6.4.8",
-    "@astrojs/starlight": "^0.40.0"
+    "@astrojs/starlight": "^0.40.0",
+    "astro": "^6.4.8"
   }
 }

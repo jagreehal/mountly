@@ -1,0 +1,158 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": "string",
+      "const": "2"
+    },
+    "platform": {
+      "type": "object",
+      "properties": {
+        "imports": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "imports"
+      ],
+      "additionalProperties": false
+    },
+    "verticals": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "url": {
+            "type": "string",
+            "minLength": 1
+          },
+          "team": {
+            "type": "string",
+            "minLength": 1
+          },
+          "version": {
+            "type": "string",
+            "minLength": 1
+          },
+          "trigger": {
+            "type": "string",
+            "enum": [
+              "hover",
+              "click",
+              "focus",
+              "viewport",
+              "idle",
+              "media",
+              "url-change",
+              "swipe",
+              "longpress",
+              "keyboard",
+              "programmatic"
+            ]
+          },
+          "alias": {
+            "type": "string",
+            "minLength": 1
+          },
+          "baseUrl": {
+            "type": "string",
+            "minLength": 1
+          },
+          "exports": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "featureExport": {
+            "type": "string",
+            "minLength": 1
+          },
+          "moduleExport": {
+            "type": "string",
+            "minLength": 1
+          },
+          "types": {
+            "type": "object",
+            "properties": {
+              "declaration": {
+                "type": "string",
+                "minLength": 1
+              },
+              "module": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "exports": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "declaration": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "names": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  ]
+                }
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "id",
+          "url"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "version",
+    "platform",
+    "verticals"
+  ],
+  "additionalProperties": false,
+  "$id": "https://mountly.dev/schema/manifest.schema.json",
+  "title": "Mountly Manifest"
+}

@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>mountly — Monorepo component library</title>
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 42rem; margin: 2rem auto; padding: 0 1rem; }
+      h1 { font-size: 24px; margin: 0 0 4px; }
+      .sub { color: #64748b; margin-bottom: 8px; }
+      code { font-size: 13px; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; }
+      .row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+      button { padding: 8px 14px; font-weight: 600; cursor: pointer; border: 1px solid #cbd5e1; border-radius: 8px; background: white; }
+      button:hover { background: #f1f5f9; }
+      .slot { min-height: 48px; }
+      .note { font-size: 14px; color: #64748b; border-left: 3px solid #3c50dc; padding-left: 12px; margin: 16px 0; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "mountly": "/packages/mountly/dist/index.js",
+          "mountly/shadow": "/packages/mountly/dist/shadow.js",
+          "mountly/assets": "/packages/mountly/dist/assets.js",
+          "mountly/adapter": "/packages/mountly/dist/adapter.js",
+          "mountly/attach": "/packages/mountly/dist/attach.js",
+          "mountly/bundle": "/packages/mountly/dist/bundle.js",
+          "mountly/elements": "/packages/mountly/dist/elements.js",
+          "mountly/island": "/packages/mountly/dist/island.js",
+          "mountly/mount": "/packages/mountly/dist/mount.js",
+          "mountly/runtime": "/packages/mountly/dist/runtime.js",
+          "mountly/triggers": "/packages/mountly/dist/triggers.js",
+          "mountly/url": "/packages/mountly/dist/url-state.js",
+          "mountly/data": "/packages/mountly/dist/data-source.js",
+          "mountly/bus": "/packages/mountly/dist/bus.js",
+          "mountly-react": "/packages/adapters/mountly-react/dist/index.js"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <h1>Monorepo component library</h1>
+    <p class="sub">Widgets share a <code>@my-org/ui</code> library. Same bundle, one fetch.</p>
+    <p class="note">
+      The widgets use <code>Button</code>, <code>Card</code>, and <code>Chip</code> from a shared UI library.
+      In a real monorepo, <code>ui-lib.js</code> would be a workspace package (<code>@my-org/ui</code>)
+      and <code>widgets-bundle.js</code> would consume it as a dependency.
+    </p>
+
+    <div class="row">
+      <button id="t-counter">Load counter</button>
+      <button id="t-status">Load status</button>
+      <button id="t-pricing">Load pricing</button>
+    </div>
+    <div class="slot" id="m-counter"></div>
+    <div class="slot" id="m-status"></div>
+    <div class="slot" id="m-pricing"></div>
+
+    <script type="module">
+      import { createWidgetBundle } from "mountly/bundle";
+      import { attach, onTrigger } from "mountly/attach";
+
+      const bundle = createWidgetBundle({
+        moduleUrl: "/docs/examples/monorepo-component-library/widgets-bundle.js",
+      });
+
+      const counter = bundle.feature({ moduleId: "counter", export: "counter" });
+      const status = bundle.feature({ moduleId: "status", export: "status" });
+      const pricing = bundle.feature({ moduleId: "pricing", export: "pricing" });
+
+      attach(counter, {
+        trigger: document.getElementById("t-counter"),
+        mount: document.getElementById("m-counter"),
+        activateOn: onTrigger.click(document.getElementById("t-counter")),
+        props: { start: 5 },
+      });
+      attach(status, {
+        trigger: document.getElementById("t-status"),
+        mount: document.getElementById("m-status"),
+        activateOn: onTrigger.click(document.getElementById("t-status")),
+        props: { message: "All systems nominal" },
+      });
+      attach(pricing, {
+        trigger: document.getElementById("t-pricing"),
+        mount: document.getElementById("m-pricing"),
+        activateOn: onTrigger.click(document.getElementById("t-pricing")),
+        props: { plan: "Enterprise", price: 99 },
+      });
+    </script>
+  </body>
+</html>

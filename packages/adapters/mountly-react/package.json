@@ -2,16 +2,19 @@
   "name": "mountly-react",
   "version": "1.0.1",
   "description": "React adapter for mountly widgets",
+  "homepage": "https://github.com/jagreehal/mountly/tree/main/packages/adapters/mountly-react#readme",
+  "bugs": {
+    "url": "https://github.com/jagreehal/mountly/issues"
+  },
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/jagreehal/mountly",
     "directory": "packages/adapters/mountly-react"
   },
-  "bugs": {
-    "url": "https://github.com/jagreehal/mountly/issues"
-  },
-  "homepage": "https://github.com/jagreehal/mountly/tree/main/packages/adapters/mountly-react#readme",
+  "files": [
+    "dist"
+  ],
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -21,9 +24,6 @@
       "types": "./dist/index.d.ts"
     }
   },
-  "files": [
-    "dist"
-  ],
   "publishConfig": {
     "access": "public"
   },
@@ -34,18 +34,18 @@
     "prepack": "rm -f LICENSE && cp ../../../LICENSE LICENSE",
     "postpack": "rm -f LICENSE && ln -s ../../../LICENSE LICENSE"
   },
-  "peerDependencies": {
-    "react": ">=18 <20",
-    "react-dom": ">=18 <20",
-    "mountly": "^0.2.2"
-  },
   "devDependencies": {
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
+    "mountly": "^0.2.2",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "tsup": "^8.5.1",
-    "typescript": "^6.0.3",
-    "mountly": "^0.2.2"
+    "typescript": "^6.0.3"
+  },
+  "peerDependencies": {
+    "mountly": "^0.2.2",
+    "react": "^19",
+    "react-dom": "^19"
   }
 }

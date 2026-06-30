@@ -5,8 +5,9 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "{{tailwindBuildScript}}tsup",
-    "dev": "tsup --watch"
+    "build": "{{tailwindBuildScript}}{{bundlerBuildCommand}}",
+    "dev": "{{bundlerDevCommand}}",
+    "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
     "vue": "^3.5.0"
@@ -15,8 +16,7 @@
     "mountly-vue": "^0.1.0"
   },
   "devDependencies": {
-    "tsup": "^8.3.0",
     "typescript": "^5.7.0",
-    "vue": "^3.5.0"{{tailwindDeps}}
+    "vue": "^3.5.0"{{tailwindDeps}}{{bundlerDevDependencies}}
   }
 }

@@ -3,7 +3,7 @@ title: When not to use mountly
 description: Three situations where the framework's native primitives are a better fit than mountly.
 ---
 
-Pre-1.0 software earns trust by saying no. mountly is a small, opinionated runtime — not the answer to every code-splitting problem.
+Pre-1.0 software earns trust by saying no. mountly is a small, opinionated runtime, not the answer to every code-splitting problem.
 
 ## You have a single SPA where the bundler owns every surface
 
@@ -11,10 +11,10 @@ If your project is one React, Next, or Svelte app and every component lives insi
 
 ```tsx
 // React example — already has on-demand loading via React.lazy + Suspense
-const PaymentBreakdown = lazy(() => import('./PaymentBreakdown'));
+const PaymentBreakdown = lazy(() => import("./PaymentBreakdown"));
 ```
 
-You'd be adding a second runtime to solve a problem the framework already solves. mountly's value is **on-intent activation across heterogeneous hosts** — static HTML, CMS pages, plain modules — and that value compounds when the host doesn't own a bundler.
+You'd be adding a second runtime to solve a problem the framework already solves. mountly's value is **on-intent activation across heterogeneous hosts**: static HTML, CMS pages, plain modules. That value compounds when the host doesn't own a bundler.
 
 If your situation is "I want a button that lazy-loads a modal in my Next app", use `next/dynamic` or `React.lazy`.
 
@@ -30,20 +30,19 @@ If you need:
 
 …use those frameworks' islands. mountly mounts widgets _after_ the page is interactive; it doesn't take over server-rendered HTML.
 
-The two layers can coexist well: Astro, Next, Remix, or SvelteKit can render the shell, routes, and server content, while mountly handles a portable widget that needs custom-tag placement, on-demand activation, or a separate component release path. The boundary is important: mountly is composable with those frameworks, but it is not replacing their hydration story.
+The two layers coexist well: Astro, Next, Remix, or SvelteKit render the shell, routes, and server content, while mountly handles a portable widget that needs custom-tag placement, on-demand activation, or a separate component release path. mountly composes with those frameworks, but it does not replace their hydration story.
 
 ## You want a microfrontend control plane
 
 mountly is an **on-demand component runtime**. It is not:
 
 - A team-routing layer.
-- A versioning / deployment coordinator across teams.
+- A versioning or deployment coordinator across teams.
 - A central runtime configuration plane.
-- A module-federation host.
 
-If you need _"team A ships the checkout, team B ships the catalogue, both deploy independently and runtime-route by URL"_, use Module Federation, single-spa, or a vendor MFE platform. mountly will not protect you from runtime version skew or coordinate deployments.
+If you need _"team A ships the checkout, team B ships the catalogue, both deploy independently and runtime-route by URL"_, use single-spa or a vendor MFE platform. mountly validates manifests and loads verticals. It does not coordinate deployments or resolve semver at runtime.
 
-mountly _is_ useful **inside** an MFE: a single team's MFE bundle can use mountly internally to lazy-load its own widgets without ballooning its part of the page. But mountly is the inner tool, not the outer one.
+mountly _is_ useful **inside** an MFE: a single team's MFE bundle can use mountly to lazy-load its own widgets without ballooning its part of the page. Use it as the inner tool that loads one team's widgets, with single-spa or a vendor platform as the outer control plane.
 
 ## When mountly is the right call
 
@@ -56,4 +55,4 @@ The shape of a good fit:
 - You want style isolation between the host page and the component.
 - You want declarative HTML usage (`<signup-card>` or `<mountly-feature>`) for non-app teams to drop into pages.
 
-If three or more of those bullets describe your situation, mountly is probably the right tool.
+If three or more of those bullets describe your situation, mountly is the right tool.

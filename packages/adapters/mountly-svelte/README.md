@@ -22,7 +22,9 @@ import styles from "./styles.generated.css";
 
 const widget = createWidget(MyComponent, { styles });
 
-widget.mount(container, { /* props */ });
+widget.mount(container, {
+  /* props */
+});
 widget.unmount(container);
 ```
 
@@ -30,10 +32,10 @@ widget.unmount(container);
 
 ## Companion Packages
 
-- [`mountly`](https://npmjs.com/package/mountly) — core runtime, lifecycle, and CLI
-- [`mountly-react`](https://npmjs.com/package/mountly-react) — React adapter
-- [`mountly-vue`](https://npmjs.com/package/mountly-vue) — Vue adapter
-- [`mountly-tailwind`](https://npmjs.com/package/mountly-tailwind) — Tailwind v4 design preset
+- [`mountly`](https://npmjs.com/package/mountly): core runtime, lifecycle, and CLI
+- [`mountly-react`](https://npmjs.com/package/mountly-react): React adapter
+- [`mountly-vue`](https://npmjs.com/package/mountly-vue): Vue adapter
+- [`mountly-tailwind`](https://npmjs.com/package/mountly-tailwind): Tailwind v4 design preset
 
 ## License
 

@@ -1,0 +1,7 @@
+import { defineConfig, mergeConfig } from "vite";
+import { svelte } from "@sveltejs/vite-plugin-svelte";
+import { defineMountlyWidgetConfig } from "mountly-vite-plugin";
+
+export default defineMountlyWidgetConfig({ framework: "svelte" }).map((config) =>
+  mergeConfig(config, { plugins: [svelte()] }),
+);

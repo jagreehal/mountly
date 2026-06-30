@@ -16,7 +16,8 @@ export interface UrlState<S extends QueryState> {
 
 function normalizeUrl(input?: URL | string): URL {
   if (input instanceof URL) return new URL(input.href);
-  if (typeof input === "string") return new URL(input, typeof location === "undefined" ? "http://localhost" : location.href);
+  if (typeof input === "string")
+    return new URL(input, typeof location === "undefined" ? "http://localhost" : location.href);
   return new URL(location.href);
 }
 
@@ -72,11 +73,12 @@ export function createUrlState<S extends QueryState = QueryState>(
   const defaultHistory = options.history ?? "replace";
   let memoryUrl = options.url === undefined ? null : normalizeUrl(options.url);
 
-  const currentUrl = (): URL => memoryUrl ? new URL(memoryUrl.href) : normalizeUrl();
-  const read = (): Partial<S> => ({
-    ...options.defaults,
-    ...parseQuery<S>(currentUrl().searchParams),
-  }) as Partial<S>;
+  const currentUrl = (): URL => (memoryUrl ? new URL(memoryUrl.href) : normalizeUrl());
+  const read = (): Partial<S> =>
+    ({
+      ...options.defaults,
+      ...parseQuery<S>(currentUrl().searchParams),
+    }) as Partial<S>;
 
   const notify = (): void => {
     const state = read();

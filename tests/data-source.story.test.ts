@@ -1,5 +1,5 @@
 import { story } from "executable-stories-vitest";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import { createDataSource } from "../packages/mountly/src/data-source";
 
 const tick = () => new Promise((resolve) => setTimeout(resolve, 0));

@@ -1,0 +1,59 @@
+{
+  "name": "mountly-manifest",
+  "version": "0.1.0",
+  "description": "Vertical registry schema and host helpers for mountly micro-frontends",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jagreehal/mountly",
+    "directory": "packages/mountly-manifest"
+  },
+  "files": [
+    "dist",
+    "schema.json"
+  ],
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./server": {
+      "import": "./dist/server.js",
+      "types": "./dist/server.d.ts"
+    },
+    "./client": {
+      "import": "./dist/client.js",
+      "types": "./dist/client.d.ts"
+    },
+    "./schema.json": "./schema.json"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup && node scripts/gen-schema.mjs",
+    "typecheck": "tsc --noEmit",
+    "dev": "tsup --watch",
+    "prepack": "rm -f LICENSE && cp ../../LICENSE LICENSE",
+    "postpack": "rm -f LICENSE && ln -s ../../LICENSE LICENSE"
+  },
+  "dependencies": {
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "mountly": "workspace:*",
+    "tsup": "^8.5.1",
+    "typescript": "^6.0.3"
+  },
+  "peerDependencies": {
+    "mountly": "^0.2.2"
+  },
+  "peerDependenciesMeta": {
+    "mountly": {
+      "optional": true
+    }
+  }
+}

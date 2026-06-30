@@ -32,14 +32,10 @@ export const Card = defineComponent({
   },
   setup(props, { slots }) {
     return () =>
-      h(
-        "section",
-        { class: ["ui-card", `ui-card-${props.tone}`] },
-        [
-          props.title ? h("h3", { class: "ui-card-title" }, props.title) : null,
-          h("div", { class: "ui-card-body" }, slots.default ? slots.default() : []),
-        ],
-      );
+      h("section", { class: ["ui-card", `ui-card-${props.tone}`] }, [
+        props.title ? h("h3", { class: "ui-card-title" }, props.title) : null,
+        h("div", { class: "ui-card-body" }, slots.default ? slots.default() : []),
+      ]);
   },
 });
 

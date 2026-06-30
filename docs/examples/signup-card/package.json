@@ -1,0 +1,43 @@
+{
+  "name": "signup-card",
+  "version": "0.0.8",
+  "private": true,
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./peer": {
+      "import": "./dist/peer.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "pnpm run build:css && tsup",
+    "build:css": "tailwindcss -i ./src/styles.css -o ./src/styles.generated.css --minify",
+    "typecheck": "tsc --noEmit",
+    "dev": "pnpm run build:css && tsup --watch"
+  },
+  "dependencies": {
+    "mountly": "workspace:*",
+    "mountly-react": "workspace:*",
+    "mountly-tailwind": "workspace:*"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.3.1",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "tailwindcss": "^4.3.1",
+    "tsup": "^8.5.1",
+    "typescript": "^6.0.3"
+  }
+}

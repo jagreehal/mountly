@@ -1,6 +1,6 @@
 # {{name}}
 
-A mountly widget scaffolded with `npx mountly init`.
+A mountly vertical widget scaffolded with `npx mountly init`.
 
 ## Develop
 
@@ -14,3 +14,14 @@ pnpm dev
 ```bash
 pnpm build
 ```
+
+Outputs:
+
+- `dist/index.js` — self-contained (Vue bundled)
+- `dist/peer.js` — peer build (host supplies Vue via import map)
+
+## Publish to your CDN
+
+Upload `dist/peer.js` to your CDN and add it to your host manifest.
+
+See [mountly micro-frontends docs](https://github.com/jagreehal/mountly/blob/main/docs/micro-frontends.md).

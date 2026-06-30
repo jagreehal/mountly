@@ -23,6 +23,7 @@ export default defineConfig({
     "src/data-source.ts",
     "src/url-state.ts",
     "src/bus.ts",
+    "src/contracts.ts",
     "src/test-utils.ts",
     "src/runtime.ts",
   ],

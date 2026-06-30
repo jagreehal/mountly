@@ -1,6 +1,13 @@
 export interface TimingEvent {
   moduleId: string;
-  phase: "preload_start" | "preload_end" | "activate_start" | "activate_end" | "mount_start" | "mount_end" | "unmount";
+  phase:
+    | "preload_start"
+    | "preload_end"
+    | "activate_start"
+    | "activate_end"
+    | "mount_start"
+    | "mount_end"
+    | "unmount";
   timestamp: number;
   duration?: number;
   error?: string;
@@ -38,7 +45,7 @@ export function emitAnalyticsEvent(event: TimingEvent): void {
 export interface FeatureTimingTracker {
   recordPhase(
     phase: TimingEvent["phase"],
-    extra?: Partial<Omit<TimingEvent, "moduleId" | "phase" | "timestamp">>
+    extra?: Partial<Omit<TimingEvent, "moduleId" | "phase" | "timestamp">>,
   ): void;
   getTimings(): TimingEvent[];
   getAverageDuration(phase: TimingEvent["phase"]): number | null;
@@ -46,9 +53,7 @@ export interface FeatureTimingTracker {
 
 const moduleTimings = new Map<string, TimingEvent[]>();
 
-export function createFeatureTimingTracker(
-  moduleId: string
-): FeatureTimingTracker {
+export function createFeatureTimingTracker(moduleId: string): FeatureTimingTracker {
   if (!moduleTimings.has(moduleId)) {
     moduleTimings.set(moduleId, []);
   }
@@ -59,7 +64,7 @@ export function createFeatureTimingTracker(
 
   const recordPhase = (
     phase: TimingEvent["phase"],
-    extra?: Partial<Omit<TimingEvent, "moduleId" | "phase" | "timestamp">>
+    extra?: Partial<Omit<TimingEvent, "moduleId" | "phase" | "timestamp">>,
   ) => {
     const now = performance.now();
     let duration: number | undefined;
@@ -89,12 +94,8 @@ export function createFeatureTimingTracker(
 
   const getTimings = (): TimingEvent[] => [...timings];
 
-  const getAverageDuration = (
-    phase: TimingEvent["phase"]
-  ): number | null => {
-    const withDuration = timings.filter(
-      (e) => e.phase === phase && e.duration !== undefined
-    );
+  const getAverageDuration = (phase: TimingEvent["phase"]): number | null => {
+    const withDuration = timings.filter((e) => e.phase === phase && e.duration !== undefined);
     if (withDuration.length === 0) return null;
     const sum = withDuration.reduce((acc, e) => acc + (e.duration ?? 0), 0);
     return sum / withDuration.length;
@@ -103,14 +104,10 @@ export function createFeatureTimingTracker(
   return { recordPhase, getTimings, getAverageDuration };
 }
 
-export function getModuleTimings(
-  moduleId: string
-): ReadonlyArray<TimingEvent> {
+export function getModuleTimings(moduleId: string): ReadonlyArray<TimingEvent> {
   return moduleTimings.get(moduleId) ?? [];
 }
 
 export function getAllModuleTimings(): Map<string, ReadonlyArray<TimingEvent>> {
-  return new Map(
-    Array.from(moduleTimings.entries()).map(([k, v]) => [k, [...v]])
-  );
+  return new Map(Array.from(moduleTimings.entries()).map(([k, v]) => [k, [...v]]));
 }

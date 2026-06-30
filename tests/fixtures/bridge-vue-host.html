@@ -3,10 +3,25 @@
   <head>
     <link rel="stylesheet" href="/tests/fixtures/bridge-tokens.css" />
     <script type="importmap">
-      {"imports":{
-        "vue":"https://esm.sh/vue@3.5.13",
-        "mountly":"/packages/mountly/dist/index.js","mountly/shadow":"/packages/mountly/dist/shadow.js","mountly/assets":"/packages/mountly/dist/assets.js","mountly/adapter":"/packages/mountly/dist/adapter.js","mountly/attach":"/packages/mountly/dist/attach.js","mountly/bundle":"/packages/mountly/dist/bundle.js","mountly/elements":"/packages/mountly/dist/elements.js","mountly/island":"/packages/mountly/dist/island.js","mountly/mount":"/packages/mountly/dist/mount.js","mountly/runtime":"/packages/mountly/dist/runtime.js","mountly/triggers":"/packages/mountly/dist/triggers.js","mountly/url":"/packages/mountly/dist/url-state.js","mountly/data":"/packages/mountly/dist/data-source.js","mountly/bus":"/packages/mountly/dist/bus.js" 
-      }}
+      {
+        "imports": {
+          "vue": "https://esm.sh/vue@3.5.13",
+          "mountly": "/packages/mountly/dist/index.js",
+          "mountly/shadow": "/packages/mountly/dist/shadow.js",
+          "mountly/assets": "/packages/mountly/dist/assets.js",
+          "mountly/adapter": "/packages/mountly/dist/adapter.js",
+          "mountly/attach": "/packages/mountly/dist/attach.js",
+          "mountly/bundle": "/packages/mountly/dist/bundle.js",
+          "mountly/elements": "/packages/mountly/dist/elements.js",
+          "mountly/island": "/packages/mountly/dist/island.js",
+          "mountly/mount": "/packages/mountly/dist/mount.js",
+          "mountly/runtime": "/packages/mountly/dist/runtime.js",
+          "mountly/triggers": "/packages/mountly/dist/triggers.js",
+          "mountly/url": "/packages/mountly/dist/url-state.js",
+          "mountly/data": "/packages/mountly/dist/data-source.js",
+          "mountly/bus": "/packages/mountly/dist/bus.js"
+        }
+      }
     </script>
   </head>
   <body>
@@ -31,8 +46,10 @@
       createApp({
         render: () =>
           h(ui.Card, { tone: "primary", title: "Direct" }, () =>
-            h(ui.Button, { variant: "primary", "data-testid": "direct-button" }, () =>
-              "Used directly, no mountly",
+            h(
+              ui.Button,
+              { variant: "primary", "data-testid": "direct-button" },
+              () => "Used directly, no mountly",
             ),
           ),
       }).mount("#direct-vue");
@@ -50,7 +67,11 @@
         trigger: tHero,
         mount: document.getElementById("m-hero"),
         activateOn: onTrigger.click(tHero),
-        props: { headline: "Same UI library, two ways.", ctaLabel: "Get started", ctaHref: "/start" },
+        props: {
+          headline: "Same UI library, two ways.",
+          ctaLabel: "Get started",
+          ctaHref: "/start",
+        },
       });
       attach(widgets.feature({ moduleId: "vue-pricing", export: "pricing" }), {
         trigger: tPricing,
@@ -81,7 +102,8 @@
         const pricingM = document.getElementById("m-pricing");
         const newsletterM = document.getElementById("m-newsletter");
         const newsletterBtn = newsletterM.querySelector(".ui-btn-default");
-        if (!direct || !heroCta || !pricingM.querySelector(".ui-card") || !newsletterBtn) return false;
+        if (!direct || !heroCta || !pricingM.querySelector(".ui-card") || !newsletterBtn)
+          return false;
         window.__result = {
           bridgeId: window.__bridge.__bridge_id,
           directRendered: !!direct,

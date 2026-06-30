@@ -1,17 +1,19 @@
 <!doctype html>
-<html><body>
-  <img class="a"/><img class="a"/><img class="a"/>
-  <input class="b"/>
-  <script type="module">
-    import { attachShadow } from "/packages/mountly/dist/shadow.js";
-    document.querySelectorAll(".a").forEach((el) => {
-      attachShadow(el, { shadow: true, styles: ".widget-a{}", shadowMode: "open" });
-    });
-    document.querySelectorAll(".b").forEach((el) => {
-      attachShadow(el, { shadow: true, styles: ".widget-b{}", shadowMode: "open" });
-    });
-    window.__result = {
-      fallbackStyleCount: document.head.querySelectorAll("style[data-mountly-fallback]").length,
-    };
-  </script>
-</body></html>
+<html>
+  <body>
+    <img class="a" /><img class="a" /><img class="a" />
+    <input class="b" />
+    <script type="module">
+      import { attachShadow } from "/packages/mountly/dist/shadow.js";
+      document.querySelectorAll(".a").forEach((el) => {
+        attachShadow(el, { shadow: true, styles: ".widget-a{}", shadowMode: "open" });
+      });
+      document.querySelectorAll(".b").forEach((el) => {
+        attachShadow(el, { shadow: true, styles: ".widget-b{}", shadowMode: "open" });
+      });
+      window.__result = {
+        fallbackStyleCount: document.head.querySelectorAll("style[data-mountly-fallback]").length,
+      };
+    </script>
+  </body>
+</html>

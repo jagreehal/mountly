@@ -7,6 +7,10 @@ export default defineConfig([
       "src/index.ts",
       "src/build/index.ts",
       "src/bridge/index.ts",
+      "src/react/index.ts",
+      "src/server/index.ts",
+      "src/json-render/index.ts",
+      "src/json-render/server.ts",
     ],
     format: ["esm"],
     dts: true,
@@ -14,6 +18,16 @@ export default defineConfig([
     minify: false,
     sourcemap: true,
     target: "es2020",
+    external: [
+      "react",
+      "react-dom",
+      "ai",
+      "@json-render/core",
+      "@json-render/react",
+      "@modelcontextprotocol/sdk",
+      "mountly",
+      "mountly-react",
+    ],
   },
   // Iframe entry — fully bundled IIFE so it can be inlined in <script> tags
   {

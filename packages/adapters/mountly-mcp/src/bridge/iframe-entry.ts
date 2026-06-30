@@ -10,17 +10,14 @@ import type { WidgetModule } from "mountly/adapter";
 import type { DisplayMode } from "../types.js";
 import { runBridge } from "./index.js";
 
-const widget = (globalThis as { __mountlyMcpWidget__?: WidgetModule })
-  .__mountlyMcpWidget__;
+const widget = (globalThis as { __mountlyMcpWidget__?: WidgetModule }).__mountlyMcpWidget__;
 const awaitToolResult =
-  (globalThis as { __mountlyMcpAwaitToolResult__?: boolean })
-    .__mountlyMcpAwaitToolResult__ ?? true;
-const availableDisplayModes =
-  (globalThis as { __mountlyMcpAvailableDisplayModes__?: ReadonlyArray<DisplayMode> })
-    .__mountlyMcpAvailableDisplayModes__ ?? ["inline"];
-const appInfo =
-  (globalThis as { __mountlyMcpAppInfo__?: { name: string; version: string } })
-    .__mountlyMcpAppInfo__;
+  (globalThis as { __mountlyMcpAwaitToolResult__?: boolean }).__mountlyMcpAwaitToolResult__ ?? true;
+const availableDisplayModes = (
+  globalThis as { __mountlyMcpAvailableDisplayModes__?: ReadonlyArray<DisplayMode> }
+).__mountlyMcpAvailableDisplayModes__ ?? ["inline"];
+const appInfo = (globalThis as { __mountlyMcpAppInfo__?: { name: string; version: string } })
+  .__mountlyMcpAppInfo__;
 
 if (!widget) {
   throw new Error("[mountly-mcp] no widget on globalThis.__mountlyMcpWidget__");

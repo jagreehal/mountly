@@ -9,9 +9,7 @@ export interface DevtoolsPanelOptions {
 let panel: HTMLElement | null = null;
 let stateInterval: ReturnType<typeof setInterval> | null = null;
 
-export function createDevtoolsPanel(
-  options: DevtoolsPanelOptions = {}
-): { destroy: () => void } {
+export function createDevtoolsPanel(options: DevtoolsPanelOptions = {}): { destroy: () => void } {
   const { position = "bottom-right", collapsed = false } = options;
 
   if (panel) {
@@ -270,15 +268,9 @@ export function createDevtoolsPanel(
 
   document.body.appendChild(panel);
 
-  const header = panel.querySelector(
-    "[data-mountly-devtools-header]"
-  )!;
-  const toggle = panel.querySelector(
-    "[data-mountly-devtools-toggle]"
-  )!;
-  const content = panel.querySelector(
-    "[data-mountly-devtools-content]"
-  )!;
+  const header = panel.querySelector("[data-mountly-devtools-header]")!;
+  const toggle = panel.querySelector("[data-mountly-devtools-toggle]")!;
+  const content = panel.querySelector("[data-mountly-devtools-content]")!;
 
   let isCollapsed = collapsed;
 
@@ -313,30 +305,24 @@ export function createDevtoolsPanel(
   const updatePanel = () => {
     if (!panel) return;
 
-    const featuresContainer = panel.querySelector(
-      "[data-mountly-devtools-features]"
-    )!;
-    const cacheContainer = panel.querySelector(
-      "[data-mountly-devtools-cache]"
-    )!;
-    const eventsContainer = panel.querySelector(
-      "[data-mountly-devtools-events]"
-    )!;
+    const featuresContainer = panel.querySelector("[data-mountly-devtools-features]")!;
+    const cacheContainer = panel.querySelector("[data-mountly-devtools-cache]")!;
+    const eventsContainer = panel.querySelector("[data-mountly-devtools-events]")!;
 
     const timings = getAllModuleTimings();
-    const featuresHtml = Array.from(timings.entries())
-      .map(([moduleId, events]) => {
-        const lastEvent = events[events.length - 1];
-        const state = lastEvent?.phase.replace("_start", "").replace("_end", "") ?? "idle";
-        return `
+    const featuresHtml =
+      Array.from(timings.entries())
+        .map(([moduleId, events]) => {
+          const lastEvent = events[events.length - 1];
+          const state = lastEvent?.phase.replace("_start", "").replace("_end", "") ?? "idle";
+          return `
           <div data-mountly-devtools-feature>
             <span data-mountly-devtools-feature-name>${moduleId}</span>
             <span data-mountly-devtools-badge class="${state}">${state}</span>
           </div>
         `;
-      })
-      .join("") ||
-      '<div style="color:#64748b;padding:8px 0">No features loaded</div>';
+        })
+        .join("") || '<div style="color:#64748b;padding:8px 0">No features loaded</div>';
 
     featuresContainer.innerHTML = featuresHtml;
 
@@ -360,10 +346,9 @@ export function createDevtoolsPanel(
           <span data-mountly-devtools-timing-phase>${e.moduleId} → ${e.phase}</span>
           <span data-mountly-devtools-timing-duration>${e.duration ? `${e.duration.toFixed(0)}ms` : "—"}</span>
         </div>
-      `
+      `,
         )
-        .join("") ||
-      '<div style="color:#64748b;padding:8px 0">No events yet</div>';
+        .join("") || '<div style="color:#64748b;padding:8px 0">No events yet</div>';
   };
 
   stateInterval = setInterval(updatePanel, 1000);

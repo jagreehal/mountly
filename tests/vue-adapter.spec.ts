@@ -6,17 +6,22 @@ test.beforeEach(({ page }, testInfo) => {
   story.init(testInfo);
 });
 
-
-test("createWidget mount renders the Vue component into the shadow root", async ({ page }, testInfo) => {
+test("createWidget mount renders the Vue component into the shadow root", async ({
+  page,
+}, testInfo) => {
   story.given("the Vue mount fixture is loaded");
   await page.goto("http://localhost:5175/tests/fixtures/vue-mount.html");
   await page.waitForLoadState("networkidle");
   story.when("the component finishes mounting");
-  await page.waitForFunction(() => {
-    const el = document.getElementById("c");
-    const node = el?.shadowRoot?.querySelector("[data-mountly-root]");
-    return node && node.textContent === "hello world";
-  }, null, { timeout: 8000 });
+  await page.waitForFunction(
+    () => {
+      const el = document.getElementById("c");
+      const node = el?.shadowRoot?.querySelector("[data-mountly-root]");
+      return node && node.textContent === "hello world";
+    },
+    null,
+    { timeout: 8000 },
+  );
   story.then("the component renders into the shadow root");
   const text = await page.evaluate(() => {
     const el = document.getElementById("c");
@@ -35,7 +40,9 @@ test("createWidget mount renders the Vue component into the shadow root", async 
   story.screenshot({ path: screenshotPath, alt: "Vue mount" });
 });
 
-test("createWidget remount is idempotent (single shadow root, single style, fresh tree)", async ({ page }, testInfo) => {
+test("createWidget remount is idempotent (single shadow root, single style, fresh tree)", async ({
+  page,
+}, testInfo) => {
   story.given("the Vue remount fixture is loaded");
   await page.goto("http://localhost:5175/tests/fixtures/vue-remount.html");
   await page.waitForLoadState("networkidle");
@@ -104,7 +111,9 @@ test("Vue widget supports independent multi-instance mounts", async ({ page }, t
   story.screenshot({ path: screenshotPath, alt: "Vue multi-instance" });
 });
 
-test("Vue widget falls back to light DOM for shadow-rejecting elements", async ({ page }, testInfo) => {
+test("Vue widget falls back to light DOM for shadow-rejecting elements", async ({
+  page,
+}, testInfo) => {
   story.given("console warnings are being captured");
   const warnings: string[] = [];
   page.on("console", (msg) => msg.type() === "warning" && warnings.push(msg.text()));
@@ -129,7 +138,9 @@ test("Vue widget falls back to light DOM for shadow-rejecting elements", async (
   story.screenshot({ path: screenshotPath, alt: "Vue light DOM fallback" });
 });
 
-test("Vue widget works with closed shadow mode and remounts cleanly", async ({ page }, testInfo) => {
+test("Vue widget works with closed shadow mode and remounts cleanly", async ({
+  page,
+}, testInfo) => {
   story.given("the Vue closed-mode fixture is loaded");
   await page.goto("http://localhost:5175/tests/fixtures/vue-closed-mode.html");
   await page.waitForLoadState("networkidle");

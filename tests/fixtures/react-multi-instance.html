@@ -1,29 +1,51 @@
 <!doctype html>
-<html><body>
-  <div id="a"></div>
-  <div id="b"></div>
-  <script type="importmap">
-    {"imports":{"react":"https://esm.sh/react@18","react-dom/client":"https://esm.sh/react-dom@18/client","react-dom":"https://esm.sh/react-dom@18","mountly":"/packages/mountly/dist/index.js","mountly/shadow":"/packages/mountly/dist/shadow.js","mountly/assets":"/packages/mountly/dist/assets.js","mountly/adapter":"/packages/mountly/dist/adapter.js","mountly/attach":"/packages/mountly/dist/attach.js","mountly/bundle":"/packages/mountly/dist/bundle.js","mountly/elements":"/packages/mountly/dist/elements.js","mountly/island":"/packages/mountly/dist/island.js","mountly/mount":"/packages/mountly/dist/mount.js","mountly/runtime":"/packages/mountly/dist/runtime.js","mountly/triggers":"/packages/mountly/dist/triggers.js","mountly/url":"/packages/mountly/dist/url-state.js","mountly/data":"/packages/mountly/dist/data-source.js","mountly/bus":"/packages/mountly/dist/bus.js"}}
-  </script>
-  <script type="module">
-    import { createElement } from "react";
-    import { createWidget } from "/packages/adapters/mountly-react/dist/index.js";
+<html>
+  <body>
+    <div id="a"></div>
+    <div id="b"></div>
+    <script type="importmap">
+      {
+        "imports": {
+          "react": "https://esm.sh/react@18",
+          "react-dom/client": "https://esm.sh/react-dom@18/client",
+          "react-dom": "https://esm.sh/react-dom@18",
+          "mountly": "/packages/mountly/dist/index.js",
+          "mountly/shadow": "/packages/mountly/dist/shadow.js",
+          "mountly/assets": "/packages/mountly/dist/assets.js",
+          "mountly/adapter": "/packages/mountly/dist/adapter.js",
+          "mountly/attach": "/packages/mountly/dist/attach.js",
+          "mountly/bundle": "/packages/mountly/dist/bundle.js",
+          "mountly/elements": "/packages/mountly/dist/elements.js",
+          "mountly/island": "/packages/mountly/dist/island.js",
+          "mountly/mount": "/packages/mountly/dist/mount.js",
+          "mountly/runtime": "/packages/mountly/dist/runtime.js",
+          "mountly/triggers": "/packages/mountly/dist/triggers.js",
+          "mountly/url": "/packages/mountly/dist/url-state.js",
+          "mountly/data": "/packages/mountly/dist/data-source.js",
+          "mountly/bus": "/packages/mountly/dist/bus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { createElement } from "react";
+      import { createWidget } from "/packages/adapters/mountly-react/dist/index.js";
 
-    const Hello = (props) => createElement("span", null, props.msg);
-    const w = createWidget(Hello, { shadow: true, styles: ".shared{}" });
-    const a = document.getElementById("a");
-    const b = document.getElementById("b");
-    w.mount(a, { msg: "alpha" });
-    w.mount(b, { msg: "beta" });
+      const Hello = (props) => createElement("span", null, props.msg);
+      const w = createWidget(Hello, { shadow: true, styles: ".shared{}" });
+      const a = document.getElementById("a");
+      const b = document.getElementById("b");
+      w.mount(a, { msg: "alpha" });
+      w.mount(b, { msg: "beta" });
 
-    await new Promise(r => setTimeout(r, 50));
-    w.unmount(a);
+      await new Promise((r) => setTimeout(r, 50));
+      w.unmount(a);
 
-    window.__result = {
-      aTextAfter: a.shadowRoot?.querySelector("[data-mountly-root]")?.textContent ?? "",
-      bText: b.shadowRoot?.querySelector("[data-mountly-root]")?.textContent ?? "",
-      aHasShadow: !!a.shadowRoot,
-      bHasShadow: !!b.shadowRoot,
-    };
-  </script>
-</body></html>
+      window.__result = {
+        aTextAfter: a.shadowRoot?.querySelector("[data-mountly-root]")?.textContent ?? "",
+        bText: b.shadowRoot?.querySelector("[data-mountly-root]")?.textContent ?? "",
+        aHasShadow: !!a.shadowRoot,
+        bHasShadow: !!b.shadowRoot,
+      };
+    </script>
+  </body>
+</html>

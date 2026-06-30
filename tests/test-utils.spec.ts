@@ -10,9 +10,7 @@ test("mountly test helpers mount and unmount widgets", async ({ page }) => {
   await page.goto("http://localhost:5175/tests/fixtures/empty.html");
 
   const result = await page.evaluate(async () => {
-    const { mountWidgetFixture } = await import(
-      "/packages/mountly/dist/test-utils.js"
-    );
+    const { mountWidgetFixture } = await import("/packages/mountly/dist/test-utils.js");
     const widget = {
       mount(container: HTMLElement, props: { label?: string }) {
         container.textContent = props.label ?? "mounted";

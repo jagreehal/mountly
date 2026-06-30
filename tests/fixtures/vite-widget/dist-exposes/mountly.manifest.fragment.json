@@ -1,0 +1,27 @@
+{
+  "version": "2",
+  "verticals": [
+    {
+      "id": "vite-widget",
+      "url": "./peer.js",
+      "featureExport": "widget",
+      "exports": {
+        "./Badge": "./Badge.js"
+      },
+      "types": {
+        "declaration": "./types/index.d.ts",
+        "module": [
+          "widget"
+        ],
+        "exports": {
+          "./Badge": {
+            "declaration": "./types/Badge.d.ts",
+            "names": [
+              "Badge"
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

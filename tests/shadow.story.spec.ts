@@ -43,7 +43,11 @@ test.describe("Shadow behavior story", () => {
     story.json({ label: "shadow fallback warnings", value: warnings });
 
     story.then("mount proceeds in light DOM and warning is emitted once");
-    const typed = result as { mountIsSibling: boolean; mountIsRendered: boolean; mountAttr: boolean };
+    const typed = result as {
+      mountIsSibling: boolean;
+      mountIsRendered: boolean;
+      mountAttr: boolean;
+    };
     expect(typed.mountIsSibling).toBe(true);
     expect(typed.mountIsRendered).toBe(true);
     expect(typed.mountAttr).toBe(true);

@@ -1,0 +1,43 @@
+---
+title: Live examples
+description: Runnable mountly hosts and widgets — open in the browser without cloning the repo.
+---
+
+import { exampleUrl } from "../../../lib/example-urls.ts";
+import LiveExample from "../../../components/LiveExample.astro";
+
+Every example below is hosted on this site. Clone the [repo](https://github.com/jagreehal/mountly) and see [`docs/examples/`](https://github.com/jagreehal/mountly/tree/main/docs/examples) for source and local dev commands.
+
+## Quick try
+
+<LiveExample path="quickstart/host.html" title="Quickstart host" height="320px" />
+
+## All demos
+
+<ul>
+  <li><a href={exampleUrl("quickstart/host.html")}>Quickstart</a> — shortest import map + attach()</li>
+  <li><a href={exampleUrl("plain-html/")}>Plain HTML (self-contained)</a> · <a href={exampleUrl("plain-html/shared-react.html")}>shared React</a></li>
+  <li><a href={exampleUrl("marketing-site/")}>Marketing site</a> — hover, click, viewport triggers</li>
+  <li><a href={exampleUrl("shadcn-drop-in/")}>shadcn drop-in</a></li>
+  <li><a href={exampleUrl("demo/")}>Demo (Vite host)</a> — full feature kitchen sink</li>
+  <li><a href={exampleUrl("cross-framework-bus/")}>Cross-framework bus</a></li>
+  <li><a href={exampleUrl("multi-vertical-host/")}>Multi-vertical host</a></li>
+  <li><a href={exampleUrl("multi-widget-bundle/")}>Multi-widget bundle</a></li>
+  <li><a href={exampleUrl("monorepo-component-library/")}>Monorepo component library</a></li>
+  <li><a href={exampleUrl("vite-host-import/")}>Vite host (import remotes)</a></li>
+  <li><a href={exampleUrl("vite-host-remotes-url/")}>Vite host (URL remotes)</a></li>
+  <li><a href={exampleUrl("pokemon-kitchen-sink/")}>Pokémon kitchen sink</a></li>
+  <li><a href={exampleUrl("mcp-app-demo/preview/host/")}>MCP app preview</a></li>
+  <li><a href={exampleUrl("mcp-generative-demo/preview/stream-dist/")}>Generative UI stream</a></li>
+</ul>
+
+## Run locally
+
+From the repo root after `pnpm install && pnpm -r build`:
+
+```bash
+pnpm --filter mountly-docs run stage-examples
+pnpm --filter mountly-docs dev
+```
+
+Per-example dev servers are documented in [`docs/examples/README.md`](https://github.com/jagreehal/mountly/blob/main/docs/examples/README.md).

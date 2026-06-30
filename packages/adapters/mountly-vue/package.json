@@ -2,16 +2,19 @@
   "name": "mountly-vue",
   "version": "1.0.2",
   "description": "Vue adapter for mountly widgets",
+  "homepage": "https://github.com/jagreehal/mountly/tree/main/packages/adapters/mountly-vue#readme",
+  "bugs": {
+    "url": "https://github.com/jagreehal/mountly/issues"
+  },
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/jagreehal/mountly",
     "directory": "packages/adapters/mountly-vue"
   },
-  "bugs": {
-    "url": "https://github.com/jagreehal/mountly/issues"
-  },
-  "homepage": "https://github.com/jagreehal/mountly/tree/main/packages/adapters/mountly-vue#readme",
+  "files": [
+    "dist"
+  ],
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -21,9 +24,6 @@
       "types": "./dist/index.d.ts"
     }
   },
-  "files": [
-    "dist"
-  ],
   "publishConfig": {
     "access": "public"
   },
@@ -34,14 +34,14 @@
     "prepack": "rm -f LICENSE && cp ../../../LICENSE LICENSE",
     "postpack": "rm -f LICENSE && ln -s ../../../LICENSE LICENSE"
   },
-  "peerDependencies": {
-    "vue": "^3",
-    "mountly": "^0.2.2"
-  },
   "devDependencies": {
     "mountly": "^0.2.2",
     "tsup": "^8.5.1",
     "typescript": "^6.0.3",
     "vue": "^3.5.38"
+  },
+  "peerDependencies": {
+    "mountly": "^0.2.2",
+    "vue": "^3"
   }
 }

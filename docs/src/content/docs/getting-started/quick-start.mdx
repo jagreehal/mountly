@@ -3,7 +3,10 @@ title: Quick start
 description: Scaffold a mountly widget and mount it on a page in 60 seconds.
 ---
 
-The fastest path is the CLI. It scaffolds a React widget pre-wired with the build pipeline, both bundle outputs, and a working host page.
+import LiveExample from "../../../components/LiveExample.astro";
+import { exampleUrl } from "../../../lib/example-urls.ts";
+
+The CLI is the fastest path. It scaffolds a React widget pre-wired with the build pipeline, both bundle outputs, and a working host page.
 
 ## 1. Scaffold a widget
 
@@ -14,7 +17,7 @@ cd my-widget
 
 You get:
 
-- `src/Component.tsx` — a React component (you can swap in Vue or Svelte later).
+- `src/Component.tsx`: a React component (you can swap in Vue or Svelte later).
 - A widget factory using `mountly-react`'s `createWidget`.
 - A `tsup` build that produces both `dist/index.js` (self-contained) and `dist/peer.js` (shared React).
 - An example host page.
@@ -28,8 +31,8 @@ pnpm build
 
 Two artifacts land in `dist/`:
 
-- **`index.js`** — self-contained bundle. Includes React. Drop into any page.
-- **`peer.js`** — peer build. Excludes React. Use when the host already maps React via an import map.
+- **`index.js`**: self-contained bundle. Includes React. Drop into any page.
+- **`peer.js`**: peer build. Excludes React. Use when the host already maps React via an import map.
 
 See [Distribution](/mountly/concepts/distribution/) for which one to ship.
 
@@ -38,16 +41,16 @@ See [Distribution](/mountly/concepts/distribution/) for which one to ship.
 ```html title="host.html"
 <div id="mount"></div>
 <script type="module">
-  import widget from './my-widget/dist/index.js';
-  widget.mount(document.getElementById('mount'));
+  import widget from "./my-widget/dist/index.js";
+  widget.mount(document.getElementById("mount"));
 </script>
 ```
 
-The widget mounts inside the container in light DOM and the host's CSS reaches in. If you need full style isolation, pass `shadow: true` to `createWidget`.
+The widget mounts inside the container in light DOM and the host's CSS reaches in. For full style isolation, pass `shadow: true` to `createWidget`.
 
 ## 3b. Lowest-ceremony host (recommended for plain HTML)
 
-If you're on a static/CMS host, prefer declarative islands + one script tag:
+On a static or CMS host, prefer declarative islands plus one script tag:
 
 ```html title="host.html"
 <div
@@ -64,53 +67,56 @@ If you're on a static/CMS host, prefer declarative islands + one script tag:
 ></script>
 ```
 
-This is the default DX path: no host app code, one script tag, and fallback HTML still works when JS is unavailable.
+This is the default DX path: no host app code, one script tag, and fallback HTML that still works when JS is unavailable.
 
 ## 4. Add the on-demand lifecycle
 
-`mount()` is the bare minimum. To get **on-intent loading**, wrap the widget in a feature:
+`mount()` is the bare minimum. For **on-intent loading**, wrap the widget in a feature:
 
 ```ts title="page.ts"
-import { createOnDemandFeature } from 'mountly';
+import { createOnDemandFeature } from "mountly";
 
 const signup = createOnDemandFeature({
-  moduleId: 'signup-card',
-  moduleUrl: './my-widget/dist/index.js',
+  moduleId: "signup-card",
+  moduleUrl: "./my-widget/dist/index.js",
 });
 
 signup.attach({
-  trigger: document.querySelector('#cta')!,
-  preloadOn: 'hover',
-  activateOn: 'click',
+  trigger: document.querySelector("#cta")!,
+  preloadOn: "hover",
+  activateOn: "click",
 });
 ```
 
-mountly synthesises the loader and a default render that threads `moduleUrl` through to the adapter, so the sibling `dist/index.css` is fetched and applied automatically. The widget code is fetched on first hover and mounted on click. Open DevTools → Network and watch.
+mountly synthesises the loader and a default render that threads `moduleUrl` through to the adapter, so it fetches and applies the sibling `dist/index.css` for you. It fetches the widget code on first hover and mounts it on click. Open DevTools → Network and watch.
 
-Need bespoke loading or rendering? `loadModule` and `render` are still available and override the auto-derived defaults.
+For bespoke loading or rendering, `loadModule` and `render` are still available and override the auto-derived defaults.
 
 ## 5. See the full demo
 
-The repo ships several runnable examples. The richest is the marketing site:
+Try the hosted demos — no clone required:
+
+- [**Quickstart host**]({exampleUrl("quickstart/host.html")}) — hover to preload, click to mount.
+- [**Marketing site**]({exampleUrl("marketing-site/")}) — hero button + viewport embed.
+
+<LiveExample path="quickstart/host.html" title="Quickstart" height="300px" />
+
+The marketing site shows hover preload, click mount, and viewport-triggered embeds with zero host framework JS before interaction.
+
+**Run locally** (optional):
 
 ```bash
 git clone https://github.com/jagreehal/mountly
 cd mountly
 pnpm install && pnpm -r build
-cd examples/marketing-site && pnpm dev
+cd docs/examples/plain-html && pnpm dev
 ```
 
-Open [http://localhost:5176/examples/marketing-site/](http://localhost:5176/examples/marketing-site/). You'll see:
-
-- A hero "Join the newsletter" button — preloads on hover, mounts on click.
-- An inline embed — mounts on viewport entry.
-- Zero framework JavaScript on the host before interaction.
-
-The shortest copy-paste host lives at [http://localhost:5175/examples/quickstart/host.html](http://localhost:5175/examples/quickstart/host.html) after running `cd examples/plain-html && pnpm dev`.
+Then open [http://localhost:5175/docs/examples/quickstart/host.html](http://localhost:5175/docs/examples/quickstart/host.html).
 
 ## Where to next
 
-- [**How it works**](/mountly/getting-started/how-it-works/) — the architecture in one page.
-- [**Triggers**](/mountly/concepts/triggers/) — the six ways to say "now".
-- [**React** / **Vue** / **Svelte**](/mountly/frameworks/react/) — adapter-specific patterns.
-- [**API: `createOnDemandFeature`**](/mountly/api/create-on-demand-feature/) — the core primitive.
+- [**How it works**](/mountly/getting-started/how-it-works/): the architecture in one page.
+- [**Triggers**](/mountly/concepts/triggers/): the six ways to say "now".
+- [**React** / **Vue** / **Svelte**](/mountly/frameworks/react/): adapter-specific patterns.
+- [**API: `createOnDemandFeature`**](/mountly/api/create-on-demand-feature/): the core primitive.

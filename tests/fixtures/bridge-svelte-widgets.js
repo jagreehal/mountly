@@ -2,11 +2,7 @@
 // primitives into product surfaces, wraps each with mountly-svelte's
 // createWidget. Library file has zero mountly references.
 import { createWidget } from "/packages/adapters/mountly-svelte/dist/index.js";
-import {
-  Button,
-  Card,
-  Stack,
-} from "/tests/fixtures/bridge-pure-svelte-lib.js";
+import { Button, Card, Stack } from "/tests/fixtures/bridge-pure-svelte-lib.js";
 
 class HeroSurface {
   constructor({ target, props = {} }) {
@@ -24,7 +20,9 @@ class HeroSurface {
     stack.el.appendChild(cta);
     this.children = [card, stack];
   }
-  $destroy() { this.children.forEach((c) => c.$destroy()); }
+  $destroy() {
+    this.children.forEach((c) => c.$destroy());
+  }
 }
 
 class PricingSurface {
@@ -45,7 +43,9 @@ class PricingSurface {
     });
     this.children = [card, stack, button];
   }
-  $destroy() { this.children.forEach((c) => c.$destroy()); }
+  $destroy() {
+    this.children.forEach((c) => c.$destroy());
+  }
 }
 
 class EmailCaptureSurface {
@@ -63,7 +63,9 @@ class EmailCaptureSurface {
     });
     this.children = [card, stack, button];
   }
-  $destroy() { this.children.forEach((c) => c.$destroy()); }
+  $destroy() {
+    this.children.forEach((c) => c.$destroy());
+  }
 }
 
 const lightDom = { shadow: false };

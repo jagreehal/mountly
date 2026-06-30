@@ -102,10 +102,7 @@ export async function buildMcpResource(options: BuildOptions): Promise<BuildResu
   return { htmlPath: options.output, metaPath, declaration };
 }
 
-function mergeCdnIntoCsp(
-  csp: McpCsp | undefined,
-  cdn: { jsUrl: string; cssUrl: string },
-): McpCsp {
+function mergeCdnIntoCsp(csp: McpCsp | undefined, cdn: { jsUrl: string; cssUrl: string }): McpCsp {
   const jsOrigin = new URL(cdn.jsUrl).origin;
   const cssOrigin = new URL(cdn.cssUrl).origin;
   const merged: McpCsp = { ...(csp ?? {}) };

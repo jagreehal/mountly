@@ -4,7 +4,9 @@ import { createWidget } from "/packages/adapters/mountly-vue/dist/index.js";
 
 const Hello = {
   props: ["msg"],
-  render() { return h("span", { class: "styled-widget" }, this.msg ?? ""); },
+  render() {
+    return h("span", { class: "styled-widget" }, this.msg ?? "");
+  },
 };
 
 export default createWidget(Hello, { shadow: true });

@@ -9,11 +9,9 @@ test.beforeEach(({ page }, testInfo) => {
 const HOST = "http://localhost:5175";
 
 async function readResult(page: Page) {
-  await page.waitForFunction(
-    () => (window as any).__ready && (window as any).__ready(),
-    null,
-    { timeout: 15_000 },
-  );
+  await page.waitForFunction(() => (window as any).__ready && (window as any).__ready(), null, {
+    timeout: 15_000,
+  });
   return page.evaluate(() => (window as any).__result);
 }
 
@@ -22,7 +20,9 @@ async function readResult(page: Page) {
 // The library has no mountly imports; the bridge is where mountly meets
 // the framework.
 test.describe("Bridge pattern: framework-agnostic UI library + mountly", () => {
-  test("React: pure UI library renders both directly via createRoot AND through the mountly bridge (with Radix Slot asChild)", async ({ page }, testInfo) => {
+  test("React: pure UI library renders both directly via createRoot AND through the mountly bridge (with Radix Slot asChild)", async ({
+    page,
+  }, testInfo) => {
     story.given("the bridge-host fixture is loaded");
     await page.goto(`${HOST}/tests/fixtures/bridge-host.html`);
     story.when("the bundle is ready");
@@ -54,7 +54,9 @@ test.describe("Bridge pattern: framework-agnostic UI library + mountly", () => {
     story.screenshot({ path: screenshotPath, alt: "Bridge host" });
   });
 
-  test("Vue: pure UI library renders both directly via createApp AND through the mountly bridge", async ({ page }, testInfo) => {
+  test("Vue: pure UI library renders both directly via createApp AND through the mountly bridge", async ({
+    page,
+  }, testInfo) => {
     story.given("the bridge-vue-host fixture is loaded");
     await page.goto(`${HOST}/tests/fixtures/bridge-vue-host.html`);
     story.when("the bundle is ready");
@@ -74,7 +76,9 @@ test.describe("Bridge pattern: framework-agnostic UI library + mountly", () => {
     story.screenshot({ path: screenshotPath, alt: "Bridge Vue host" });
   });
 
-  test("Svelte: pure UI library renders both directly via class constructors AND through the mountly bridge", async ({ page }) => {
+  test("Svelte: pure UI library renders both directly via class constructors AND through the mountly bridge", async ({
+    page,
+  }) => {
     await page.goto(`${HOST}/tests/fixtures/bridge-svelte-host.html`);
     const result = await readResult(page);
 

@@ -13,13 +13,13 @@ import { createWidget } from "/packages/adapters/mountly-react/dist/index.js";
 
 const sampleData = [
   { id: 1, name: "Alpha", score: 92 },
-  { id: 2, name: "Beta",  score: 81 },
+  { id: 2, name: "Beta", score: 81 },
   { id: 3, name: "Gamma", score: 76 },
 ];
 
 const columns = [
-  { accessorKey: "id",    header: "ID" },
-  { accessorKey: "name",  header: "Name" },
+  { accessorKey: "id", header: "ID" },
+  { accessorKey: "name", header: "Name" },
   { accessorKey: "score", header: "Score" },
 ];
 
@@ -58,13 +58,11 @@ function PeopleTable({ rows }) {
         h(
           "tr",
           { key: row.id, "data-row-id": row.original.id },
-          row.getVisibleCells().map((cell) =>
-            h(
-              "td",
-              { key: cell.id },
-              flexRender(cell.column.columnDef.cell, cell.getContext()),
+          row
+            .getVisibleCells()
+            .map((cell) =>
+              h("td", { key: cell.id }, flexRender(cell.column.columnDef.cell, cell.getContext())),
             ),
-          ),
         ),
       ),
     ),

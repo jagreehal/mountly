@@ -1,37 +1,65 @@
 <!doctype html>
-<html><body>
-  <div id="c"></div>
-  <script type="importmap">{"imports":{"mountly":"/packages/mountly/dist/index.js","mountly/shadow":"/packages/mountly/dist/shadow.js","mountly/assets":"/packages/mountly/dist/assets.js","mountly/adapter":"/packages/mountly/dist/adapter.js","mountly/attach":"/packages/mountly/dist/attach.js","mountly/bundle":"/packages/mountly/dist/bundle.js","mountly/elements":"/packages/mountly/dist/elements.js","mountly/island":"/packages/mountly/dist/island.js","mountly/mount":"/packages/mountly/dist/mount.js","mountly/runtime":"/packages/mountly/dist/runtime.js","mountly/triggers":"/packages/mountly/dist/triggers.js","mountly/url":"/packages/mountly/dist/url-state.js","mountly/data":"/packages/mountly/dist/data-source.js","mountly/bus":"/packages/mountly/dist/bus.js"}}</script>
-  <script type="module">
-    import { __clearCssTextCache } from "/packages/mountly/dist/assets.js";
-    import { createWidget } from "/packages/adapters/mountly-svelte/dist/index.js";
-    __clearCssTextCache();
-
-    class HelloComponent {
-      constructor({ target, props }) {
-        this.el = document.createElement("span");
-        this.el.className = "styled-widget";
-        this.el.textContent = String(props?.msg ?? "");
-        target.appendChild(this.el);
+<html>
+  <body>
+    <div id="c"></div>
+    <script type="importmap">
+      {
+        "imports": {
+          "mountly": "/packages/mountly/dist/index.js",
+          "mountly/shadow": "/packages/mountly/dist/shadow.js",
+          "mountly/assets": "/packages/mountly/dist/assets.js",
+          "mountly/adapter": "/packages/mountly/dist/adapter.js",
+          "mountly/attach": "/packages/mountly/dist/attach.js",
+          "mountly/bundle": "/packages/mountly/dist/bundle.js",
+          "mountly/elements": "/packages/mountly/dist/elements.js",
+          "mountly/island": "/packages/mountly/dist/island.js",
+          "mountly/mount": "/packages/mountly/dist/mount.js",
+          "mountly/runtime": "/packages/mountly/dist/runtime.js",
+          "mountly/triggers": "/packages/mountly/dist/triggers.js",
+          "mountly/url": "/packages/mountly/dist/url-state.js",
+          "mountly/data": "/packages/mountly/dist/data-source.js",
+          "mountly/bus": "/packages/mountly/dist/bus.js"
+        }
       }
-      $destroy() { this.el?.remove(); }
-    }
+    </script>
+    <script type="module">
+      import { __clearCssTextCache } from "/packages/mountly/dist/assets.js";
+      import { createWidget } from "/packages/adapters/mountly-svelte/dist/index.js";
+      __clearCssTextCache();
 
-    // 404 CSS must not break mount — component should still render unstyled.
-    const widget = createWidget(HelloComponent, { shadow: true, cssUrl: "/tests/fixtures/this-file-does-not-exist.css", });
-    const c = document.getElementById("c");
-    let mountError = null;
-    try {
-      await widget.mount(c, { msg: "missing" });
-    } catch (e) { mountError = String(e); }
+      class HelloComponent {
+        constructor({ target, props }) {
+          this.el = document.createElement("span");
+          this.el.className = "styled-widget";
+          this.el.textContent = String(props?.msg ?? "");
+          target.appendChild(this.el);
+        }
+        $destroy() {
+          this.el?.remove();
+        }
+      }
 
-    const node = c.shadowRoot?.querySelector(".styled-widget");
-    window.__result = {
-      mountError,
-      hasShadowRoot: !!c.shadowRoot,
-      text: node?.textContent ?? "",
-      computedColor: node ? getComputedStyle(node).color : "",
-      adoptedSheetCount: c.shadowRoot?.adoptedStyleSheets.length ?? 0,
-    };
-  </script>
-</body></html>
+      // 404 CSS must not break mount — component should still render unstyled.
+      const widget = createWidget(HelloComponent, {
+        shadow: true,
+        cssUrl: "/tests/fixtures/this-file-does-not-exist.css",
+      });
+      const c = document.getElementById("c");
+      let mountError = null;
+      try {
+        await widget.mount(c, { msg: "missing" });
+      } catch (e) {
+        mountError = String(e);
+      }
+
+      const node = c.shadowRoot?.querySelector(".styled-widget");
+      window.__result = {
+        mountError,
+        hasShadowRoot: !!c.shadowRoot,
+        text: node?.textContent ?? "",
+        computedColor: node ? getComputedStyle(node).color : "",
+        adoptedSheetCount: c.shadowRoot?.adoptedStyleSheets.length ?? 0,
+      };
+    </script>
+  </body>
+</html>

@@ -21,7 +21,7 @@ In your widget's CSS entry:
 }
 ```
 
-That's it. You now have:
+That gives you:
 
 - Tailwind utility classes
 - A shared color/spacing/font palette via `--color-ui-*`, `--radius-ui`, `--font-ui-*`
