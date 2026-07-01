@@ -1,0 +1,28 @@
+{
+  "name": "mcp-app-demo",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "verify": "node ./verify.mjs",
+    "preview": "node ./preview.mjs",
+    "serve:stdio": "node ./serve-stdio.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/ext-apps": "^1.7.4",
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "mountly-mcp": "workspace:*",
+    "payment-breakdown": "workspace:*",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "esbuild": "^0.28.1",
+    "serve": "^14.2.6",
+    "typescript": "^6.0.3"
+  }
+}

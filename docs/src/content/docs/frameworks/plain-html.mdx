@@ -3,9 +3,11 @@ title: Plain HTML
 description: Run mountly with no bundler — import maps, native modules, one inline script.
 ---
 
-mountly's most distinctive use case is **plain HTML hosts** — CMS pages, partner integrations, static sites. No bundler. No SPA. Use custom tags or declarative islands plus one host script tag.
+import { exampleUrl } from "../../../lib/example-urls.ts";
 
-That makes it a strong fit for legacy modernization: you can keep the existing host page and add richer features incrementally instead of rewriting the whole app.
+mountly runs on **plain HTML hosts**: CMS pages, partner integrations, static sites. No bundler, no SPA. You drop in custom tags or declarative islands plus one host script tag.
+
+That fits legacy modernization. Keep the existing host page and add richer features one piece at a time instead of rewriting the whole app.
 
 ## The minimum host (recommended)
 
@@ -33,11 +35,11 @@ That makes it a strong fit for legacy modernization: you can keep the existing h
 <html>
   <head>
     <script type="module">
-      import { installRuntime } from 'https://cdn.jsdelivr.net/npm/mountly@0.1/dist/index.js';
+      import { installRuntime } from "https://cdn.jsdelivr.net/npm/mountly@0.1/dist/index.js";
       installRuntime({
-        react: 'https://esm.sh/react@18',
-        reactDom: 'https://esm.sh/react-dom@18',
-        reactDomClient: 'https://esm.sh/react-dom@18/client',
+        react: "https://esm.sh/react@18",
+        reactDom: "https://esm.sh/react-dom@18",
+        reactDomClient: "https://esm.sh/react-dom@18/client",
       });
     </script>
     <script type="importmap">
@@ -51,22 +53,18 @@ That makes it a strong fit for legacy modernization: you can keep the existing h
   <body>
     <button id="cta">Sign up</button>
     <script type="module">
-      import {
-        createOnDemandFeature,
-        registerCustomElement,
-        defineMountlyFeature,
-      } from 'mountly';
+      import { createOnDemandFeature, registerCustomElement, defineMountlyFeature } from "mountly";
 
       const signup = createOnDemandFeature({
-        moduleId: 'signup-card',
-        loadModule: () => import('signup-card'),
+        moduleId: "signup-card",
+        loadModule: () => import("signup-card"),
         render: ({ mod, container, props }) => mod.mount(container, props),
       });
 
       signup.attach({
-        trigger: document.getElementById('cta'),
-        preloadOn: 'hover',
-        activateOn: 'click',
+        trigger: document.getElementById("cta"),
+        preloadOn: "hover",
+        activateOn: "click",
       });
     </script>
   </body>
@@ -75,7 +73,7 @@ That makes it a strong fit for legacy modernization: you can keep the existing h
 
 ## What `installRuntime` does
 
-It writes a `<script type="importmap">` to `<head>` mapping `react`, `react/jsx-runtime`, `react-dom`, and `react-dom/client` to the URLs you pass. The widget's peer build imports `react` as a bare specifier; the import map resolves that bare specifier to the URL.
+It writes a `<script type="importmap">` to `<head>` that maps `react`, `react/jsx-runtime`, `react-dom`, and `react-dom/client` to the URLs you pass. The widget's peer build imports `react` as a bare specifier, and the import map resolves that bare specifier to the URL.
 
 `installRuntime` does **not** map `mountly/*` subpaths. If your host imports subpaths (for example `mountly/attach`, `mountly/elements`, `mountly/shadow`, `mountly/assets`, `mountly/adapter`), add those entries explicitly in your import map.
 
@@ -92,15 +90,12 @@ If the host is a CMS or a static templating engine where you'd rather drop in HT
 
 ```html
 <signup-card trigger="hover" props='{"plan":"pro"}'></signup-card>
-<payment-breakdown
-  trigger="idle"
-  props='{"invoiceId":"inv_123"}'
-></payment-breakdown>
+<payment-breakdown trigger="idle" props='{"invoiceId":"inv_123"}'></payment-breakdown>
 
 <script type="module">
-  import { defineMountlyFeature } from 'mountly';
+  import { defineMountlyFeature } from "mountly";
 
-  defineMountlyFeature('/widgets/dist/index.js');
+  defineMountlyFeature("/widgets/dist/index.js");
 </script>
 ```
 
@@ -112,11 +107,11 @@ Use `prefix` when the host needs namespaced custom tags:
 <acme-signup-card trigger="hover" props='{"plan":"pro"}'></acme-signup-card>
 
 <script type="module">
-  import { defineMountlyFeature } from 'mountly';
+  import { defineMountlyFeature } from "mountly";
 
   defineMountlyFeature({
-    source: '/widgets/dist/index.js',
-    prefix: 'acme',
+    source: "/widgets/dist/index.js",
+    prefix: "acme",
   });
 </script>
 ```
@@ -129,11 +124,11 @@ When widgets are split into separate files, restrict the modules and derive URLs
 <signup-card trigger="hover" props='{"plan":"pro"}'></signup-card>
 
 <script type="module">
-  import { defineMountlyFeature } from 'mountly';
+  import { defineMountlyFeature } from "mountly";
 
   defineMountlyFeature({
-    baseUrl: '/widgets',
-    modules: ['signup-card'],
+    baseUrl: "/widgets",
+    modules: ["signup-card"],
   });
 </script>
 ```
@@ -143,11 +138,7 @@ This loads `/widgets/signup-card/dist/index.js` and ignores other custom tags on
 You can still use the wrapper tag directly when a module ID cannot be a browser custom element name:
 
 ```html
-<mountly-feature
-  module-id="signup"
-  trigger="hover"
-  props='{"plan":"pro"}'
-></mountly-feature>
+<mountly-feature module-id="signup" trigger="hover" props='{"plan":"pro"}'></mountly-feature>
 ```
 
 Browser custom elements must include a hyphen, so `<signup>` is not valid.
@@ -158,11 +149,11 @@ For more than one framework widget, use peer builds and one import map for share
 
 ```html
 <script type="module">
-  import { installRuntime } from 'https://cdn.jsdelivr.net/npm/mountly@0.1/dist/index.js';
+  import { installRuntime } from "https://cdn.jsdelivr.net/npm/mountly@0.1/dist/index.js";
   installRuntime({
-    react: 'https://esm.sh/react@18',
-    reactDom: 'https://esm.sh/react-dom@18',
-    reactDomClient: 'https://esm.sh/react-dom@18/client',
+    react: "https://esm.sh/react@18",
+    reactDom: "https://esm.sh/react-dom@18",
+    reactDomClient: "https://esm.sh/react-dom@18/client",
   });
 </script>
 
@@ -200,9 +191,11 @@ When you see that, check the import map and the order of `<script>` tags.
 
 ## Runnable example
 
-The repo's `examples/plain-html` directory is the canonical reference. It serves both a self-contained host and a shared-React host on the same domain so you can compare network panels side by side.
+**Live:** [self-contained host]({exampleUrl("plain-html/")}) · [shared React host]({exampleUrl("plain-html/shared-react.html")})
+
+Source lives in [`docs/examples/plain-html`](https://github.com/jagreehal/mountly/tree/main/docs/examples/plain-html). To run locally:
 
 ```bash
-cd examples/plain-html && pnpm dev
-# → http://localhost:5175/examples/plain-html/
+cd docs/examples/plain-html && pnpm dev
+# → http://localhost:5175/docs/examples/plain-html/
 ```

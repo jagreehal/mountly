@@ -40,20 +40,20 @@ interface DataSourceSnapshot<T> {
 }
 ```
 
-Widgets can render consistently from `status`, `loading`, `error`, and `data` rather than each framework inventing a slightly different shape.
+Widgets render from `status`, `loading`, `error`, and `data` rather than each framework inventing a different shape.
 
 ## Options
 
-| Field | Type | Default | Notes |
-|---|---|---|---|
-| `load` | `({ key, signal }) => Promise<T>` | required | Fetcher for one key. Always receives an `AbortSignal`. |
-| `cacheKey` | `(key) => string` | string or `JSON.stringify(key)` | Normalizes cache keys. |
-| `ttl` | `number \| null` | `null` | Hard cache expiry in milliseconds. |
-| `staleTime` | `number \| null` | `null` | Marks data as stale after this many milliseconds. |
-| `staleWhileRevalidate` | `boolean` | `true` | Return stale data immediately while refreshing in the background. |
-| `retry` | `number` | `0` | Retry count after the first failed attempt. |
-| `retryDelay` | `number \| (attempt, error) => number` | `0` | Delay between retries. |
-| `cache` | `DedupCache<string, T>` | new cache | Override storage for tests or advanced sharing. |
+| Field                  | Type                                   | Default                         | Notes                                                             |
+| ---------------------- | -------------------------------------- | ------------------------------- | ----------------------------------------------------------------- |
+| `load`                 | `({ key, signal }) => Promise<T>`      | required                        | Fetcher for one key. Always receives an `AbortSignal`.            |
+| `cacheKey`             | `(key) => string`                      | string or `JSON.stringify(key)` | Normalizes cache keys.                                            |
+| `ttl`                  | `number \| null`                       | `null`                          | Hard cache expiry in milliseconds.                                |
+| `staleTime`            | `number \| null`                       | `null`                          | Marks data as stale after this many milliseconds.                 |
+| `staleWhileRevalidate` | `boolean`                              | `true`                          | Return stale data immediately while refreshing in the background. |
+| `retry`                | `number`                               | `0`                             | Retry count after the first failed attempt.                       |
+| `retryDelay`           | `number \| (attempt, error) => number` | `0`                             | Delay between retries.                                            |
+| `cache`                | `DedupCache<string, T>`                | new cache                       | Override storage for tests or advanced sharing.                   |
 
 ## Subscribe
 
@@ -71,22 +71,21 @@ Subscribers receive the current snapshot immediately and then every transition: 
 ## Abort and invalidation
 
 ```ts
-products.abort("sku_123");      // abort one in-flight key
-products.abort();               // abort every in-flight key
+products.abort("sku_123"); // abort one in-flight key
+products.abort(); // abort every in-flight key
 
 products.invalidate("sku_123"); // drop one cached value
-products.clear();               // drop everything
+products.clear(); // drop everything
 ```
 
-Use `abort()` when an island is no longer relevant, such as a route transition or a closing modal. Use `invalidate()` when a mutation changes server state.
+Call `abort()` when an island stops mattering, such as a route transition or a closing modal. Call `invalidate()` when a mutation changes server state.
 
 ## With `createOnDemandFeature`
 
 ```ts
 const quoteSource = createDataSource<string, Quote>({
   staleTime: 60_000,
-  load: ({ key, signal }) =>
-    fetch(`/api/quotes/${key}`, { signal }).then((r) => r.json()),
+  load: ({ key, signal }) => fetch(`/api/quotes/${key}`, { signal }).then((r) => r.json()),
 });
 
 const quoteFeature = createOnDemandFeature({

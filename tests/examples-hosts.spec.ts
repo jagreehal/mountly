@@ -6,10 +6,9 @@ test.beforeEach(({ page }, testInfo) => {
   story.init(testInfo);
 });
 
-
 test("quickstart host mounts the widget on click", async ({ page }, testInfo) => {
   story.given("the quickstart host is loaded");
-  await page.goto("http://localhost:5175/examples/quickstart/host.html");
+  await page.goto("http://localhost:5175/docs/examples/quickstart/host.html");
   await page.waitForLoadState("networkidle");
   story.when("the button is clicked");
   await page.getByRole("button", { name: "View payment" }).click();
@@ -26,7 +25,7 @@ test("quickstart host mounts the widget on click", async ({ page }, testInfo) =>
 
 test("plain-html self-contained host copy-paste flow works", async ({ page }, testInfo) => {
   story.given("the plain-html host is loaded");
-  await page.goto("http://localhost:5175/examples/plain-html/");
+  await page.goto("http://localhost:5175/docs/examples/plain-html/");
   await page.waitForLoadState("networkidle");
   story.when("trigger-1 is clicked");
   await page.locator("#trigger-1").click();
@@ -43,7 +42,7 @@ test("plain-html self-contained host copy-paste flow works", async ({ page }, te
 
 test("shared-react host import map includes jsx runtime mapping", async ({ page }, testInfo) => {
   story.given("the shared-react host is loaded");
-  await page.goto("http://localhost:5175/examples/plain-html/shared-react.html");
+  await page.goto("http://localhost:5175/docs/examples/plain-html/shared-react.html");
   await page.waitForLoadState("networkidle");
   story.when("the import map is read");
   const imports = await page.evaluate(() => {
@@ -61,8 +60,10 @@ test("shared-react host import map includes jsx runtime mapping", async ({ page 
   story.screenshot({ path: screenshotPath, alt: "Shared React host" });
 });
 
-test("marketing-site production example ships correct import map and host-token overrides", async ({ page }) => {
-  await page.goto("http://localhost:5175/examples/marketing-site/");
+test("marketing-site production example ships correct import map and host-token overrides", async ({
+  page,
+}) => {
+  await page.goto("http://localhost:5175/docs/examples/marketing-site/");
   await page.waitForLoadState("networkidle");
   const result = await page.evaluate(() => {
     const mapEl = document.querySelector("script[type=importmap]");
@@ -80,7 +81,7 @@ test("marketing-site production example ships correct import map and host-token 
   expect(result.imports["mountly-react"]).toContain(
     "/packages/adapters/mountly-react/dist/index.js",
   );
-  expect(result.imports["signup-card"]).toContain("/examples/signup-card/dist/peer.js");
+  expect(result.imports["signup-card"]).toContain("/docs/examples/signup-card/dist/peer.js");
   expect(result.inlineStyle).toContain("--primary");
   expect(result.inlineStyle).toContain("--ring");
 

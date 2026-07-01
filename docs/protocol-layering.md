@@ -1,6 +1,6 @@
 # Protocol Layering: MCP, MCP Apps, mcp-ui
 
-This repo treats MCP-family protocols as complementary layers, not as competing standards.
+This repo treats MCP-family protocols as complementary layers.
 
 ## Layer Map
 
@@ -36,7 +36,7 @@ Practical guidance:
 This repo implements the **`MCP Apps`** path:
 
 - `mountly-mcp` — build pipeline (`buildMcpResource`) + bridge runtime (wraps `@modelcontextprotocol/ext-apps`'s `App`)
-- `mountly-mcp-react` — React widget wrapper (`createMcpWidget`) + hooks (re-exports ext-apps's React hooks plus mountly's context-bound variants)
-- `mountly-mcp-server` — opinionated wrapper over `@modelcontextprotocol/sdk` using `@modelcontextprotocol/ext-apps/server`'s `registerAppTool` / `registerAppResource`
+- `mountly-mcp/react` — React widget wrapper (`createMcpWidget`) + hooks (re-exports ext-apps's React hooks plus mountly's context-bound variants)
+- `mountly-mcp/server` — opinionated wrapper over `@modelcontextprotocol/sdk` using `@modelcontextprotocol/ext-apps/server`'s `registerAppTool` / `registerAppResource`
 
-For practical verification, see [`docs/how-to-test.md`](./how-to-test.md). For an end-to-end runnable reference, see [`examples/mcp-app-demo/README.md`](../examples/mcp-app-demo/README.md).
+For practical verification, see [`docs/how-to-test.md`](./how-to-test.md). For an end-to-end runnable reference, see [`docs/examples/mcp-app-demo/README.md`](../docs/examples/mcp-app-demo/README.md).

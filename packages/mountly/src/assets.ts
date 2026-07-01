@@ -1,5 +1,7 @@
+import { importBySpecifier } from "./dynamic-import.js";
+
 export interface CssAutoLoadOptions {
-  css?: "auto" | "none" | string | string[];
+  css?: "auto" | "none" | (string & {}) | string[];
   crossorigin?: string;
 }
 
@@ -12,7 +14,9 @@ function toAbsoluteUrl(url: string): string {
 function ensureStylesheet(url: string, crossorigin?: string): Promise<void> {
   const href = toAbsoluteUrl(url);
   if (loadedCssUrls.has(href)) return Promise.resolve();
-  const existing = document.querySelector(`link[rel="stylesheet"][href="${href}"]`) as HTMLLinkElement | null;
+  const existing = document.querySelector(
+    `link[rel="stylesheet"][href="${href}"]`,
+  ) as HTMLLinkElement | null;
   if (existing) {
     loadedCssUrls.add(href);
     return Promise.resolve();
@@ -39,11 +43,14 @@ function normalizeCssList(moduleUrl: string, css: CssAutoLoadOptions["css"]): st
   return Array.isArray(css) ? css : [css];
 }
 
-export function createModuleLoader(moduleUrl: string, options: CssAutoLoadOptions = {}): () => Promise<unknown> {
+export function createModuleLoader(
+  moduleUrl: string,
+  options: CssAutoLoadOptions = {},
+): () => Promise<unknown> {
   const cssUrls = normalizeCssList(moduleUrl, options.css);
   return async () => {
     await Promise.all(cssUrls.map((url) => ensureStylesheet(url, options.crossorigin)));
-    return import(/* @vite-ignore */ moduleUrl);
+    return importBySpecifier(moduleUrl);
   };
 }
 
@@ -108,4 +115,3 @@ export function resolveCssUrl(sources: {
 export function __clearCssTextCache(): void {
   cssTextCache.clear();
 }
-

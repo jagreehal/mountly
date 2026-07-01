@@ -31,8 +31,8 @@ test.describe("Runtime story", () => {
     await page.waitForLoadState("networkidle");
 
     story.when("import-map script elements are counted");
-    const count = await page.evaluate(() =>
-      document.querySelectorAll("script[type=importmap][data-mountly-runtime]").length,
+    const count = await page.evaluate(
+      () => document.querySelectorAll("script[type=importmap][data-mountly-runtime]").length,
     );
     story.kv({ label: "import map script count", value: String(count) });
 
@@ -70,7 +70,9 @@ test.describe("Runtime story", () => {
     });
 
     story.then("react/jsx-runtime is derived from react URL");
-    expect(map?.imports?.["react/jsx-runtime"]).toBe("https://example.test/react.js/jsx-runtime?dev");
+    expect(map?.imports?.["react/jsx-runtime"]).toBe(
+      "https://example.test/react.js/jsx-runtime?dev",
+    );
   });
 
   test("installRuntime warns when an import map already exists", async ({ page }, testInfo) => {
@@ -80,5 +82,23 @@ test.describe("Runtime story", () => {
     await page.goto("http://localhost:5175/tests/fixtures/runtime-existing-importmap.html");
     await page.waitForLoadState("networkidle");
     expect(warnings.some((w) => w.includes("existing import map detected"))).toBe(true);
+  });
+
+  test("installPlatformRuntime merges platform imports", async ({ page }, testInfo) => {
+    story.init(testInfo, { tags: ["runtime"], ticket: "MOUNTLY-RT-6" });
+    story.given("a fixture that installs platform runtime with extra imports");
+    await page.goto("http://localhost:5175/tests/fixtures/runtime-platform.html");
+    await page.waitForLoadState("networkidle");
+
+    story.when("the runtime import map is read");
+    const map = await page.evaluate(() => {
+      const el = document.querySelector("script[type=importmap][data-mountly-runtime]");
+      return el ? JSON.parse(el.textContent ?? "{}") : null;
+    });
+
+    story.then("React and platform vertical imports are merged");
+    expect(map?.imports?.react).toBe("https://example.test/react.js");
+    expect(map?.imports?.mountly).toBe("https://example.test/mountly.js");
+    expect(map?.imports?.["payment-breakdown"]).toBe("https://example.test/payment-breakdown.js");
   });
 });

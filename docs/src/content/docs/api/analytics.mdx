@@ -41,13 +41,16 @@ off();
 interface TimingEvent {
   moduleId: string;
   phase:
-    | "preload_start" | "preload_end"
-    | "activate_start" | "activate_end"
-    | "mount_start" | "mount_end"
+    | "preload_start"
+    | "preload_end"
+    | "activate_start"
+    | "activate_end"
+    | "mount_start"
+    | "mount_end"
     | "unmount";
-  timestamp: number;     // performance.now()
-  duration?: number;     // present on _end phases
-  error?: string;        // present on errored _end phases
+  timestamp: number; // performance.now()
+  duration?: number; // present on _end phases
+  error?: string; // present on errored _end phases
 }
 ```
 
@@ -62,7 +65,7 @@ onAnalyticsEvent((event) => {
 });
 ```
 
-There is no built-in per-feature filter — keep it simple, filter in your callback.
+There is no built-in per-feature filter. Filter in your callback.
 
 ## `getModuleTimings(moduleId)` / `getAllModuleTimings()`
 
@@ -96,17 +99,17 @@ For widgets that want to log their own milestones (e.g. "form_submitted") throug
 ```ts
 emitAnalyticsEvent({
   moduleId: "signup-card",
-  phase: "mount_end",            // reuse a phase name, or invent your own
+  phase: "mount_end", // reuse a phase name, or invent your own
   timestamp: performance.now(),
   duration: 0,
 });
 ```
 
-Subscribers see all events emitted via `emitAnalyticsEvent` — there's no schema validation, so use sparingly.
+Subscribers see all events emitted via `emitAnalyticsEvent`. There's no schema validation, so use it sparingly.
 
 ## `createFeatureTimingTracker(moduleId)`
 
-The internal helper used by `createOnDemandFeature`. Exposed for advanced use — building a custom feature shape that participates in the same analytics pipeline.
+The internal helper that `createOnDemandFeature` uses. It's exposed for one advanced case: building a custom feature shape that joins the same analytics pipeline.
 
 ```ts
 const tracker = createFeatureTimingTracker("custom-thing");
@@ -115,9 +118,9 @@ tracker.recordPhase("preload_start");
 tracker.recordPhase("preload_end");
 ```
 
-Most users never call this directly.
+You'll rarely call this directly.
 
 ## Related
 
-- [Lifecycle](/mountly/concepts/lifecycle/) — what each phase means.
-- [Devtools panel](/mountly/concepts/devtools/) — visual frontend for the same events.
+- [Lifecycle](/mountly/concepts/lifecycle/): what each phase means.
+- [Devtools panel](/mountly/concepts/devtools/): visual frontend for the same events.

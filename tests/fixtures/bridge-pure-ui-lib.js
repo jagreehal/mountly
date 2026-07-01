@@ -7,21 +7,11 @@ import { createElement as h } from "https://esm.sh/react@19.2.5";
 import clsx from "https://esm.sh/clsx@2.1.1";
 import { Slot } from "https://esm.sh/@radix-ui/react-slot@1.1.2?deps=react@19.2.5";
 
-export const Button = ({
-  variant = "default",
-  asChild = false,
-  className,
-  children,
-  ...rest
-}) => {
+export const Button = ({ variant = "default", asChild = false, className, children, ...rest }) => {
   // shadcn-style: when `asChild` is true, the child element receives the
   // button's classes and event handlers. Used for `<Button asChild><a href>`.
   const Comp = asChild ? Slot : "button";
-  return h(
-    Comp,
-    { className: clsx("ui-btn", `ui-btn-${variant}`, className), ...rest },
-    children,
-  );
+  return h(Comp, { className: clsx("ui-btn", `ui-btn-${variant}`, className), ...rest }, children);
 };
 
 export const Card = ({ tone = "neutral", title, children }) =>

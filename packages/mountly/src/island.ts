@@ -1,8 +1,4 @@
-import {
-  createOnDemandFeature,
-  type FeatureModule,
-  type OnDemandFeature,
-} from "./feature.js";
+import { createOnDemandFeature, type FeatureModule, type OnDemandFeature } from "./feature.js";
 import { attach, onTrigger, type TriggerSource } from "./attach.js";
 
 export interface IslandPayload {
@@ -71,12 +67,7 @@ export interface MountedIsland {
   unmount: () => void;
 }
 
-type IslandErrorCode =
-  | "MNTI001"
-  | "MNTI002"
-  | "MNTI003"
-  | "MNTI004"
-  | "MNTI005";
+type IslandErrorCode = "MNTI001" | "MNTI002" | "MNTI003" | "MNTI004" | "MNTI005";
 
 const ISLAND_PAYLOAD_KEYS = new Set([
   "schemaVersion",
@@ -131,12 +122,16 @@ function emitIslandEvent(
   );
 }
 
-function setIslandState(element: HTMLElement, state: "idle" | "loading" | "mounted" | "error"): void {
+function setIslandState(
+  element: HTMLElement,
+  state: "idle" | "loading" | "mounted" | "error",
+): void {
   element.setAttribute("data-mountly-state", state);
 }
 
 function mark(enabled: boolean, name: string): void {
-  if (!enabled || typeof performance === "undefined" || typeof performance.mark !== "function") return;
+  if (!enabled || typeof performance === "undefined" || typeof performance.mark !== "function")
+    return;
   performance.mark(name);
 }
 
@@ -234,8 +229,7 @@ export function readIslandPayload(element: Element): IslandPayload {
     }
   }
   if (parsed.trigger === "url-change" && parsed.preloadOn === "hover") {
-    const message =
-      `[mountly] preloadOn="hover" is usually ineffective with trigger="url-change"; consider preloadOn="idle" or false.`;
+    const message = `[mountly] preloadOn="hover" is usually ineffective with trigger="url-change"; consider preloadOn="idle" or false.`;
     console.warn(message);
     emitMountlyWarning(element, {
       code: "MNTW002",
@@ -292,8 +286,10 @@ export function mountIslandFeature(
   const waitForParent = options.waitForParent ?? payload.waitForParent ?? true;
   const retry = Math.max(0, options.retry ?? payload.retry ?? 0);
   const retryDelayMs = Math.max(0, options.retryDelayMs ?? payload.retryDelayMs ?? 0);
-  const unmountEvent = options.unmountEvent === undefined ? "mountly:unmount" : options.unmountEvent;
-  const refreshEvent = options.refreshEvent === undefined ? "mountly:refresh" : options.refreshEvent;
+  const unmountEvent =
+    options.unmountEvent === undefined ? "mountly:unmount" : options.unmountEvent;
+  const refreshEvent =
+    options.refreshEvent === undefined ? "mountly:refresh" : options.refreshEvent;
   const warnOnHydrationMismatch = options.warnOnHydrationMismatch ?? true;
   const perfMarks = options.perfMarks ?? false;
   const pauseOnHidden = options.pauseOnHidden ?? false;
@@ -324,7 +320,11 @@ export function mountIslandFeature(
         try {
           const normalized = normalizeModule(await loader(), payload.moduleId);
           mark(perfMarks, `mountly:island:${payload.id}:load-end`);
-          emitIslandEvent(element, "load-end", { id: payload.id, moduleId: payload.moduleId, attempt });
+          emitIslandEvent(element, "load-end", {
+            id: payload.id,
+            moduleId: payload.moduleId,
+            attempt,
+          });
           return normalized;
         } catch (error) {
           if (attempt >= retry) {
@@ -465,7 +465,11 @@ export function mountIslandFeature(
   const unmountListener = () => unmount();
   const refreshListener = () => {
     mark(perfMarks, `mountly:island:${payload.id}:refresh`);
-    void feature.refresh(mountTarget, { element: trigger, triggerType: "programmatic" }, payload.props ?? {});
+    void feature.refresh(
+      mountTarget,
+      { element: trigger, triggerType: "programmatic" },
+      payload.props ?? {},
+    );
   };
   if (unmountEvent) {
     element.addEventListener(unmountEvent, unmountListener as EventListener);
@@ -476,9 +480,13 @@ export function mountIslandFeature(
   const visibilityListener = () => {
     if (!pauseOnHidden) return;
     if (document.visibilityState === "hidden") {
-      element.dispatchEvent(new CustomEvent("mountly:island:pause", { bubbles: true, detail: { id: payload.id } }));
+      element.dispatchEvent(
+        new CustomEvent("mountly:island:pause", { bubbles: true, detail: { id: payload.id } }),
+      );
     } else {
-      element.dispatchEvent(new CustomEvent("mountly:island:resume", { bubbles: true, detail: { id: payload.id } }));
+      element.dispatchEvent(
+        new CustomEvent("mountly:island:resume", { bubbles: true, detail: { id: payload.id } }),
+      );
     }
   };
   if (pauseOnHidden) {

@@ -1,0 +1,39 @@
+.card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: #f5f5fa;
+  border: 1px solid #dcdce6;
+  font-family: system-ui, sans-serif;
+  margin-bottom: 8px;
+}
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: white;
+}
+.badge-primary { background: #3c50dc; }
+.badge-info { background: #288cc8; }
+.badge-success { background: #28a064; }
+.num {
+  font-variant-numeric: tabular-nums;
+  font-size: 18px;
+  color: #14141e;
+}
+.msg { margin: 0; color: #3c3c50; }
+.inc {
+  margin-left: auto;
+  padding: 2px 10px;
+  border: 1px solid #dcdce6;
+  border-radius: 6px;
+  background: white;
+  cursor: pointer;
+  font-size: 14px;
+}

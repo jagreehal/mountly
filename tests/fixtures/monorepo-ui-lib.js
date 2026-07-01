@@ -15,8 +15,7 @@ export const Card = ({ tone = "neutral", title, children }) =>
     h("div", { className: "ui-card-body" }, children),
   );
 
-export const Chip = ({ children }) =>
-  h("span", { className: "ui-chip" }, children);
+export const Chip = ({ children }) => h("span", { className: "ui-chip" }, children);
 
 // In a real monorepo this is a regular package.json export — same shape.
 export const __ui_lib_marker = "monorepo-ui-lib@simulated";

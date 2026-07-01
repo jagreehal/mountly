@@ -9,28 +9,28 @@ mountly is an on-demand component runtime:
 
 It turns React, Vue, Svelte, and TSRX components into lazy, HTML-addressable features (light DOM by default; `shadow: true` for isolation). The host can be a CMS page, marketing site, legacy app, static file, partner embed, or another framework app.
 
-The performance problem still matters: modern web apps ship too much JavaScript upfront. But mountly's deeper job is component delivery. It lets a page load a real component only when the user or route actually needs it, without forcing the host into a new app framework.
+The performance problem still matters: modern web apps ship too much JavaScript upfront. But mountly's main job is component delivery. A page loads a real component only when the user or route needs it, without forcing the host into a new app framework.
 
 ## The shape of it
 
-You write components the way you already do — React, Vue, Svelte, or TSRX. The framework adapter wraps each component as a **widget**: a self-contained, mountable, framework-agnostic unit. `createOnDemandFeature` or `defineMountlyFeature` then adds a lifecycle around the widget — a trigger (hover, click, focus, viewport, idle, media, url-change), a module loader, optional data fetching, dual caching, and a standardised state machine.
+You write components the way you already do, in React, Vue, Svelte, or TSRX. The framework adapter wraps each component as a **widget**: a self-contained, mountable, framework-agnostic unit. `createOnDemandFeature` or `defineMountlyFeature` then adds a lifecycle around the widget: a trigger (hover, click, focus, viewport, idle, media, url-change), a module loader, optional data fetching, dual caching, and a standardised state machine.
 
-The vocabulary is enforced in the docs because it pays off:
+These docs use three terms consistently:
 
-- **Component** — your normal React/Vue/Svelte component. Nothing new to learn.
-- **Widget** — a component wrapped by an adapter. Has `mount` and `unmount`. Knows nothing about _when_.
-- **Feature** — a widget plus the on-demand lifecycle. Built with [`createOnDemandFeature`](/mountly/api/create-on-demand-feature/) or declared with [`<mountly-feature>`](/mountly/concepts/custom-element/).
+- **Component**: your normal React/Vue/Svelte component. Nothing new to learn.
+- **Widget**: a component wrapped by an adapter. Has `mount` and `unmount`. Knows nothing about _when_.
+- **Feature**: a widget plus the on-demand lifecycle. Built with [`createOnDemandFeature`](/mountly/api/create-on-demand-feature/) or declared with [`<mountly-feature>`](/mountly/concepts/custom-element/).
 
 You write **components**, the adapter wraps them as **widgets**, and you ship them as **features**.
 
 ## Where it fits
 
-- **Marketing surfaces** — reuse real product components on fast campaign pages.
-- **Legacy modernization** — replace old UI one feature at a time without rewriting the host.
-- **Runtime islands** — get island-style activation in HTML hosts without adopting a site framework.
-- **Partner and CMS embeds** — expose stable custom tags that non-app teams can place safely.
-- **Performance-sensitive pages** — pay for heavy UI on idle, viewport, click, hover, media, or URL change.
-- **Framework transitions** — run React, Vue, Svelte, and TSRX widgets side by side while migrating.
+- **Marketing surfaces**: reuse real product components on fast campaign pages.
+- **Legacy modernization**: replace old UI one feature at a time without rewriting the host.
+- **Runtime islands**: get island-style activation in HTML hosts without adopting a site framework.
+- **Partner and CMS embeds**: expose stable custom tags that non-app teams can place safely.
+- **Performance-sensitive pages**: pay for heavy UI on idle, viewport, click, hover, media, or URL change.
+- **Framework transitions**: run React, Vue, Svelte, and TSRX widgets side by side while migrating.
 
 ## Who it's for
 
@@ -42,7 +42,7 @@ mountly is appropriate when:
 - You want **style isolation when needed** (`shadow: true`) so the host page and component do not break each other in unknown hosts.
 - You need **multiple widgets on one page**, potentially from different frameworks.
 
-It's the **wrong** tool when you have a single SPA where the bundler owns every surface, when you need SSR + hydration of server-rendered HTML, or when you actually want a microfrontend control plane. See [When not to use mountly](/mountly/concepts/when-not-to-use/) for the longer answer.
+It's the **wrong** tool when you have a single SPA where the bundler owns every surface, when you need SSR plus hydration of server-rendered HTML, or when you want a microfrontend control plane. See [When not to use mountly](/mountly/concepts/when-not-to-use/) for the longer answer.
 
 ## How it compares
 
@@ -55,6 +55,6 @@ It's the **wrong** tool when you have a single SPA where the bundler owns every 
 
 ## Where to next
 
-- [**Quick start**](/mountly/getting-started/quick-start/) — scaffold and ship your first widget in 60 seconds.
-- [**How it works**](/mountly/getting-started/how-it-works/) — read the architecture before you commit.
-- [**Vocabulary**](/mountly/concepts/vocabulary/) — the three terms you'll see everywhere.
+- [**Quick start**](/mountly/getting-started/quick-start/): scaffold and ship your first widget in 60 seconds.
+- [**How it works**](/mountly/getting-started/how-it-works/): read the architecture before you commit.
+- [**Vocabulary**](/mountly/concepts/vocabulary/): the three terms you'll see everywhere.

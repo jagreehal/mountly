@@ -1,5 +1,9 @@
 import { defineConfig, devices } from "@playwright/test";
 
+if (process.env.FORCE_COLOR) {
+  delete process.env.NO_COLOR;
+}
+
 export default defineConfig({
   testDir: "./tests",
   // Vitest unit tests live alongside Playwright specs but use the .test.ts
@@ -47,34 +51,47 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: "pnpm --filter cross-framework-bus dev",
+      command: "env -u NO_COLOR pnpm --filter cross-framework-bus dev",
       url: "http://localhost:5173",
       reuseExistingServer: !process.env.CI,
       timeout: 30_000,
     },
     {
-      command: "pnpm --filter mountly-demo dev",
+      command: "env -u NO_COLOR pnpm --filter mountly-demo dev",
       url: "http://localhost:5174",
       reuseExistingServer: !process.env.CI,
       timeout: 30_000,
     },
     {
-      command: "pnpm exec serve -l 5175 --no-port-switching .",
+      command: "env -u NO_COLOR pnpm exec serve -l 5175 --no-port-switching .",
       url: "http://localhost:5175",
       reuseExistingServer: !process.env.CI,
       timeout: 30_000,
     },
     {
-      command: "pnpm --filter mcp-app-demo preview",
+      command: "env -u NO_COLOR pnpm --filter mcp-app-demo preview",
       url: "http://localhost:5179",
       reuseExistingServer: !process.env.CI,
       timeout: 60_000,
     },
     {
-      command: "pnpm --filter mcp-generative-demo preview:stream:serve",
+      command: "env -u NO_COLOR pnpm --filter mcp-generative-demo preview:stream:serve",
       url: "http://localhost:5181",
       reuseExistingServer: !process.env.CI,
       timeout: 60_000,
+    },
+    {
+      command: "env -u NO_COLOR pnpm --filter multi-vertical-host-example dev",
+      url: "http://localhost:5182",
+      reuseExistingServer: !process.env.CI,
+      timeout: 30_000,
+    },
+    {
+      command:
+        "env -u NO_COLOR pnpm --filter vite-host-import run build:remote && env -u NO_COLOR pnpm --filter vite-host-import dev -- --port 5190",
+      url: "http://localhost:5190",
+      reuseExistingServer: !process.env.CI,
+      timeout: 120_000,
     },
   ],
 });

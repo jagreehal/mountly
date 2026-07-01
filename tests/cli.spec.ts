@@ -10,7 +10,6 @@ test.beforeEach(({ page }, testInfo) => {
   story.init(testInfo);
 });
 
-
 const REPO_ROOT = join(__dirname, "..");
 const CLI = join(REPO_ROOT, "packages", "mountly", "cli", "index.js");
 
@@ -28,10 +27,9 @@ test("cli init scaffolds a react widget package", () => {
   const dir = mkdtempSync(join(tmpdir(), "mountly-cli-"));
   try {
     story.and("the CLI init command is run");
-    const out = execSync(
-      `node ${CLI} init my-widget --framework react --dir ${dir}/my-widget`,
-      { encoding: "utf8" },
-    );
+    const out = execSync(`node ${CLI} init my-widget --framework react --dir ${dir}/my-widget`, {
+      encoding: "utf8",
+    });
     story.then("the scaffolded directory has package.json");
     const files = readdirSync(`${dir}/my-widget`);
     expect(files).toContain("package.json");
@@ -96,6 +94,7 @@ test("cli init scaffolds a svelte widget package", () => {
     expect(existsSync(`${dir}/my-svelte-widget/src/styles.css`)).toBe(true);
     expect(existsSync(`${dir}/my-svelte-widget/src/index.ts`)).toBe(true);
     expect(existsSync(`${dir}/my-svelte-widget/tsup.config.ts`)).toBe(true);
+    expect(existsSync(`${dir}/my-svelte-widget/vite.config.ts`)).toBe(false);
     expect(existsSync(`${dir}/my-svelte-widget/src/Component.ts.tmpl`)).toBe(false);
 
     expect(out).toContain(`cd ${dir}/my-svelte-widget`);
@@ -110,10 +109,9 @@ test("cli init scaffolds a svelte widget package", () => {
 test("cli init --no-tailwind produces a Tailwind-free package", () => {
   const dir = mkdtempSync(join(tmpdir(), "mountly-cli-no-tw-"));
   try {
-    execSync(
-      `node ${CLI} init bare --framework react --no-tailwind --dir ${dir}/bare`,
-      { stdio: "ignore" },
-    );
+    execSync(`node ${CLI} init bare --framework react --no-tailwind --dir ${dir}/bare`, {
+      stdio: "ignore",
+    });
     const pkg = JSON.parse(readFileSync(`${dir}/bare/package.json`, "utf8"));
 
     // No Tailwind devDeps
@@ -134,10 +132,20 @@ test("cli rejects unknown framework with exit 1", () => {
   const dir = mkdtempSync(join(tmpdir(), "mountly-cli-"));
   let exitCode = 0;
   try {
-    execSync(
-      `node ${CLI} init x --framework solid --dir ${dir}/x`,
-      { stdio: "pipe" },
-    );
+    execSync(`node ${CLI} init x --framework solid --dir ${dir}/x`, { stdio: "pipe" });
+  } catch (e: any) {
+    exitCode = e.status;
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+  expect(exitCode).toBe(1);
+});
+
+test("cli rejects unsupported bundler with exit 1", () => {
+  const dir = mkdtempSync(join(tmpdir(), "mountly-cli-bundler-"));
+  let exitCode = 0;
+  try {
+    execSync(`node ${CLI} init x --bundler vite --dir ${dir}/x`, { stdio: "pipe" });
   } catch (e: any) {
     exitCode = e.status;
   } finally {
@@ -156,11 +164,13 @@ test("cli init --no-tailwind scaffolds a widget that builds from packed artifact
   const tarballsDir = join(dir, "tarballs");
 
   const packInto = (pkgDir: string): string => {
-    const filename = execSync(`npm pack --silent --pack-destination "${tarballsDir}"`, {
+    const output = execSync(`pnpm pack --json --pack-destination "${tarballsDir}"`, {
       cwd: pkgDir,
       encoding: "utf8",
-    }).trim();
-    return join(tarballsDir, filename);
+    });
+    const jsonStart = output.indexOf("{");
+    const { filename } = JSON.parse(output.slice(jsonStart)) as { filename: string };
+    return filename;
   };
 
   try {
@@ -171,12 +181,10 @@ test("cli init --no-tailwind scaffolds a widget that builds from packed artifact
     );
 
     const coreTarball = packInto(join(REPO_ROOT, "packages", "mountly"));
-    const reactTarball = packInto(
-      join(REPO_ROOT, "packages", "adapters", "mountly-react"),
-    );
-    const tailwindTarball = packInto(
-      join(REPO_ROOT, "packages", "mountly-tailwind"),
-    );
+    const reactTarball = packInto(join(REPO_ROOT, "packages", "adapters", "mountly-react"));
+    const manifestTarball = packInto(join(REPO_ROOT, "packages", "mountly-manifest"));
+    const vitePluginTarball = packInto(join(REPO_ROOT, "packages", "mountly-vite-plugin"));
+    const tailwindTarball = packInto(join(REPO_ROOT, "packages", "mountly-tailwind"));
 
     const pkgPath = join(widgetDir, "package.json");
     const pkg = JSON.parse(readFileSync(pkgPath, "utf8"));
@@ -184,6 +192,10 @@ test("cli init --no-tailwind scaffolds a widget that builds from packed artifact
     // mountly-react has a peer dep on mountly; satisfy it locally so the
     // install doesn't reach for the registry during pre-publish validation.
     pkg.dependencies["mountly"] = `file:${coreTarball}`;
+    pkg.devDependencies["mountly-manifest"] = `file:${manifestTarball}`;
+    if (pkg.devDependencies?.["mountly-vite-plugin"]) {
+      pkg.devDependencies["mountly-vite-plugin"] = `file:${vitePluginTarball}`;
+    }
     // Keep devDependencies resolvable regardless of --no-tailwind, since this
     // template entry exists in the scaffold for the default path.
     if (pkg.devDependencies?.["mountly-tailwind"]) {
@@ -222,11 +234,13 @@ test("cli init vue --no-tailwind scaffolds a widget that builds from packed arti
   const tarballsDir = join(dir, "tarballs");
 
   const packInto = (pkgDir: string): string => {
-    const filename = execSync(`npm pack --silent --pack-destination "${tarballsDir}"`, {
+    const output = execSync(`pnpm pack --json --pack-destination "${tarballsDir}"`, {
       cwd: pkgDir,
       encoding: "utf8",
-    }).trim();
-    return join(tarballsDir, filename);
+    });
+    const jsonStart = output.indexOf("{");
+    const { filename } = JSON.parse(output.slice(jsonStart)) as { filename: string };
+    return filename;
   };
 
   try {
@@ -237,17 +251,19 @@ test("cli init vue --no-tailwind scaffolds a widget that builds from packed arti
     );
 
     const coreTarball = packInto(join(REPO_ROOT, "packages", "mountly"));
-    const vueTarball = packInto(
-      join(REPO_ROOT, "packages", "adapters", "mountly-vue"),
-    );
-    const tailwindTarball = packInto(
-      join(REPO_ROOT, "packages", "mountly-tailwind"),
-    );
+    const vueTarball = packInto(join(REPO_ROOT, "packages", "adapters", "mountly-vue"));
+    const manifestTarball = packInto(join(REPO_ROOT, "packages", "mountly-manifest"));
+    const vitePluginTarball = packInto(join(REPO_ROOT, "packages", "mountly-vite-plugin"));
+    const tailwindTarball = packInto(join(REPO_ROOT, "packages", "mountly-tailwind"));
 
     const pkgPath = join(widgetDir, "package.json");
     const pkg = JSON.parse(readFileSync(pkgPath, "utf8"));
     pkg.dependencies["mountly-vue"] = `file:${vueTarball}`;
     pkg.dependencies["mountly"] = `file:${coreTarball}`;
+    pkg.devDependencies["mountly-manifest"] = `file:${manifestTarball}`;
+    if (pkg.devDependencies?.["mountly-vite-plugin"]) {
+      pkg.devDependencies["mountly-vite-plugin"] = `file:${vitePluginTarball}`;
+    }
     if (pkg.devDependencies?.["mountly-tailwind"]) {
       pkg.devDependencies["mountly-tailwind"] = `file:${tailwindTarball}`;
     }
@@ -282,11 +298,13 @@ test("cli init svelte --no-tailwind scaffolds a widget that builds from packed a
   const tarballsDir = join(dir, "tarballs");
 
   const packInto = (pkgDir: string): string => {
-    const filename = execSync(`npm pack --silent --pack-destination "${tarballsDir}"`, {
+    const output = execSync(`pnpm pack --json --pack-destination "${tarballsDir}"`, {
       cwd: pkgDir,
       encoding: "utf8",
-    }).trim();
-    return join(tarballsDir, filename);
+    });
+    const jsonStart = output.indexOf("{");
+    const { filename } = JSON.parse(output.slice(jsonStart)) as { filename: string };
+    return filename;
   };
 
   try {
@@ -297,17 +315,19 @@ test("cli init svelte --no-tailwind scaffolds a widget that builds from packed a
     );
 
     const coreTarball = packInto(join(REPO_ROOT, "packages", "mountly"));
-    const svelteTarball = packInto(
-      join(REPO_ROOT, "packages", "adapters", "mountly-svelte"),
-    );
-    const tailwindTarball = packInto(
-      join(REPO_ROOT, "packages", "mountly-tailwind"),
-    );
+    const svelteTarball = packInto(join(REPO_ROOT, "packages", "adapters", "mountly-svelte"));
+    const manifestTarball = packInto(join(REPO_ROOT, "packages", "mountly-manifest"));
+    const vitePluginTarball = packInto(join(REPO_ROOT, "packages", "mountly-vite-plugin"));
+    const tailwindTarball = packInto(join(REPO_ROOT, "packages", "mountly-tailwind"));
 
     const pkgPath = join(widgetDir, "package.json");
     const pkg = JSON.parse(readFileSync(pkgPath, "utf8"));
     pkg.dependencies["mountly-svelte"] = `file:${svelteTarball}`;
     pkg.dependencies["mountly"] = `file:${coreTarball}`;
+    pkg.devDependencies["mountly-manifest"] = `file:${manifestTarball}`;
+    if (pkg.devDependencies?.["mountly-vite-plugin"]) {
+      pkg.devDependencies["mountly-vite-plugin"] = `file:${vitePluginTarball}`;
+    }
     if (pkg.devDependencies?.["mountly-tailwind"]) {
       pkg.devDependencies["mountly-tailwind"] = `file:${tailwindTarball}`;
     }

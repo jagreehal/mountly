@@ -4,11 +4,14 @@ dist
 *.log
 .DS_Store
 packages/*/src/styles.generated.css
+**/mountly-remotes.d.ts
+**/.mountly
 test-results
 playwright-report
 .executable-stories
 docs/evidence
 .playwright-cli
+.playwright-mcp
 .cursor
 .turbo
 .pnpm-store
@@ -16,7 +19,12 @@ docs/evidence
 docs-backup
 
 docs/.astro
-examples/mcp-app-demo/preview/
-examples/mcp-generative-demo/preview/dist/
-examples/mcp-generative-demo/preview-host/
-examples/mcp-generative-demo/preview/stream-dist/
+docs/public/packages/
+docs/public/examples/
+docs/public/api/
+docs/examples/mcp-app-demo/preview/
+docs/examples/mcp-generative-demo/preview/dist/
+docs/examples/mcp-generative-demo/preview-host/
+docs/examples/mcp-generative-demo/preview/stream-dist/
+___temp
+.opencode

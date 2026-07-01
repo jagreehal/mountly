@@ -9,15 +9,15 @@ test.beforeEach(({ page }, testInfo) => {
 const HOST = "http://localhost:5175";
 
 test.describe("Monorepo: shared UI library + widgets package + third-party deps", () => {
-  test("widgets bundle imports from a sibling library and from npm (clsx), all three render with shared styles", async ({ page }, testInfo) => {
+  test("widgets bundle imports from a sibling library and from npm (clsx), all three render with shared styles", async ({
+    page,
+  }, testInfo) => {
     story.given("the monorepo-host fixture is loaded");
     await page.goto(`${HOST}/tests/fixtures/monorepo-host.html`);
     story.when("the bundle is ready");
-    await page.waitForFunction(
-      () => (window as any).__ready && (window as any).__ready(),
-      null,
-      { timeout: 15_000 },
-    );
+    await page.waitForFunction(() => (window as any).__ready && (window as any).__ready(), null, {
+      timeout: 15_000,
+    });
     story.then("the library marker is present");
     const result = await page.evaluate(() => (window as any).__result);
     expect(result.libraryMarker).toBe("monorepo-ui-lib@simulated");

@@ -3,9 +3,9 @@ title: Vertical codebase
 description: "How mountly Features fit the vertical codebase pattern: code grouped by what it does, not what it is."
 ---
 
-[TkDodo's *The Vertical Codebase*](https://tkdodo.eu/blog/the-vertical-codebase) makes a familiar argument: splitting a frontend by technical layer (`components/`, `hooks/`, `utils/`, `types/`) breaks down at scale. Code that changes together gets scattered, ownership blurs, and finding anything turns into a treasure hunt. The fix is to group by what the code *does*. Verticals.
+[TkDodo's _The Vertical Codebase_](https://tkdodo.eu/blog/the-vertical-codebase) makes a familiar argument: splitting a frontend by technical layer (`components/`, `hooks/`, `utils/`, `types/`) breaks down at scale. Code that changes together gets scattered, ownership blurs, and finding anything turns into a treasure hunt. The fix is to group by what the code _does_. Verticals.
 
-mountly is shaped for that world. A Feature can be your whole vertical.
+mountly fits that world. A Feature can be your whole vertical.
 
 ## A Feature can be the whole vertical
 
@@ -30,7 +30,7 @@ This is the kind of boundary TkDodo describes enforcing with `eslint-plugin-boun
 
 ## Polyglot product teams
 
-The blog post argues for teams that own a slice top to bottom: frontend, backend, design, all in one team. mountly fits this directly and pushes one step further. The *framework* can also be a team choice.
+TkDodo argues for teams that own a slice top to bottom: frontend, backend, design, all in one team. mountly fits this and adds one more axis. The _framework_ can also be a team choice.
 
 The reviews team can ship React. The pricing team can ship Svelte. The host doesn't know or care:
 
@@ -47,18 +47,18 @@ mountly mounts in light DOM by default because most product code wants the host'
 
 When the widget will be embedded in unknown hosts (CMS pages, third-party sites, legacy apps with conflicting CSS) opt into a hard style boundary by passing `shadow: true` on [`createWidget`](/mountly/concepts/styling/#shadow-dom-shadow-true). The vertical is unchanged. The public surface is still `mount` and `unmount`, props are still the contract, and internal components are still unreachable from outside the folder.
 
-Shadow DOM is a tool. The vertical is the discipline.
+Shadow DOM is one tool you can reach for. The vertical stays the discipline you keep.
 
 ## Verticals as packages
 
-When a Feature stabilises and gets reused, promote it to its own package. The usage shape stays the same:
+When a Feature stabilises and a second consumer picks it up, promote it to its own package. The usage shape stays the same:
 
 ```ts
 // before, local feature
-import { reviews } from './features/reviews';
+import { reviews } from "./features/reviews";
 
 // after, workspace or published package
-import { reviews } from '@acme/reviews';
+import { reviews } from "@acme/reviews";
 ```
 
 Same public shape, same runtime usage. pnpm workspaces and `package.json` `exports` give you the boundary at the source level; mountly already gave it to you at runtime. Together they make reuse cheap.
@@ -84,4 +84,4 @@ What it isn't: a `utils/` folder. The moment a util is shared between two Featur
 - When a Feature stabilises and gets two or more consumers, promote it to a workspace package. The host usage doesn't change.
 - Add `eslint-plugin-boundaries` early. It's cheaper than untangling deep imports later.
 
-The vertical codebase is a layout discipline. mountly makes that discipline executable: one public surface, one runtime contract, and internals that stay internal.
+The vertical codebase is a layout discipline. mountly makes you enforce it at runtime: one public surface, one runtime contract, and internals that stay internal.

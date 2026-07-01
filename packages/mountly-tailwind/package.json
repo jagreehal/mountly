@@ -2,27 +2,27 @@
   "name": "mountly-tailwind",
   "version": "0.1.4",
   "description": "Design tokens and Tailwind v4 preset for mountly widgets",
+  "homepage": "https://github.com/jagreehal/mountly/tree/main/packages/mountly-tailwind#readme",
+  "bugs": {
+    "url": "https://github.com/jagreehal/mountly/issues"
+  },
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/jagreehal/mountly",
     "directory": "packages/mountly-tailwind"
   },
-  "bugs": {
-    "url": "https://github.com/jagreehal/mountly/issues"
-  },
-  "homepage": "https://github.com/jagreehal/mountly/tree/main/packages/mountly-tailwind#readme",
+  "style": "./dist/index.css",
+  "files": [
+    "dist"
+  ],
   "type": "module",
   "main": "./dist/index.css",
-  "style": "./dist/index.css",
   "exports": {
     ".": "./dist/index.css",
     "./tokens": "./dist/tokens.css",
     "./package.json": "./package.json"
   },
-  "files": [
-    "dist"
-  ],
   "publishConfig": {
     "access": "public"
   },

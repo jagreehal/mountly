@@ -17,8 +17,16 @@
   padding: 16px;
   margin-bottom: 12px;
 }
-.card-title { margin: 0 0 4px; font-size: 16px; font-weight: 700; }
-.card-body { display: flex; flex-direction: column; gap: 8px; }
+.card-title {
+  margin: 0 0 4px;
+  font-size: 16px;
+  font-weight: 700;
+}
+.card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
 .btn {
   border: 0;
   border-radius: 8px;
@@ -26,9 +34,31 @@
   font-weight: 600;
   cursor: pointer;
 }
-.btn-default { background: white; color: var(--shadcn-fg); border: 1px solid var(--shadcn-border); }
-.btn-primary { background: var(--shadcn-primary); color: white; }
-.muted { color: var(--shadcn-muted); margin: 0; }
-.amount { margin: 0; font-size: 22px; font-weight: 700; }
-.form { display: flex; gap: 8px; }
-.form input { flex: 1; padding: 8px 10px; border: 1px solid var(--shadcn-border); border-radius: 6px; }
+.btn-default {
+  background: white;
+  color: var(--shadcn-fg);
+  border: 1px solid var(--shadcn-border);
+}
+.btn-primary {
+  background: var(--shadcn-primary);
+  color: white;
+}
+.muted {
+  color: var(--shadcn-muted);
+  margin: 0;
+}
+.amount {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+}
+.form {
+  display: flex;
+  gap: 8px;
+}
+.form input {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid var(--shadcn-border);
+  border-radius: 6px;
+}

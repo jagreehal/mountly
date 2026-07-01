@@ -92,9 +92,7 @@ function linkSignals(controller: AbortController, signal?: AbortSignal): void {
   signal.addEventListener("abort", () => controller.abort(), { once: true });
 }
 
-export function createDataSource<K, T>(
-  options: CreateDataSourceOptions<K, T>,
-): DataSource<K, T> {
+export function createDataSource<K, T>(options: CreateDataSourceOptions<K, T>): DataSource<K, T> {
   const cache = options.cache ?? new DedupCache<string, T>({ defaultTtl: options.ttl ?? null });
   const cacheKey = options.cacheKey ?? defaultCacheKey;
   const ttl = options.ttl ?? null;
@@ -177,10 +175,7 @@ export function createDataSource<K, T>(
             throw error;
           }
           attempt += 1;
-          const wait =
-            typeof retryDelay === "function"
-              ? retryDelay(attempt, error)
-              : retryDelay;
+          const wait = typeof retryDelay === "function" ? retryDelay(attempt, error) : retryDelay;
           if (wait > 0) await delay(wait, controller.signal);
         }
       }

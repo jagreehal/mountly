@@ -43,11 +43,15 @@ for (const c of cases) {
   test(`${c.name} parity: update applies new props`, async ({ page }) => {
     await page.goto(c.updateUrl);
     await page.waitForLoadState("networkidle");
-    await page.waitForFunction(() => {
-      const el = document.getElementById("c");
-      const text = el?.shadowRoot?.textContent ?? "";
-      return text.includes("b");
-    }, null, { timeout: 8000 });
+    await page.waitForFunction(
+      () => {
+        const el = document.getElementById("c");
+        const text = el?.shadowRoot?.textContent ?? "";
+        return text.includes("b");
+      },
+      null,
+      { timeout: 8000 },
+    );
   });
 
   test(`${c.name} parity: supports no-shadow styling`, async ({ page }) => {
@@ -57,8 +61,7 @@ for (const c of cases) {
       const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
       for (let i = 0; i < 20; i += 1) {
         const root = document.getElementById("c") ?? document.getElementById("mount");
-        const node =
-          root?.querySelector(".react-loader-widget, .vue-no-shadow, .svelte-no-shadow");
+        const node = root?.querySelector(".react-loader-widget, .vue-no-shadow, .svelte-no-shadow");
         if (root && node) {
           return {
             hasShadowRoot: !!(root as HTMLElement).shadowRoot,

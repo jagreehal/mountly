@@ -42,7 +42,7 @@ cartBus.eventName("changed"); // "cart:changed"
 cartBus.emit("changed", { count: 1 });
 ```
 
-Namespaces are useful when several teams or bundles share the same page. They keep short event names readable without making global event names ambiguous.
+Reach for namespaces when several teams or bundles share the same page. They keep short event names readable and global event names unambiguous.
 
 ## Payload validation
 
@@ -59,7 +59,7 @@ const bus = createEventBus<{
 });
 
 bus.emit("selected", { id: "sku_123" }); // ok
-bus.emit("selected", { id: 123 });       // throws
+bus.emit("selected", { id: 123 }); // throws
 ```
 
 Use validators at host boundaries where event payloads may come from separately deployed widgets. Keep them simple; the helper accepts any type guard, so you can use a schema library if the host already has one.

@@ -10,7 +10,9 @@ class HelloComponent {
     this.el.textContent = String(props?.msg ?? "");
     target.appendChild(this.el);
   }
-  $destroy() { this.el?.remove(); }
+  $destroy() {
+    this.el?.remove();
+  }
 }
 
 export default createWidget(HelloComponent, { shadow: true });

@@ -48,11 +48,15 @@ export class DedupCache<K, V> {
   async resolve(
     key: K,
     factory: () => Promise<V>,
-    options?: { ttl?: number | null; signal?: AbortSignal }
+    options?: { ttl?: number | null; signal?: AbortSignal },
   ): Promise<V> {
     const existing = this.cache.get(key);
     if (existing && !this.isExpired(existing)) {
-      if (typeof existing.value === "object" && existing.value !== null && "_status" in existing.value) {
+      if (
+        typeof existing.value === "object" &&
+        existing.value !== null &&
+        "_status" in existing.value
+      ) {
         return existing.value;
       }
       return existing.value as V;
@@ -77,7 +81,7 @@ export class DedupCache<K, V> {
         },
         (error) => {
           reject(error);
-        }
+        },
       );
     }) as PendingPromise<V>;
 
@@ -161,7 +165,12 @@ export class DedupCache<K, V> {
     }
   }
 
-  getStats(): { entries: number; sizeBytes: number; maxEntries: number; maxSizeBytes: number | null } {
+  getStats(): {
+    entries: number;
+    sizeBytes: number;
+    maxEntries: number;
+    maxSizeBytes: number | null;
+  } {
     return {
       entries: this.cache.size,
       sizeBytes: this.currentSizeBytes,

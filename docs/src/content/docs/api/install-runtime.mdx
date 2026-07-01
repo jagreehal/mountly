@@ -1,6 +1,6 @@
 ---
 title: installRuntime
-description: Inject an import map for shared React/ReactDOM in plain-HTML hosts. One line, one place — early in the head.
+description: Inject an import map for shared React/ReactDOM in plain-HTML hosts. One line, one place, early in the head.
 ---
 
 ```ts
@@ -20,7 +20,7 @@ interface RuntimeUrls {
   react: string;
   reactDom: string;
   reactDomClient: string;
-  reactJsxRuntime?: string;   // derived from react if omitted
+  reactJsxRuntime?: string; // derived from react if omitted
 }
 ```
 
@@ -82,7 +82,7 @@ Calling `installRuntime` twice with **different** URLs warns:
 [mountly] installRuntime called twice with different URLs; first call wins.
 ```
 
-The second call is otherwise ignored. If you need to change runtime URLs at runtime, you'd be re-architecting more than this helper supports.
+The second call is otherwise ignored. Changing runtime URLs at runtime means re-architecting more than this helper supports.
 
 ### 3. The mark attribute
 
@@ -98,7 +98,21 @@ const map = document.querySelector("script[data-mountly-runtime]");
 - You're inside a bundler (Vite, Next, Astro). The bundler resolves `react` directly; an import map would be redundant or conflicting.
 - You manage your own import map already. mountly's helper is a convenience, not a requirement.
 
+## Manifest-driven hosts: `bootstrapMountly`
+
+`installRuntime` is the low-level primitive. If a [manifest](/mountly/concepts/manifest-hosts/) describes your host, prefer `bootstrapMountly` from `mountly/runtime`. It fetches the manifest, calls `installPlatformRuntime` for you, and defines the `<mountly-feature>` elements in the order that avoids the bare-specifier race:
+
+```html
+<script type="module">
+  import { bootstrapMountly } from "/path/to/mountly/dist/runtime.js";
+  await bootstrapMountly("/manifest.json");
+</script>
+```
+
+`installPlatformRuntime(urls)` is the same as `installRuntime` but also accepts an `imports` map for `mountly/*` subpaths and vertical specifiers. `appendImports(map)` adds **new** import-map keys after boot (used by `setVertical` for runtime-added remotes). See [Manifest & host shells](/mountly/concepts/manifest-hosts/).
+
 ## Related
 
-- [Distribution](/mountly/concepts/distribution/) — when to ship `peer.js` vs `index.js`.
-- [Plain HTML](/mountly/frameworks/plain-html/) — the host pattern that needs this helper.
+- [Manifest & host shells](/mountly/concepts/manifest-hosts/): the manifest, `bootstrapMountly`, SSR, registry, and CLI.
+- [Distribution](/mountly/concepts/distribution/): when to ship `peer.js` vs `index.js`.
+- [Plain HTML](/mountly/frameworks/plain-html/): the host pattern that needs this helper.

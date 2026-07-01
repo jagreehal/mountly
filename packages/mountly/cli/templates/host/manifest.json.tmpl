@@ -1,0 +1,26 @@
+{
+  "$schema": "https://mountly.dev/schema/manifest.schema.json",
+  "version": "2",
+  "platform": {
+    "imports": {
+      "react": "{{cdn}}/react@19.2.7",
+      "react/jsx-runtime": "{{cdn}}/react@19.2.7/jsx-runtime",
+      "react-dom": "{{cdn}}/react-dom@19.2.7",
+      "react-dom/client": "{{cdn}}/react-dom@19.2.7/client",
+      "mountly": "{{cdn}}/mountly@{{mountlyVersion}}",
+      "mountly/runtime": "{{mountlyRuntimeUrl}}",
+      "mountly/elements": "{{cdn}}/mountly@{{mountlyVersion}}/elements",
+      "mountly-react": "{{cdn}}/mountly-react",
+      "mountly-manifest": "{{cdn}}/mountly-manifest"
+    }
+  },
+  "verticals": [
+    {
+      "id": "example-widget",
+      "team": "example",
+      "version": "0.0.1",
+      "url": "https://cdn.example.com/example-widget@0.0.1/dist/peer.js",
+      "featureExport": "exampleWidget"
+    }
+  ]
+}

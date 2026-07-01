@@ -3,7 +3,7 @@ title: Multi-widget bundles
 description: When you have several widgets that share code, ship them in one bundle and wire them with createWidgetBundle. One fetch, one stylesheet, many features.
 ---
 
-mountly's default unit is one widget per `dist/index.js`. That's the right shape when widgets are independent. When widgets share code (a design system, utility components, shadcn primitives, a date library), shipping them as separate bundles forces every page that uses two or more to redownload the shared bytes. `createWidgetBundle` collapses that duplication.
+mountly's default unit is one widget per `dist/index.js`. That fits when widgets are independent. When widgets share code (a design system, utility components, shadcn primitives, a date library), separate bundles force every page that uses two or more to redownload the shared bytes. `createWidgetBundle` collapses that duplication.
 
 ## The pattern
 
@@ -32,8 +32,8 @@ const dashboard = createWidgetBundle({
 });
 
 const counter = dashboard.feature({ moduleId: "counter", export: "counter" });
-const clock   = dashboard.feature({ moduleId: "clock",   export: "clock"   });
-const status  = dashboard.feature({ moduleId: "status",  export: "status"  });
+const clock = dashboard.feature({ moduleId: "clock", export: "clock" });
+const status = dashboard.feature({ moduleId: "status", export: "status" });
 
 counter.attach({ trigger: btn1, activateOn: "click" });
 clock.attach({ trigger: btn2, activateOn: "click" });
@@ -80,7 +80,7 @@ A test in the repo (`tests/fixtures/tanstack-table-widget.js` + spec) loads a no
 
 ## Light DOM vs shadow DOM for a bundle
 
-A whole bundle should commit to **one mode**. Mixing light-DOM and shadow-rooted widgets within a single design system tends to confuse styling assumptions (does the host's Tailwind reach in? does the design token cascade work?).
+Commit a whole bundle to **one mode**. Mixing light-DOM and shadow-rooted widgets within a single design system confuses your styling assumptions (does the host's Tailwind reach in? does the design token cascade work?).
 
 ### All light DOM (default)
 
@@ -90,7 +90,7 @@ Default. Every widget renders inline; the host's global stylesheets reach in. Be
 - A library like Radix UI (used by shadcn) portals content to `document.body`, and you don't want to reconfigure each component's portal target.
 - You want Tailwind's `:root` tokens to flow through the document into every widget.
 
-The repo's `examples/shadcn-light-dom` and matching test (`shadcn-light-dom.html`) demonstrate three React widgets sharing a global Tailwind/tokens stylesheet through this approach.
+The repo's `docs/examples/shadcn-light-dom` and matching test (`shadcn-light-dom.html`) demonstrate three React widgets sharing a global Tailwind/tokens stylesheet through this approach.
 
 ### All shadow DOM
 
@@ -128,7 +128,7 @@ After `pnpm -r build`:
 - The host's `createWidgetBundle({ moduleUrl })` registers each widget
   by export name.
 
-`examples/monorepo-component-library/README.md` walks through the
+`docs/examples/monorepo-component-library/README.md` walks through the
 package.json, vite.config, and host wiring step by step. The repo also
 ships `tests/monorepo-component-library.spec.ts` which simulates this
 exact shape (UI library importing `clsx` from npm, widgets package
@@ -140,10 +140,10 @@ imports resolved, third-party deps working.
 
 The most common real-world shape: a team already has a UI library built
 for Next.js / Nuxt / a Svelte app / a TanStack Start app. The library
-knows nothing about mountly. They want to also drop widgets that use
+knows nothing about mountly. The team also wants to drop widgets that use
 this library onto static pages, third-party hosts, or partner sites.
 
-The right answer is **a separate bridge package**, not a fork of the
+Add **a separate bridge package** rather than forking the
 library:
 
 ```
@@ -160,8 +160,8 @@ my-org/
     └── web/                 # Next.js app, consumes @my-org/ui directly.
 ```
 
-The library stays a normal component library. It's importable wherever
-React/Vue/Svelte renders. The bridge is small (typically tens of lines
+The library stays a normal component library. You can import it wherever
+React/Vue/Svelte renders. The bridge is small (tens of lines
 per widget) and is the only file that imports `mountly-react` /
 `mountly-vue` / `mountly-svelte`.
 
@@ -223,7 +223,7 @@ off when more than one consumer depends on the UI library.
 
 ## Mixing modes (don't)
 
-You _can_ have one widget with `shadow: true` and another with `shadow: false` in the same bundle. It rarely ends well: the global stylesheet styles half your widgets and not the others, design-token inheritance is asymmetric, and any bug report becomes "but on this widget…" detective work. Pick a mode per bundle.
+You _can_ have one widget with `shadow: true` and another with `shadow: false` in the same bundle. It rarely ends well: the global stylesheet styles half your widgets and not the others, design-token inheritance goes asymmetric, and every bug report turns into "but on this widget…" detective work. Pick a mode per bundle.
 
 ## Related
 

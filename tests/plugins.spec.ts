@@ -11,9 +11,7 @@ test("eachUrlChange listens to popstate/hashchange by default", async ({ page },
   await page.goto("http://localhost:5175/tests/fixtures/empty.html");
   story.when("popstate and hashchange events are dispatched");
   const events = await page.evaluate(async () => {
-    const { eachUrlChange } = await import(
-      "/packages/mountly/dist/triggers.js"
-    );
+    const { eachUrlChange } = await import("/packages/mountly/dist/triggers.js");
 
     const seen: string[] = [];
     const cleanup = eachUrlChange((ev: { event?: Event }) => {
@@ -46,9 +44,7 @@ test("eachUrlChange can subscribe to pushState/replaceState only", async ({ page
   await page.goto("http://localhost:5175/tests/fixtures/empty.html");
   story.when("history.pushState and replaceState are called");
   const result = await page.evaluate(async () => {
-    const { eachUrlChange } = await import(
-      "/packages/mountly/dist/triggers.js"
-    );
+    const { eachUrlChange } = await import("/packages/mountly/dist/triggers.js");
 
     const seen: string[] = [];
     const cleanup = eachUrlChange(
@@ -81,12 +77,9 @@ test("eachMedia fires immediately when query already matches", async ({ page }, 
     const { eachMedia } = await import("/packages/mountly/dist/triggers.js");
 
     const seen: string[] = [];
-    const cleanup = eachMedia(
-      "(min-width: 1px)",
-      (ev: { type: string }) => {
-        seen.push(ev.type);
-      },
-    );
+    const cleanup = eachMedia("(min-width: 1px)", (ev: { type: string }) => {
+      seen.push(ev.type);
+    });
     await new Promise((resolve) => setTimeout(resolve, 0));
     cleanup();
     return seen;
