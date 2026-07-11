@@ -1,0 +1,5 @@
+dist
+node_modules
+src/mountly-remotes.d.ts
+src/.mountly
+*.tsbuildinfo

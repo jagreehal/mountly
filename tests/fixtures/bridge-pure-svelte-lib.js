@@ -31,7 +31,9 @@ export class Button {
     if (props.testid) this.el.setAttribute("data-testid", props.testid);
     target.appendChild(this.el);
   }
-  $destroy() { this.el?.remove(); }
+  $destroy() {
+    this.el?.remove();
+  }
 }
 
 export class Card {
@@ -45,7 +47,9 @@ export class Card {
     this.el = el("section", { class: `ui-card ui-card-${tone}` }, children);
     target.appendChild(this.el);
   }
-  $destroy() { this.el?.remove(); }
+  $destroy() {
+    this.el?.remove();
+  }
 }
 
 export class Stack {
@@ -56,7 +60,9 @@ export class Stack {
     });
     target.appendChild(this.el);
   }
-  $destroy() { this.el?.remove(); }
+  $destroy() {
+    this.el?.remove();
+  }
 }
 
 export const __ui_id = "pure-svelte-ui-lib@1.0.0";

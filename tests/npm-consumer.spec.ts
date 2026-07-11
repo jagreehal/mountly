@@ -1,27 +1,16 @@
-import { expect, test, type Page } from '@playwright/test';
-import {
-  execSync,
-  spawn,
-  type ChildProcessWithoutNullStreams,
-} from 'node:child_process';
-import {
-  existsSync,
-  mkdirSync,
-  mkdtempSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from 'node:fs';
-import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { expect, test, type Page } from "@playwright/test";
+import { execSync, spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join } from "node:path";
 
-const REPO_ROOT = join(__dirname, '..');
+const REPO_ROOT = join(__dirname, "..");
 
 function run(command: string, cwd: string): string {
   return execSync(command, {
     cwd,
-    encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'pipe'],
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
   });
 }
 
@@ -31,41 +20,33 @@ function write(path: string, contents: string): void {
 }
 
 function packInto(pkgDir: string, tarballsDir: string): string {
-  const filename = run(
-    `npm pack --silent --pack-destination ${JSON.stringify(tarballsDir)}`,
-    pkgDir
-  ).trim();
-  return join(tarballsDir, filename);
+  const output = run(`pnpm pack --json --pack-destination ${JSON.stringify(tarballsDir)}`, pkgDir);
+  const jsonStart = output.indexOf("{");
+  const { filename } = JSON.parse(output.slice(jsonStart)) as { filename: string };
+  return filename;
 }
 
-async function startVite(
-  cwd: string,
-  port: number
-): Promise<ChildProcessWithoutNullStreams> {
-  const child = spawn(
-    'npm',
-    ['run', 'dev', '--', '--host', '127.0.0.1', '--port', String(port)],
-    {
-      cwd,
-      stdio: ['ignore', 'pipe', 'pipe'],
-    }
-  );
+async function startVite(cwd: string, port: number): Promise<ChildProcessWithoutNullStreams> {
+  const child = spawn("npm", ["run", "dev", "--", "--host", "127.0.0.1", "--port", String(port)], {
+    cwd,
+    stdio: ["ignore", "pipe", "pipe"],
+  });
 
-  let output = '';
+  let output = "";
   await new Promise<void>((resolve, reject) => {
     const timeout = setTimeout(() => {
       reject(new Error(`Timed out waiting for Vite dev server.\n${output}`));
     }, 20_000);
     const onData = (chunk: Buffer) => {
       output += chunk.toString();
-      if (output.includes('Local:') || output.includes('ready in')) {
+      if (output.includes("Local:") || output.includes("ready in")) {
         clearTimeout(timeout);
         resolve();
       }
     };
-    child.stdout.on('data', onData);
-    child.stderr.on('data', onData);
-    child.on('exit', (code) => {
+    child.stdout.on("data", onData);
+    child.stderr.on("data", onData);
+    child.on("exit", (code) => {
       clearTimeout(timeout);
       reject(new Error(`Vite exited early with ${code}.\n${output}`));
     });
@@ -77,7 +58,7 @@ async function startVite(
 async function renderedText(page: Page): Promise<string> {
   return page.evaluate(() => {
     function textDeep(node: Node): string {
-      let text = node.nodeType === Node.TEXT_NODE ? node.textContent ?? '' : '';
+      let text = node.nodeType === Node.TEXT_NODE ? (node.textContent ?? "") : "";
       if (node instanceof Element && node.shadowRoot) {
         text += textDeep(node.shadowRoot);
       }
@@ -86,18 +67,18 @@ async function renderedText(page: Page): Promise<string> {
       }
       return text;
     }
-    return textDeep(document.body).replace(/\s+/g, ' ').trim();
+    return textDeep(document.body).replace(/\s+/g, " ").trim();
   });
 }
 
-test('packed npm packages install into a clean Vite consumer and render all adapters', async ({
+test("packed npm packages install into a clean Vite consumer and render all adapters", async ({
   page,
 }) => {
   test.setTimeout(240_000);
 
-  const dir = mkdtempSync(join(tmpdir(), 'mountly-npm-consumer-'));
-  const consumerDir = join(dir, 'consumer');
-  const tarballsDir = join(dir, 'tarballs');
+  const dir = mkdtempSync(join(tmpdir(), "mountly-npm-consumer-"));
+  const consumerDir = join(dir, "consumer");
+  const tarballsDir = join(dir, "tarballs");
   let server: ChildProcessWithoutNullStreams | null = null;
 
   try {
@@ -105,62 +86,48 @@ test('packed npm packages install into a clean Vite consumer and render all adap
     mkdirSync(consumerDir, { recursive: true });
 
     run(
-      'pnpm --filter mountly --filter mountly-react --filter mountly-vue --filter mountly-svelte --filter mountly-tsrx build',
-      REPO_ROOT
+      "pnpm --filter mountly --filter mountly-react --filter mountly-vue --filter mountly-svelte build",
+      REPO_ROOT,
     );
 
     const tarballs = {
-      mountly: packInto(join(REPO_ROOT, 'packages', 'mountly'), tarballsDir),
-      react: packInto(
-        join(REPO_ROOT, 'packages', 'adapters', 'mountly-react'),
-        tarballsDir
-      ),
-      vue: packInto(
-        join(REPO_ROOT, 'packages', 'adapters', 'mountly-vue'),
-        tarballsDir
-      ),
-      svelte: packInto(
-        join(REPO_ROOT, 'packages', 'adapters', 'mountly-svelte'),
-        tarballsDir
-      ),
-      tsrx: packInto(
-        join(REPO_ROOT, 'packages', 'adapters', 'mountly-tsrx'),
-        tarballsDir
-      ),
+      mountly: packInto(join(REPO_ROOT, "packages", "mountly"), tarballsDir),
+      react: packInto(join(REPO_ROOT, "packages", "adapters", "mountly-react"), tarballsDir),
+      vue: packInto(join(REPO_ROOT, "packages", "adapters", "mountly-vue"), tarballsDir),
+      svelte: packInto(join(REPO_ROOT, "packages", "adapters", "mountly-svelte"), tarballsDir),
     };
 
     writeFileSync(
-      join(consumerDir, 'package.json'),
+      join(consumerDir, "package.json"),
       JSON.stringify(
         {
-          type: 'module',
+          type: "module",
           scripts: {
-            build: 'vite build',
-            dev: 'vite',
+            build: "vite build",
+            dev: "vite",
           },
           dependencies: {
             mountly: `file:${tarballs.mountly}`,
-            'mountly-react': `file:${tarballs.react}`,
-            'mountly-vue': `file:${tarballs.vue}`,
-            'mountly-svelte': `file:${tarballs.svelte}`,
-            'mountly-tsrx': `file:${tarballs.tsrx}`,
-            react: '18.3.1',
-            'react-dom': '18.3.1',
-            vue: '^3.5.33',
-            svelte: '^5.55.5',
+            "mountly-react": `file:${tarballs.react}`,
+            "mountly-vue": `file:${tarballs.vue}`,
+            "mountly-svelte": `file:${tarballs.svelte}`,
+            react: "19.2.7",
+            "react-dom": "19.2.7",
+            vue: "^3.5.33",
+            svelte: "^5.55.5",
           },
           devDependencies: {
-            '@sveltejs/vite-plugin-svelte': '^7.0.0',
-            vite: '^8.0.10',
+            "@sveltejs/vite-plugin-svelte": "^7.0.0",
+            vite: "^8.0.10",
           },
         },
         null,
-        2
-      )
+        2,
+      ),
     );
 
     write(
-      join(consumerDir, 'vite.config.mjs'),
+      join(consumerDir, "vite.config.mjs"),
       `
         import { defineConfig } from "vite";
         import { svelte } from "@sveltejs/vite-plugin-svelte";
@@ -173,11 +140,11 @@ test('packed npm packages install into a clean Vite consumer and render all adap
             },
           },
         });
-      `
+      `,
     );
 
     write(
-      join(consumerDir, 'src', 'react-card.js'),
+      join(consumerDir, "src", "react-card.js"),
       `
         import React from "react";
         import { createWidget } from "mountly-react";
@@ -193,11 +160,11 @@ test('packed npm packages install into a clean Vite consumer and render all adap
         export default createWidget(ReactCard, {
           styles: ".consumer-card { color: rgb(10, 80, 160); }",
         });
-      `
+      `,
     );
 
     write(
-      join(consumerDir, 'src', 'vue-card.js'),
+      join(consumerDir, "src", "vue-card.js"),
       `
         import { h } from "vue";
         import { createWidget } from "mountly-vue";
@@ -210,50 +177,33 @@ test('packed npm packages install into a clean Vite consumer and render all adap
         };
 
         export default createWidget(VueCard);
-      `
+      `,
     );
 
     write(
-      join(consumerDir, 'src', 'SvelteCard.svelte'),
+      join(consumerDir, "src", "SvelteCard.svelte"),
       `
         <script>
           let { name = "missing" } = $props();
         </script>
 
         <section data-testid="svelte-card">Svelte card: {name}</section>
-      `
+      `,
     );
 
     write(
-      join(consumerDir, 'src', 'svelte-card.js'),
+      join(consumerDir, "src", "svelte-card.js"),
       `
         import { mount, unmount } from "svelte";
         import { createWidget } from "mountly-svelte";
         import SvelteCard from "./SvelteCard.svelte";
 
         export default createWidget(SvelteCard, { mount, unmount });
-      `
+      `,
     );
 
     write(
-      join(consumerDir, 'src', 'tsrx-card.js'),
-      `
-        import { createWidget } from "mountly-tsrx";
-
-        export default createWidget({
-          render(target, props) {
-            const section = document.createElement("section");
-            section.dataset.testid = "tsrx-card";
-            section.textContent = \`TSRX card: \${props.name}\`;
-            target.append(section);
-            return () => section.remove();
-          },
-        });
-      `
-    );
-
-    write(
-      join(consumerDir, 'index.html'),
+      join(consumerDir, "index.html"),
       `
         <!doctype html>
         <html>
@@ -261,7 +211,6 @@ test('packed npm packages install into a clean Vite consumer and render all adap
             <react-card trigger="click" props='{"name":"Ada"}'></react-card>
             <vue-card trigger="click" props='{"name":"Lin"}'></vue-card>
             <svelte-card trigger="click" props='{"name":"Mae"}'></svelte-card>
-            <tsrx-card trigger="click" props='{"name":"Ken"}'></tsrx-card>
 
             <script type="module">
               import { defineMountlyFeature } from "mountly/elements";
@@ -270,8 +219,7 @@ test('packed npm packages install into a clean Vite consumer and render all adap
                 modules: {
                   "react-card": "/src/react-card.js",
                   "vue-card": "/src/vue-card.js",
-                  "svelte-card": "/src/svelte-card.js",
-                  "tsrx-card": "/src/tsrx-card.js"
+                  "svelte-card": "/src/svelte-card.js"
                 }
               });
 
@@ -284,25 +232,19 @@ test('packed npm packages install into a clean Vite consumer and render all adap
             </script>
           </body>
         </html>
-      `
+      `,
     );
 
-    run('npm install --no-package-lock --no-audit --no-fund', consumerDir);
-    run('npm run build', consumerDir);
+    run("npm install --no-package-lock --no-audit --no-fund", consumerDir);
+    run("npm run build", consumerDir);
 
-    expect(existsSync(join(consumerDir, 'dist', 'index.html'))).toBe(true);
+    expect(existsSync(join(consumerDir, "dist", "index.html"))).toBe(true);
     expect(
-      readFileSync(
-        join(consumerDir, 'node_modules', 'mountly', 'package.json'),
-        'utf8'
-      )
+      readFileSync(join(consumerDir, "node_modules", "mountly", "package.json"), "utf8"),
     ).toContain('"name": "mountly"');
     expect(
-      readFileSync(
-        join(consumerDir, 'node_modules', 'mountly-react', 'package.json'),
-        'utf8'
-      )
-    ).toContain('">=18 <20"');
+      readFileSync(join(consumerDir, "node_modules", "mountly-react", "package.json"), "utf8"),
+    ).toContain('"react": "^19"');
 
     const port = 5317 + Math.floor(Math.random() * 1000);
     server = await startVite(consumerDir, port);
@@ -312,29 +254,24 @@ test('packed npm packages install into a clean Vite consumer and render all adap
         async () => {
           const text = await renderedText(page);
           return {
-            react: text.includes('React 18 card: Ada'),
-            vue: text.includes('Vue card: Lin'),
-            svelte: text.includes('Svelte card: Mae'),
-            tsrx: text.includes('TSRX card: Ken'),
+            react: text.includes("React 18 card: Ada"),
+            vue: text.includes("Vue card: Lin"),
+            svelte: text.includes("Svelte card: Mae"),
           };
         },
-        { timeout: 30_000 }
+        { timeout: 30_000 },
       )
       .toEqual({
         react: true,
         vue: true,
         svelte: true,
-        tsrx: true,
       });
 
     const reactColor = await page.evaluate(() => {
-      function queryDeep(
-        selector: string,
-        root: Document | ShadowRoot | Element
-      ): Element | null {
+      function queryDeep(selector: string, root: Document | ShadowRoot | Element): Element | null {
         const direct = root.querySelector(selector);
         if (direct) return direct;
-        for (const element of Array.from(root.querySelectorAll('*'))) {
+        for (const element of Array.from(root.querySelectorAll("*"))) {
           if (element.shadowRoot) {
             const found = queryDeep(selector, element.shadowRoot);
             if (found) return found;
@@ -343,9 +280,9 @@ test('packed npm packages install into a clean Vite consumer and render all adap
         return null;
       }
       const section = queryDeep("[data-testid='react-card']", document);
-      return section ? getComputedStyle(section).color : '';
+      return section ? getComputedStyle(section).color : "";
     });
-    expect(reactColor).toBe('rgb(10, 80, 160)');
+    expect(reactColor).toBe("rgb(10, 80, 160)");
   } finally {
     server?.kill();
     rmSync(dir, { recursive: true, force: true });

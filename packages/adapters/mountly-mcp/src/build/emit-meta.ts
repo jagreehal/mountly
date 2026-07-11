@@ -23,9 +23,7 @@ export interface EmitMetaInput {
 
 function assertUiUri(uri: string): void {
   if (!uri.startsWith("ui://")) {
-    throw new Error(
-      `mountly-mcp: UI resource uri must use the 'ui://' scheme (received '${uri}')`,
-    );
+    throw new Error(`mountly-mcp: UI resource uri must use the 'ui://' scheme (received '${uri}')`);
   }
 }
 

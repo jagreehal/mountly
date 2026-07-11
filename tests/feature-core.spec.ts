@@ -6,7 +6,6 @@ test.beforeEach(({ page }, testInfo) => {
   story.init(testInfo);
 });
 
-
 test("attach cleanup unmounts active instance and detaches listeners", async ({ page }) => {
   await page.goto("http://localhost:5175/tests/fixtures/empty.html");
 
@@ -63,7 +62,9 @@ test("attach cleanup unmounts active instance and detaches listeners", async ({ 
   expect(result.state).toBe("activated");
 });
 
-test("attach with toggle=false keeps widget mounted on second activation click", async ({ page }) => {
+test("attach with toggle=false keeps widget mounted on second activation click", async ({
+  page,
+}) => {
   await page.goto("http://localhost:5175/tests/fixtures/empty.html");
 
   const result = await page.evaluate(async () => {
@@ -116,7 +117,9 @@ test("attach with toggle=false keeps widget mounted on second activation click",
   expect(result.mountText).toBe("still-mounted");
 });
 
-test("update falls back to render remount when module has no update and getMounts stays accurate", async ({ page }) => {
+test("update falls back to render remount when module has no update and getMounts stays accurate", async ({
+  page,
+}) => {
   await page.goto("http://localhost:5175/tests/fixtures/empty.html");
 
   const result = await page.evaluate(async () => {
@@ -197,8 +200,7 @@ test("attach onError reports loadModule failures from activation", async ({ page
       mount,
       activateOn: onTrigger.click(trigger),
       onError: (err) => {
-        onErrorMessage =
-          err instanceof Error ? err.message : String(err);
+        onErrorMessage = err instanceof Error ? err.message : String(err);
       },
     });
 
@@ -289,9 +291,7 @@ test("loadModule resolution failure is wrapped with import-map hint", async ({ p
     const feature = createOnDemandFeature({
       moduleId: "missing-importmap-widget",
       loadModule: async () => {
-        throw new Error(
-          "Failed to resolve module specifier 'missing-importmap-widget'",
-        );
+        throw new Error("Failed to resolve module specifier 'missing-importmap-widget'");
       },
       render: () => {},
     });
@@ -316,7 +316,9 @@ test("loadModule resolution failure is wrapped with import-map hint", async ({ p
   expect(result.captured).toContain("Original:");
 });
 
-test("attach with activateOn=urlChange mounts on history updates and toggles on next update", async ({ page }) => {
+test("attach with activateOn=urlChange mounts on history updates and toggles on next update", async ({
+  page,
+}) => {
   await page.goto("http://localhost:5175/tests/fixtures/empty.html");
 
   const result = await page.evaluate(async () => {
@@ -588,7 +590,10 @@ test("viewportRootMargin is forwarded to IntersectionObserver for viewport trigg
       }
 
       observe(target: Element) {
-        this.callback([{ isIntersecting: true, target } as IntersectionObserverEntry], this as unknown as IntersectionObserver);
+        this.callback(
+          [{ isIntersecting: true, target } as IntersectionObserverEntry],
+          this as unknown as IntersectionObserver,
+        );
       }
       unobserve() {}
       disconnect() {}

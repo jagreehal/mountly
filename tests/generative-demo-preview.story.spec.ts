@@ -5,7 +5,7 @@ import { story } from "executable-stories-playwright";
  * Real-browser proof of the generative-UI loop: an agent-shaped UI that
  * **builds itself** (json-render's stream compiler replays the spec live) and
  * then **navigates itself** (a generated button drives the next view via
- * `mountly-json-render`'s action bridge).
+ * `mountly-mcp/json-render`'s action bridge).
  *
  * The native vitest test asserts a spec renders to DOM; this is the only thing
  * that catches a regression in the streaming + self-navigation experience the
@@ -27,16 +27,16 @@ test.describe("mcp-generative-demo streaming preview", () => {
     await page.goto(PREVIEW);
 
     story.when("json-render's compiler replays the spec patch-by-patch");
-    await expect(
-      page.getByRole("heading", { name: "Revenue overview" }),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("heading", { name: "Revenue overview" })).toBeVisible({
+      timeout: 10_000,
+    });
 
     story.then("the generated KPIs and the agent-wired button finish streaming");
     await expect(page.getByText("MRR", { exact: false })).toBeVisible();
     await expect(page.getByText("$48.2k")).toBeVisible();
-    await expect(
-      page.getByRole("button", { name: /Break down Q3 by region/i }),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("button", { name: /Break down Q3 by region/i })).toBeVisible({
+      timeout: 10_000,
+    });
     story.screenshot({
       path: testInfo.outputPath("overview.png"),
       alt: "The revenue overview dashboard after streaming in",
@@ -65,9 +65,9 @@ test.describe("mcp-generative-demo streaming preview", () => {
     await drillDown.click();
 
     story.then("the action bridge drives the next view, which streams in over the last");
-    await expect(
-      page.getByRole("heading", { name: "Q3 revenue by region" }),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("heading", { name: "Q3 revenue by region" })).toBeVisible({
+      timeout: 10_000,
+    });
     await expect(page.getByText("North America")).toBeVisible();
     await expect(page.getByText("EMEA", { exact: true })).toBeVisible();
     await expect(page.getByText("APAC")).toBeVisible();
@@ -78,8 +78,8 @@ test.describe("mcp-generative-demo streaming preview", () => {
 
     story.and("a generated 'Overview' button closes the loop back to the start");
     await page.getByRole("button", { name: /Overview/i }).click();
-    await expect(
-      page.getByRole("heading", { name: "Revenue overview" }),
-    ).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("heading", { name: "Revenue overview" })).toBeVisible({
+      timeout: 10_000,
+    });
   });
 });

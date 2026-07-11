@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>mountly — Multi-widget bundle</title>
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 42rem; margin: 2rem auto; padding: 0 1rem; }
+      h1 { font-size: 24px; margin: 0 0 4px; }
+      .sub { color: #64748b; margin-bottom: 24px; }
+      .row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+      button { padding: 8px 14px; font-weight: 600; cursor: pointer; border: 1px solid #cbd5e1; border-radius: 8px; background: white; }
+      button:hover { background: #f1f5f9; }
+      .slot { min-height: 48px; }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "mountly": "/packages/mountly/dist/index.js",
+          "mountly/shadow": "/packages/mountly/dist/shadow.js",
+          "mountly/assets": "/packages/mountly/dist/assets.js",
+          "mountly/adapter": "/packages/mountly/dist/adapter.js",
+          "mountly/attach": "/packages/mountly/dist/attach.js",
+          "mountly/bundle": "/packages/mountly/dist/bundle.js",
+          "mountly/elements": "/packages/mountly/dist/elements.js",
+          "mountly/island": "/packages/mountly/dist/island.js",
+          "mountly/mount": "/packages/mountly/dist/mount.js",
+          "mountly/runtime": "/packages/mountly/dist/runtime.js",
+          "mountly/triggers": "/packages/mountly/dist/triggers.js",
+          "mountly/url": "/packages/mountly/dist/url-state.js",
+          "mountly/data": "/packages/mountly/dist/data-source.js",
+          "mountly/bus": "/packages/mountly/dist/bus.js",
+          "mountly-react": "/packages/adapters/mountly-react/dist/index.js"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <h1>Multi-widget bundle</h1>
+    <p class="sub">Three widgets share code in one bundle. One JS fetch, one CSS fetch.</p>
+
+    <div class="row">
+      <button id="t-counter">Load counter</button>
+      <button id="t-clock">Load clock</button>
+      <button id="t-status">Load status</button>
+    </div>
+    <div class="slot" id="m-counter"></div>
+    <div class="slot" id="m-clock"></div>
+    <div class="slot" id="m-status"></div>
+
+    <script type="module">
+      import { createWidgetBundle } from "mountly/bundle";
+      import { attach, onTrigger } from "mountly/attach";
+
+      const bundle = createWidgetBundle({
+        moduleUrl: "/docs/examples/multi-widget-bundle/bundle.js",
+      });
+
+      const counter = bundle.feature({ moduleId: "counter", export: "counter" });
+      const clock = bundle.feature({ moduleId: "clock", export: "clock" });
+      const status = bundle.feature({ moduleId: "status", export: "status" });
+
+      attach(counter, {
+        trigger: document.getElementById("t-counter"),
+        mount: document.getElementById("m-counter"),
+        activateOn: onTrigger.click(document.getElementById("t-counter")),
+        props: { start: 7 },
+      });
+      attach(clock, {
+        trigger: document.getElementById("t-clock"),
+        mount: document.getElementById("m-clock"),
+        activateOn: onTrigger.click(document.getElementById("t-clock")),
+      });
+      attach(status, {
+        trigger: document.getElementById("t-status"),
+        mount: document.getElementById("m-status"),
+        activateOn: onTrigger.click(document.getElementById("t-status")),
+        props: { message: "All systems nominal" },
+      });
+    </script>
+  </body>
+</html>

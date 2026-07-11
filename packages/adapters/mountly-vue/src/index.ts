@@ -30,14 +30,15 @@ export function createWidget<P>(
     apps.delete(container);
   }
 
-  function mountWith(container: Element, props: Record<string, unknown> | undefined, fetched: string | undefined): void {
+  function mountWith(
+    container: Element,
+    props: Record<string, unknown> | undefined,
+    fetched: string | undefined,
+  ): void {
     if (options.reserveSize) {
       (container as HTMLElement).style.cssText += `;${options.reserveSize}`;
     }
-    const target = attachShadow(
-      container,
-      fetched ? { ...options, styles: fetched } : options,
-    );
+    const target = attachShadow(container, fetched ? { ...options, styles: fetched } : options);
     const state = { props: props as P };
     const app = createApp({
       render() {
@@ -52,7 +53,9 @@ export function createWidget<P>(
     mount(container, props) {
       unmount(container);
       const cssUrlFromProps = (props as Record<string, unknown>)?.cssUrl as string | undefined;
-      const moduleUrlFromProps = (props as Record<string, unknown>)?.moduleUrl as string | undefined;
+      const moduleUrlFromProps = (props as Record<string, unknown>)?.moduleUrl as
+        | string
+        | undefined;
       const cssUrlResolved = resolveCssUrl({
         cssUrlOption: cssUrl,
         moduleUrlOption: moduleUrl,

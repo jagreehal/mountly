@@ -259,7 +259,9 @@ h2.section-title {
   text-decoration-color: var(--accent-soft);
   text-underline-offset: 3px;
   text-decoration-thickness: 1px;
-  transition: text-decoration-color 120ms ease, color 120ms ease;
+  transition:
+    text-decoration-color 120ms ease,
+    color 120ms ease;
 }
 
 .sl-markdown-content a:not(.button):not(.action):hover {
@@ -415,7 +417,11 @@ header.header {
   border-radius: var(--radius-md);
   border: 1px solid transparent;
   text-decoration: none !important;
-  transition: background 140ms ease, border-color 140ms ease, color 140ms ease, transform 140ms ease;
+  transition:
+    background 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease,
+    transform 140ms ease;
 }
 
 .action.primary {
@@ -567,14 +573,28 @@ header.header {
   animation: demo-row-in 600ms ease-out forwards;
 }
 
-.demo-states .row.r1 { animation-delay: 200ms; }
-.demo-states .row.r2 { animation-delay: 1100ms; }
-.demo-states .row.r3 { animation-delay: 1800ms; }
-.demo-states .row.r4 { animation-delay: 2400ms; }
+.demo-states .row.r1 {
+  animation-delay: 200ms;
+}
+.demo-states .row.r2 {
+  animation-delay: 1100ms;
+}
+.demo-states .row.r3 {
+  animation-delay: 1800ms;
+}
+.demo-states .row.r4 {
+  animation-delay: 2400ms;
+}
 
 @keyframes demo-row-in {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .demo-states .row > * {
@@ -901,10 +921,19 @@ header.header {
   color: var(--text);
 }
 
-.codeblock .kw { color: var(--accent-strong); }
-.codeblock .str { color: oklch(0.78 0.11 145); }
-.codeblock .com { color: var(--text-muted); font-style: italic; }
-.codeblock .fn { color: oklch(0.78 0.13 50); }
+.codeblock .kw {
+  color: var(--accent-strong);
+}
+.codeblock .str {
+  color: oklch(0.78 0.11 145);
+}
+.codeblock .com {
+  color: var(--text-muted);
+  font-style: italic;
+}
+.codeblock .fn {
+  color: oklch(0.78 0.13 50);
+}
 
 /* Two-column "before / after" */
 .before-after {
@@ -1010,6 +1039,8 @@ header.header {
   letter-spacing: 0.04em;
 }
 
-.sl-markdown-no-margin :not(a, strong, em, del, span, input, code, br) + :not(a, strong, em, del, span, input, code, br, :where(.not-content *)){
+.sl-markdown-no-margin
+  :not(a, strong, em, del, span, input, code, br)
+  + :not(a, strong, em, del, span, input, code, br, :where(.not-content *)) {
   margin-top: 0;
 }

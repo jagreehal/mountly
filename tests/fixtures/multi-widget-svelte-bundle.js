@@ -23,7 +23,9 @@ class CounterCard {
     this.root.appendChild(this.num);
     target.appendChild(this.root);
   }
-  $destroy() { this.root?.remove(); }
+  $destroy() {
+    this.root?.remove();
+  }
 }
 
 class ClockCard {
@@ -37,7 +39,9 @@ class ClockCard {
     this.root.appendChild(time);
     target.appendChild(this.root);
   }
-  $destroy() { this.root?.remove(); }
+  $destroy() {
+    this.root?.remove();
+  }
 }
 
 class StatusCard {
@@ -51,7 +55,9 @@ class StatusCard {
     this.root.appendChild(msg);
     target.appendChild(this.root);
   }
-  $destroy() { this.root?.remove(); }
+  $destroy() {
+    this.root?.remove();
+  }
 }
 
 // Each export is a fully-formed WidgetModule. Sharing one bundle means

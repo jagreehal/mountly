@@ -3,7 +3,7 @@ title: Devtools panel
 description: A floating overlay that shows live feature states, cache contents, and analytics events. Development-only.
 ---
 
-`createDevtoolsPanel` mounts a floating overlay on the page that shows what every feature is doing, in real time. Use it during development; gate it behind your own dev flag for production.
+`createDevtoolsPanel` mounts a floating overlay on the page that shows what each feature is doing, in real time. Use it during development and gate it behind your own dev flag for production.
 
 ## Wire it up
 
@@ -34,14 +34,14 @@ It also shows a rolling log of analytics events (the same events `onAnalyticsEve
 
 ## Options
 
-| Option | Type | Default | Notes |
-|---|---|---|---|
-| `features` | `OnDemandFeature[]` | required | Features to inspect. |
-| `position` | `"top-left"` · `"top-right"` · `"bottom-left"` · `"bottom-right"` | `"bottom-right"` | Anchor on screen. |
-| `collapsed` | boolean | `false` | Start collapsed. |
-| `theme` | `"auto"` · `"light"` · `"dark"` | `"auto"` | Match the page or override. |
-| `maxLogEntries` | number | `100` | Trim the analytics ring buffer. |
+| Option          | Type                                                              | Default          | Notes                           |
+| --------------- | ----------------------------------------------------------------- | ---------------- | ------------------------------- |
+| `features`      | `OnDemandFeature[]`                                               | required         | Features to inspect.            |
+| `position`      | `"top-left"` · `"top-right"` · `"bottom-left"` · `"bottom-right"` | `"bottom-right"` | Anchor on screen.               |
+| `collapsed`     | boolean                                                           | `false`          | Start collapsed.                |
+| `theme`         | `"auto"` · `"light"` · `"dark"`                                   | `"auto"`         | Match the page or override.     |
+| `maxLogEntries` | number                                                            | `100`            | Trim the analytics ring buffer. |
 
 ## Don't ship it
 
-The panel is a development aid, not a runtime feature. Gate it with `import.meta.env.DEV`, `process.env.NODE_ENV !== "production"`, or whatever your bundler uses. Tree-shake it out of production builds.
+The panel is a development aid, not a runtime feature. Gate it with `import.meta.env.DEV`, `process.env.NODE_ENV !== "production"`, or whatever your bundler uses, and tree-shake it out of production builds.

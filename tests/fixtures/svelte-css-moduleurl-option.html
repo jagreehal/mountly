@@ -1,32 +1,48 @@
 <!doctype html>
-<html><body>
-  <div id="c"></div>
-  <script type="importmap">{"imports":{"mountly":"/packages/mountly/dist/index.js","mountly/shadow":"/packages/mountly/dist/shadow.js","mountly/assets":"/packages/mountly/dist/assets.js","mountly/adapter":"/packages/mountly/dist/adapter.js"}}</script>
-  <script type="module">
-    import { __clearCssTextCache } from "/packages/mountly/dist/assets.js";
-    import { createWidget } from "/packages/adapters/mountly-svelte/dist/index.js";
-    __clearCssTextCache();
-
-    class HelloComponent {
-      constructor({ target, props }) {
-        this.el = document.createElement("span");
-        this.el.className = "styled-widget";
-        this.el.textContent = String(props?.msg ?? "");
-        target.appendChild(this.el);
+<html>
+  <body>
+    <div id="c"></div>
+    <script type="importmap">
+      {
+        "imports": {
+          "mountly": "/packages/mountly/dist/index.js",
+          "mountly/shadow": "/packages/mountly/dist/shadow.js",
+          "mountly/assets": "/packages/mountly/dist/assets.js",
+          "mountly/adapter": "/packages/mountly/dist/adapter.js"
+        }
       }
-      $destroy() { this.el?.remove(); }
-    }
+    </script>
+    <script type="module">
+      import { __clearCssTextCache } from "/packages/mountly/dist/assets.js";
+      import { createWidget } from "/packages/adapters/mountly-svelte/dist/index.js";
+      __clearCssTextCache();
 
-    const widget = createWidget(HelloComponent, { shadow: true, moduleUrl: "/tests/fixtures/css-loader-asset.js", });
-    const c = document.getElementById("c");
-    await widget.mount(c, { msg: "moduleUrl-opt" });
+      class HelloComponent {
+        constructor({ target, props }) {
+          this.el = document.createElement("span");
+          this.el.className = "styled-widget";
+          this.el.textContent = String(props?.msg ?? "");
+          target.appendChild(this.el);
+        }
+        $destroy() {
+          this.el?.remove();
+        }
+      }
 
-    const node = c.shadowRoot.querySelector(".styled-widget");
-    window.__result = {
-      hasShadowRoot: !!c.shadowRoot,
-      text: node?.textContent ?? "",
-      computedColor: node ? getComputedStyle(node).color : "",
-      adoptedRuleCount: c.shadowRoot.adoptedStyleSheets[0]?.cssRules.length ?? 0,
-    };
-  </script>
-</body></html>
+      const widget = createWidget(HelloComponent, {
+        shadow: true,
+        moduleUrl: "/tests/fixtures/css-loader-asset.js",
+      });
+      const c = document.getElementById("c");
+      await widget.mount(c, { msg: "moduleUrl-opt" });
+
+      const node = c.shadowRoot.querySelector(".styled-widget");
+      window.__result = {
+        hasShadowRoot: !!c.shadowRoot,
+        text: node?.textContent ?? "",
+        computedColor: node ? getComputedStyle(node).color : "",
+        adoptedRuleCount: c.shadowRoot.adoptedStyleSheets[0]?.cssRules.length ?? 0,
+      };
+    </script>
+  </body>
+</html>

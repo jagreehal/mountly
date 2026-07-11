@@ -23,7 +23,9 @@ test.describe("Mount utils story", () => {
       document.body.appendChild(host);
 
       safeUnmount(container);
-      (window as Window & { __storyState?: { calls: number; exists: boolean; html: string } }).__storyState = {
+      (
+        window as Window & { __storyState?: { calls: number; exists: boolean; html: string } }
+      ).__storyState = {
         calls,
         exists: document.getElementById("story-container") !== null,
         html: container.innerHTML,
@@ -32,7 +34,9 @@ test.describe("Mount utils story", () => {
 
     story.when("safeUnmount is invoked");
     const result = await page.evaluate(() => {
-      return (window as Window & { __storyState?: { calls: number; exists: boolean; html: string } }).__storyState;
+      return (
+        window as Window & { __storyState?: { calls: number; exists: boolean; html: string } }
+      ).__storyState;
     });
     story.json({ label: "safeUnmount result", value: result });
 

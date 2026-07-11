@@ -6,17 +6,20 @@ test.beforeEach(({ page }, testInfo) => {
   story.init(testInfo);
 });
 
-
 test("createWidget mount renders the Svelte component into the shadow root", async ({ page }) => {
   story.given("the Svelte mount fixture is loaded");
   await page.goto("http://localhost:5175/tests/fixtures/svelte-mount.html");
   await page.waitForLoadState("networkidle");
   story.when("the component finishes mounting");
-  await page.waitForFunction(() => {
-    const el = document.getElementById("c");
-    const node = el?.shadowRoot?.querySelector("[data-mountly-root]");
-    return node && node.textContent === "hello world";
-  }, null, { timeout: 8000 });
+  await page.waitForFunction(
+    () => {
+      const el = document.getElementById("c");
+      const node = el?.shadowRoot?.querySelector("[data-mountly-root]");
+      return node && node.textContent === "hello world";
+    },
+    null,
+    { timeout: 8000 },
+  );
   story.then("the component renders into the shadow root");
   const text = await page.evaluate(() => {
     const el = document.getElementById("c");
@@ -32,7 +35,9 @@ test("createWidget mount renders the Svelte component into the shadow root", asy
   expect(color).toBe("rgb(11, 22, 33)");
 });
 
-test("createWidget remount is idempotent (single shadow root, single style, fresh tree)", async ({ page }) => {
+test("createWidget remount is idempotent (single shadow root, single style, fresh tree)", async ({
+  page,
+}) => {
   story.given("the Svelte remount fixture is loaded");
   await page.goto("http://localhost:5175/tests/fixtures/svelte-remount.html");
   await page.waitForLoadState("networkidle");
@@ -97,7 +102,9 @@ test("Svelte widget supports independent multi-instance mounts", async ({ page }
   story.screenshot({ path: screenshotPath, alt: "Multi-instance mount" });
 });
 
-test("Svelte widget falls back to light DOM for shadow-rejecting elements", async ({ page }, testInfo) => {
+test("Svelte widget falls back to light DOM for shadow-rejecting elements", async ({
+  page,
+}, testInfo) => {
   story.given("console warnings are being captured");
   const warnings: string[] = [];
   page.on("console", (msg) => msg.type() === "warning" && warnings.push(msg.text()));
@@ -122,7 +129,9 @@ test("Svelte widget falls back to light DOM for shadow-rejecting elements", asyn
   story.screenshot({ path: screenshotPath, alt: "Light DOM fallback" });
 });
 
-test("Svelte widget works with closed shadow mode and remounts cleanly", async ({ page }, testInfo) => {
+test("Svelte widget works with closed shadow mode and remounts cleanly", async ({
+  page,
+}, testInfo) => {
   story.given("the Svelte closed-mode fixture is loaded");
   await page.goto("http://localhost:5175/tests/fixtures/svelte-closed-mode.html");
   await page.waitForLoadState("networkidle");
@@ -140,7 +149,9 @@ test("Svelte widget works with closed shadow mode and remounts cleanly", async (
   story.screenshot({ path: screenshotPath, alt: "Closed shadow mode" });
 });
 
-test("Svelte 5 functional components dispatch through host-supplied mount/unmount", async ({ page }, testInfo) => {
+test("Svelte 5 functional components dispatch through host-supplied mount/unmount", async ({
+  page,
+}, testInfo) => {
   story.given("the Svelte v5 functional fixture is loaded");
   await page.goto("http://localhost:5175/tests/fixtures/svelte-v5-functional.html");
   await page.waitForLoadState("networkidle");
@@ -162,7 +173,9 @@ test("Svelte 5 functional components dispatch through host-supplied mount/unmoun
   story.screenshot({ path: screenshotPath, alt: "Svelte 5 functional component" });
 });
 
-test("Svelte 5 auto-runtime import errors clearly when `svelte` is not resolvable", async ({ page }, testInfo) => {
+test("Svelte 5 auto-runtime import errors clearly when `svelte` is not resolvable", async ({
+  page,
+}, testInfo) => {
   story.given("the Svelte v5 missing-mount fixture is loaded");
   await page.goto("http://localhost:5175/tests/fixtures/svelte-v5-missing-mount.html");
   await page.waitForLoadState("networkidle");
@@ -178,7 +191,9 @@ test("Svelte 5 auto-runtime import errors clearly when `svelte` is not resolvabl
   story.screenshot({ path: screenshotPath, alt: "Svelte 5 missing runtime error" });
 });
 
-test("Svelte widget supports shadow: false and still applies styles", async ({ page }, testInfo) => {
+test("Svelte widget supports shadow: false and still applies styles", async ({
+  page,
+}, testInfo) => {
   story.given("the Svelte no-shadow fixture is loaded");
   await page.goto("http://localhost:5175/tests/fixtures/svelte-no-shadow.html");
   await page.waitForLoadState("networkidle");

@@ -44,9 +44,7 @@ interface SvelteWidgetOptions extends AdapterOptions {
   unmount?: SvelteV5Unmount;
 }
 
-let cachedSvelteRuntime:
-  | { mount: SvelteV5Mount; unmount: SvelteV5Unmount }
-  | null = null;
+let cachedSvelteRuntime: { mount: SvelteV5Mount; unmount: SvelteV5Unmount } | null = null;
 
 async function getSvelteRuntime(): Promise<{
   mount: SvelteV5Mount;
@@ -89,9 +87,7 @@ interface ActiveInstance {
 // function has `prototype === undefined` and a normal function's prototype is
 // just `{ constructor }`. Real Svelte 5 components are exported as functions
 // without a meaningful prototype.
-function isLegacyClass<P>(
-  Component: SvelteAnyComponent<P>,
-): Component is SvelteLegacyCtor<P> {
+function isLegacyClass<P>(Component: SvelteAnyComponent<P>): Component is SvelteLegacyCtor<P> {
   if (typeof Component !== "function") return false;
   const proto = (Component as { prototype?: object }).prototype;
   if (!proto) return false;
@@ -128,10 +124,7 @@ export function createWidget<P>(
     if (options.reserveSize) {
       (container as HTMLElement).style.cssText += `;${options.reserveSize}`;
     }
-    const target = attachShadow(
-      container,
-      fetched ? { ...options, styles: fetched } : options,
-    );
+    const target = attachShadow(container, fetched ? { ...options, styles: fetched } : options);
     if (isLegacyClass(Component)) {
       const instance = new Component({ target, props: props as P });
       instances.set(container, { legacy: instance });
@@ -158,7 +151,9 @@ export function createWidget<P>(
     mount(container, props) {
       unmount(container);
       const cssUrlFromProps = (props as Record<string, unknown>)?.cssUrl as string | undefined;
-      const moduleUrlFromProps = (props as Record<string, unknown>)?.moduleUrl as string | undefined;
+      const moduleUrlFromProps = (props as Record<string, unknown>)?.moduleUrl as
+        | string
+        | undefined;
       const cssUrlResolved = resolveCssUrl({
         cssUrlOption: cssUrl,
         moduleUrlOption: moduleUrl,
@@ -174,8 +169,8 @@ export function createWidget<P>(
       if (!cssUrlResolved) {
         return mountWith(container, propsRecord, undefined);
       }
-      return loadCssText(cssUrlResolved).then(
-        (css) => mountWith(container, propsRecord, css || undefined),
+      return loadCssText(cssUrlResolved).then((css) =>
+        mountWith(container, propsRecord, css || undefined),
       );
     },
     update(container, props) {

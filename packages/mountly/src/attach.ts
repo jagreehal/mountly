@@ -1,4 +1,4 @@
-import type { FeatureContext, OnDemandFeature } from './feature.js';
+import type { FeatureContext, OnDemandFeature } from "./feature.js";
 import {
   eachClick,
   eachFocus,
@@ -10,7 +10,7 @@ import {
   type BaseTriggerOptions,
   type TriggerEvent,
   type UrlChangeEventType,
-} from './triggers.js';
+} from "./triggers.js";
 
 /**
  * A trigger source: any function that takes a handler and returns a cleanup.
@@ -18,7 +18,7 @@ import {
  */
 export type TriggerSource = (
   handler: (ev: TriggerEvent) => void,
-  opts: BaseTriggerOptions
+  opts: BaseTriggerOptions,
 ) => () => void;
 
 export interface AttachOptions {
@@ -42,8 +42,8 @@ export interface AttachOptions {
 }
 
 const describeArg = (value: unknown): string => {
-  if (value === null) return 'null';
-  if (value === undefined) return 'undefined';
+  if (value === null) return "null";
+  if (value === undefined) return "undefined";
   return typeof value;
 };
 
@@ -61,23 +61,20 @@ const describeArg = (value: unknown): string => {
  *     activateOn: onTrigger.click(button),
  *   });
  */
-export function attach(
-  feature: OnDemandFeature,
-  opts: AttachOptions
-): () => void {
+export function attach(feature: OnDemandFeature, opts: AttachOptions): () => void {
   if (!(opts?.trigger instanceof Element)) {
     throw new Error(
       `[mountly] attach({ trigger }) for "${feature.id}" got ${describeArg(
-        opts?.trigger
+        opts?.trigger,
       )} instead of an Element. Common cause: document.getElementById("...") returned null. ` +
-        `Check the element exists in the DOM at the time attach() runs (e.g. defer until DOMContentLoaded).`
+        `Check the element exists in the DOM at the time attach() runs (e.g. defer until DOMContentLoaded).`,
     );
   }
   if (opts.mount !== undefined && !(opts.mount instanceof Element)) {
     throw new Error(
       `[mountly] attach({ mount }) for "${feature.id}" got ${describeArg(
-        opts.mount
-      )} instead of an Element. Pass an HTMLElement to mount into, or omit to mount inside the trigger.`
+        opts.mount,
+      )} instead of an Element. Pass an HTMLElement to mount into, or omit to mount inside the trigger.`,
     );
   }
 
@@ -88,11 +85,11 @@ export function attach(
   const onUnmount = opts.onUnmount;
 
   const resolveContext = (): Partial<FeatureContext> => {
-    if (typeof opts.context === 'function') return opts.context();
+    if (typeof opts.context === "function") return opts.context();
     return opts.context ?? {};
   };
   const resolveProps = (): Record<string, unknown> | undefined => {
-    if (typeof opts.props === 'function') return opts.props();
+    if (typeof opts.props === "function") return opts.props();
     return opts.props;
   };
 
@@ -159,14 +156,18 @@ export function attach(
  * `each*` primitives in `mountly/triggers`. Compose with `attach({ activateOn })`.
  */
 export const onTrigger = {
-  click: (el: HTMLElement): TriggerSource => (handler, opts) =>
-    eachClick(el, handler, opts),
+  click:
+    (el: HTMLElement): TriggerSource =>
+    (handler, opts) =>
+      eachClick(el, handler, opts),
   hover:
     (el: HTMLElement, params?: { delay?: number }): TriggerSource =>
     (handler, opts) =>
       eachHover(el, handler, { ...opts, delay: params?.delay }),
-  focus: (el: HTMLElement): TriggerSource => (handler, opts) =>
-    eachFocus(el, handler, opts),
+  focus:
+    (el: HTMLElement): TriggerSource =>
+    (handler, opts) =>
+      eachFocus(el, handler, opts),
   viewport:
     (el: HTMLElement, params?: { rootMargin?: string; threshold?: number }): TriggerSource =>
     (handler, opts) =>

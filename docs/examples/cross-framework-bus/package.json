@@ -1,0 +1,27 @@
+{
+  "name": "cross-framework-bus",
+  "version": "0.0.9",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vp dev",
+    "build": "vp build"
+  },
+  "dependencies": {
+    "mountly": "workspace:*",
+    "mountly-react": "workspace:*",
+    "mountly-svelte": "workspace:*",
+    "mountly-vue": "workspace:*",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "svelte": "^5.56.3",
+    "vue": "^3.5.38"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^7.1.2",
+    "@vitejs/plugin-react": "^6.0.2",
+    "@vitejs/plugin-vue": "^6.0.7",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.16"
+  }
+}

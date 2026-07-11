@@ -1,0 +1,13 @@
+// One call: fetch manifest -> inject import map -> define <mountly-feature> elements,
+// in the order that avoids the bare-specifier race. bootstrapMountly is imported by a
+// full URL (not a bare specifier) so it resolves before any import map exists.
+// Keep this mountly version in sync with manifest.platform.imports["mountly/runtime"].
+import { bootstrapMountly } from "{{mountlyRuntimeUrl}}";
+
+await bootstrapMountly("./manifest.json");
+
+// Bare specifiers (mountly-contracts, etc.) resolve now that the map is installed.
+// Example: subscribe to the cross-team platform bus.
+// import { createPlatformBus } from "mountly-contracts";
+// const bus = createPlatformBus();
+// bus.on("payment:selected", (payload) => console.log(payload));

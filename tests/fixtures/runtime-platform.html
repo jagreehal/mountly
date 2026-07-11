@@ -1,0 +1,17 @@
+<!doctype html>
+<html>
+  <body>
+    <script type="module">
+      import { installPlatformRuntime } from "/packages/mountly/dist/runtime.js";
+      installPlatformRuntime({
+        react: "https://example.test/react.js",
+        reactDom: "https://example.test/react-dom.js",
+        reactDomClient: "https://example.test/react-dom-client.js",
+        imports: {
+          mountly: "https://example.test/mountly.js",
+          "payment-breakdown": "https://example.test/payment-breakdown.js",
+        },
+      });
+    </script>
+  </body>
+</html>

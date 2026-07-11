@@ -1,15 +1,15 @@
 export type TriggerType =
-  | 'hover'
-  | 'click'
-  | 'focus'
-  | 'viewport'
-  | 'idle'
-  | 'media'
-  | 'url-change'
-  | 'swipe'
-  | 'longpress'
-  | 'keyboard'
-  | 'programmatic';
+  | "hover"
+  | "click"
+  | "focus"
+  | "viewport"
+  | "idle"
+  | "media"
+  | "url-change"
+  | "swipe"
+  | "longpress"
+  | "keyboard"
+  | "programmatic";
 
 export interface TriggerEvent {
   element: HTMLElement;
@@ -21,15 +21,11 @@ export interface BaseTriggerOptions {
   signal?: AbortSignal;
 }
 
-export type UrlChangeEventType =
-  | 'popstate'
-  | 'hashchange'
-  | 'pushstate'
-  | 'replacestate';
+export type UrlChangeEventType = "popstate" | "hashchange" | "pushstate" | "replacestate";
 
 const aborted = (signal?: AbortSignal): Error => {
   void signal;
-  return new DOMException('Aborted', 'AbortError');
+  return new DOMException("Aborted", "AbortError");
 };
 
 const onAbort = (signal: AbortSignal | undefined, fn: () => void): void => {
@@ -38,7 +34,7 @@ const onAbort = (signal: AbortSignal | undefined, fn: () => void): void => {
     fn();
     return;
   }
-  signal.addEventListener('abort', fn, { once: true });
+  signal.addEventListener("abort", fn, { once: true });
 };
 
 // ---------------------------------------------------------------------------
@@ -49,12 +45,11 @@ const onAbort = (signal: AbortSignal | undefined, fn: () => void): void => {
 export function eachClick(
   el: HTMLElement,
   handler: (ev: TriggerEvent) => void,
-  opts: BaseTriggerOptions = {}
+  opts: BaseTriggerOptions = {},
 ): () => void {
-  const listener = (event: Event) =>
-    handler({ element: el, event, type: 'click' });
-  el.addEventListener('click', listener);
-  const cleanup = () => el.removeEventListener('click', listener);
+  const listener = (event: Event) => handler({ element: el, event, type: "click" });
+  el.addEventListener("click", listener);
+  const cleanup = () => el.removeEventListener("click", listener);
   onAbort(opts.signal, cleanup);
   return cleanup;
 }
@@ -67,7 +62,7 @@ export interface HoverOptions extends BaseTriggerOptions {
 export function eachHover(
   el: HTMLElement,
   handler: (ev: TriggerEvent) => void,
-  opts: HoverOptions = {}
+  opts: HoverOptions = {},
 ): () => void {
   const delay = opts.delay ?? 0;
   let timer: ReturnType<typeof setTimeout> | null = null;
@@ -82,18 +77,18 @@ export function eachHover(
     if (delay > 0) {
       timer = setTimeout(() => {
         timer = null;
-        handler({ element: el, event, type: 'hover' });
+        handler({ element: el, event, type: "hover" });
       }, delay);
     } else {
-      handler({ element: el, event, type: 'hover' });
+      handler({ element: el, event, type: "hover" });
     }
   };
-  el.addEventListener('mouseenter', enter);
-  el.addEventListener('mouseleave', cancelTimer);
+  el.addEventListener("mouseenter", enter);
+  el.addEventListener("mouseleave", cancelTimer);
   const cleanup = () => {
     cancelTimer();
-    el.removeEventListener('mouseenter', enter);
-    el.removeEventListener('mouseleave', cancelTimer);
+    el.removeEventListener("mouseenter", enter);
+    el.removeEventListener("mouseleave", cancelTimer);
   };
   onAbort(opts.signal, cleanup);
   return cleanup;
@@ -102,12 +97,11 @@ export function eachHover(
 export function eachFocus(
   el: HTMLElement,
   handler: (ev: TriggerEvent) => void,
-  opts: BaseTriggerOptions = {}
+  opts: BaseTriggerOptions = {},
 ): () => void {
-  const listener = (event: Event) =>
-    handler({ element: el, event, type: 'focus' });
-  el.addEventListener('focus', listener);
-  const cleanup = () => el.removeEventListener('focus', listener);
+  const listener = (event: Event) => handler({ element: el, event, type: "focus" });
+  el.addEventListener("focus", listener);
+  const cleanup = () => el.removeEventListener("focus", listener);
   onAbort(opts.signal, cleanup);
   return cleanup;
 }
@@ -122,21 +116,21 @@ export interface ViewportOptions extends BaseTriggerOptions {
 export function eachViewport(
   el: HTMLElement,
   handler: (ev: TriggerEvent) => void,
-  opts: ViewportOptions = {}
+  opts: ViewportOptions = {},
 ): () => void {
   const observer = new IntersectionObserver(
     (entries) => {
       for (const entry of entries) {
         if (entry.isIntersecting) {
-          handler({ element: el, type: 'viewport' });
+          handler({ element: el, type: "viewport" });
           if (opts.once) cleanup();
         }
       }
     },
     {
       threshold: opts.threshold ?? 0.1,
-      rootMargin: opts.rootMargin ?? '0px',
-    }
+      rootMargin: opts.rootMargin ?? "0px",
+    },
   );
   observer.observe(el);
   const cleanup = () => observer.disconnect();
@@ -152,29 +146,28 @@ export interface MediaOptions extends BaseTriggerOptions {
 export function eachMedia(
   query: string,
   handler: (ev: TriggerEvent) => void,
-  opts: MediaOptions = {}
+  opts: MediaOptions = {},
 ): () => void {
-  if (typeof window === 'undefined' || !window.matchMedia) {
+  if (typeof window === "undefined" || !window.matchMedia) {
     return () => {};
   }
   const mql = window.matchMedia(query);
   const fakeTarget =
-    (typeof document !== 'undefined' ? document.body : null) ??
-    (null as unknown as HTMLElement);
+    (typeof document !== "undefined" ? document.body : null) ?? (null as unknown as HTMLElement);
   const onChange = (event: MediaQueryListEvent) => {
-    if (event.matches) handler({ element: fakeTarget, type: 'media' });
+    if (event.matches) handler({ element: fakeTarget, type: "media" });
   };
   if ((opts.fireIfMatching ?? true) && mql.matches) {
-    handler({ element: fakeTarget, type: 'media' });
+    handler({ element: fakeTarget, type: "media" });
   }
-  if (typeof mql.addEventListener === 'function') {
-    mql.addEventListener('change', onChange);
+  if (typeof mql.addEventListener === "function") {
+    mql.addEventListener("change", onChange);
   } else {
     mql.addListener(onChange);
   }
   const cleanup = () => {
-    if (typeof mql.removeEventListener === 'function') {
-      mql.removeEventListener('change', onChange);
+    if (typeof mql.removeEventListener === "function") {
+      mql.removeEventListener("change", onChange);
     } else {
       mql.removeListener(onChange);
     }
@@ -188,24 +181,23 @@ export function eachMedia(
 // Idempotent — patches the prototype once per page load.
 // ---------------------------------------------------------------------------
 
-const historySubscribers = new Set<
-  (type: 'pushstate' | 'replacestate') => void
->();
+const historySubscribers = new Set<(type: "pushstate" | "replacestate") => void>();
 let historyPatched = false;
 
 function ensureHistoryPatched(): void {
   if (historyPatched) return;
-  if (typeof window === 'undefined' || !window.history) return;
-  const originalPush = window.history.pushState;
-  const originalReplace = window.history.replaceState;
+  if (typeof window === "undefined" || !window.history) return;
+  const history = window.history;
+  const originalPush = history.pushState.bind(history);
+  const originalReplace = history.replaceState.bind(history);
   window.history.pushState = function (...args) {
-    const result = originalPush.apply(this, args);
-    historySubscribers.forEach((cb) => cb('pushstate'));
+    const result = originalPush(...args);
+    historySubscribers.forEach((cb) => cb("pushstate"));
     return result;
   };
   window.history.replaceState = function (...args) {
-    const result = originalReplace.apply(this, args);
-    historySubscribers.forEach((cb) => cb('replacestate'));
+    const result = originalReplace(...args);
+    historySubscribers.forEach((cb) => cb("replacestate"));
     return result;
   };
   historyPatched = true;
@@ -217,38 +209,30 @@ export interface UrlChangeOptions extends BaseTriggerOptions {
 
 export function eachUrlChange(
   handler: (ev: TriggerEvent) => void,
-  opts: UrlChangeOptions = {}
+  opts: UrlChangeOptions = {},
 ): () => void {
-  if (typeof window === 'undefined') return () => {};
-  const events = opts.events ?? [
-    'popstate',
-    'hashchange',
-    'pushstate',
-    'replacestate',
-  ];
+  if (typeof window === "undefined") return () => {};
+  const events = opts.events ?? ["popstate", "hashchange", "pushstate", "replacestate"];
   const fakeTarget =
-    (typeof document !== 'undefined' ? document.body : null) ??
-    (null as unknown as HTMLElement);
+    (typeof document !== "undefined" ? document.body : null) ?? (null as unknown as HTMLElement);
 
   const cleanups: Array<() => void> = [];
 
-  if (events.includes('popstate')) {
-    const fn = (event: Event) =>
-      handler({ element: fakeTarget, event, type: 'url-change' });
-    window.addEventListener('popstate', fn);
-    cleanups.push(() => window.removeEventListener('popstate', fn));
+  if (events.includes("popstate")) {
+    const fn = (event: Event) => handler({ element: fakeTarget, event, type: "url-change" });
+    window.addEventListener("popstate", fn);
+    cleanups.push(() => window.removeEventListener("popstate", fn));
   }
-  if (events.includes('hashchange')) {
-    const fn = (event: Event) =>
-      handler({ element: fakeTarget, event, type: 'url-change' });
-    window.addEventListener('hashchange', fn);
-    cleanups.push(() => window.removeEventListener('hashchange', fn));
+  if (events.includes("hashchange")) {
+    const fn = (event: Event) => handler({ element: fakeTarget, event, type: "url-change" });
+    window.addEventListener("hashchange", fn);
+    cleanups.push(() => window.removeEventListener("hashchange", fn));
   }
-  if (events.includes('pushstate') || events.includes('replacestate')) {
+  if (events.includes("pushstate") || events.includes("replacestate")) {
     ensureHistoryPatched();
-    const cb = (type: 'pushstate' | 'replacestate') => {
+    const cb = (type: "pushstate" | "replacestate") => {
       if (events.includes(type)) {
-        handler({ element: fakeTarget, type: 'url-change' });
+        handler({ element: fakeTarget, type: "url-change" });
       }
     };
     historySubscribers.add(cb);
@@ -266,26 +250,22 @@ export interface IdleOptions extends BaseTriggerOptions {
   timeout?: number;
 }
 
-export function eachIdle(
-  handler: (ev: TriggerEvent) => void,
-  opts: IdleOptions = {}
-): () => void {
+export function eachIdle(handler: (ev: TriggerEvent) => void, opts: IdleOptions = {}): () => void {
   // Idle is intrinsically one-shot per call. Repeated firing isn't a thing.
   const fakeTarget =
-    (typeof document !== 'undefined' ? document.body : null) ??
-    (null as unknown as HTMLElement);
+    (typeof document !== "undefined" ? document.body : null) ?? (null as unknown as HTMLElement);
   let cancelled = false;
 
-  if (typeof requestIdleCallback === 'function') {
+  if (typeof requestIdleCallback === "function") {
     const id = requestIdleCallback(
       () => {
-        if (!cancelled) handler({ element: fakeTarget, type: 'idle' });
+        if (!cancelled) handler({ element: fakeTarget, type: "idle" });
       },
-      typeof opts.timeout === 'number' ? { timeout: opts.timeout } : undefined
+      typeof opts.timeout === "number" ? { timeout: opts.timeout } : undefined,
     );
     const cleanup = () => {
       cancelled = true;
-      if (typeof cancelIdleCallback === 'function') {
+      if (typeof cancelIdleCallback === "function") {
         cancelIdleCallback(id);
       }
     };
@@ -294,9 +274,9 @@ export function eachIdle(
   }
   const id = setTimeout(
     () => {
-      if (!cancelled) handler({ element: fakeTarget, type: 'idle' });
+      if (!cancelled) handler({ element: fakeTarget, type: "idle" });
     },
-    typeof opts.timeout === 'number' ? opts.timeout : 0
+    typeof opts.timeout === "number" ? opts.timeout : 0,
   );
   const cleanup = () => {
     cancelled = true;
@@ -311,10 +291,7 @@ export function eachIdle(
 // ---------------------------------------------------------------------------
 
 function oncePromise<O extends BaseTriggerOptions>(
-  setup: (
-    handler: (ev: TriggerEvent) => void,
-    opts: O
-  ) => () => void
+  setup: (handler: (ev: TriggerEvent) => void, opts: O) => () => void,
 ): (opts: O) => Promise<TriggerEvent> {
   return (opts: O) =>
     new Promise<TriggerEvent>((resolve, reject) => {
@@ -333,57 +310,33 @@ function oncePromise<O extends BaseTriggerOptions>(
     });
 }
 
-export function onClick(
-  el: HTMLElement,
-  opts: BaseTriggerOptions = {}
-): Promise<TriggerEvent> {
-  return oncePromise<BaseTriggerOptions>((handler, o) =>
-    eachClick(el, handler, o)
-  )(opts);
+export function onClick(el: HTMLElement, opts: BaseTriggerOptions = {}): Promise<TriggerEvent> {
+  return oncePromise<BaseTriggerOptions>((handler, o) => eachClick(el, handler, o))(opts);
 }
 
-export function onHover(
-  el: HTMLElement,
-  opts: HoverOptions = {}
-): Promise<TriggerEvent> {
-  return oncePromise<HoverOptions>((handler, o) => eachHover(el, handler, o))(
-    opts
-  );
+export function onHover(el: HTMLElement, opts: HoverOptions = {}): Promise<TriggerEvent> {
+  return oncePromise<HoverOptions>((handler, o) => eachHover(el, handler, o))(opts);
 }
 
-export function onFocus(
-  el: HTMLElement,
-  opts: BaseTriggerOptions = {}
-): Promise<TriggerEvent> {
-  return oncePromise<BaseTriggerOptions>((handler, o) =>
-    eachFocus(el, handler, o)
-  )(opts);
+export function onFocus(el: HTMLElement, opts: BaseTriggerOptions = {}): Promise<TriggerEvent> {
+  return oncePromise<BaseTriggerOptions>((handler, o) => eachFocus(el, handler, o))(opts);
 }
 
 export function onViewport(
   el: HTMLElement,
-  opts: Omit<ViewportOptions, 'once'> = {}
+  opts: Omit<ViewportOptions, "once"> = {},
 ): Promise<TriggerEvent> {
   return oncePromise<ViewportOptions>((handler, o) =>
-    eachViewport(el, handler, { ...o, once: true })
+    eachViewport(el, handler, { ...o, once: true }),
   )(opts);
 }
 
-export function onMedia(
-  query: string,
-  opts: MediaOptions = {}
-): Promise<TriggerEvent> {
-  return oncePromise<MediaOptions>((handler, o) =>
-    eachMedia(query, handler, o)
-  )(opts);
+export function onMedia(query: string, opts: MediaOptions = {}): Promise<TriggerEvent> {
+  return oncePromise<MediaOptions>((handler, o) => eachMedia(query, handler, o))(opts);
 }
 
-export function onUrlChange(
-  opts: UrlChangeOptions = {}
-): Promise<TriggerEvent> {
-  return oncePromise<UrlChangeOptions>((handler, o) =>
-    eachUrlChange(handler, o)
-  )(opts);
+export function onUrlChange(opts: UrlChangeOptions = {}): Promise<TriggerEvent> {
+  return oncePromise<UrlChangeOptions>((handler, o) => eachUrlChange(handler, o))(opts);
 }
 
 export function onIdle(opts: IdleOptions = {}): Promise<TriggerEvent> {

@@ -48,24 +48,13 @@ export function createWidget<P>(
     const existing = roots.get(container);
     if (isUpdate && existing) {
       existing.render(
-        createElement(
-          Component as React.ComponentType,
-          props as unknown as P & object,
-        ),
+        createElement(Component as React.ComponentType, props as unknown as P & object),
       );
       return;
     }
-    const target = attachShadow(
-      container,
-      fetched ? { ...options, styles: fetched } : options,
-    );
+    const target = attachShadow(container, fetched ? { ...options, styles: fetched } : options);
     const root = createRoot(target);
-    root.render(
-      createElement(
-        Component as React.ComponentType,
-        props as unknown as P & object,
-      ),
-    );
+    root.render(createElement(Component as React.ComponentType, props as unknown as P & object));
     roots.set(container, root);
   }
 
@@ -88,8 +77,8 @@ export function createWidget<P>(
       renderInto(container, props, undefined, isUpdate);
       return;
     }
-    return loadCssText(cssUrlResolved).then(
-      (css) => renderInto(container, props, css || undefined, isUpdate),
+    return loadCssText(cssUrlResolved).then((css) =>
+      renderInto(container, props, css || undefined, isUpdate),
     );
   }
 

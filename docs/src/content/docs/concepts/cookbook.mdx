@@ -1,0 +1,306 @@
+---
+title: Cookbook
+description: Common patterns for using mountly in production — forms, auth, navigation, loading states, error handling, and more.
+---
+
+## Form submission from a widget
+
+A widget embedded in a static page needs to submit a form and notify the host:
+
+```ts
+import { createWidget } from "mountly-react";
+import { attach, onTrigger } from "mountly/attach";
+
+function SignupForm({ onSuccess }: { onSuccess?: (email: string) => void }) {
+  const [email, setEmail] = useState("");
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await fetch("/api/signup", { method: "POST", body: JSON.stringify({ email }) });
+    onSuccess?.(email);
+  };
+  return (
+    <form onSubmit={handleSubmit}>
+      <input value={email} onChange={(e) => setEmail(e.target.value)} />
+      <button type="submit">Sign up</button>
+    </form>
+  );
+}
+
+const widget = createWidget(SignupForm);
+
+attach(widget, {
+  trigger: document.getElementById("cta"),
+  activateOn: onTrigger.click(document.getElementById("cta")),
+  props: {
+    onSuccess: (email) => {
+      // Host callback — update page UI, fire analytics, redirect
+      document.getElementById("thank-you").style.display = "block";
+    },
+  },
+});
+```
+
+**Key:** The callback is a plain function passed through `props`. No cross-widget imports needed.
+
+## Passing auth tokens
+
+Your host has an auth token. Each widget needs it:
+
+```ts
+// Host page
+const token = getAuthToken();
+
+attach(widget, {
+  trigger: btn,
+  activateOn: onTrigger.click(btn),
+  props: { token, tenant: "acme-corp" },
+});
+```
+
+```ts
+// Widget
+function Dashboard({ token, tenant }: { token: string; tenant: string }) {
+  const { data } = useQuery({
+    queryKey: ["dashboard", tenant],
+    queryFn: () => fetch(`/api/${tenant}/dashboard`, {
+      headers: { Authorization: `Bearer ${token}` },
+    }).then(r => r.json()),
+  });
+  // ...
+}
+```
+
+For many widgets on the same page, pass auth once via the event bus or a shared context module imported by both the host and the widget's peer build.
+
+## Navigation from a widget
+
+A widget needs to navigate the host page. Use the event bus — the widget emits a navigation event, the host listens:
+
+```ts
+// host.js
+import { createEventBus } from "mountly/bus";
+
+const bus = createEventBus<{
+  "navigate": { path: string };
+}>();
+
+bus.on("navigate", ({ path }) => {
+  // Host controls navigation — SPA router, window.location, etc.
+  window.location.href = path;
+});
+```
+
+```ts
+// widget.js
+import { createEventBus } from "mountly/bus";
+
+const bus = createEventBus<{ "navigate": { path: string } }>();
+
+function ProductCard({ productId }: { productId: string }) {
+  return (
+    <button onClick={() => bus.emit("navigate", { path: `/products/${productId}` })}>
+      View details
+    </button>
+  );
+}
+```
+
+**Key:** The widget never touches `window.location` directly. The host owns navigation. The bus keeps them decoupled.
+
+## Loading states
+
+Mountly preloads the module on hover and mounts on click. But data fetching is inside the widget. Show a loading state while data loads:
+
+```tsx
+function PaymentBreakdown({ paymentId }: { paymentId: string }) {
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    setLoading(true);
+    fetch(`/api/payments/${paymentId}`)
+      .then(r => r.json())
+      .then(setData)
+      .finally(() => setLoading(false));
+  }, [paymentId]);
+
+  if (loading) return <div class="skeleton">Loading payment…</div>;
+  return <div>{/* real content */}</div>;
+}
+```
+
+For a more sophisticated approach, use mountly's built-in data cache:
+
+```ts
+createOnDemandFeature({
+  moduleId: "payment-breakdown",
+  loadModule: () => import("./payment-breakdown.js"),
+  loadData: (ctx) => fetch(`/api/payments/${ctx.paymentId}`).then(r => r.json()),
+  render: ({ mod, data, container }) => mod.mount(container, data),
+});
+```
+
+The data fetch runs in parallel with the module fetch, and the result is cached by `paymentId`. Hover a second payment — cache hit, instant render.
+
+## Error handling
+
+Widget module fails to load. Data fetch fails. The widget itself throws. Handle each:
+
+```ts
+attach(widget, {
+  trigger: btn,
+  activateOn: onTrigger.click(btn),
+  onError: (error) => {
+    // Module load failure, data fetch failure, or mount error
+    document.getElementById("error-area").textContent = "Failed to load. Try again.";
+    console.error("[mountly]", error);
+  },
+});
+```
+
+For per-widget error boundaries (React):
+
+```tsx
+function WidgetErrorBoundary({ children }: { children: React.ReactNode }) {
+  const [error, setError] = useState<Error | null>(null);
+  if (error) return <div class="error">Something went wrong. <button onClick={() => setError(null)}>Retry</button></div>;
+  return <ErrorBoundary fallback={(e) => { setError(e); return null; }}>{children}</ErrorBoundary>;
+}
+```
+
+## Imperative mount on route change
+
+When you want to mount a widget in response to a client-side route change, not a DOM event:
+
+```ts
+const feature = createOnDemandFeature({
+  moduleId: "checkout",
+  loadModule: () => import("./checkout-widget.js"),
+  render: ({ mod, container, props }) => mod.mount(container, props),
+});
+
+router.on("/checkout/:id", ({ params }) => {
+  const container = document.getElementById("checkout-mount");
+  feature.mount(container, { orderId: params.id });
+});
+```
+
+Use `feature.abort()` to cancel an in-flight preload when the user navigates away:
+
+```ts
+router.beforeEach(() => { feature.abort(); });
+```
+
+## Multiple mount targets for one feature
+
+A single feature can mount into multiple containers — useful for showing the same widget in a sidebar and a modal:
+
+```ts
+const feature = createOnDemandFeature({ /* ... */ });
+const sidebarMount = feature.mount(document.getElementById("sidebar"), { mode: "compact" });
+const modalMount = feature.mount(document.getElementById("modal"), { mode: "full" });
+```
+
+Each mount returns `{ unmount }`. Call `sidebarMount.unmount()` to tear down just the sidebar instance.
+
+## Testing a widget
+
+```ts
+import { mountWidgetFixture, cycleWidgetFixture } from "mountly/test";
+
+test("mounts with props", () => {
+  const { container, unmount } = mountWidgetFixture(widget, { start: 5 });
+  expect(container.textContent).toContain("5");
+  unmount();
+  expect(container.innerHTML).toBe("");
+});
+
+test("survives unmount-remount cycle", () => {
+  const { container, remount } = cycleWidgetFixture(widget, { start: 5 });
+  expect(container.textContent).toContain("5");
+  remount({ start: 10 });
+  expect(container.textContent).toContain("10");
+});
+```
+
+## Sharing state between widgets
+
+Use the event bus:
+
+```ts
+import { createEventBus } from "mountly/bus";
+
+const bus = createEventBus<{
+  "cart:updated": { itemCount: number; total: number };
+  "user:logged-in": { userId: string; token: string };
+}>();
+
+// Widget A emits
+bus.emit("cart:updated", { itemCount: 3, total: 49.99 });
+
+// Widget B listens
+bus.on("cart:updated", (payload) => {
+  updateCartBadge(payload.itemCount);
+});
+```
+
+Both widgets import the bus module. They never import each other.
+
+## Widget that accepts slot content
+
+Mountly widgets mount inside an empty container. For patterns where the host provides markup that the widget wraps, pass the host's HTML as a prop:
+
+```ts
+// Host
+attach(widget, {
+  trigger: btn,
+  activateOn: onTrigger.click(btn),
+  props: { slotHTML: document.getElementById("slot-content").innerHTML },
+});
+```
+
+```tsx
+// Widget — renders host-provided content inside its own shell
+function Dialog({ slotHTML, onClose }: { slotHTML: string; onClose: () => void }) {
+  return (
+    <div class="dialog-overlay">
+      <div class="dialog-body" dangerouslySetInnerHTML={{ __html: slotHTML }} />
+      <button onClick={onClose}>Close</button>
+    </div>
+  );
+}
+```
+
+## Using mountly inside an existing Next/Vite/Remix app
+
+mountly is not a replacement for your app framework. Use it for specific embedded features where you need:
+
+- A component loaded from an external CDN, not your app bundle.
+- A widget owned by a different team with a different deploy cadence.
+- A custom-element drop target for marketing/CMS placement inside an otherwise framework-owned page.
+
+```tsx
+// Next.js page
+import { useEffect, useRef } from "react";
+
+export default function Page() {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    import("mountly").then(({ createOnDemandFeature }) => {
+      const feature = createOnDemandFeature({
+        moduleId: "pricing",
+        loadModule: () => import("https://cdn.example.com/pricing@latest/dist/peer.js"),
+        render: ({ mod, container }) => mod.mount(container, { plan: "pro" }),
+      });
+      const { unmount } = feature.mount(el);
+      return unmount;
+    });
+  }, []);
+
+  return <div ref={containerRef} />;
+}
+```

@@ -1,35 +1,57 @@
 <!doctype html>
-<html><body>
-  <div id="c"></div>
-  <script type="importmap">
-    {"imports":{"mountly":"/packages/mountly/dist/index.js","mountly/shadow":"/packages/mountly/dist/shadow.js","mountly/assets":"/packages/mountly/dist/assets.js","mountly/adapter":"/packages/mountly/dist/adapter.js","mountly/attach":"/packages/mountly/dist/attach.js","mountly/bundle":"/packages/mountly/dist/bundle.js","mountly/elements":"/packages/mountly/dist/elements.js","mountly/island":"/packages/mountly/dist/island.js","mountly/mount":"/packages/mountly/dist/mount.js","mountly/runtime":"/packages/mountly/dist/runtime.js","mountly/triggers":"/packages/mountly/dist/triggers.js","mountly/url":"/packages/mountly/dist/url-state.js","mountly/data":"/packages/mountly/dist/data-source.js","mountly/bus":"/packages/mountly/dist/bus.js"}}
-  </script>
-  <script type="module">
-    import { createWidget } from "/packages/adapters/mountly-tsrx/dist/index.js";
+<html>
+  <body>
+    <div id="c"></div>
+    <script type="importmap">
+      {
+        "imports": {
+          "mountly": "/packages/mountly/dist/index.js",
+          "mountly/shadow": "/packages/mountly/dist/shadow.js",
+          "mountly/assets": "/packages/mountly/dist/assets.js",
+          "mountly/adapter": "/packages/mountly/dist/adapter.js",
+          "mountly/attach": "/packages/mountly/dist/attach.js",
+          "mountly/bundle": "/packages/mountly/dist/bundle.js",
+          "mountly/elements": "/packages/mountly/dist/elements.js",
+          "mountly/island": "/packages/mountly/dist/island.js",
+          "mountly/mount": "/packages/mountly/dist/mount.js",
+          "mountly/runtime": "/packages/mountly/dist/runtime.js",
+          "mountly/triggers": "/packages/mountly/dist/triggers.js",
+          "mountly/url": "/packages/mountly/dist/url-state.js",
+          "mountly/data": "/packages/mountly/dist/data-source.js",
+          "mountly/bus": "/packages/mountly/dist/bus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { createWidget } from "/packages/adapters/mountly-tsrx/dist/index.js";
 
-    const c = document.getElementById("c");
-    const w = createWidget({
-      mount(target, props) {
-        target.textContent = props.msg;
-      },
-      unmount(target) {
-        target.textContent = "";
-      },
-    }, { shadow: true, styles: ".x{}" });
+      const c = document.getElementById("c");
+      const w = createWidget(
+        {
+          mount(target, props) {
+            target.textContent = props.msg;
+          },
+          unmount(target) {
+            target.textContent = "";
+          },
+        },
+        { shadow: true, styles: ".x{}" },
+      );
 
-    w.mount(c, { msg: "first" });
-    await new Promise(r => setTimeout(r, 50));
-    const initialSheetCount = c.shadowRoot?.adoptedStyleSheets?.length ?? 0;
+      w.mount(c, { msg: "first" });
+      await new Promise((r) => setTimeout(r, 50));
+      const initialSheetCount = c.shadowRoot?.adoptedStyleSheets?.length ?? 0;
 
-    w.unmount(c);
-    w.mount(c, { msg: "second" });
-    await new Promise(r => setTimeout(r, 50));
+      w.unmount(c);
+      w.mount(c, { msg: "second" });
+      await new Promise((r) => setTimeout(r, 50));
 
-    const finalSheetCount = c.shadowRoot?.adoptedStyleSheets?.length ?? 0;
-    const styleStillPresent = finalSheetCount > 0 || !!c.shadowRoot?.querySelector("style");
+      const finalSheetCount = c.shadowRoot?.adoptedStyleSheets?.length ?? 0;
+      const styleStillPresent = finalSheetCount > 0 || !!c.shadowRoot?.querySelector("style");
 
-    window.__result = {
-      styleStillPresent,
-    };
-  </script>
-</body></html>
+      window.__result = {
+        styleStillPresent,
+      };
+    </script>
+  </body>
+</html>

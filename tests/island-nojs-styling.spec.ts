@@ -9,7 +9,9 @@ test.beforeEach(({ page }, testInfo) => {
 const HOST = "http://localhost:5175";
 
 test.describe("Island styling with JavaScript disabled", () => {
-  test("SSR'd island content remains styled when JS is off (noscript pattern)", async ({ browser }) => {
+  test("SSR'd island content remains styled when JS is off (noscript pattern)", async ({
+    browser,
+  }) => {
     story.given("a browser context with JS disabled");
     const context = await browser.newContext({ javaScriptEnabled: false });
     const page = await context.newPage();
@@ -37,7 +39,9 @@ test.describe("Island styling with JavaScript disabled", () => {
     await context.close();
   });
 
-  test("Same fixture with JS on: island hydrates into a shadow root and is still styled (no double-paint regression)", async ({ page }, testInfo) => {
+  test("Same fixture with JS on: island hydrates into a shadow root and is still styled (no double-paint regression)", async ({
+    page,
+  }, testInfo) => {
     story.given("the island-nojs-styled fixture is loaded");
     await page.goto(`${HOST}/tests/fixtures/island-nojs-styled.html`);
     story.when("the user clicks to trigger hydration");
@@ -55,7 +59,9 @@ test.describe("Island styling with JavaScript disabled", () => {
         hasShadowRoot: !!island?.shadowRoot,
         shadowText: inShadow?.textContent ?? "",
         shadowComputedColor: inShadow ? getComputedStyle(inShadow).color : "",
-        documentHasLink: !!document.querySelector('link[rel="stylesheet"][href*="css-loader-asset.css"]'),
+        documentHasLink: !!document.querySelector(
+          'link[rel="stylesheet"][href*="css-loader-asset.css"]',
+        ),
       };
     });
     expect(result.hasShadowRoot).toBe(true);

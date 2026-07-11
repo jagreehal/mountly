@@ -1,0 +1,12 @@
+{
+  "name": "multi-vertical-host-example",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "serve -l 5182 ../../.."
+  },
+  "devDependencies": {
+    "serve": "^14.2.6"
+  }
+}

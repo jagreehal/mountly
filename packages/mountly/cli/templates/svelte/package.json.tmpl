@@ -5,8 +5,9 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "{{tailwindBuildScript}}tsup",
-    "dev": "tsup --watch"
+    "build": "{{tailwindBuildScript}}{{bundlerBuildCommand}}",
+    "dev": "{{bundlerDevCommand}}",
+    "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
     "svelte": "^4.2.0 || ^5.0.0"
@@ -16,7 +17,6 @@
   },
   "devDependencies": {
     "svelte": "^5.0.0",
-    "tsup": "^8.3.0",
-    "typescript": "^5.7.0"{{tailwindDeps}}
+    "typescript": "^5.7.0"{{tailwindDeps}}{{bundlerDevDependencies}}
   }
 }

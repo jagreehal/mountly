@@ -3,17 +3,17 @@ title: Caching
 description: How mountly caches modules and data, how cache keys are built, and how to invalidate.
 ---
 
-mountly keeps two cooperating caches. They are simple, in-memory, and survive across re-mounts within a page session.
+mountly keeps two cooperating caches. Both live in memory and survive re-mounts within a page session.
 
 ## Module cache
 
 Stores resolved widget modules, keyed by `moduleId`.
 
 - One key per `moduleId` regardless of `loadModule` implementation.
-- **In-flight deduplication** — if 12 hovers fire before the first `import()` resolves, you get one fetch and 12 callers awaiting one promise.
+- **In-flight deduplication.** If 12 hovers fire before the first `import()` resolves, you get one fetch and 12 callers awaiting one promise.
 - An aborted load clears the cache entry so the next attempt starts fresh.
 
-You rarely interact with it directly. The exported `moduleCache` is available if you need to seed entries or invalidate from outside the runtime:
+You rarely touch it directly. Use the exported `moduleCache` to seed entries or invalidate from outside the runtime:
 
 ```ts
 import { moduleCache } from "mountly";
@@ -64,7 +64,7 @@ dataCache.delete(`signup-card:${currentLocale}`);
 ## What the caches don't do
 
 - They don't persist across page reloads. (You can layer a Service Worker on top of `moduleCache` for that.)
-- They don't honour HTTP cache headers — that's the browser's job, downstream of the loader.
+- They don't honour HTTP cache headers. That's the browser's job, downstream of the loader.
 - They don't ship invalidation primitives beyond `delete()`. Use timeouts or app-level events.
 
 ## The `DedupCache` primitive
@@ -76,11 +76,7 @@ import { DedupCache } from "mountly";
 
 const cache = new DedupCache<MyValue>();
 
-const value = await cache.resolve(
-  "key",
-  async () => fetchSomething(),
-  { signal },
-);
+const value = await cache.resolve("key", async () => fetchSomething(), { signal });
 ```
 
 Concurrent `resolve` calls with the same key share a single promise. Pass an `AbortSignal` to cancel.
@@ -98,8 +94,8 @@ T+1500 cache hits both. activate completes synchronously
 T+1500 mount → render
 ```
 
-Open the same widget elsewhere on the page — both caches hit, mount happens within a frame.
+Open the same widget elsewhere on the page and both caches hit, so mount happens within a frame.
 
 ## Inspecting the cache
 
-The [devtools panel](/mountly/concepts/devtools/) shows live module and data cache contents alongside feature states. Useful for spotting an over-aggressive prefetch or a missed cache-key collision.
+The [devtools panel](/mountly/concepts/devtools/) shows live module and data cache contents alongside feature states. Use it to spot an over-aggressive prefetch or a missed cache-key collision.

@@ -1,5 +1,10 @@
 import { createModuleLoader } from "./assets.js";
-import { mountAllIslands, type IslandLoaders, type MountAllIslandsOptions, type MountedIsland } from "./island.js";
+import {
+  mountAllIslands,
+  type IslandLoaders,
+  type MountAllIslandsOptions,
+  type MountedIsland,
+} from "./island.js";
 
 export interface HostBootstrapOptions extends MountAllIslandsOptions {
   root?: ParentNode;

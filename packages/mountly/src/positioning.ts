@@ -32,7 +32,7 @@ function getPlacementCoords(
   anchorRect: DOMRect,
   overlayRect: DOMRect,
   placement: Placement,
-  offset: number
+  offset: number,
 ): { top: number; left: number } {
   const [side, alignment = "center"] = placement.split("-") as [string, string?];
 
@@ -90,14 +90,14 @@ function getOppositePlacement(placement: Placement): Placement {
     right: "left",
   };
   const newSide = opposite[side] ?? side;
-  return alignment ? `${newSide}-${alignment}` as Placement : newSide as Placement;
+  return alignment ? (`${newSide}-${alignment}` as Placement) : (newSide as Placement);
 }
 
 function isOutOfBounds(
   top: number,
   left: number,
   overlayRect: DOMRect,
-  boundary: DOMRect
+  boundary: DOMRect,
 ): { top: boolean; left: boolean; right: boolean; bottom: boolean } {
   return {
     top: top < boundary.top,
@@ -133,7 +133,12 @@ export function computePosition(options: PositionOptions): PositionResult {
     if (hasOverflow) {
       const opposite = getOppositePlacement(currentPlacement);
       const oppositeCoords = getPlacementCoords(anchorRect, overlayRect, opposite, offset);
-      const oppositeOverflow = isOutOfBounds(oppositeCoords.top, oppositeCoords.left, overlayRect, boundaryRect);
+      const oppositeOverflow = isOutOfBounds(
+        oppositeCoords.top,
+        oppositeCoords.left,
+        overlayRect,
+        boundaryRect,
+      );
 
       const oppositeOverflowCount = Object.values(oppositeOverflow).filter(Boolean).length;
       const currentOverflowCount = Object.values(overflow).filter(Boolean).length;
@@ -243,7 +248,7 @@ export function createOverlay(options: OverlayOptions): OverlayHandle {
     if (e.key !== "Tab") return;
 
     const focusable = element.querySelectorAll<HTMLElement>(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
     );
     if (focusable.length === 0) return;
 
@@ -280,7 +285,7 @@ export function createOverlay(options: OverlayOptions): OverlayHandle {
 
     if (trapFocus) {
       const focusable = element.querySelector<HTMLElement>(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
       );
       focusable?.focus();
     }

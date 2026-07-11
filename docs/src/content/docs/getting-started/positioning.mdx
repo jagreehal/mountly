@@ -3,7 +3,7 @@ title: Positioning
 description: How to think about mountly, where it fits, and what it is not.
 ---
 
-mountly is best described as an **on-demand component runtime**.
+mountly is an **on-demand component runtime**.
 
 Short version:
 
@@ -28,15 +28,17 @@ Everything else is a use case built on that primitive.
 
 ## Use cases
 
-| Use case              | What mountly provides                                                     |
-| --------------------- | ------------------------------------------------------------------------- |
-| Marketing pages       | Product-owned components on fast campaign pages without copying UI code.  |
-| CMS and static hosts  | Custom tags plus one host script instead of a full app shell.             |
-| Legacy modernization  | Replace old UI one feature at a time while the host remains in place.     |
-| Runtime islands       | Island-style activation for HTML hosts without adopting a site framework. |
+| Use case              | What mountly provides                                                                        |
+| --------------------- | -------------------------------------------------------------------------------------------- |
+| Marketing pages       | Product-owned components on fast campaign pages without copying UI code.                     |
+| CMS and static hosts  | Custom tags plus one host script instead of a full app shell.                                |
+| Legacy modernization  | Replace old UI one feature at a time while the host remains in place.                        |
+| Runtime islands       | Island-style activation for HTML hosts without adopting a site framework.                    |
 | Partner embeds        | Stable HTML tags that load interactive UI on demand, with optional `shadow: true` isolation. |
-| Framework transitions | React, Vue, Svelte, and TSRX widgets can coexist during migration.        |
-| Performance work      | Heavy UI loads on intent, viewport, idle, media query, or URL change.     |
+| Multi-team sites      | Each team deploys independently. The host manifest pins versions. No shared config block.    |
+| Cross-framework pages | React, Vue, and Svelte widgets coexist on one page. Each team picks their framework.         |
+| MCP-hosted UI         | mountly widgets wrapped as MCP App resources. Same component, two activation contexts.       |
+| Performance work      | Heavy UI loads on intent, viewport, idle, media query, or URL change.                        |
 
 ## What it is
 
@@ -58,19 +60,19 @@ Everything else is a use case built on that primitive.
 
 ### Astro
 
-Astro is a site framework with compile-time island directives. mountly is runtime-first and host-agnostic. It works inside pages that already exist: CMS templates, static files, legacy apps, partner pages, or app shells from another framework.
+Astro is a site framework with compile-time island directives. mountly is runtime-first and host-agnostic. It works inside pages that already exist: CMS templates, static files, legacy apps, partner pages, and app shells from another framework.
 
 Use Astro when Astro owns the site. Use mountly when the page already exists and you need to drop in an interactive component.
 
-They can also work together: Astro can render the shell and content, while mountly handles a portable, deeply interactive widget that should keep its own release path or framework lifecycle.
+They can also work together: Astro can render the shell and content, while mountly handles a portable, interactive widget that should keep its own release path or framework lifecycle.
 
 ### Web Components
 
 mountly uses custom elements as a delivery mechanism, not as the authoring model. You still write React, Vue, Svelte, or TSRX components. The adapter exposes them as mountable widgets, and mountly gives the host a stable tag such as `<signup-card>`.
 
-### Module Federation
+### Import maps and shared modules
 
-Module Federation is for sharing modules across separately built applications. mountly is smaller and more page-oriented: "put this component here, load it on demand, and opt into isolation when needed."
+Import maps pin shared modules across separately built applications. mountly adds manifest validation, on-demand mounting, and custom-element delivery on top of that model.
 
 ### Framework lazy loading
 

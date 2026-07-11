@@ -13,7 +13,9 @@ async function readResult(page: import("@playwright/test").Page) {
   return page.evaluate(() => (window as any).__result);
 }
 
-test("React adapter applies styles passed as a literal `styles` option (shadow DOM)", async ({ page }, testInfo) => {
+test("React adapter applies styles passed as a literal `styles` option (shadow DOM)", async ({
+  page,
+}, testInfo) => {
   story.given("the react-css-styles-option fixture is loaded");
   await page.goto(`${HOST}/tests/fixtures/react-css-styles-option.html`);
   story.when("the component mounts");
@@ -29,7 +31,9 @@ test("React adapter applies styles passed as a literal `styles` option (shadow D
   story.screenshot({ path: screenshotPath, alt: "React CSS styles option" });
 });
 
-test("React adapter fetches CSS via `cssUrl` option and adopts it into the shadow root", async ({ page }, testInfo) => {
+test("React adapter fetches CSS via `cssUrl` option and adopts it into the shadow root", async ({
+  page,
+}, testInfo) => {
   story.given("the react-css-cssurl-option fixture is loaded");
   await page.goto(`${HOST}/tests/fixtures/react-css-cssurl-option.html`);
   story.when("the component mounts");
@@ -43,7 +47,9 @@ test("React adapter fetches CSS via `cssUrl` option and adopts it into the shado
   story.screenshot({ path: screenshotPath, alt: "React CSS url option" });
 });
 
-test("React adapter derives CSS from `moduleUrl` passed via mount() props", async ({ page }, testInfo) => {
+test("React adapter derives CSS from `moduleUrl` passed via mount() props", async ({
+  page,
+}, testInfo) => {
   story.given("the react-css-moduleurl-prop fixture is loaded");
   await page.goto(`${HOST}/tests/fixtures/react-css-moduleurl-prop.html`);
   story.when("the component mounts");
@@ -57,7 +63,9 @@ test("React adapter derives CSS from `moduleUrl` passed via mount() props", asyn
   story.screenshot({ path: screenshotPath, alt: "React CSS moduleUrl prop" });
 });
 
-test("React adapter sends `Accept: text/css` so dev servers return raw CSS, not JS-wrapped modules", async ({ page }, testInfo) => {
+test("React adapter sends `Accept: text/css` so dev servers return raw CSS, not JS-wrapped modules", async ({
+  page,
+}, testInfo) => {
   story.given("a mock Vite-like server is set up");
   await page.route("**/__vite_mock__/widget.css", async (route, request) => {
     const accept = request.headers()["accept"] ?? "";
@@ -88,7 +96,9 @@ test("React adapter sends `Accept: text/css` so dev servers return raw CSS, not 
   story.screenshot({ path: screenshotPath, alt: "React CSS Vite-like server" });
 });
 
-test("React adapter scopes CSS-Modules class names through the shadow root (decoy global rule does NOT leak in)", async ({ page }) => {
+test("React adapter scopes CSS-Modules class names through the shadow root (decoy global rule does NOT leak in)", async ({
+  page,
+}) => {
   // Demonstrates that React, which has no native style scoping, gets it
   // for free from mountly's shadow root: the build's hashed class names
   // come out of a CSS-Modules pipeline, the .css is fetched alongside the
@@ -106,7 +116,9 @@ test("React adapter scopes CSS-Modules class names through the shadow root (deco
   expect(result.adoptedRuleCount).toBe(2);
 });
 
-test("React adapter applies styles via head fallback in light DOM (shadow:false, default styleMode)", async ({ page }) => {
+test("React adapter applies styles via head fallback in light DOM (shadow:false, default styleMode)", async ({
+  page,
+}) => {
   await page.goto(`${HOST}/tests/fixtures/react-css-cssurl-light-dom.html`);
   const result = await readResult(page);
   expect(result.hasShadowRoot).toBe(false);
@@ -123,9 +135,13 @@ test("React adapter mount succeeds even when the CSS URL 404s", async ({ page })
   expect(result.text).toBe("missing");
 });
 
-test("React zero-config: createOnDemandFeature({ moduleUrl }) auto-wires CSS into shadow DOM", async ({ page }) => {
+test("React zero-config: createOnDemandFeature({ moduleUrl }) auto-wires CSS into shadow DOM", async ({
+  page,
+}) => {
   await page.goto(`${HOST}/tests/fixtures/react-css-zero-config.html`);
-  await page.waitForFunction(() => (window as any).__ready && (window as any).__ready(), null, { timeout: 8000 });
+  await page.waitForFunction(() => (window as any).__ready && (window as any).__ready(), null, {
+    timeout: 8000,
+  });
   const result = await page.evaluate(() => (window as any).__result);
   expect(result.hasShadowRoot).toBe(true);
   expect(result.adoptedRuleCount).toBeGreaterThan(0);

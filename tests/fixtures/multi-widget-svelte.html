@@ -1,83 +1,107 @@
 <!doctype html>
-<html><body>
-  <button id="trigger-counter">load counter</button>
-  <button id="trigger-clock">load clock</button>
-  <button id="trigger-status">load status</button>
-  <div id="mount-counter"></div>
-  <div id="mount-clock"></div>
-  <div id="mount-status"></div>
+<html>
+  <body>
+    <button id="trigger-counter">load counter</button>
+    <button id="trigger-clock">load clock</button>
+    <button id="trigger-status">load status</button>
+    <div id="mount-counter"></div>
+    <div id="mount-clock"></div>
+    <div id="mount-status"></div>
 
-  <script type="importmap">{"imports":{"mountly":"/packages/mountly/dist/index.js","mountly/shadow":"/packages/mountly/dist/shadow.js","mountly/assets":"/packages/mountly/dist/assets.js","mountly/adapter":"/packages/mountly/dist/adapter.js","mountly/attach":"/packages/mountly/dist/attach.js","mountly/bundle":"/packages/mountly/dist/bundle.js","mountly/elements":"/packages/mountly/dist/elements.js","mountly/island":"/packages/mountly/dist/island.js","mountly/mount":"/packages/mountly/dist/mount.js","mountly/runtime":"/packages/mountly/dist/runtime.js","mountly/triggers":"/packages/mountly/dist/triggers.js","mountly/url":"/packages/mountly/dist/url-state.js","mountly/data":"/packages/mountly/dist/data-source.js","mountly/bus":"/packages/mountly/dist/bus.js"}}</script>
-  <script type="module">
-    import { createWidgetBundle } from "/packages/mountly/dist/bundle.js";
-    import { attach, onTrigger } from "/packages/mountly/dist/attach.js";
-    import { __clearCssTextCache } from "/packages/mountly/dist/assets.js";
-    __clearCssTextCache();
+    <script type="importmap">
+      {
+        "imports": {
+          "mountly": "/packages/mountly/dist/index.js",
+          "mountly/shadow": "/packages/mountly/dist/shadow.js",
+          "mountly/assets": "/packages/mountly/dist/assets.js",
+          "mountly/adapter": "/packages/mountly/dist/adapter.js",
+          "mountly/attach": "/packages/mountly/dist/attach.js",
+          "mountly/bundle": "/packages/mountly/dist/bundle.js",
+          "mountly/elements": "/packages/mountly/dist/elements.js",
+          "mountly/island": "/packages/mountly/dist/island.js",
+          "mountly/mount": "/packages/mountly/dist/mount.js",
+          "mountly/runtime": "/packages/mountly/dist/runtime.js",
+          "mountly/triggers": "/packages/mountly/dist/triggers.js",
+          "mountly/url": "/packages/mountly/dist/url-state.js",
+          "mountly/data": "/packages/mountly/dist/data-source.js",
+          "mountly/bus": "/packages/mountly/dist/bus.js"
+        }
+      }
+    </script>
+    <script type="module">
+      import { createWidgetBundle } from "/packages/mountly/dist/bundle.js";
+      import { attach, onTrigger } from "/packages/mountly/dist/attach.js";
+      import { __clearCssTextCache } from "/packages/mountly/dist/assets.js";
+      __clearCssTextCache();
 
-    // One bundle, one fetch, three features.
-    const bundle = createWidgetBundle({
-      moduleUrl: "/tests/fixtures/multi-widget-svelte-bundle.js",
-    });
+      // One bundle, one fetch, three features.
+      const bundle = createWidgetBundle({
+        moduleUrl: "/tests/fixtures/multi-widget-svelte-bundle.js",
+      });
 
-    const counter = bundle.feature({ moduleId: "counter", export: "counter" });
-    const clock   = bundle.feature({ moduleId: "clock",   export: "clock"   });
-    const status  = bundle.feature({ moduleId: "status",  export: "status"  });
+      const counter = bundle.feature({ moduleId: "counter", export: "counter" });
+      const clock = bundle.feature({ moduleId: "clock", export: "clock" });
+      const status = bundle.feature({ moduleId: "status", export: "status" });
 
-    attach(counter, {
-      trigger: document.getElementById("trigger-counter"),
-      mount: document.getElementById("mount-counter"),
-      activateOn: onTrigger.click(document.getElementById("trigger-counter")),
-      props: { start: 7 },
-    });
-    attach(clock, {
-      trigger: document.getElementById("trigger-clock"),
-      mount: document.getElementById("mount-clock"),
-      activateOn: onTrigger.click(document.getElementById("trigger-clock")),
-      props: { now: "11:42" },
-    });
-    attach(status, {
-      trigger: document.getElementById("trigger-status"),
-      mount: document.getElementById("mount-status"),
-      activateOn: onTrigger.click(document.getElementById("trigger-status")),
-      props: { message: "All systems nominal" },
-    });
+      attach(counter, {
+        trigger: document.getElementById("trigger-counter"),
+        mount: document.getElementById("mount-counter"),
+        activateOn: onTrigger.click(document.getElementById("trigger-counter")),
+        props: { start: 7 },
+      });
+      attach(clock, {
+        trigger: document.getElementById("trigger-clock"),
+        mount: document.getElementById("mount-clock"),
+        activateOn: onTrigger.click(document.getElementById("trigger-clock")),
+        props: { now: "11:42" },
+      });
+      attach(status, {
+        trigger: document.getElementById("trigger-status"),
+        mount: document.getElementById("mount-status"),
+        activateOn: onTrigger.click(document.getElementById("trigger-status")),
+        props: { message: "All systems nominal" },
+      });
 
-    // Click all three. Test then asserts shared loading + adopted CSS.
-    document.getElementById("trigger-counter").click();
-    document.getElementById("trigger-clock").click();
-    document.getElementById("trigger-status").click();
+      // Click all three. Test then asserts shared loading + adopted CSS.
+      document.getElementById("trigger-counter").click();
+      document.getElementById("trigger-clock").click();
+      document.getElementById("trigger-status").click();
 
-    window.__ready = () => {
-      const mounts = ["mount-counter", "mount-clock", "mount-status"]
-        .map((id) => document.getElementById(id));
-      if (mounts.some((m) => !m?.shadowRoot?.querySelector(".card"))) return false;
-      window.__result = {
-        // All three mounted.
-        allMounted: mounts.every((m) => !!m.shadowRoot?.querySelector(".card")),
-        // Each adopted the same shared stylesheet.
-        adoptedRuleCounts: mounts.map((m) => m.shadowRoot.adoptedStyleSheets[0]?.cssRules.length ?? 0),
-        // Different widgets render different DOM but share the helper styles.
-        counterText: mounts[0].shadowRoot.querySelector(".num").textContent,
-        clockText: mounts[1].shadowRoot.querySelector(".num").textContent,
-        statusText: mounts[2].shadowRoot.querySelector(".msg").textContent,
-        // Constructed-stylesheet identity check: the same `CSSStyleSheet`
-        // instance is adopted by all three roots (mountly's sheet cache).
-        sameSheetInstance:
-          mounts[0].shadowRoot.adoptedStyleSheets[0] ===
-            mounts[1].shadowRoot.adoptedStyleSheets[0] &&
-          mounts[1].shadowRoot.adoptedStyleSheets[0] ===
-            mounts[2].shadowRoot.adoptedStyleSheets[0],
-        // Counted module fetches (browser dedup means it's exactly one).
-        moduleFetchCount: performance.getEntriesByName(
-          new URL("/tests/fixtures/multi-widget-svelte-bundle.js", location.origin).href,
-          "resource",
-        ).length,
-        cssFetchCount: performance.getEntriesByName(
-          new URL("/tests/fixtures/multi-widget-svelte-bundle.css", location.origin).href,
-          "resource",
-        ).length,
+      window.__ready = () => {
+        const mounts = ["mount-counter", "mount-clock", "mount-status"].map((id) =>
+          document.getElementById(id),
+        );
+        if (mounts.some((m) => !m?.shadowRoot?.querySelector(".card"))) return false;
+        window.__result = {
+          // All three mounted.
+          allMounted: mounts.every((m) => !!m.shadowRoot?.querySelector(".card")),
+          // Each adopted the same shared stylesheet.
+          adoptedRuleCounts: mounts.map(
+            (m) => m.shadowRoot.adoptedStyleSheets[0]?.cssRules.length ?? 0,
+          ),
+          // Different widgets render different DOM but share the helper styles.
+          counterText: mounts[0].shadowRoot.querySelector(".num").textContent,
+          clockText: mounts[1].shadowRoot.querySelector(".num").textContent,
+          statusText: mounts[2].shadowRoot.querySelector(".msg").textContent,
+          // Constructed-stylesheet identity check: the same `CSSStyleSheet`
+          // instance is adopted by all three roots (mountly's sheet cache).
+          sameSheetInstance:
+            mounts[0].shadowRoot.adoptedStyleSheets[0] ===
+              mounts[1].shadowRoot.adoptedStyleSheets[0] &&
+            mounts[1].shadowRoot.adoptedStyleSheets[0] ===
+              mounts[2].shadowRoot.adoptedStyleSheets[0],
+          // Counted module fetches (browser dedup means it's exactly one).
+          moduleFetchCount: performance.getEntriesByName(
+            new URL("/tests/fixtures/multi-widget-svelte-bundle.js", location.origin).href,
+            "resource",
+          ).length,
+          cssFetchCount: performance.getEntriesByName(
+            new URL("/tests/fixtures/multi-widget-svelte-bundle.css", location.origin).href,
+            "resource",
+          ).length,
+        };
+        return true;
       };
-      return true;
-    };
-  </script>
-</body></html>
+    </script>
+  </body>
+</html>

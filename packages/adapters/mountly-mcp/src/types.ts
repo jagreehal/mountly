@@ -60,7 +60,7 @@ export interface McpWidgetProps {
 
 /**
  * Resource metadata written to the `.meta.json` sidecar next to the emitted
- * HTML, consumed by `mountly-mcp-server` when registering the `ui://`
+ * HTML, consumed by `mountly-mcp/server` when registering the `ui://`
  * resource with `_meta.ui = {...}`.
  */
 export interface McpResourceDeclaration {

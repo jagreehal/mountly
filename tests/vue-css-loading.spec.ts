@@ -13,7 +13,9 @@ async function readResult(page: import("@playwright/test").Page) {
   return page.evaluate(() => (window as any).__result);
 }
 
-test("Vue adapter applies styles passed as a literal `styles` option (shadow DOM)", async ({ page }, testInfo) => {
+test("Vue adapter applies styles passed as a literal `styles` option (shadow DOM)", async ({
+  page,
+}, testInfo) => {
   story.given("the vue-css-styles-option fixture is loaded");
   await page.goto(`${HOST}/tests/fixtures/vue-css-styles-option.html`);
   story.when("the component mounts");
@@ -29,7 +31,9 @@ test("Vue adapter applies styles passed as a literal `styles` option (shadow DOM
   story.screenshot({ path: screenshotPath, alt: "Vue CSS styles option" });
 });
 
-test("Vue adapter fetches CSS via `cssUrl` option and adopts it into the shadow root", async ({ page }, testInfo) => {
+test("Vue adapter fetches CSS via `cssUrl` option and adopts it into the shadow root", async ({
+  page,
+}, testInfo) => {
   story.given("the vue-css-cssurl-option fixture is loaded");
   await page.goto(`${HOST}/tests/fixtures/vue-css-cssurl-option.html`);
   story.when("the component mounts");
@@ -45,7 +49,9 @@ test("Vue adapter fetches CSS via `cssUrl` option and adopts it into the shadow 
   story.screenshot({ path: screenshotPath, alt: "Vue CSS url option" });
 });
 
-test("Vue adapter derives CSS URL from `moduleUrl` option (.js → .css)", async ({ page }, testInfo) => {
+test("Vue adapter derives CSS URL from `moduleUrl` option (.js → .css)", async ({
+  page,
+}, testInfo) => {
   story.given("the vue-css-moduleurl-option fixture is loaded");
   await page.goto(`${HOST}/tests/fixtures/vue-css-moduleurl-option.html`);
   story.when("the component mounts");
@@ -73,7 +79,9 @@ test("Vue adapter accepts `cssUrl` passed via mount() props", async ({ page }, t
   story.screenshot({ path: screenshotPath, alt: "Vue CSS url prop" });
 });
 
-test("Vue adapter derives CSS from `moduleUrl` passed via mount() props", async ({ page }, testInfo) => {
+test("Vue adapter derives CSS from `moduleUrl` passed via mount() props", async ({
+  page,
+}, testInfo) => {
   story.given("the vue-css-moduleurl-prop fixture is loaded");
   await page.goto(`${HOST}/tests/fixtures/vue-css-moduleurl-prop.html`);
   story.when("the component mounts");
@@ -87,7 +95,9 @@ test("Vue adapter derives CSS from `moduleUrl` passed via mount() props", async 
   story.screenshot({ path: screenshotPath, alt: "Vue CSS moduleUrl prop" });
 });
 
-test("Vue adapter sends `Accept: text/css` so dev servers return raw CSS, not JS-wrapped modules", async ({ page }, testInfo) => {
+test("Vue adapter sends `Accept: text/css` so dev servers return raw CSS, not JS-wrapped modules", async ({
+  page,
+}, testInfo) => {
   story.given("a mock Vite-like server is set up");
   await page.route("**/__vite_mock__/widget.css", async (route, request) => {
     const accept = request.headers()["accept"] ?? "";
@@ -118,7 +128,9 @@ test("Vue adapter sends `Accept: text/css` so dev servers return raw CSS, not JS
   story.screenshot({ path: screenshotPath, alt: "Vue CSS Vite-like server" });
 });
 
-test("Vue adapter applies styles via head fallback in light DOM (shadow:false, default styleMode)", async ({ page }, testInfo) => {
+test("Vue adapter applies styles via head fallback in light DOM (shadow:false, default styleMode)", async ({
+  page,
+}, testInfo) => {
   story.given("the vue-css-cssurl-light-dom fixture is loaded");
   await page.goto(`${HOST}/tests/fixtures/vue-css-cssurl-light-dom.html`);
   story.when("the component mounts");
@@ -136,7 +148,9 @@ test("Vue adapter applies styles via head fallback in light DOM (shadow:false, d
   story.screenshot({ path: screenshotPath, alt: "Vue CSS head fallback" });
 });
 
-test("Vue adapter applies styles via inline <style> in light DOM with styleMode='isolated'", async ({ page }, testInfo) => {
+test("Vue adapter applies styles via inline <style> in light DOM with styleMode='isolated'", async ({
+  page,
+}, testInfo) => {
   story.given("the vue-css-moduleurl-prop-light-dom fixture is loaded");
   await page.goto(`${HOST}/tests/fixtures/vue-css-moduleurl-prop-light-dom.html`);
   story.when("the component mounts");
@@ -170,11 +184,15 @@ test("Vue adapter mount succeeds even when the CSS URL 404s", async ({ page }, t
   story.screenshot({ path: screenshotPath, alt: "Vue CSS missing URL" });
 });
 
-test("Vue zero-config: createOnDemandFeature({ moduleUrl }) auto-wires CSS into shadow DOM", async ({ page }, testInfo) => {
+test("Vue zero-config: createOnDemandFeature({ moduleUrl }) auto-wires CSS into shadow DOM", async ({
+  page,
+}, testInfo) => {
   story.given("the vue-css-zero-config fixture is loaded");
   await page.goto(`${HOST}/tests/fixtures/vue-css-zero-config.html`);
   story.when("the feature is ready");
-  await page.waitForFunction(() => (window as any).__ready && (window as any).__ready(), null, { timeout: 8000 });
+  await page.waitForFunction(() => (window as any).__ready && (window as any).__ready(), null, {
+    timeout: 8000,
+  });
   story.and("the component mounts");
   const result = await page.evaluate(() => (window as any).__result);
   story.then("there is a shadow root");

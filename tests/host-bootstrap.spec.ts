@@ -3,10 +3,14 @@ import { test, expect } from "@playwright/test";
 test("one-script host bootstrap mounts islands and styles them", async ({ page }) => {
   await page.goto("http://localhost:5175/tests/fixtures/host-one-tag.html");
   await page.waitForLoadState("networkidle");
-  await page.waitForFunction(() => {
-    const node = document.querySelector("#island .host-widget");
-    return !!node;
-  }, null, { timeout: 8000 });
+  await page.waitForFunction(
+    () => {
+      const node = document.querySelector("#island .host-widget");
+      return !!node;
+    },
+    null,
+    { timeout: 8000 },
+  );
 
   const result = await page.evaluate(() => {
     const node = document.querySelector("#island .host-widget");

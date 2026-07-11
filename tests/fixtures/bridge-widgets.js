@@ -20,12 +20,16 @@ function HeroSurface({ headline, ctaLabel, ctaHref }) {
   return h(
     Card,
     { tone: "primary", title: "Hero" },
-    h(Stack, { gap: 8 },
+    h(
+      Stack,
+      { gap: 8 },
       h("p", { className: "ui-muted" }, headline),
       // shadcn `asChild` pattern from the library — the <a> renders with
       // the Button's classes & events. Proves the Radix Slot dependency
       // survives the bridge.
-      h(Button, { variant: "primary", asChild: true, "data-testid": "hero-cta" },
+      h(
+        Button,
+        { variant: "primary", asChild: true, "data-testid": "hero-cta" },
         h("a", { href: ctaHref }, ctaLabel),
       ),
     ),
@@ -36,7 +40,9 @@ function PricingSurface({ plan, price, blurb }) {
   return h(
     Card,
     { tone: "primary", title: "Pricing" },
-    h(Stack, { gap: 8 },
+    h(
+      Stack,
+      { gap: 8 },
       h("p", { className: "ui-muted" }, blurb),
       h("p", { className: "ui-amount" }, `$${price}/mo`),
       h(Button, { variant: "primary" }, `Subscribe to ${plan}`),
@@ -48,7 +54,9 @@ function EmailCaptureSurface({ buttonLabel = "Subscribe" }) {
   return h(
     Card,
     { tone: "neutral", title: "Newsletter" },
-    h(Stack, { gap: 8 },
+    h(
+      Stack,
+      { gap: 8 },
       h("input", {
         type: "email",
         placeholder: "you@example.com",

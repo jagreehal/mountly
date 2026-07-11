@@ -2,7 +2,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { story } from "executable-stories-vitest";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import { buildMcpResource } from "../packages/adapters/mountly-mcp/src/build/index";
 import { emitHtml } from "../packages/adapters/mountly-mcp/src/build/emit-html";
 import { emitMeta } from "../packages/adapters/mountly-mcp/src/build/emit-meta";
@@ -70,7 +70,7 @@ describe("emitHtml — self-contained", () => {
       uri: "ui://weather-server/dashboard",
       js: 'console.log("hi");',
       css: "h1 { color: red; }",
-      bridgeRuntimeJs: 'self.__mountlyMcpBoot = () => {};',
+      bridgeRuntimeJs: "self.__mountlyMcpBoot = () => {};",
     });
 
     story.then("the HTML carries protocol + uri meta tags and inlined assets");
@@ -96,7 +96,9 @@ describe("emitHtml — cdn", () => {
 
     story.then("html points to the external URLs");
     expect(html).toContain('<link rel="stylesheet" href="https://cdn.example.com/weather.css">');
-    expect(html).toContain('<script type="module" src="https://cdn.example.com/weather.js"></script>');
+    expect(html).toContain(
+      '<script type="module" src="https://cdn.example.com/weather.js"></script>',
+    );
     expect(html).toContain("self.__bootBridge();");
   });
 
@@ -109,7 +111,7 @@ describe("emitHtml — cdn", () => {
       cssUrl: 'https://x/y"<>&',
       bridgeRuntimeJs: "",
     });
-    expect(html).not.toContain('<script>alert(1)</script>');
+    expect(html).not.toContain("<script>alert(1)</script>");
     expect(html).toContain("&quot;");
   });
 
@@ -183,12 +185,8 @@ describe("buildMcpResource", () => {
       csp: { connectDomains: ["https://api.weather.com"] },
     });
 
-    expect(result.declaration._meta.ui.csp?.resourceDomains).toEqual([
-      "https://cdn.example.com",
-    ]);
-    expect(result.declaration._meta.ui.csp?.connectDomains).toEqual([
-      "https://api.weather.com",
-    ]);
+    expect(result.declaration._meta.ui.csp?.resourceDomains).toEqual(["https://cdn.example.com"]);
+    expect(result.declaration._meta.ui.csp?.connectDomains).toEqual(["https://api.weather.com"]);
     rmSync(dir, { recursive: true });
   });
 });

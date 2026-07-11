@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{name}} — mountly host</title>
+    <script type="module" src="./host.js"></script>
+  </head>
+  <body>
+    <h1>{{name}}</h1>
+
+    <!-- Each vertical from manifest.json mounts on intent. module-id = vertical id. -->
+    <mountly-feature module-id="example-widget" trigger="click">
+      <button type="button">Load widget</button>
+      <div data-mountly-mount></div>
+    </mountly-feature>
+  </body>
+</html>

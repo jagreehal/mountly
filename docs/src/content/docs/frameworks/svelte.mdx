@@ -22,7 +22,7 @@ import SignupCard from "./SignupCard.svelte";
 export default createWidget(SignupCard);
 ```
 
-The Vite library build emits `dist/index.js` plus `dist/index.css` (Svelte's component styles, hashed). The adapter fetches the CSS automatically when the host wires up `moduleUrl`; see "[On-demand lifecycle (zero-config)](#on-demand-lifecycle-zero-config)" below.
+The Vite library build emits `dist/index.js` plus `dist/index.css` (Svelte's component styles, hashed). The adapter fetches the CSS when the host wires up `moduleUrl`; see "[On-demand lifecycle (zero-config)](#on-demand-lifecycle-zero-config)" below.
 
 ## Svelte 5
 
@@ -36,7 +36,7 @@ import SignupCard from "./SignupCard.svelte";
 export default createWidget(SignupCard, { mount, unmount });
 ```
 
-If you omit them, the adapter dynamically imports `"svelte"` itself. That works, but adds one promise hop on first mount.
+If you omit them, the adapter imports `"svelte"` itself. That works, at the cost of one promise hop on first mount.
 
 ## Mounting
 
@@ -63,19 +63,19 @@ const signup = createOnDemandFeature({
 signup.attach({ trigger: btn, preloadOn: "hover", activateOn: "click" });
 ```
 
-mountly threads `moduleUrl` through to the adapter, which fetches `dist/index.css` (sibling) and applies it before render. No FOUC, no manual loader. Default light DOM lets the host's design system reach in; pass `shadow: true` for hard isolation.
+mountly threads `moduleUrl` through to the adapter, which fetches `dist/index.css` (sibling) and applies it before render. No FOUC, no manual loader. Default light DOM lets the host's design system reach in. Pass `shadow: true` for hard isolation.
 
 Need to override? `loadModule` / `render` still work and trump the auto-derived defaults.
 
 ## Live updates
 
-The Svelte adapter falls back to remount on `feature.update()`, which preserves the container but creates a new component instance — local state inside the component **resets**. If you need state to survive a prop change, lift it to a store or pass it back in via props.
+The Svelte adapter falls back to remount on `feature.update()`. That preserves the container but creates a new component instance, so local state inside the component **resets**. If you need state to survive a prop change, lift it to a store or pass it back in via props.
 
 ## Common pitfalls
 
 ### Two Svelte runtimes on the same page
 
-Same risk as React/Vue. Use the peer build pattern for multi-widget pages — externalise `svelte` and provide it once via the host's import map.
+Same risk as React/Vue. Use the peer build pattern for multi-widget pages: externalise `svelte` and provide it once via the host's import map.
 
 ### Style isolation
 
@@ -83,15 +83,14 @@ Svelte's component-scoped styles already isolate via Svelte's hash. With `shadow
 
 ## Reference
 
-- [`createWidget`](/mountly/api/create-widget/) — the adapter API.
-- [`createOnDemandFeature`](/mountly/api/create-on-demand-feature/) — the lifecycle wrapper.
-
+- [`createWidget`](/mountly/api/create-widget/): the adapter API.
+- [`createOnDemandFeature`](/mountly/api/create-on-demand-feature/): the lifecycle wrapper.
 
 ## Tailwind and non-Tailwind defaults
 
 ### No Tailwind
 
-The Vite + `@sveltejs/vite-plugin-svelte` library build emits a sibling `dist/index.css` for any component that has `<style>`. The adapter picks it up automatically when the host passes `moduleUrl`:
+The Vite + `@sveltejs/vite-plugin-svelte` library build emits a sibling `dist/index.css` for any component that has `<style>`. The adapter picks it up when the host passes `moduleUrl`:
 
 ```ts
 import { createWidget } from "mountly-svelte";

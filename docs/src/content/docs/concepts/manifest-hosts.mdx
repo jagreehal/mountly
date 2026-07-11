@@ -1,0 +1,276 @@
+---
+title: Manifest & host shells
+description: Run multi-team frontends with Vite, ESM, and import maps. A manifest describes verticals; bootstrapMountly boots plain HTML hosts; mountlyHostPlugin wires Vite apps.
+---
+
+import { exampleUrl } from "../../../lib/example-urls.ts";
+
+mountly runs multi-team frontends on **Vite, ESM, and import maps**. A JSON **manifest** lists platform dependencies and each team's vertical. The `mountly-manifest` package validates that manifest, boots plain HTML hosts, and ships helpers for SSR, per-tenant registries, and runtime vertical registration.
+
+This page covers the host-side toolkit. For composition patterns and custom elements, see [Microfrontends](/mountly/concepts/microfrontends/).
+
+## The five-step model
+
+1. **Vite builds ESM.** Each vertical repo adds `mountlyRemote` from `mountly-vite-plugin` and runs `vite build`, emitting its exposed entries plus a manifest fragment. (`defineMountlyWidgetConfig` instead builds a self-contained `dist/index.js` for standalone distribution.)
+2. **CDN hosts ESM.** Teams publish immutable versioned artifacts (`billing@2.1.0/dist/peer.js`).
+3. **Import map pins versions.** The host shell maps bare specifiers to CDN URLs.
+4. **Runtime loads and mounts widgets.** `bootstrapMountly()` injects the import map and defines `<mountly-feature>` elements, or a Vite host imports remotes directly.
+5. **Manifest describes verticals.** A `mountly-manifest` JSON lists platform deps and one entry per team.
+
+## Manifest schema (v2)
+
+```json
+{
+  "$schema": "https://mountly.dev/schema/manifest.schema.json",
+  "version": "2",
+  "platform": {
+    "imports": {
+      "react": "https://esm.sh/react@19.2.7",
+      "react/jsx-runtime": "https://esm.sh/react@19.2.7/jsx-runtime",
+      "react-dom": "https://esm.sh/react-dom@19.2.7",
+      "react-dom/client": "https://esm.sh/react-dom@19.2.7/client",
+      "mountly": "https://cdn.example.com/mountly@0.2.3/dist/index.js",
+      "mountly-manifest": "https://esm.sh/mountly-manifest"
+    }
+  },
+  "verticals": [
+    {
+      "id": "payment-breakdown",
+      "team": "payments",
+      "version": "1.2.0",
+      "url": "https://cdn.example.com/payment-breakdown@1.2.0/dist/peer.js",
+      "featureExport": "paymentBreakdown",
+      "exports": {
+        "./PaymentBreakdown": "./PaymentBreakdown.js"
+      },
+      "types": {
+        "module": ["paymentBreakdown"],
+        "exports": {
+          "./PaymentBreakdown": ["PaymentBreakdown"]
+        }
+      }
+    },
+    {
+      "id": "chat-widget",
+      "team": "cx",
+      "url": "https://cdn.example.com/chat@3.0.0/dist/peer.js",
+      "moduleExport": "default"
+    }
+  ]
+}
+```
+
+### Vertical entry fields
+
+| Field           | Purpose                                                                             |
+| --------------- | ----------------------------------------------------------------------------------- |
+| `id`            | `module-id` for `<mountly-feature>` and the registry                                |
+| `url`           | CDN URL to `peer.js` (also registered as an import-map entry under `id` or `alias`) |
+| `team`          | Documentation / governance only                                                     |
+| `version`       | Documentation / pinning policy                                                      |
+| `exports`       | Subpath map: `"./Checkout": "./Checkout.js"` resolves as `billing/Checkout`         |
+| `baseUrl`       | Prefix for relative export paths (defaults to the directory of `url`)               |
+| `types`         | Export names for TypeScript codegen (`module`, `exports`)                           |
+| `featureExport` | Named export that is already an `OnDemandFeature`                                   |
+| `moduleExport`  | Named export that satisfies `FeatureModule` (`mount` / `unmount`)                   |
+| `alias`         | Optional bare specifier for the import map (e.g. `@acme/chat`)                      |
+
+Manifest v1 is no longer accepted. Bump `"version"` to `"2"`. Add `exports` and `types` when the host imports subpaths or needs generated ambient declarations.
+
+## Authoring a remote (Vite)
+
+A vertical adds `mountlyRemote` to its `vite.config` and runs `vite build`, with no build script and no `shared` block to keep in sync with the host. The framework peers are externalized; the host shares them through its import map.
+
+```ts
+// checkout/vite.config.ts
+import react from "@vitejs/plugin-react";
+import { defineConfig } from "vite";
+import { mountlyRemote } from "mountly-vite-plugin";
+
+export default defineConfig({
+  plugins: [
+    react(),
+    mountlyRemote({
+      name: "checkout",
+      exposes: { ".": "src/index.ts", "./Cart": "src/Cart.tsx" },
+    }),
+  ],
+});
+```
+
+`vite build` emits each exposed entry, `mountly.manifest.fragment.json`, and `.d.ts` files, so the host's `import("checkout/Cart")` is typed. For a self-contained widget that bundles its own framework (drop into any page), use `defineMountlyWidgetConfig` instead; see [Distribution](/mountly/concepts/distribution/).
+
+## Vite host: import remotes
+
+For **Vite/React/Vue host apps**, add `mountlyHostPlugin` so host code imports remotes as bare specifiers:
+
+```tsx
+const { PaymentBreakdown } = await import("payment-breakdown/PaymentBreakdown");
+const mod = await import("payment-breakdown");
+```
+
+```ts
+// vite.config.ts
+import { mountlyHostPlugin } from "mountly-vite-plugin";
+
+export default defineConfig({
+  plugins: [
+    mountlyHostPlugin({
+      verticals: [{ fragment: "./checkout/dist/mountly.manifest.fragment.json" }],
+      devOrigins: { checkout: "http://localhost:5001" }, // optional dev origin overrides
+      writeManifest: "./manifest.json", // optional — for plain HTML / CI
+    }),
+  ],
+});
+```
+
+Point the plugin at built remote fragments, with no handwritten host manifest for the common React case. Each vertical's `mountlyRemote` build emits `mountly.manifest.fragment.json` alongside its entries and declaration files. The host plugin composes platform imports (React from esm.sh by default), absolutizes vertical URLs, externalizes remotes, injects an import map in dev and production, and writes typed ambient modules to `src/mountly-remotes.d.ts`.
+
+Pass `devOrigins` when vertical dev servers run on different origins; otherwise use relative manifest URLs and proxy them through the host dev server.
+
+### Declare remotes by URL
+
+When a remote is already published (a CDN, another deploy), point at its URL instead of a local fragment. The host fetches the remote's `mountly.manifest.fragment.json` from that URL and auto-wires the import map **and** types:
+
+```ts
+mountlyHostPlugin({
+  remotes: { checkout: "https://cdn.example.com/checkout/" },
+});
+```
+
+This is the federation-style host config, but the host gets typed, discoverable exposes. `vite-plugin-federation` gives neither from a URL remote, and needs a hand-synced `shared` block on both sides. Use `verticals: [{ fragment }]` for remotes built in the same repo. Runnable reference: [vite-host-remotes-url live demo]({exampleUrl("vite-host-remotes-url/")}) · [source](https://github.com/jagreehal/mountly/tree/main/docs/examples/vite-host-remotes-url).
+
+For custom pipelines or plain HTML hosts, compose a static manifest:
+
+```sh
+npx mountly manifest compose ./checkout/dist/mountly.manifest.fragment.json --out manifest.json
+npx mountly manifest codegen ./manifest.json --out mountly-remotes.d.ts
+```
+
+Runnable reference: [vite-host-import live demo]({exampleUrl("vite-host-import/")}) · [source](https://github.com/jagreehal/mountly/tree/main/docs/examples/vite-host-import).
+
+Plain HTML and CMS hosts should use `bootstrapMountly()` below. They do not need the Vite plugin.
+
+## Boot the host with `bootstrapMountly`
+
+`bootstrapMountly()` fetches the manifest, injects the import map, and defines features in the order that avoids the bare-specifier race. Load it from `mountly/runtime` by **absolute URL**. It has no bare-specifier dependencies, so it resolves before any import map exists. Everything after it can use bare specifiers.
+
+```html
+<script type="module">
+  import { bootstrapMountly } from "/path/to/mountly/dist/runtime.js";
+
+  await bootstrapMountly("/manifest.json");
+</script>
+
+<mountly-feature module-id="payment-breakdown" trigger="click">
+  <button type="button">Show billing</button>
+  <div data-mountly-mount></div>
+</mountly-feature>
+```
+
+It accepts either a **manifest URL** (fetched for you) or an **already-loaded manifest object**:
+
+```js
+await bootstrapMountly(myManifestObject);
+await bootstrapMountly("/manifest.json", { define: false }); // map only, define yourself
+```
+
+`manifest.platform.imports` must map `mountly-manifest` when you use the default define step. Pass `{ define: false }` to inject only the import map.
+
+At boot, `bootstrapMountly` logs [validation](#validate-a-manifest) warnings to the console. Pass `{ validate: false }` to silence them in production.
+
+## Runtime verticals (load remotes after boot)
+
+You do not always know the vertical list at boot. A host may fetch a per-user plugin list after the page loads. `setVertical()` registers one vertical at runtime: it appends the vertical's URL to the import map and registers its `<mountly-feature>` element. `loadVertical()` and `unwrapDefault()` import a module directly.
+
+```ts
+import { setVertical, loadVertical, unwrapDefault } from "mountly-manifest";
+
+const plugins = await fetch("/api/plugins").then((r) => r.json());
+
+for (const plugin of plugins) {
+  setVertical({ id: plugin.id, url: plugin.entry, featureExport: plugin.featureExport });
+}
+
+const feature = unwrapDefault(await loadVertical("payment-breakdown"));
+```
+
+Runtime map additions add **new** keys only. Browsers merge multiple import maps, but a later map cannot override a key an earlier one defined. A runtime vertical id has never been imported, so this stays safe.
+
+## CLI
+
+### Scaffold a host shell
+
+```sh
+npx mountly init my-host --host
+# --dir <path>   output directory (default: ./my-host)
+# --cdn <url>    ESM CDN base for the import map (default: https://esm.sh)
+```
+
+Emits `index.html`, `host.js` (one `bootstrapMountly` call), `manifest.json` (with a `$schema` reference), and a `package.json` wired with `dev` + `validate` scripts. Scaffold a vertical with `npx mountly init my-widget`.
+
+### Validate a manifest
+
+```sh
+npx mountly manifest validate ./manifest.json
+npx mountly manifest compose ./remote/dist/mountly.manifest.fragment.json --out manifest.json
+npx mountly manifest codegen ./manifest.json --out mountly-remotes.d.ts
+```
+
+Parses against the schema, then checks consistency: duplicate React pins, missing required React entries, duplicate vertical ids/aliases, and ambiguous export config. Wire it into CI before deploying a manifest. The same checks run inside `bootstrapMountly` at boot.
+
+## SSR hosts (island story)
+
+When the host is server-rendered (Next, Astro, Remix), emit the import map **statically** in the HTML `<head>` instead of injecting it at runtime. You avoid the bare-specifier ordering problem and the client round-trip to fetch the manifest. `renderMountlyHead` produces the static import map plus a tiny module that defines the `<mountly-feature>` elements from the inlined manifest. Widgets still mount on intent, client-side, because mountly widgets are [on-demand islands](/mountly/concepts/islands/).
+
+```ts
+import { renderMountlyHead } from "mountly-manifest/server";
+
+const head = renderMountlyHead(manifest);
+```
+
+`renderMountlyHead(manifest, { nonce })` sets a CSP nonce on the emitted scripts. The inlined manifest JSON is escaped so it cannot break out of the script tag. `mountly-manifest/server` has **no browser dependencies**, so you can import it in any server runtime.
+
+## Manifest registry
+
+You can assemble the vertical list per-request: a shared base plus the verticals a given tenant or user is entitled to. `mergeManifests` composes manifests (platform imports merge, verticals dedupe by `id`, later wins). `createManifestResponse` returns a validated Web `Response` (`200` JSON, or `422` with `{ issues }` on error). It works in any Web-standard handler.
+
+```ts
+import { mergeManifests, createManifestResponse, parseManifest } from "mountly-manifest/server";
+
+const base = parseManifest(baseManifestJson);
+
+export function GET(request: Request) {
+  const tenant = tenantVerticalsFor(request);
+  const manifest = mergeManifests(base, { verticals: tenant });
+  return createManifestResponse(manifest);
+}
+```
+
+The host then calls `bootstrapMountly("/api/manifest")` (client) or `renderMountlyHead(manifest)` (SSR) against this endpoint.
+
+## Self-contained vs peer build
+
+| Use case                      | Build           | Host wiring                                    |
+| ----------------------------- | --------------- | ---------------------------------------------- |
+| One widget, host has no React | `dist/index.js` | Map widget URL only                            |
+| Multiple widgets on one page  | `dist/peer.js`  | Import map for React + mountly + each vertical |
+| Host is already React         | `dist/peer.js`  | Avoid duplicate React                          |
+
+See [Distribution](/mountly/concepts/distribution/) for choosing a build.
+
+## Version pinning
+
+Pin **immutable CDN URLs** per release (`@version` in path or content-addressed storage). Updating a vertical does not require redeploying the platform packages, only the host manifest entry for that vertical. The host import map is the single source of truth for shared dep versions. Run `mountly manifest validate` to catch skew that would load duplicate React.
+
+## What this does not provide
+
+- Central routing or deploy orchestration across verticals
+- SSR **edge composition** of vertical markup (mountly mounts on-demand client islands; the SSR story above is islands, not edge composition)
+
+## Related
+
+- [Microfrontends](/mountly/concepts/microfrontends/): composition patterns and custom elements
+- [installRuntime](/mountly/api/install-runtime/): the lower-level import-map helper `bootstrapMountly` builds on
+- [Vertical codebase](/mountly/concepts/vertical-codebase/): how a team structures a vertical repo
+- [Cross-framework event bus](/mountly/getting-started/cross-framework-event-bus/): typed platform events between verticals

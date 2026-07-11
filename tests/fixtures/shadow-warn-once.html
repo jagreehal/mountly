@@ -1,11 +1,12 @@
 <!doctype html>
-<html><body>
-  <img class="x"/><img class="x"/><img class="x"/>
-  <input class="y"/><input class="y"/>
-  <script type="module">
-    import { attachShadow } from "/packages/mountly/dist/shadow.js";
-    document.querySelectorAll(".x, .y").forEach((el) => {
-      attachShadow(el, { shadow: true, styles: ".z{}", shadowMode: "open" });
-    });
-  </script>
-</body></html>
+<html>
+  <body>
+    <img class="x" /><img class="x" /><img class="x" /> <input class="y" /><input class="y" />
+    <script type="module">
+      import { attachShadow } from "/packages/mountly/dist/shadow.js";
+      document.querySelectorAll(".x, .y").forEach((el) => {
+        attachShadow(el, { shadow: true, styles: ".z{}", shadowMode: "open" });
+      });
+    </script>
+  </body>
+</html>

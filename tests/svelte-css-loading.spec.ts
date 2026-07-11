@@ -13,7 +13,9 @@ async function readResult(page: import("@playwright/test").Page) {
   return page.evaluate(() => (window as any).__result);
 }
 
-test("Svelte adapter applies styles passed as a literal `styles` option (shadow DOM)", async ({ page }, testInfo) => {
+test("Svelte adapter applies styles passed as a literal `styles` option (shadow DOM)", async ({
+  page,
+}, testInfo) => {
   story.given("the svelte-css-styles-option fixture is loaded");
   await page.goto(`${HOST}/tests/fixtures/svelte-css-styles-option.html`);
   story.when("the component mounts");
@@ -29,7 +31,9 @@ test("Svelte adapter applies styles passed as a literal `styles` option (shadow 
   story.screenshot({ path: screenshotPath, alt: "Svelte CSS styles option" });
 });
 
-test("Svelte adapter fetches CSS via `cssUrl` option and adopts it into the shadow root", async ({ page }, testInfo) => {
+test("Svelte adapter fetches CSS via `cssUrl` option and adopts it into the shadow root", async ({
+  page,
+}, testInfo) => {
   story.given("the svelte-css-cssurl-option fixture is loaded");
   await page.goto(`${HOST}/tests/fixtures/svelte-css-cssurl-option.html`);
   story.when("the component mounts");
@@ -47,7 +51,9 @@ test("Svelte adapter fetches CSS via `cssUrl` option and adopts it into the shad
   story.screenshot({ path: screenshotPath, alt: "Svelte CSS url option" });
 });
 
-test("Svelte adapter derives CSS URL from `moduleUrl` option (.js → .css)", async ({ page }, testInfo) => {
+test("Svelte adapter derives CSS URL from `moduleUrl` option (.js → .css)", async ({
+  page,
+}, testInfo) => {
   story.given("the svelte-css-moduleurl-option fixture is loaded");
   await page.goto(`${HOST}/tests/fixtures/svelte-css-moduleurl-option.html`);
   story.when("the component mounts");
@@ -75,7 +81,9 @@ test("Svelte adapter accepts `cssUrl` passed via mount() props", async ({ page }
   story.screenshot({ path: screenshotPath, alt: "Svelte CSS url prop" });
 });
 
-test("Svelte adapter derives CSS from `moduleUrl` passed via mount() props (regression)", async ({ page }, testInfo) => {
+test("Svelte adapter derives CSS from `moduleUrl` passed via mount() props (regression)", async ({
+  page,
+}, testInfo) => {
   story.given("the svelte-css-moduleurl-prop fixture is loaded");
   await page.goto(`${HOST}/tests/fixtures/svelte-css-moduleurl-prop.html`);
   story.when("the component mounts");
@@ -89,7 +97,9 @@ test("Svelte adapter derives CSS from `moduleUrl` passed via mount() props (regr
   story.screenshot({ path: screenshotPath, alt: "Svelte CSS moduleUrl prop" });
 });
 
-test("Svelte adapter sends `Accept: text/css` so dev servers return raw CSS, not JS-wrapped modules", async ({ page }, testInfo) => {
+test("Svelte adapter sends `Accept: text/css` so dev servers return raw CSS, not JS-wrapped modules", async ({
+  page,
+}, testInfo) => {
   story.given("a mock Vite-like server is set up");
   await page.route("**/__vite_mock__/widget.css", async (route, request) => {
     const accept = request.headers()["accept"] ?? "";
@@ -120,7 +130,9 @@ test("Svelte adapter sends `Accept: text/css` so dev servers return raw CSS, not
   story.screenshot({ path: screenshotPath, alt: "Svelte CSS Vite-like server" });
 });
 
-test("Svelte adapter applies styles via head fallback in light DOM (shadow:false, default styleMode)", async ({ page }) => {
+test("Svelte adapter applies styles via head fallback in light DOM (shadow:false, default styleMode)", async ({
+  page,
+}) => {
   await page.goto(`${HOST}/tests/fixtures/svelte-css-cssurl-light-dom.html`);
   const result = await readResult(page);
   expect(result.hasShadowRoot).toBe(false);
@@ -129,7 +141,9 @@ test("Svelte adapter applies styles via head fallback in light DOM (shadow:false
   expect(result.headFallbackHasCss).toBe(true);
 });
 
-test("Svelte adapter applies styles via inline <style> in light DOM with styleMode='isolated'", async ({ page }) => {
+test("Svelte adapter applies styles via inline <style> in light DOM with styleMode='isolated'", async ({
+  page,
+}) => {
   await page.goto(`${HOST}/tests/fixtures/svelte-css-moduleurl-prop-light-dom.html`);
   const result = await readResult(page);
   expect(result.hasShadowRoot).toBe(false);
@@ -146,12 +160,16 @@ test("Svelte adapter mount succeeds even when the CSS URL 404s", async ({ page }
   expect(result.text).toBe("missing");
 });
 
-test("Svelte zero-config: createOnDemandFeature({ moduleUrl }) auto-wires CSS into shadow DOM", async ({ page }) => {
+test("Svelte zero-config: createOnDemandFeature({ moduleUrl }) auto-wires CSS into shadow DOM", async ({
+  page,
+}) => {
   // Astro-grade DX check: only `moduleId` + `moduleUrl` from the host.
   // No render function, no manual props plumbing — the adapter still
   // adopts the sibling .css into the shadow root.
   await page.goto(`${HOST}/tests/fixtures/svelte-css-zero-config.html`);
-  await page.waitForFunction(() => (window as any).__ready && (window as any).__ready(), null, { timeout: 8000 });
+  await page.waitForFunction(() => (window as any).__ready && (window as any).__ready(), null, {
+    timeout: 8000,
+  });
   const result = await page.evaluate(() => (window as any).__result);
   expect(result.hasShadowRoot).toBe(true);
   expect(result.adoptedRuleCount).toBeGreaterThan(0);

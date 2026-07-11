@@ -1,13 +1,13 @@
 import { createSpecStreamCompiler } from "@json-render/core";
 import type { Spec } from "@json-render/core";
 import { story } from "executable-stories-vitest";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vite-plus/test";
 import {
   compileTextStreamToSpecs,
   parseSpecStreamLine,
   specToPatchLines,
-} from "../packages/adapters/mountly-json-render/src/spec-stream";
-import { defaultActionRouter } from "../packages/adapters/mountly-json-render/src/widget";
+} from "../packages/adapters/mountly-mcp/src/json-render/spec-stream";
+import { defaultActionRouter } from "../packages/adapters/mountly-mcp/src/json-render/widget";
 
 // A tiny dashboard spec in the shape json-render's Renderer consumes:
 // { root, state, elements: { key: { type, props, children? } } }.
@@ -23,9 +23,7 @@ const SPEC = {
 } as unknown as Spec;
 
 describe("mountly-json-render spec stream", () => {
-  it("emits patch lines parent-before-child with scaffold/state/root first", ({
-    task,
-  }) => {
+  it("emits patch lines parent-before-child with scaffold/state/root first", ({ task }) => {
     story.init(task);
 
     story.given("a finished dashboard spec");
@@ -36,16 +34,10 @@ describe("mountly-json-render spec stream", () => {
     const patches = lines.map((l) => parseSpecStreamLine(l) as { path: string });
 
     story.then("the first three patches scaffold elements, state, then root");
-    expect(patches.slice(0, 3).map((p) => p.path)).toEqual([
-      "/elements",
-      "/state",
-      "/root",
-    ]);
+    expect(patches.slice(0, 3).map((p) => p.path)).toEqual(["/elements", "/state", "/root"]);
 
     story.then("every element is added after its parent (breadth-first)");
-    const order = patches
-      .map((p) => p.path)
-      .filter((p) => p.startsWith("/elements/"));
+    const order = patches.map((p) => p.path).filter((p) => p.startsWith("/elements/"));
     expect(order).toEqual([
       "/elements/root",
       "/elements/heading",
@@ -72,9 +64,7 @@ describe("mountly-json-render spec stream", () => {
     expect(rebuilt).toEqual(SPEC);
   });
 
-  it("escapes JSON-pointer special chars (~ and /) in element keys", ({
-    task,
-  }) => {
+  it("escapes JSON-pointer special chars (~ and /) in element keys", ({ task }) => {
     story.init(task);
 
     story.given("a spec whose element keys contain '/' and '~'");
@@ -161,10 +151,8 @@ describe("mountly-json-render action bridge", () => {
     story.init(task);
 
     story.given("a mock MCP host");
-    const sendMessage = vi.fn();
-    const mcp = { sendMessage } as unknown as Parameters<
-      typeof defaultActionRouter
-    >[2];
+    const sendMessage = vi.fn<Parameters<typeof defaultActionRouter>[2]["sendMessage"]>();
+    const mcp = { sendMessage } as unknown as Parameters<typeof defaultActionRouter>[2];
 
     story.when("a generated button fires `ask` with a prompt");
     defaultActionRouter("ask", { prompt: "Break down Q3 by region" }, mcp);
@@ -180,10 +168,8 @@ describe("mountly-json-render action bridge", () => {
     story.init(task);
 
     story.given("a mock MCP host");
-    const sendMessage = vi.fn();
-    const mcp = { sendMessage } as unknown as Parameters<
-      typeof defaultActionRouter
-    >[2];
+    const sendMessage = vi.fn<Parameters<typeof defaultActionRouter>[2]["sendMessage"]>();
+    const mcp = { sendMessage } as unknown as Parameters<typeof defaultActionRouter>[2];
 
     story.when("a non-`ask` action, an empty prompt, and no params arrive");
     defaultActionRouter("navigate", { prompt: "x" }, mcp);

@@ -4,10 +4,7 @@ export interface MountOptions {
   afterMount?(container: HTMLElement): void;
 }
 
-export function createMountContainer(
-  anchor: HTMLElement,
-  options?: MountOptions
-): HTMLElement {
+export function createMountContainer(anchor: HTMLElement, options?: MountOptions): HTMLElement {
   const container = document.createElement("div");
   container.setAttribute("data-mountly", "true");
 
@@ -35,13 +32,8 @@ export function safeUnmount(container: HTMLElement): void {
   container.remove();
 }
 
-export function getOrCreateContainer(
-  anchor: HTMLElement,
-  id: string
-): HTMLElement {
-  const existing = anchor.querySelector(
-    `[data-mountly-id="${id}"]`
-  ) as HTMLElement | null;
+export function getOrCreateContainer(anchor: HTMLElement, id: string): HTMLElement {
+  const existing = anchor.querySelector(`[data-mountly-id="${id}"]`) as HTMLElement | null;
 
   if (existing) return existing;
 

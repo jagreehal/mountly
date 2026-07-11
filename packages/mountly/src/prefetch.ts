@@ -36,9 +36,7 @@ export function resetInteractionHistory(): void {
   lastInteractionTime = 0;
 }
 
-export function createPredictivePrefetcher(
-  options: PrefetchHeuristicOptions
-) {
+export function createPredictivePrefetcher(options: PrefetchHeuristicOptions) {
   const {
     features,
     strategy = "staggered",
@@ -97,9 +95,7 @@ export function createPredictivePrefetcher(
 
     for (const batch of batches) {
       if (aborted) return;
-      await Promise.all(
-        batch.map((sf) => sf.feature.preload().catch(() => {}))
-      );
+      await Promise.all(batch.map((sf) => sf.feature.preload().catch(() => {})));
       await new Promise((r) => setTimeout(r, staggerDelay));
     }
   };
@@ -115,7 +111,7 @@ export function createPredictivePrefetcher(
 
       if (index + 1 < sorted.length) {
         rafId = requestAnimationFrame(() => {
-          prefetchNext(index + 1);
+          void prefetchNext(index + 1);
         });
       }
     };
@@ -131,17 +127,17 @@ export function createPredictivePrefetcher(
     const idleCallback = () => {
       switch (strategy) {
         case "sequential":
-          prefetchSequential().finally(() => {
+          void prefetchSequential().finally(() => {
             active = false;
           });
           break;
         case "parallel":
-          prefetchParallel().finally(() => {
+          void prefetchParallel().finally(() => {
             active = false;
           });
           break;
         case "staggered":
-          prefetchStaggered().finally(() => {
+          void prefetchStaggered().finally(() => {
             active = false;
           });
           break;
@@ -180,15 +176,8 @@ export interface ScrollBasedPrefetchOptions {
   preloadDistance?: number;
 }
 
-export function createScrollPrefetcher(
-  options: ScrollBasedPrefetchOptions
-): () => void {
-  const {
-    feature,
-    element,
-    threshold = 0.1,
-    preloadDistance = 200,
-  } = options;
+export function createScrollPrefetcher(options: ScrollBasedPrefetchOptions): () => void {
+  const { feature, element, threshold = 0.1, preloadDistance = 200 } = options;
 
   let preloaded = false;
 
@@ -205,7 +194,7 @@ export function createScrollPrefetcher(
     {
       rootMargin: `${preloadDistance}px`,
       threshold,
-    }
+    },
   );
 
   observer.observe(element);
@@ -222,15 +211,8 @@ export interface MouseTrailPrefetchOptions {
   delay?: number;
 }
 
-export function createMouseTrailPrefetcher(
-  options: MouseTrailPrefetchOptions
-): () => void {
-  const {
-    feature,
-    element,
-    proximityThreshold = 50,
-    delay = 150,
-  } = options;
+export function createMouseTrailPrefetcher(options: MouseTrailPrefetchOptions): () => void {
+  const { feature, element, proximityThreshold = 50, delay = 150 } = options;
 
   let preloaded = false;
   let timer: ReturnType<typeof setTimeout> | null = null;
@@ -240,7 +222,7 @@ export function createMouseTrailPrefetcher(
 
     const rect = element.getBoundingClientRect();
     const distance = Math.sqrt(
-      Math.pow(e.clientX - rect.left, 2) + Math.pow(e.clientY - rect.top, 2)
+      Math.pow(e.clientX - rect.left, 2) + Math.pow(e.clientY - rect.top, 2),
     );
 
     if (distance < proximityThreshold) {

@@ -3,7 +3,7 @@ title: Cross-framework Event Bus
 description: React, Vue, and Svelte widgets communicating on the same host page.
 ---
 
-This pattern shows three independent widgets sharing state without importing each other.
+Three independent widgets share state without importing each other.
 
 - React 19 widget (`mountly-react`)
 - Vue widget (`mountly-vue`)
@@ -19,7 +19,7 @@ They communicate through a host-level event bus and publish counter updates.
 
 ## Example location
 
-- `examples/cross-framework-bus`
+- `docs/examples/cross-framework-bus`
 
 For new code, use mountly's typed helper:
 
@@ -39,7 +39,7 @@ const off = bus.on("changed", (event) => {
 });
 ```
 
-The example app keeps the raw `EventTarget` version visible so the pattern is easy to inspect. The `mountly/bus` helper adds namespacing, typed payloads, unsubscribe helpers, and optional runtime validation. See [Event bus](/mountly/api/event-bus/).
+The example app keeps the raw `EventTarget` version visible so you can inspect the pattern. The `mountly/bus` helper adds namespacing, typed payloads, unsubscribe helpers, and optional runtime validation. See [Event bus](/mountly/api/event-bus/).
 
 ## Run
 
@@ -53,4 +53,4 @@ Then open the local Vite URL and click each framework button:
 - `+ Vue`
 - `+ Svelte`
 
-Each widget view updates peer values from the other two frameworks.
+Each widget view shows peer values from the other two frameworks.

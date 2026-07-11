@@ -18,8 +18,21 @@
   letter-spacing: 0.06em;
   color: white;
 }
-.badge-primary { background: rgb(60, 80, 220); }
-.badge-info    { background: rgb(40, 140, 200); }
-.badge-success { background: rgb(40, 160, 100); }
-.num { font-variant-numeric: tabular-nums; font-size: 18px; color: rgb(20, 20, 30); }
-.msg { margin: 0; color: rgb(60, 60, 80); }
+.badge-primary {
+  background: rgb(60, 80, 220);
+}
+.badge-info {
+  background: rgb(40, 140, 200);
+}
+.badge-success {
+  background: rgb(40, 160, 100);
+}
+.num {
+  font-variant-numeric: tabular-nums;
+  font-size: 18px;
+  color: rgb(20, 20, 30);
+}
+.msg {
+  margin: 0;
+  color: rgb(60, 60, 80);
+}

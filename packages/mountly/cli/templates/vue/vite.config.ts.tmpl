@@ -1,0 +1,7 @@
+import { defineConfig, mergeConfig } from "vite";
+import vue from "@vitejs/plugin-vue";
+import { defineMountlyWidgetConfig } from "mountly-vite-plugin";
+
+export default defineMountlyWidgetConfig({ framework: "vue" }).map((config) =>
+  mergeConfig(config, { plugins: [vue()] }),
+);

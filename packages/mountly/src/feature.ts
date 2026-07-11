@@ -1,7 +1,7 @@
-import { moduleCache, dataCache } from './cache.js';
-import { createModuleLoader, type CssAutoLoadOptions } from './assets.js';
-import type { TriggerType } from './triggers.js';
-import { createFeatureTimingTracker } from './analytics.js';
+import { moduleCache, dataCache } from "./cache.js";
+import { createModuleLoader, type CssAutoLoadOptions } from "./assets.js";
+import type { TriggerType } from "./triggers.js";
+import { createFeatureTimingTracker } from "./analytics.js";
 
 export interface FeatureContext {
   element: HTMLElement;
@@ -36,13 +36,13 @@ export interface CreateOnDemandFeatureOptions {
 }
 
 export type FeatureState =
-  | 'idle'
-  | 'preloading'
-  | 'preloaded'
-  | 'activating'
-  | 'activated'
-  | 'mounted'
-  | 'aborted';
+  | "idle"
+  | "preloading"
+  | "preloaded"
+  | "activating"
+  | "activated"
+  | "mounted"
+  | "aborted";
 
 export interface OnDemandFeature {
   readonly id: string;
@@ -51,17 +51,17 @@ export interface OnDemandFeature {
   mount: (
     container: HTMLElement,
     context?: Partial<FeatureContext>,
-    props?: Record<string, unknown>
+    props?: Record<string, unknown>,
   ) => Promise<{ unmount: () => void }>;
   update: (
     container: HTMLElement,
     props: Record<string, unknown>,
-    context?: Partial<FeatureContext>
+    context?: Partial<FeatureContext>,
   ) => Promise<void>;
   refresh: (
     container: HTMLElement,
     context?: Partial<FeatureContext>,
-    props?: Record<string, unknown>
+    props?: Record<string, unknown>,
   ) => Promise<void>;
   abort: () => void;
   getState: () => FeatureState;
@@ -72,51 +72,40 @@ export interface OnDemandFeature {
 function resolveFeatureModule(
   moduleId: string,
   value: unknown,
-  moduleExport?: string
+  moduleExport?: string,
 ): FeatureModule {
   const exports = value as Record<string, unknown> | null;
   const candidate =
-    moduleExport &&
-    exports &&
-    typeof exports === 'object' &&
-    moduleExport in exports
+    moduleExport && exports && typeof exports === "object" && moduleExport in exports
       ? exports[moduleExport]
-      : (value as { default?: unknown })?.default ?? value;
+      : ((value as { default?: unknown })?.default ?? value);
   if (
     candidate &&
-    typeof candidate === 'object' &&
-    typeof (candidate as { mount?: unknown }).mount === 'function'
+    typeof candidate === "object" &&
+    typeof (candidate as { mount?: unknown }).mount === "function"
   ) {
     return candidate as FeatureModule;
   }
   const keys =
-    value && typeof value === 'object'
-      ? Object.keys(value as Record<string, unknown>)
-      : [];
+    value && typeof value === "object" ? Object.keys(value as Record<string, unknown>) : [];
   throw new Error(
     `[mountly:MNTX001] invalid widget module for "${moduleId}". ` +
       `Expected \`mount(container, props)\` on module${
-        moduleExport ? `, module.${moduleExport},` : ''
+        moduleExport ? `, module.${moduleExport},` : ""
       } or module.default. ` +
-      `Received type=${typeof value}, keys=[${keys.join(', ')}].`
+      `Received type=${typeof value}, keys=[${keys.join(", ")}].`,
   );
 }
 
 function stableStringify(value: unknown): string {
   if (value === null || value === undefined) return JSON.stringify(value);
-  if (typeof value !== 'object') return JSON.stringify(value);
+  if (typeof value !== "object") return JSON.stringify(value);
   if (Array.isArray(value)) {
-    return '[' + value.map(stableStringify).join(',') + ']';
+    return "[" + value.map(stableStringify).join(",") + "]";
   }
   const obj = value as Record<string, unknown>;
   const keys = Object.keys(obj).sort();
-  return (
-    '{' +
-    keys
-      .map((k) => JSON.stringify(k) + ':' + stableStringify(obj[k]))
-      .join(',') +
-    '}'
-  );
+  return "{" + keys.map((k) => JSON.stringify(k) + ":" + stableStringify(obj[k])).join(",") + "}";
 }
 
 function defaultCacheKey(moduleId: string, context: FeatureContext): string {
@@ -126,18 +115,17 @@ function defaultCacheKey(moduleId: string, context: FeatureContext): string {
   return `${moduleId}:${stableStringify(rest)}`;
 }
 
-const isAbortError = (e: unknown): boolean =>
-  e instanceof DOMException && e.name === 'AbortError';
+const isAbortError = (e: unknown): boolean => e instanceof DOMException && e.name === "AbortError";
 
 const isModuleResolutionError = (e: unknown): boolean => {
   if (!(e instanceof Error)) return false;
   const msg = e.message;
   return (
-    msg.includes('Failed to fetch dynamically imported module') ||
-    msg.includes('Failed to resolve module specifier') ||
-    msg.includes('bare specifier') ||
-    msg.includes('Cannot find module') ||
-    msg.includes('does not provide an export')
+    msg.includes("Failed to fetch dynamically imported module") ||
+    msg.includes("Failed to resolve module specifier") ||
+    msg.includes("bare specifier") ||
+    msg.includes("Cannot find module") ||
+    msg.includes("does not provide an export")
   );
 };
 
@@ -148,24 +136,21 @@ function wrapModuleLoadError(moduleId: string, err: unknown): Error {
     `[mountly] loadModule for "${moduleId}" failed to resolve. ` +
       `If you're in plain HTML, check that your <script type="importmap"> maps the bare specifier — ` +
       `e.g. { "imports": { "${moduleId}": "/path/to/${moduleId}/dist/index.js" } } — and that installRuntime() runs before any module imports. ` +
-      `Original: ${original.message}`
+      `Original: ${original.message}`,
   );
   (wrapped as Error & { cause?: unknown }).cause = original;
   return wrapped;
 }
 
-export function createOnDemandFeature(
-  options: CreateOnDemandFeatureOptions
-): OnDemandFeature {
+export function createOnDemandFeature(options: CreateOnDemandFeatureOptions): OnDemandFeature {
   const { moduleId, moduleUrl, moduleExport, assetOptions, loadData } = options;
   if (!options.loadModule && !moduleUrl) {
     throw new Error(
-      `[mountly] createOnDemandFeature("${moduleId}"): provide either \`moduleUrl\` (recommended) or \`loadModule\`.`
+      `[mountly] createOnDemandFeature("${moduleId}"): provide either \`moduleUrl\` (recommended) or \`loadModule\`.`,
     );
   }
   const loadModule =
-    options.loadModule ||
-    createModuleLoader(moduleUrl as string, assetOptions ?? { css: 'none' });
+    options.loadModule || createModuleLoader(moduleUrl as string, assetOptions ?? { css: "none" });
   const render =
     options.render ||
     (({ mod, container, props }) => {
@@ -176,7 +161,7 @@ export function createOnDemandFeature(
     ? options.getCacheKey
     : (ctx: FeatureContext) => defaultCacheKey(moduleId, ctx);
 
-  let state: FeatureState = 'idle';
+  let state: FeatureState = "idle";
   let loadedModule: FeatureModule | null = null;
   let modulePromise: Promise<FeatureModule> | null = null;
   let abortController: AbortController | null = null;
@@ -204,7 +189,7 @@ export function createOnDemandFeature(
           moduleId,
           async () => {
             if (signal.aborted) {
-              throw new DOMException('Aborted', 'AbortError');
+              throw new DOMException("Aborted", "AbortError");
             }
             try {
               const mod = await loadModule();
@@ -214,14 +199,14 @@ export function createOnDemandFeature(
               throw wrapModuleLoadError(moduleId, err);
             }
           },
-          { signal }
+          { signal },
         )
         .then(
           (m) => m as FeatureModule,
           (err) => {
             modulePromise = null;
             throw err;
-          }
+          },
         ) as Promise<FeatureModule>;
     }
     loadedModule = await modulePromise;
@@ -236,91 +221,87 @@ export function createOnDemandFeature(
       key,
       async () => {
         if (signal.aborted) {
-          throw new DOMException('Aborted', 'AbortError');
+          throw new DOMException("Aborted", "AbortError");
         }
         return loadData(context);
       },
-      { signal }
+      { signal },
     );
   };
 
   const buildContext = (
     partial?: Partial<FeatureContext>,
-    fallbackElement?: HTMLElement
+    fallbackElement?: HTMLElement,
   ): FeatureContext => {
     return {
       element:
         partial?.element ??
         fallbackElement ??
-        (typeof document !== 'undefined' ? document.body : (null as never)),
-      triggerType: (partial?.triggerType ?? 'programmatic') as TriggerType,
+        (typeof document !== "undefined" ? document.body : (null as never)),
+      triggerType: (partial?.triggerType ?? "programmatic") as TriggerType,
       ...partial,
     } as FeatureContext;
   };
 
   const recoverFromAborted = () => {
-    if (state === 'aborted') {
+    if (state === "aborted") {
       abortController = null;
-      setState('idle');
+      setState("idle");
     }
   };
 
-  const preload = async (
-    contextInput?: Partial<FeatureContext>
-  ): Promise<void> => {
+  const preload = async (contextInput?: Partial<FeatureContext>): Promise<void> => {
     if (
-      state === 'preloading' ||
-      state === 'preloaded' ||
-      state === 'activated' ||
-      state === 'mounted'
+      state === "preloading" ||
+      state === "preloaded" ||
+      state === "activated" ||
+      state === "mounted"
     ) {
       return;
     }
     recoverFromAborted();
-    tracker.recordPhase('preload_start');
-    setState('preloading');
+    tracker.recordPhase("preload_start");
+    setState("preloading");
     try {
       await ensureModule();
       if (contextInput) {
         await ensureData(buildContext(contextInput));
       }
-      if ((state as string) === 'preloading') setState('preloaded');
-      tracker.recordPhase('preload_end');
+      if ((state as string) === "preloading") setState("preloaded");
+      tracker.recordPhase("preload_end");
     } catch (error) {
       if (isAbortError(error)) {
-        if ((state as string) === 'preloading') setState('aborted');
-        tracker.recordPhase('preload_end', { error: 'Aborted' });
+        if ((state as string) === "preloading") setState("aborted");
+        tracker.recordPhase("preload_end", { error: "Aborted" });
         return;
       }
-      if ((state as string) === 'preloading') setState('idle');
-      tracker.recordPhase('preload_end', {
+      if ((state as string) === "preloading") setState("idle");
+      tracker.recordPhase("preload_end", {
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;
     }
   };
 
-  const activate = async (
-    contextInput?: Partial<FeatureContext>
-  ): Promise<void> => {
+  const activate = async (contextInput?: Partial<FeatureContext>): Promise<void> => {
     recoverFromAborted();
     const context = buildContext(contextInput);
-    const wasMounted = state === 'mounted';
-    if (!wasMounted) setState('activating');
-    tracker.recordPhase('activate_start');
+    const wasMounted = state === "mounted";
+    if (!wasMounted) setState("activating");
+    tracker.recordPhase("activate_start");
     try {
       await ensureModule();
       await ensureData(context);
-      if (!wasMounted) setState('activated');
-      tracker.recordPhase('activate_end');
+      if (!wasMounted) setState("activated");
+      tracker.recordPhase("activate_end");
     } catch (error) {
       if (isAbortError(error)) {
-        if (!wasMounted) setState('aborted');
-        tracker.recordPhase('activate_end', { error: 'Aborted' });
+        if (!wasMounted) setState("aborted");
+        tracker.recordPhase("activate_end", { error: "Aborted" });
         return;
       }
-      if (!wasMounted) setState('idle');
-      tracker.recordPhase('activate_end', {
+      if (!wasMounted) setState("idle");
+      tracker.recordPhase("activate_end", {
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;
@@ -330,17 +311,17 @@ export function createOnDemandFeature(
   const mount = async (
     container: HTMLElement,
     contextInput?: Partial<FeatureContext>,
-    props?: Record<string, unknown>
+    props?: Record<string, unknown>,
   ): Promise<{ unmount: () => void }> => {
     recoverFromAborted();
     const context = buildContext(contextInput, container);
-    tracker.recordPhase('mount_start');
+    tracker.recordPhase("mount_start");
 
     try {
       await ensureModule();
       await ensureData(context);
     } catch (error) {
-      tracker.recordPhase('mount_end', {
+      tracker.recordPhase("mount_end", {
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;
@@ -366,8 +347,8 @@ export function createOnDemandFeature(
     });
 
     mounts.set(container, context);
-    setState('mounted');
-    tracker.recordPhase('mount_end');
+    setState("mounted");
+    tracker.recordPhase("mount_end");
 
     let unmounted = false;
     const unmount = () => {
@@ -380,9 +361,9 @@ export function createOnDemandFeature(
       }
       mounts.delete(container);
       if (mounts.size === 0) {
-        setState(loadedModule ? 'activated' : 'idle');
+        setState(loadedModule ? "activated" : "idle");
       }
-      tracker.recordPhase('unmount');
+      tracker.recordPhase("unmount");
     };
     // Expose feature-owned unmount on the container so safeUnmount() and
     // widget onClose handlers route through full teardown.
@@ -394,7 +375,7 @@ export function createOnDemandFeature(
   const update = async (
     container: HTMLElement,
     props: Record<string, unknown>,
-    contextInput?: Partial<FeatureContext>
+    contextInput?: Partial<FeatureContext>,
   ): Promise<void> => {
     if (!mounts.has(container)) return;
     const mod = loadedModule;
@@ -420,7 +401,7 @@ export function createOnDemandFeature(
   const refresh = async (
     container: HTMLElement,
     contextInput?: Partial<FeatureContext>,
-    props?: Record<string, unknown>
+    props?: Record<string, unknown>,
   ): Promise<void> => {
     if (!mounts.has(container)) return;
     const mod = loadedModule;
@@ -438,15 +419,15 @@ export function createOnDemandFeature(
   const abort = (): void => {
     if (abortController) abortController.abort();
     abortController = null;
-    if (state === 'preloading' || state === 'activating') {
-      setState('aborted');
-      tracker.recordPhase('preload_end', { error: 'Aborted' });
+    if (state === "preloading" || state === "activating") {
+      setState("aborted");
+      tracker.recordPhase("preload_end", { error: "Aborted" });
     }
     modulePromise = null;
   };
 
   const getState = (): FeatureState => state;
-  const isAborted = (): boolean => state === 'aborted';
+  const isAborted = (): boolean => state === "aborted";
   const getMounts = (): ReadonlyArray<HTMLElement> => Array.from(mounts.keys());
 
   return {

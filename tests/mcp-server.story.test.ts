@@ -2,26 +2,19 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { story } from "executable-stories-vitest";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import { z } from "zod";
 import { buildMcpResource } from "../packages/adapters/mountly-mcp/src/build/index";
-import { createMcpAppServer } from "../packages/adapters/mountly-mcp-server/src/index";
+import { createMcpAppServer } from "../packages/adapters/mountly-mcp/src/server/index";
 
 describe("createMcpAppServer", () => {
-  it("registers a widget's html and tool, then handles a tools/call", async ({
-    task,
-  }) => {
+  it("registers a widget's html and tool, then handles a tools/call", async ({ task }) => {
     story.init(task);
     const dir = mkdtempSync(join(tmpdir(), "mountly-mcp-server-"));
     const entry = join(dir, "widget.js");
     const bridgeRuntime = join(dir, "bridge.js");
     const out = join(dir, "weather.html");
-    const outAdmin = join(dir, "weather-admin.html");
-    writeFileSync(
-      entry,
-      "globalThis.__mountlyMcpWidget__ = { mount(){}, unmount(){} };",
-      "utf8",
-    );
+    writeFileSync(entry, "globalThis.__mountlyMcpWidget__ = { mount(){}, unmount(){} };", "utf8");
     writeFileSync(bridgeRuntime, "/* bridge */", "utf8");
 
     const built = await buildMcpResource({
@@ -44,29 +37,25 @@ describe("createMcpAppServer", () => {
             name: "get_weather",
             description: "Get weather",
             inputSchema: { location: z.string() },
-            handler: async ({ location }: { location: string }) => ({
-              structuredContent: { temperature: 72, location },
-            }),
+            handler: async (args: unknown) => {
+              const { location } = args as { location: string };
+              return { structuredContent: { temperature: 72, location } };
+            },
           },
         },
       ],
     });
 
-    story.when(
-      "the in-process client calls tools/list, resources/list, and the tool",
-    );
+    story.when("the in-process client calls tools/list, resources/list, and the tool");
     const { client } = await server.connectInProcess();
 
     const tools = await client.listTools();
-    story.then(
-      "the tool is registered with _meta.ui.resourceUri pointing at the ui:// URI",
-    );
+    story.then("the tool is registered with _meta.ui.resourceUri pointing at the ui:// URI");
     const tool = tools.tools.find((t) => t.name === "get_weather");
     expect(tool).toBeDefined();
-    expect(
-      (tool as { _meta?: { ui?: { resourceUri?: string } } })._meta?.ui
-        ?.resourceUri,
-    ).toBe("ui://weather-server/dashboard");
+    expect((tool as { _meta?: { ui?: { resourceUri?: string } } })._meta?.ui?.resourceUri).toBe(
+      "ui://weather-server/dashboard",
+    );
 
     const resources = await client.listResources();
     story.then("the ui:// resource is present");
@@ -93,19 +82,13 @@ describe("createMcpAppServer", () => {
     rmSync(dir, { recursive: true });
   });
 
-  it("throws at boot when registration uri doesn't match sidecar", async ({
-    task,
-  }) => {
+  it("throws at boot when registration uri doesn't match sidecar", async ({ task }) => {
     story.init(task);
     const dir = mkdtempSync(join(tmpdir(), "mountly-mcp-server-mismatch-"));
     const entry = join(dir, "widget.js");
     const bridgeRuntime = join(dir, "bridge.js");
     const out = join(dir, "weather.html");
-    writeFileSync(
-      entry,
-      "globalThis.__mountlyMcpWidget__ = { mount(){}, unmount(){} };",
-      "utf8",
-    );
+    writeFileSync(entry, "globalThis.__mountlyMcpWidget__ = { mount(){}, unmount(){} };", "utf8");
     writeFileSync(bridgeRuntime, "/* bridge */", "utf8");
 
     await buildMcpResource({
@@ -147,11 +130,7 @@ describe("createMcpAppServer", () => {
     const bridgeRuntime = join(dir, "bridge.js");
     const out = join(dir, "weather.html");
     const outAdmin = join(dir, "weather-admin.html");
-    writeFileSync(
-      entry,
-      "globalThis.__mountlyMcpWidget__ = { mount(){}, unmount(){} };",
-      "utf8",
-    );
+    writeFileSync(entry, "globalThis.__mountlyMcpWidget__ = { mount(){}, unmount(){} };", "utf8");
     writeFileSync(bridgeRuntime, "/* bridge */", "utf8");
 
     await buildMcpResource({
@@ -198,11 +177,7 @@ describe("createMcpAppServer", () => {
     const entry = join(dir, "widget.js");
     const bridgeRuntime = join(dir, "bridge.js");
     const out = join(dir, "weather.html");
-    writeFileSync(
-      entry,
-      "globalThis.__mountlyMcpWidget__ = { mount(){}, unmount(){} };",
-      "utf8",
-    );
+    writeFileSync(entry, "globalThis.__mountlyMcpWidget__ = { mount(){}, unmount(){} };", "utf8");
     writeFileSync(bridgeRuntime, "/* bridge */", "utf8");
 
     await buildMcpResource({
@@ -247,11 +222,7 @@ describe("createMcpAppServer", () => {
     const entry = join(dir, "widget.js");
     const bridgeRuntime = join(dir, "bridge.js");
     const out = join(dir, "weather.html");
-    writeFileSync(
-      entry,
-      "globalThis.__mountlyMcpWidget__ = { mount(){}, unmount(){} };",
-      "utf8",
-    );
+    writeFileSync(entry, "globalThis.__mountlyMcpWidget__ = { mount(){}, unmount(){} };", "utf8");
     writeFileSync(bridgeRuntime, "/* bridge */", "utf8");
 
     await buildMcpResource({
@@ -297,11 +268,7 @@ describe("createMcpAppServer", () => {
     const bridgeRuntime = join(dir, "bridge.js");
     const out = join(dir, "weather.html");
     const outAdmin = join(dir, "weather-admin.html");
-    writeFileSync(
-      entry,
-      "globalThis.__mountlyMcpWidget__ = { mount(){}, unmount(){} };",
-      "utf8",
-    );
+    writeFileSync(entry, "globalThis.__mountlyMcpWidget__ = { mount(){}, unmount(){} };", "utf8");
     writeFileSync(bridgeRuntime, "/* bridge */", "utf8");
 
     await buildMcpResource({
@@ -338,7 +305,7 @@ describe("createMcpAppServer", () => {
           tool: {
             name: "refresh_weather",
             inputSchema: {},
-            visibility: ["app"],
+            visibility: "app",
             handler: async () => ({ structuredContent: { mode: "refresh" } }),
           },
         },
@@ -350,9 +317,9 @@ describe("createMcpAppServer", () => {
     expect(tools.tools.some((t) => t.name === "get_weather")).toBe(true);
     const refresh = tools.tools.find((t) => t.name === "refresh_weather");
     expect(refresh).toBeDefined();
-    expect((refresh as { _meta?: { ui?: { visibility?: string[] } } })._meta?.ui?.visibility).toEqual([
+    expect((refresh as { _meta?: { ui?: { visibility?: string } } })._meta?.ui?.visibility).toBe(
       "app",
-    ]);
+    );
 
     const resources = await client.listResources();
     expect(

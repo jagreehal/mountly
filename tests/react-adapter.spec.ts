@@ -6,17 +6,22 @@ test.beforeEach(({ page }, testInfo) => {
   story.init(testInfo);
 });
 
-
-test("createWidget mount renders the React component into the shadow root", async ({ page }, testInfo) => {
+test("createWidget mount renders the React component into the shadow root", async ({
+  page,
+}, testInfo) => {
   story.given("the React mount fixture is loaded");
   await page.goto("http://localhost:5175/tests/fixtures/react-mount.html");
   await page.waitForLoadState("networkidle");
   story.when("the component finishes mounting");
-  await page.waitForFunction(() => {
-    const el = document.getElementById("c");
-    const node = el?.shadowRoot?.querySelector("[data-mountly-root]");
-    return node && node.textContent === "hello world";
-  }, null, { timeout: 8000 });
+  await page.waitForFunction(
+    () => {
+      const el = document.getElementById("c");
+      const node = el?.shadowRoot?.querySelector("[data-mountly-root]");
+      return node && node.textContent === "hello world";
+    },
+    null,
+    { timeout: 8000 },
+  );
   story.then("the component renders into the shadow root");
   const text = await page.evaluate(() => {
     const el = document.getElementById("c");
@@ -28,7 +33,9 @@ test("createWidget mount renders the React component into the shadow root", asyn
   story.screenshot({ path: screenshotPath, alt: "React mount" });
 });
 
-test("createWidget remount is idempotent (single shadow root, single style, fresh tree)", async ({ page }, testInfo) => {
+test("createWidget remount is idempotent (single shadow root, single style, fresh tree)", async ({
+  page,
+}, testInfo) => {
   story.given("the React remount fixture is loaded");
   await page.goto("http://localhost:5175/tests/fixtures/react-remount.html");
   await page.waitForLoadState("networkidle");
@@ -65,10 +72,14 @@ test("React widget exposes update() and applies new props", async ({ page }, tes
   await page.goto("http://localhost:5175/tests/fixtures/react-update.html");
   await page.waitForLoadState("networkidle");
   story.when("the component finishes mounting");
-  await page.waitForFunction(() => {
-    const el = document.getElementById("c");
-    return (el?.shadowRoot?.textContent ?? "").includes("b");
-  }, null, { timeout: 8000 });
+  await page.waitForFunction(
+    () => {
+      const el = document.getElementById("c");
+      return (el?.shadowRoot?.textContent ?? "").includes("b");
+    },
+    null,
+    { timeout: 8000 },
+  );
   story.then("the text contains b");
   const text = await page.evaluate(() => {
     const el = document.getElementById("c");
@@ -117,7 +128,9 @@ test("React widget supports independent multi-instance mounts", async ({ page },
   story.screenshot({ path: screenshotPath, alt: "React multi-instance" });
 });
 
-test("React widget falls back to light DOM for shadow-rejecting elements", async ({ page }, testInfo) => {
+test("React widget falls back to light DOM for shadow-rejecting elements", async ({
+  page,
+}, testInfo) => {
   story.given("console warnings are being captured");
   const warnings: string[] = [];
   page.on("console", (msg) => msg.type() === "warning" && warnings.push(msg.text()));
@@ -142,7 +155,9 @@ test("React widget falls back to light DOM for shadow-rejecting elements", async
   story.screenshot({ path: screenshotPath, alt: "React light DOM fallback" });
 });
 
-test("React widget works with closed shadow mode and remounts cleanly", async ({ page }, testInfo) => {
+test("React widget works with closed shadow mode and remounts cleanly", async ({
+  page,
+}, testInfo) => {
   story.given("the React closed-mode fixture is loaded");
   await page.goto("http://localhost:5175/tests/fixtures/react-closed-mode.html");
   await page.waitForLoadState("networkidle");

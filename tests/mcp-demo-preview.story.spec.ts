@@ -25,9 +25,7 @@ test.describe("mcp-app-demo preview", () => {
     return page.frameLocator("#sandbox").frameLocator("iframe#inner");
   }
 
-  test("full spec handshake: widget renders with annual breakdown", async ({
-    page,
-  }, testInfo) => {
+  test("full spec handshake: widget renders with annual breakdown", async ({ page }, testInfo) => {
     story.init(testInfo, {
       tags: ["mcp", "preview", "sandbox-proxy"],
       ticket: "MOUNTLY-MCP-DEMO-1",
@@ -40,7 +38,9 @@ test.describe("mcp-app-demo preview", () => {
     await page.goto("http://localhost:5179/");
     await page.waitForLoadState("networkidle");
 
-    story.when("the sandbox proxy → view handshake completes and the host auto-delivers the annual payload");
+    story.when(
+      "the sandbox proxy → view handshake completes and the host auto-delivers the annual payload",
+    );
     const widget = widgetFrameLocator(page);
     await expect(widget.getByText("Total due")).toBeVisible({ timeout: 5000 });
 
@@ -100,7 +100,10 @@ test.describe("mcp-app-demo preview", () => {
     await page.waitForLoadState("networkidle");
 
     story.when("we enumerate the iframe topology");
-    const frameUrls = page.frames().map((f) => f.url()).sort();
+    const frameUrls = page
+      .frames()
+      .map((f) => f.url())
+      .sort();
 
     story.then("there are 3 frames: host, sandbox proxy on a distinct origin, inner srcdoc widget");
     expect(frameUrls).toContain("http://localhost:5179/");

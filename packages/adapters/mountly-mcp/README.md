@@ -27,10 +27,9 @@ This writes:
 - `./dist/hello.html`
 - `./dist/hello.html.meta.json`
 
-Use these with `mountly-mcp-server`.
+Use these with `mountly-mcp/server`.
 
 ## See also
 
 - `docs/how-to-test.md`
-- `examples/mcp-app-demo/README.md`
-
+- `docs/examples/mcp-app-demo/README.md`

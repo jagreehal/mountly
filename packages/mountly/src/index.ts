@@ -5,4 +5,4 @@ export {
   type FeatureModule,
   type FeatureState,
   type CreateOnDemandFeatureOptions,
-} from './feature.js';
+} from "./feature.js";

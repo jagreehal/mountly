@@ -11,6 +11,7 @@ pnpm changeset
 ```
 
 This will:
+
 1. Ask which packages changed and the kind of change (major, minor, patch)
 2. Ask for a summary of the changes
 3. Create a changeset file in `.changeset/`
@@ -18,6 +19,7 @@ This will:
 ## Versioning and Publishing
 
 The GitHub Actions workflow will automatically:
+
 - Create a PR with version bumps when changesets are merged to `main`
 - Publish to npm when the version PR is merged (using OIDC for secure publishing)
 

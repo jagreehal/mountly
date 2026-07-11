@@ -35,10 +35,7 @@ function injectGlobalStyles(_container: Element, css: string): void {
   injectedCss.add(css);
 }
 
-export function attachShadow(
-  container: Element,
-  options: AdapterOptions,
-): HTMLDivElement {
+export function attachShadow(container: Element, options: AdapterOptions): HTMLDivElement {
   const existing = mountNodes.get(container);
   if (existing) return existing;
 
@@ -46,9 +43,7 @@ export function attachShadow(
     if (options.styles) {
       if (options.styleMode === "isolated") {
         try {
-          const existingInline = container.querySelector(
-            'style[data-mountly-inline="true"]',
-          );
+          const existingInline = container.querySelector('style[data-mountly-inline="true"]');
           if (!existingInline) {
             const inlineStyle = document.createElement("style");
             inlineStyle.setAttribute("data-mountly-inline", "true");

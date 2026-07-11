@@ -6,8 +6,10 @@ import {
 } from "./feature.js";
 import { createModuleLoader, type CssAutoLoadOptions } from "./assets.js";
 
-interface BundleFeatureOptions
-  extends Omit<CreateOnDemandFeatureOptions, "moduleUrl" | "loadModule" | "assetOptions"> {
+interface BundleFeatureOptions extends Omit<
+  CreateOnDemandFeatureOptions,
+  "moduleUrl" | "loadModule" | "assetOptions"
+> {
   /**
    * Name of the export inside the bundle module that contains this widget.
    * Defaults to `default`. The export must satisfy `FeatureModule`
@@ -60,9 +62,7 @@ export interface WidgetBundle {
  * clock.attach({ trigger: btn2, activateOn: "click" });
  * ```
  */
-export function createWidgetBundle(
-  options: CreateWidgetBundleOptions,
-): WidgetBundle {
+export function createWidgetBundle(options: CreateWidgetBundleOptions): WidgetBundle {
   const { moduleUrl, assetOptions } = options;
   const loader = createModuleLoader(moduleUrl, assetOptions ?? { css: "none" });
   // One in-flight promise shared across every feature created from this
@@ -98,16 +98,10 @@ export function createWidgetBundle(
   };
 }
 
-function pickExport(
-  mod: unknown,
-  name: string,
-  moduleId: string,
-): FeatureModule {
+function pickExport(mod: unknown, name: string, moduleId: string): FeatureModule {
   const record = mod as Record<string, unknown> | null | undefined;
   if (!record || typeof record !== "object") {
-    throw new Error(
-      `[mountly] bundle did not resolve to a module object for "${moduleId}".`,
-    );
+    throw new Error(`[mountly] bundle did not resolve to a module object for "${moduleId}".`);
   }
   const value = record[name];
   if (value === undefined) {

@@ -1,0 +1,45 @@
+.ui-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  font-family: system-ui, sans-serif;
+  margin-bottom: 12px;
+}
+.ui-card-header {
+  background: #f8fafc;
+  padding: 10px 14px;
+  font-weight: 600;
+  font-size: 14px;
+  border-bottom: 1px solid #e2e8f0;
+}
+.ui-card-body { padding: 14px; }
+.ui-chip {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  background: #3c50dc;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 8px;
+}
+.ui-num { font-size: 24px; font-weight: 700; margin: 8px 0; }
+.ui-msg { color: #3c3c50; margin: 8px 0; }
+.ui-amount { font-size: 20px; font-weight: 700; margin: 8px 0; color: #0f172a; }
+.ui-row { display: flex; gap: 8px; margin-top: 8px; }
+.ui-btn {
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  font-weight: 500;
+  cursor: pointer;
+  background: white;
+}
+.ui-btn-primary {
+  background: #3c50dc;
+  color: white;
+  border-color: #3c50dc;
+}
+.ui-btn-primary:hover { background: #3344c4; }

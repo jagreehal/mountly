@@ -4,14 +4,10 @@ description: Fixture helpers for widget mount/unmount cycles and trigger asserti
 ---
 
 ```ts
-import {
-  mountWidgetFixture,
-  cycleWidgetFixture,
-  triggerFixture,
-} from "mountly/test";
+import { mountWidgetFixture, cycleWidgetFixture, triggerFixture } from "mountly/test";
 ```
 
-`mountly/test` is a tiny test-only surface for the widget contract. It is useful when you are writing adapter tests or verifying a custom widget module without going through the full on-demand feature lifecycle.
+`mountly/test` is a small test-only surface for the widget contract. Reach for it when you write adapter tests or verify a custom widget module without running the full on-demand feature lifecycle.
 
 ## `mountWidgetFixture(widget, props?, container?)`
 
@@ -42,10 +38,7 @@ This catches common contract bugs: `unmount()` leaving DOM behind, second `mount
 
 ```ts
 const button = document.createElement("button");
-const trigger = triggerFixture(
-  { type: "click", element: button, once: true },
-  () => calls++,
-);
+const trigger = triggerFixture({ type: "click", element: button, once: true }, () => calls++);
 
 trigger.fire(new MouseEvent("click", { bubbles: true }));
 trigger.cleanup();
@@ -55,4 +48,4 @@ This wraps the same `setupTrigger()` primitive used by Mountly features, so test
 
 ## Scope
 
-These helpers are intentionally small. For end-to-end lifecycle tests, use `createOnDemandFeature()` and Playwright. For framework adapter tests, use these helpers to keep the fixture short and focused.
+These helpers stay small on purpose. For end-to-end lifecycle tests, use `createOnDemandFeature()` and Playwright. For framework adapter tests, use these helpers to keep the fixture short and focused.
