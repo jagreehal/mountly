@@ -46,8 +46,8 @@ importers:
         specifier: ^8.6.1
         version: 8.6.1(@playwright/test@1.61.1)(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)
       executable-stories-vitest:
-        specifier: ^8.4.5
-        version: 8.4.5(vitest@4.1.9(@opentelemetry/api@1.9.1)(@types/node@25.9.3)(@vitest/browser-preview@4.1.9)(jsdom@29.1.1)(vite@8.1.4(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(yaml@2.9.0)))
+        specifier: ^8.5.0
+        version: 8.5.0(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(vitest@4.1.9(@opentelemetry/api@1.9.1)(@types/node@25.9.3)(@vitest/browser-preview@4.1.9)(jsdom@29.1.1)(vite@8.1.4(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(yaml@2.9.0)))
       jsdom:
         specifier: ^29.1.1
         version: 29.1.1
@@ -3777,8 +3777,8 @@ packages:
       mermaid:
         optional: true
 
-  executable-stories-vitest@8.4.5:
-    resolution: {integrity: sha512-1jpQIH5i/qOxiSBKYyT8YmjXFkaI57Xz2DBNUFw4Lyw7RfOCxunROmJlr1Bfj3MGI6aiqcDWDx9g+uMvZcoMow==}
+  executable-stories-vitest@8.5.0:
+    resolution: {integrity: sha512-7tBAHZ7T/saM0AafEPpf6j1RVpQj2UvwGS6i5Bmav2Ym5YcQldGC4yueZ+GL/49s6iBikLH+m0Wa4wwNOzIL2Q==}
     peerDependencies:
       vitest: '>=4.1.5'
 
@@ -8883,12 +8883,18 @@ snapshots:
       - '@types/react-dom'
       - date-fns
 
-  executable-stories-vitest@8.4.5(vitest@4.1.9(@opentelemetry/api@1.9.1)(@types/node@25.9.3)(@vitest/browser-preview@4.1.9)(jsdom@29.1.1)(vite@8.1.4(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(yaml@2.9.0))):
+  executable-stories-vitest@8.5.0(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(vitest@4.1.9(@opentelemetry/api@1.9.1)(@types/node@25.9.3)(@vitest/browser-preview@4.1.9)(jsdom@29.1.1)(vite@8.1.4(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(yaml@2.9.0))):
     dependencies:
-      executable-stories-formatters: 0.16.0
+      executable-stories-formatters: 1.1.0(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)
       fast-glob: 3.3.3
-      picomatch: 4.0.4
+      picomatch: 4.0.5
       vitest: 4.1.9(@opentelemetry/api@1.9.1)(@types/node@25.9.3)(@vitest/browser-preview@4.1.9)(jsdom@29.1.1)(vite@8.1.4(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(yaml@2.9.0))
+    transitivePeerDependencies:
+      - '@date-fns/tz'
+      - '@types/react'
+      - '@types/react-dom'
+      - date-fns
+      - mermaid
 
   expect-type@1.4.0: {}
 
