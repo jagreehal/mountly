@@ -93,6 +93,7 @@ export default defineConfig({
       timeout: 30_000,
     },
     {
+      command:
         "env -u NO_COLOR pnpm --filter vite-host-import run build:remote && env -u NO_COLOR pnpm --filter vite-host-import dev -- --port 5190",
       url: "http://localhost:5190",
       reuseExistingServer: !process.env.CI,
