@@ -46,6 +46,14 @@ export default defineConfig({
           items: [
             { label: "Introduction", slug: "getting-started/introduction" },
             { label: "Positioning", slug: "getting-started/positioning" },
+            {
+              label: "Choosing an architecture",
+              slug: "getting-started/choosing-an-architecture",
+            },
+            {
+              label: "When not to use mountly",
+              slug: "concepts/when-not-to-use",
+            },
             { label: "Quick start", slug: "getting-started/quick-start" },
             { label: "How it works", slug: "getting-started/how-it-works" },
             { label: "Installation", slug: "getting-started/installation" },

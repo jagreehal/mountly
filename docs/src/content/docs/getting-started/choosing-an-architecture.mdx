@@ -1,0 +1,189 @@
+---
+title: Choosing an architecture
+description: You probably don't need micro frontends. A decision ladder from monorepo npm libs to mountly widgets to full MFE platforms.
+---
+
+Most teams reach for micro frontends (Module Federation, Single-SPA, vendor MFE platforms) when what they actually need is a **boundary** — a way to ship Product A UI into another team's shell without rewriting either codebase.
+
+For a temporary customization, a full micro-frontend platform is usually a trap. You can spend months on orchestration before you ship the feature.
+
+Start smaller. Escalate only when the problem genuinely requires runtime composability across many independently deployed **apps** or route-level shells.
+
+## Start here: you probably don't need micro frontends
+
+mountly is an **on-demand component runtime**, not a micro-frontend control plane. If your situation is:
+
+- One React app where every surface lives in the same bundle → use `React.lazy`, `next/dynamic`, or framework-native lazy routes. See [When not to use mountly](/mountly/concepts/when-not-to-use/).
+- Every region shares one Router, Query client, or Redux store → stay in one app shell.
+- You need SSR plus hydration of server-rendered HTML → use Astro, Next, or Remix islands.
+
+If most of these describe your work, mountly is likely the right tool:
+
+- You ship widgets into hosts you do not fully control (CMS, static HTML, another team's platform).
+- You need HTML-addressable components (`<product-a-settings>`).
+- Teams need independent **widget** deploys, not independent **app** deploys.
+- You want intent-based loading without writing a lazy-loader per button.
+
+## Decision ladder
+
+```mermaid
+flowchart TD
+  start[Need Product A UI in another team's shell]
+  q1{Can you merge into a monorepo or publish an npm package?}
+  q2{Is the host page you do not own?}
+  q3{Do regions share one Router / Query / Redux graph?}
+  q4{Do teams need independent CDN deploys?}
+  q5{Many teams and runtime route orchestration?}
+  monorepo[Monorepo + shared lib + lazy routes]
+  mountlyNpm[mountly as npm dep in host app]
+  mountlyWidget[mountly widget + custom element drop-in]
+  mountlyManifest[mountly manifest + import map verticals]
+  singleSpa[Single-SPA / vendor MFE platform]
+  oneApp[One app shell - do not split]
+
+  start --> q1
+  q1 -->|Yes, for now| monorepo
+  q1 -->|No| q2
+  q2 -->|Yes, CMS/static/legacy| mountlyWidget
+  q2 -->|No, same app shell| q3
+  q3 -->|Yes| oneApp
+  q3 -->|No| q4
+  q4 -->|No| mountlyNpm
+  q4 -->|Yes| q5
+  q5 -->|No, a few teams| mountlyManifest
+  q5 -->|Yes| singleSpa
+```
+
+### Comparison at a glance
+
+| Approach | When | Pain you accept |
+| -------- | ---- | --------------- |
+| Monorepo npm lib | Same org, shared CI is OK | Merge coordination |
+| mountly widget drop-in | Foreign host, 1–5 interactive regions | Import map / version pinning |
+| mountly manifest verticals | 2–5 teams, independent CDN deploys | Shared React version agreement |
+| Module Federation | Deep horizontal integration, shared build graph | `shared` blocks, tooling complexity |
+| Single-SPA | Full app shells per route, many teams | Orchestration, routing ownership |
+| Subdomain per product | Fully separate products | No shared page shell; routing at DNS level |
+
+mountly does **not** replace subdomain separation. If Product A and the platform are truly separate products with no shared page, deploy them under different subdomains and skip composition entirely.
+
+---
+
+## Stage 1: Monorepo + shared npm libs
+
+**Best when:** you can merge into one repo (or publish internal packages) and coordinate deploys for now.
+
+Structure:
+
+```
+my-org/
+├── packages/
+│   ├── ui-lib/          # shared components — no mountly
+│   └── widgets/         # mountly widgets consuming ui-lib
+└── apps/
+    └── platform/        # host app — lazy-imports widgets
+```
+
+- Each team owns a vertical folder with strict import boundaries.
+- Use framework-native lazy routes until you need independent CDN deploys.
+- Promote widgets to published packages when a second consumer appears.
+
+**Example:** [monorepo-component-library](/mountly/examples/) in the repo (`docs/examples/monorepo-component-library/`).
+
+This is what Reddit commenters mean by "monorepo + lazy loaded feature modules until you are ready for a clean break." **Start here** if you can.
+
+---
+
+## Stage 2: Widget drop-in for foreign hosts
+
+**Best when:** the host page is owned by another team (CMS, static HTML, legacy Rails/Django shell) and you need one or a few interactive regions that call **your** API.
+
+Product A ships a widget bundle. The platform team drops a custom element — they never touch React:
+
+```html
+<product-a-settings trigger="viewport" props='{"tenantId":"acme"}'></product-a-settings>
+```
+
+- No Module Federation `shared` block.
+- No Single-SPA shell.
+- Product A deploys `dist/peer.js` to a CDN; the platform updates one URL when you release.
+- When Product A becomes standalone: keep the same widget artifact, swap the host page. No rewrite.
+
+**Examples:**
+
+- [Platform embed scenario](https://github.com/jagreehal/mountly/tree/main/docs/examples/platform-embed) — Product A inside another team's platform (mirrors the classic "should I use micro frontends?" question).
+- [marketing-site](https://github.com/jagreehal/mountly/tree/main/docs/examples/marketing-site) — dev ships widget, marketing drops HTML.
+- [plain-html](https://github.com/jagreehal/mountly/tree/main/docs/examples/plain-html) — zero bundler on the host.
+
+This is **Stage 2**, not Stage 4. Do not jump to manifest-driven multi-vertical architecture for a single customization.
+
+---
+
+## Stage 3: Manifest + import map verticals
+
+**Best when:** 2–5 teams each own a widget vertical with **independent CDN deploy cadence**, sharing one page shell.
+
+1. Each vertical builds with `mountlyRemote` → `dist/peer.js` + fragment JSON.
+2. Host manifest pins platform deps (one React) and vertical URLs.
+3. `bootstrapMountly()` or `mountlyHostPlugin` wires the import map.
+4. Run `mountly manifest validate` in CI before deploy.
+
+**Examples:**
+
+- [multi-vertical-host](https://github.com/jagreehal/mountly/tree/main/docs/examples/multi-vertical-host)
+- [Manifest & host shells](/mountly/concepts/manifest-hosts/)
+- [Micro-frontends guide](https://github.com/jagreehal/mountly/blob/main/docs/micro-frontends.md) (advanced — read Stage 1 and 2 first)
+
+Key difference from Module Federation: React is shared through the **import map**, not a runtime `shared` negotiation block. The remote's fragment auto-wires types and exposes.
+
+---
+
+## When to escalate beyond mountly
+
+| Situation | Better fit |
+| --------- | ---------- |
+| 30+ teams, runtime route-to-app routing, dedicated platform team | Single-SPA or vendor MFE platform (mountly can load widgets **inside** each team's bundle) |
+| Fully separate products, no shared page | Subdomain per product |
+| Temporary customization in a monorepo you control | Stage 1 monorepo — do not adopt MFE tooling |
+| Shared global client state across every region | One app shell |
+
+---
+
+## FAQ (from common objections)
+
+### "Module Federation + Vite is state of the art — should I use that?"
+
+For **full app remotes** with deep horizontal integration, maybe. For **component-sized features** dropped into an existing page, Federation adds `shared` block maintenance, duplicate-React risk, and build-time coupling — without giving you HTML-addressable widgets or on-demand triggers.
+
+mountly's Vite story (`mountlyRemote` + `mountlyHostPlugin`) gives typed native ESM imports and import-map sharing instead. See [vite-host-remotes-url](https://github.com/jagreehal/mountly/tree/main/docs/examples/vite-host-remotes-url).
+
+### "Won't I load duplicate React and break hooks?"
+
+Yes — if the host bundles React **and** a vertical ships a self-contained `dist/index.js` that also bundles React. Fix:
+
+- Use `dist/peer.js` on React hosts.
+- Pin one React version in the host import map.
+- Run `mountly manifest validate` (or `mountly doctor`) in CI.
+
+See [Version coordination](/mountly/concepts/microfrontends/#version-coordination).
+
+### "We're doing this temporarily before a platform split."
+
+Perfect fit for **Stage 2**. Ship a widget now; migrate to standalone by changing the host URL in the manifest, not by rewriting the widget. Avoid building Federation infrastructure for a transition that may take six months.
+
+### "Do I need a platform team?"
+
+For 30+ micro frontends with runtime routing — yes. For 1–5 mountly widgets with a JSON manifest — no. The host manifest **is** your coordination layer; `mountly manifest validate` is your guardrail.
+
+### "What about web components as the common ground?"
+
+Valid for style/DOM boundaries. mountly uses custom elements as a **delivery** mechanism; you still author React/Vue/Svelte. You get lifecycle, triggers, and caching without hand-rolling mount/unmount for every team.
+
+---
+
+## Next steps
+
+- Not sure mountly fits at all? [When not to use mountly](/mountly/concepts/when-not-to-use/)
+- Ready to ship a widget? [Quick start](/mountly/getting-started/quick-start/)
+- Platform embed walkthrough: [platform-embed example](https://github.com/jagreehal/mountly/tree/main/docs/examples/platform-embed)
+- Why mountly exists: [Why mountly](/mountly/concepts/why-mountly/)

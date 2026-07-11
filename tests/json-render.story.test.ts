@@ -1,7 +1,14 @@
-import { createSpecStreamCompiler } from "@json-render/core";
+import { createSpecStreamCompiler, defineCatalog } from "@json-render/core";
 import type { Spec } from "@json-render/core";
+import { schema } from "@json-render/react/schema";
 import { story } from "executable-stories-vitest";
 import { describe, expect, it, vi } from "vite-plus/test";
+import { z } from "zod";
+import {
+  REQUIRED_FIELDS_RULE,
+  pruneDanglingChildren,
+  streamSpec,
+} from "../packages/adapters/mountly-mcp/src/json-render/server";
 import {
   compileTextStreamToSpecs,
   parseSpecStreamLine,
@@ -143,6 +150,161 @@ describe("mountly-json-render live streaming", () => {
 
     story.then("the buffered final line is still flushed into the spec");
     expect(step.value).toEqual(SPEC);
+  });
+});
+
+describe("mountly-json-render spec repair", () => {
+  it("prunes children references to elements the model never defined", ({ task }) => {
+    story.init(task);
+
+    story.given("a spec whose root references a child the model never emitted");
+    const dangling = {
+      root: "root",
+      elements: {
+        root: { type: "Stack", props: {}, children: ["text", "ghost"] },
+        text: { type: "Text", props: { text: "hi" }, children: [] },
+      },
+    } as unknown as Spec;
+
+    story.when("dangling children are pruned");
+    const fixes: string[] = [];
+    const pruned = pruneDanglingChildren(dangling, fixes);
+
+    story.then("the undefined reference is removed and reported as a fix");
+    expect(pruned.elements.root?.children).toEqual(["text"]);
+    expect(fixes).toEqual([
+      'Removed reference to undefined element "ghost" from children of "root".',
+    ]);
+
+    story.and("defined elements are untouched");
+    expect(pruned.elements.text).toEqual(dangling.elements.text);
+  });
+
+  it("never prunes a repeat container to zero children", ({ task }) => {
+    story.init(task);
+
+    story.given("a repeat container whose only child (the template) is undefined");
+    const fixes: string[] = [];
+    const spec = {
+      root: "root",
+      state: { items: [1, 2] },
+      elements: {
+        root: { type: "Stack", props: {}, children: ["list"] },
+        list: {
+          type: "Stack",
+          props: {},
+          repeat: { statePath: "/items" },
+          children: ["ghost-template"],
+        },
+      },
+    } as unknown as Spec;
+
+    story.when("dangling children are pruned");
+    const pruned = pruneDanglingChildren(spec, fixes);
+
+    story.then("the dangling template reference is kept so repair targets the real problem");
+    expect(pruned.elements.list?.children).toEqual(["ghost-template"]);
+    expect(fixes).toEqual([]);
+  });
+
+  it("leaves a fully-defined spec unchanged", ({ task }) => {
+    story.init(task);
+
+    story.given("a spec where every children reference resolves");
+    const fixes: string[] = [];
+
+    story.when("dangling children are pruned");
+    const pruned = pruneDanglingChildren(SPEC, fixes);
+
+    story.then("nothing is pruned and no fixes are reported");
+    expect(pruned).toEqual(SPEC);
+    expect(fixes).toEqual([]);
+  });
+});
+
+// A minimal AI SDK LanguageModelV3 that replays a fixed text stream and
+// records the call, so `streamSpec` can be exercised without a real model.
+function mockModel(text: string) {
+  const calls: Array<{ prompt: Array<{ role: string; content: unknown }> }> = [];
+  const model = {
+    specificationVersion: "v3",
+    provider: "mock",
+    modelId: "mock-model",
+    supportedUrls: {},
+    doGenerate: async () => {
+      throw new Error("streamSpec must use doStream");
+    },
+    doStream: async (options: { prompt: Array<{ role: string; content: unknown }> }) => {
+      calls.push(options);
+      return {
+        stream: new ReadableStream({
+          start(controller) {
+            controller.enqueue({ type: "stream-start", warnings: [] });
+            controller.enqueue({ type: "text-start", id: "1" });
+            controller.enqueue({ type: "text-delta", id: "1", delta: text });
+            controller.enqueue({ type: "text-end", id: "1" });
+            controller.enqueue({
+              type: "finish",
+              finishReason: "stop",
+              usage: { inputTokens: 1, outputTokens: 1, totalTokens: 2 },
+            });
+            controller.close();
+          },
+        }),
+      };
+    },
+  };
+  return { calls, model };
+}
+
+describe("mountly-json-render streamSpec", () => {
+  const catalog = defineCatalog(schema, {
+    components: {
+      Stack: { props: z.object({}), slots: ["default"], description: "A stack." },
+      Text: { props: z.object({ text: z.string() }), description: "A line of text." },
+    },
+    actions: {},
+  });
+
+  it("hardens the prompt and repairs dangling children end-to-end", async ({ task }) => {
+    story.init(task);
+
+    story.given("a model that emits a spec referencing a child it never defines");
+    const wire = [
+      JSON.stringify({ op: "add", path: "/elements", value: {} }),
+      JSON.stringify({ op: "add", path: "/root", value: "root" }),
+      JSON.stringify({
+        op: "add",
+        path: "/elements/root",
+        value: { type: "Stack", props: {}, children: ["text", "ghost"] },
+      }),
+      JSON.stringify({
+        op: "add",
+        path: "/elements/text",
+        value: { type: "Text", props: { text: "hi" }, children: [] },
+      }),
+    ].join("\n");
+    const { calls, model } = mockModel(wire);
+
+    story.when("streamSpec generates a UI from a prompt");
+    const result = await streamSpec({
+      catalog,
+      model: model as never,
+      prompt: "say hi",
+    }).result;
+
+    story.then("the system prompt includes the REQUIRED FIELDS rule (#299 port)");
+    const system = calls[0]?.prompt.find((m) => m.role === "system");
+    expect(system?.content).toContain(REQUIRED_FIELDS_RULE);
+
+    story.then("the dangling child is pruned and reported (#300 port)");
+    expect(result.spec.elements.root?.children).toEqual(["text"]);
+    expect(result.fixes).toContain(
+      'Removed reference to undefined element "ghost" from children of "root".',
+    );
+
+    story.and("the repaired spec passes validation");
+    expect(result.issues.valid).toBe(true);
   });
 });
 

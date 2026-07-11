@@ -177,6 +177,8 @@ await bootstrapMountly("/manifest.json", { define: false }); // map only, define
 
 `manifest.platform.imports` must map `mountly-manifest` when you use the default define step. Pass `{ define: false }` to inject only the import map.
 
+If `platform.imports.mountly` is present, `bootstrapMountly()` also derives the common `mountly/*` subpaths for you (`mountly/mount`, `mountly/elements`, and others). If you skip `bootstrapMountly()` and hand-author the import map, you must map any `mountly/*` subpaths your peer widget imports.
+
 At boot, `bootstrapMountly` logs [validation](#validate-a-manifest) warnings to the console. Pass `{ validate: false }` to silence them in production.
 
 ## Runtime verticals (load remotes after boot)

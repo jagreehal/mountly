@@ -37,8 +37,10 @@ test.describe("mcp-generative-demo streaming preview", () => {
     await expect(page.getByRole("button", { name: /Break down Q3 by region/i })).toBeVisible({
       timeout: 10_000,
     });
+    const overviewScreenshotPath = testInfo.outputPath("overview.png");
+    await page.screenshot({ path: overviewScreenshotPath, fullPage: true });
     story.screenshot({
-      path: testInfo.outputPath("overview.png"),
+      path: overviewScreenshotPath,
       alt: "The revenue overview dashboard after streaming in",
     });
 
@@ -71,8 +73,10 @@ test.describe("mcp-generative-demo streaming preview", () => {
     await expect(page.getByText("North America")).toBeVisible();
     await expect(page.getByText("EMEA", { exact: true })).toBeVisible();
     await expect(page.getByText("APAC")).toBeVisible();
+    const q3ScreenshotPath = testInfo.outputPath("q3-by-region.png");
+    await page.screenshot({ path: q3ScreenshotPath, fullPage: true });
     story.screenshot({
-      path: testInfo.outputPath("q3-by-region.png"),
+      path: q3ScreenshotPath,
       alt: "The Q3-by-region view the agent generated in response to the click",
     });
 

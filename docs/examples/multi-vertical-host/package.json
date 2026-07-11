@@ -4,9 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "serve -l 5182 ../../.."
+    "dev": "serve -l 5182 ../../..",
+    "validate": "mountly manifest validate ./manifest.json",
+    "doctor": "mountly doctor ./manifest.json"
   },
   "devDependencies": {
+    "mountly": "workspace:*",
     "serve": "^14.2.6"
   }
 }

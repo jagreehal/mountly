@@ -28,8 +28,11 @@ pagefind: false
       <a class="action primary" href="/mountly/getting-started/quick-start/">
         Quick start <span class="arrow">→</span>
       </a>
-      <a class="action ghost" href="/mountly/getting-started/how-it-works/">
-        How it works
+      <a class="action ghost" href="/mountly/getting-started/choosing-an-architecture/">
+        Choosing an architecture
+      </a>
+      <a class="action ghost" href="/mountly/concepts/when-not-to-use/">
+        When not to use
       </a>
     </div>
     <div class="hero-stats sl-markdown-no-margin">
@@ -174,8 +177,8 @@ pagefind: false
     <div class="trigger-cell">
       <span class="index">03</span>
       <span class="label">multi-team</span>
-      <span class="name">Independent verticals, shared host</span>
-      <span class="desc">Team A ships payments, Team B ships chat, Team C owns the host. No merge conflicts, no shared deploy, no shared config block. A typed event bus for cross-team events.</span>
+      <span class="name">Independent widgets, not independent apps</span>
+      <span class="desc">Team A ships a payments widget, Team B ships chat, Team C owns the host. Independent widget deploys via CDN + manifest — no merge conflicts, no Federation <code>shared</code> block. Not a micro-frontend control plane.</span>
     </div>
     <div class="trigger-cell">
       <span class="index">04</span>
@@ -389,9 +392,15 @@ signup.attach({
           <td>High</td>
         </tr>
         <tr>
-          <td>Import-map MFE (mountly model)</td>
-          <td>Team-scalable widgets with zero orchestration</td>
-          <td>All verticals must tolerate one shared React version. No SSR composition at the edge. You own the CDN/manifest workflow.</td>
+          <td>Monorepo + npm libs</td>
+          <td>Same org, shared CI, lazy routes until clean break</td>
+          <td>Merge coordination; not for foreign hosts you cannot merge into</td>
+          <td>Low</td>
+        </tr>
+        <tr>
+          <td>Import-map widgets (mountly model)</td>
+          <td>Team-scalable widgets with zero orchestrator</td>
+          <td>Shared React version agreement; you own CDN/manifest workflow</td>
           <td>Low</td>
         </tr>
         <tr class="highlight">

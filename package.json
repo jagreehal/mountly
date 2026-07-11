@@ -17,7 +17,7 @@
     "test:unit:watch": "vp test",
     "test:e2e": "env -u NO_COLOR PLAYWRIGHT_HTML_OPEN=never playwright test",
     "test:stories": "pnpm run test:unit && PLAYWRIGHT_HTML_OPEN=never playwright test \"tests/.*\\\\.story\\\\.spec\\\\.ts\"",
-    "test:examples": "env -u NO_COLOR PLAYWRIGHT_HTML_OPEN=never playwright test tests/examples-hosts.spec.ts tests/vite-host-remotes-url.spec.ts tests/mcp-demo-preview.story.spec.ts tests/docs-happy-path.story.spec.ts",
+    "test:examples": "env -u NO_COLOR PLAYWRIGHT_HTML_OPEN=never playwright test tests/examples-hosts.spec.ts tests/platform-embed.spec.ts tests/vite-host-remotes-url.spec.ts tests/mcp-demo-preview.story.spec.ts tests/docs-happy-path.story.spec.ts",
     "test:cli": "env -u NO_COLOR PLAYWRIGHT_HTML_OPEN=never playwright test tests/cli.spec.ts",
     "test:consumer": "env -u NO_COLOR PLAYWRIGHT_HTML_OPEN=never playwright test tests/npm-consumer.spec.ts",
     "test:dx": "pnpm run test:cli && pnpm run test:consumer && pnpm run test:examples",

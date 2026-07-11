@@ -109,6 +109,18 @@ console.log(typeof createOnDemandFeature, typeof createWidget);
 
 If both log `"function"`, you're set.
 
+## Tested versions
+
+These are the versions exercised in CI and the example matrix:
+
+| Framework | Versions tested | Adapter package |
+| --------- | --------------- | --------------- |
+| React     | 18.x, 19.x      | `mountly-react` |
+| Vue       | 3.5.x           | `mountly-vue`   |
+| Svelte    | 4.x, 5.x        | `mountly-svelte`|
+
+Peer builds expect the host import map to pin matching `react`, `react/jsx-runtime`, and `react-dom/client` entries. Run `mountly manifest validate` or `mountly doctor` before deploy.
+
 ## Tested npm path
 
 The repo has an external-consumer Playwright test that packs the publish artifacts, installs them into a clean Vite project with `npm install`, builds the consumer app, and renders React, Vue, Svelte, and TSRX widgets through `defineMountlyFeature`. That test is the release gate for package install DX.
