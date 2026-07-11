@@ -42,19 +42,27 @@ mountly is appropriate when:
 - You want **style isolation when needed** (`shadow: true`) so the host page and component do not break each other in unknown hosts.
 - You need **multiple widgets on one page**, potentially from different frameworks.
 
-It's the **wrong** tool when you have a single SPA where the bundler owns every surface, when you need SSR plus hydration of server-rendered HTML, or when you want a microfrontend control plane. See [When not to use mountly](/mountly/concepts/when-not-to-use/) for the longer answer.
+It's the **wrong** tool when you have a single SPA where the bundler owns every surface, when you need SSR plus hydration of server-rendered HTML, or when you want a microfrontend control plane. See [When not to use mountly](/mountly/concepts/when-not-to-use/) and [Choosing an architecture](/mountly/getting-started/choosing-an-architecture/) for the longer answer.
 
 ## How it compares
 
-| Approach                    | Best at                                 | Tradeoff                                                        | Complexity |
-| --------------------------- | --------------------------------------- | --------------------------------------------------------------- | ---------- |
-| Traditional SPA             | One app owns every surface              | Poor fit for CMS, legacy, or partner-hosted UI                  | Low        |
-| Framework code-splitting    | Routes inside one framework app         | Does not standardize HTML drops or host-agnostic lifecycle      | Medium     |
-| Microfrontend orchestrators | Independent apps with team ownership    | Operationally heavy for component-sized features                | High       |
-| **mountly**                 | **Component features in any HTML page** | **Not a router, SSR framework, or microfrontend control plane** | **Low**    |
+Not sure where mountly fits? Start with [Choosing an architecture](/mountly/getting-started/choosing-an-architecture/) — most teams should try a monorepo or widget drop-in before adopting micro-frontend orchestration.
+
+| Approach | When | Pain you accept | Complexity |
+| -------- | ---- | --------------- | ---------- |
+| Monorepo npm lib | Same org, shared CI OK | Merge coordination | Low |
+| Traditional SPA | One app owns every surface | Poor fit for CMS, legacy, or partner-hosted UI | Low |
+| Framework code-splitting | Routes inside one framework app | Does not standardize HTML drops or host-agnostic lifecycle | Medium |
+| **mountly widget drop-in** | **Foreign host, 1–5 interactive regions** | **Import map / version pinning** | **Low** |
+| mountly manifest verticals | 2–5 teams, independent CDN widget deploys | Shared React version agreement | Low |
+| Module Federation | Deep horizontal integration, shared build graph | `shared` blocks, tooling complexity | High |
+| Single-SPA / vendor MFE | Full app shells per route, many teams | Orchestration, routing ownership | High |
+| Microfrontend orchestrators (generic) | Independent apps with org-level ownership | Operationally heavy for component-sized features | High |
 
 ## Where to next
 
+- [**Choosing an architecture**](/mountly/getting-started/choosing-an-architecture/): monorepo vs widget vs manifest — before you pick micro frontends.
+- [**When not to use mountly**](/mountly/concepts/when-not-to-use/): disqualifiers upfront.
 - [**Quick start**](/mountly/getting-started/quick-start/): scaffold and ship your first widget in 60 seconds.
 - [**How it works**](/mountly/getting-started/how-it-works/): read the architecture before you commit.
 - [**Vocabulary**](/mountly/concepts/vocabulary/): the three terms you'll see everywhere.

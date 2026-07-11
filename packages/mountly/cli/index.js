@@ -2,6 +2,7 @@
 import { argv, exit, stderr, stdout } from "node:process";
 import { init } from "./commands/init.js";
 import { manifest } from "./commands/manifest.js";
+import { doctor } from "./commands/doctor.js";
 
 const USAGE = `mountly — scaffold mountly widgets and hosts.
 
@@ -10,6 +11,7 @@ USAGE
   mountly init <name> --host [options]   Scaffold a host shell
   mountly manifest validate <path>       Validate a manifest JSON file
   mountly manifest codegen <path>        Generate TypeScript remote module declarations
+  mountly doctor [path]                  Validate manifest + deploy footgun checks
 
 INIT OPTIONS
   --framework <name>   Framework: react|vue|svelte (default: react)
@@ -27,6 +29,7 @@ EXAMPLES
   npx mountly init my-widget --framework vue --no-tailwind
   npx mountly init my-host --host
   npx mountly manifest validate ./manifest.json
+  npx mountly doctor ./manifest.json
 `;
 
 const args = argv.slice(2);
@@ -38,7 +41,7 @@ if (args.length === 0 || args.includes("--help") || args.includes("-h")) {
 
 const [command, ...rest] = args;
 
-const COMMANDS = { init, manifest };
+const COMMANDS = { init, manifest, doctor };
 
 if (COMMANDS[command]) {
   try {

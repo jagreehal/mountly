@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Platform shell — Product A embed</title>
+    <style>
+      :root {
+        --ink: #0f172a;
+        --muted: #64748b;
+        --rule: #e2e8f0;
+        --platform: #7c3aed;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: system-ui, -apple-system, sans-serif;
+        background: #fafafa;
+        color: var(--ink);
+        line-height: 1.5;
+      }
+      .platform-bar {
+        background: var(--platform);
+        color: #fff;
+        padding: 10px 20px;
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .wrap {
+        max-width: 880px;
+        margin: 0 auto;
+        padding: 40px 24px 80px;
+      }
+      h1 {
+        margin: 0 0 8px;
+        font-size: clamp(26px, 4vw, 36px);
+      }
+      .lede {
+        color: var(--muted);
+        max-width: 62ch;
+        margin-bottom: 28px;
+      }
+      .platform-card {
+        border: 1px solid var(--rule);
+        border-radius: 12px;
+        padding: 20px;
+        background: #fff;
+        margin-bottom: 24px;
+      }
+      .platform-card h2 {
+        margin: 0 0 8px;
+        font-size: 18px;
+      }
+      .platform-card p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .embed-section {
+        border: 2px dashed #93c5fd;
+        border-radius: 12px;
+        padding: 20px;
+        background: #eff6ff;
+      }
+      .embed-section .label {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #1d4ed8;
+        margin-bottom: 12px;
+      }
+      .migration {
+        margin-top: 32px;
+        font-size: 14px;
+        color: var(--muted);
+      }
+      .migration code {
+        font-size: 13px;
+      }
+      .platform-btn {
+        background: #2563eb;
+        color: #fff;
+        border: 0;
+        padding: 10px 16px;
+        border-radius: 8px;
+        font-weight: 500;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="platform-bar">Platform team shell — you do not own Product A code</div>
+    <div class="wrap">
+      <h1>Customer dashboard</h1>
+      <p class="lede">
+        Product A ships an exclusive settings panel into this page without Module Federation,
+        without touching platform React code, and without a shared <code>shared</code> block. When
+        Product A goes standalone, keep the same widget artifact — swap the host page.
+      </p>
+
+      <section class="platform-card" aria-label="Platform-owned region">
+        <h2>Platform overview</h2>
+        <p>Owned by the platform team. Static HTML and platform CSS only in this region.</p>
+      </section>
+
+      <section class="embed-section" aria-label="Product A widget region">
+        <div class="label">Team: Product A · independent widget deploy</div>
+        <mountly-feature
+          module-id="product-a-settings"
+          trigger="click"
+          props='{"tenantId":"tenant_acme","apiUrl":"/api/product-a","data":{"tenantId":"tenant_acme","plan":"Business","seats":42,"apiBase":"https://api.product-a.example/v1"}}'
+        >
+          <button class="platform-btn" type="button">Show Product A settings</button>
+          <div data-mountly-mount style="margin-top: 12px; min-height: 160px"></div>
+        </mountly-feature>
+      </section>
+
+      <p class="migration">
+        <strong>Migration path:</strong> publish <code>product-a-settings@x.y.z/dist/peer.js</code>
+        to your CDN. Standalone Product A host loads the same URL from its own manifest — no widget
+        rewrite.
+      </p>
+    </div>
+
+    <script type="module" src="./host.js"></script>
+  </body>
+</html>

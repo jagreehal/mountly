@@ -37,7 +37,7 @@ export function validateManifest(manifest: MountlyManifest): ManifestIssue[] {
     if (!imports[key]) {
       issues.push({
         level: "error",
-        message: `platform.imports is missing "${key}" — host runtime needs it`,
+        message: `platform.imports is missing "${key}" — host runtime needs it. Add a pin under platform.imports (see /mountly/concepts/manifest-hosts/)`,
       });
     }
   }
@@ -60,7 +60,7 @@ export function validateManifest(manifest: MountlyManifest): ManifestIssue[] {
       .join(", ");
     issues.push({
       level: "error",
-      message: `React import-map entries pin different major versions (${detail}) — this loads duplicate React and breaks hooks`,
+      message: `React import-map entries pin different major versions (${detail}) — this loads duplicate React and breaks hooks. Pin one version for every react/* entry, use dist/peer.js for verticals, run mountly doctor. See /mountly/getting-started/choosing-an-architecture/#faq-from-common-objections`,
     });
   } else {
     const reactPatches = new Set(
@@ -73,7 +73,7 @@ export function validateManifest(manifest: MountlyManifest): ManifestIssue[] {
         .join(", ");
       issues.push({
         level: "warning",
-        message: `React import-map entries pin different versions (${detail}) — pin one version to avoid a duplicate-React risk`,
+        message: `React import-map entries pin different versions (${detail}) — pin one version to avoid duplicate-React risk. Run mountly manifest validate or mountly doctor before deploy`,
       });
     }
   }

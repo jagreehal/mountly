@@ -86,8 +86,9 @@ The widget mounts inside the container in light DOM by default, with bundled sty
 - **Lazy load on user intent (Features)**: `createOnDemandFeature(...)` adds hover/click/viewport/idle triggers around a widget. See [docs/examples/marketing-site](docs/examples/marketing-site/README.md).
 - **Plain-HTML host (no bundler)**: `installRuntime({...})` injects a shared-React import map. For direct browser import maps, also map used `mountly/*` subpaths (for example `mountly/attach`, `mountly/elements`, `mountly/shadow`, `mountly/assets`, `mountly/adapter`). See [docs/examples/plain-html](docs/examples/plain-html/README.md).
 - **Pick a distribution (self-contained vs shared React)**: when to ship one widget vs many, when to share React. See [docs/examples/README.md#choosing-a-distribution](docs/examples/README.md#choosing-a-distribution).
-- **Micro-frontends (Vite + manifest)**: platform monorepo plus independent vertical repos via import maps, not Webpack federation. See [docs/micro-frontends.md](docs/micro-frontends.md) and [docs/examples/multi-vertical-host](docs/examples/multi-vertical-host/README.md).
-- **When _not_ to use mountly**: single SPA, full SSR-hydration ownership, MFE orchestration control plane. See [docs/examples/README.md#when-not-to-use-it](docs/examples/README.md#when-not-to-use-it).
+- **Choosing an architecture**: monorepo first, widget drop-in, manifest verticals — when you do and do not need micro frontends. See [Choosing an architecture](https://jagreehal.github.io/mountly/getting-started/choosing-an-architecture/).
+- **Import-map verticals (advanced)**: independent **widget** repos via manifest + CDN, not Webpack federation. See [docs/micro-frontends.md](docs/micro-frontends.md) and [docs/examples/multi-vertical-host](docs/examples/multi-vertical-host/README.md). Read the architecture guide first.
+- **When _not_ to use mountly**: single SPA, full SSR-hydration ownership, MFE orchestration control plane. See [When not to use mountly](https://jagreehal.github.io/mountly/concepts/when-not-to-use/).
 - **All runnable examples**: [docs/examples/README.md](docs/examples/README.md).
 - **Host runtime API**: [packages/mountly/README.md](packages/mountly/README.md).
 - **MCP Apps integration**: [docs/protocol-layering.md](docs/protocol-layering.md) and [docs/how-to-test.md](docs/how-to-test.md).

@@ -128,6 +128,69 @@ test("cli init --no-tailwind produces a Tailwind-free package", () => {
   }
 });
 
+test("cli doctor validates example manifest", () => {
+  const manifest = join(REPO_ROOT, "docs/examples/platform-embed/platform-host/manifest.json");
+  const out = execSync(`node ${CLI} doctor ${manifest}`, { encoding: "utf8" });
+  expect(out).toContain("looks deploy-ready");
+});
+
+test("cli doctor exits 1 on duplicate React manifest", () => {
+  const dir = mkdtempSync(join(tmpdir(), "mountly-doctor-"));
+  const badManifest = join(dir, "manifest.json");
+  writeFileSync(
+    badManifest,
+    JSON.stringify({
+      version: "2",
+      platform: {
+        imports: {
+          react: "https://esm.sh/react@19.2.7",
+          "react-dom": "https://esm.sh/react-dom@18.3.1",
+          "react-dom/client": "https://esm.sh/react-dom@18.3.1/client",
+        },
+      },
+      verticals: [{ id: "a", url: "/a/peer.js" }],
+    }),
+  );
+  let exitCode = 0;
+  try {
+    execSync(`node ${CLI} doctor ${badManifest}`, { encoding: "utf8", stdio: "pipe" });
+  } catch (e: any) {
+    exitCode = e.status;
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+  expect(exitCode).toBe(1);
+});
+
+test("cli doctor warns React hosts to keep peer builds", () => {
+  const dir = mkdtempSync(join(tmpdir(), "mountly-doctor-"));
+  const manifest = join(dir, "manifest.json");
+  writeFileSync(
+    manifest,
+    JSON.stringify({
+      version: "2",
+      platform: {
+        imports: {
+          react: "https://esm.sh/react@19.2.7",
+          "react/jsx-runtime": "https://esm.sh/react@19.2.7/jsx-runtime",
+          "react-dom": "https://esm.sh/react-dom@19.2.7",
+          "react-dom/client": "https://esm.sh/react-dom@19.2.7/client",
+          mountly: "/packages/mountly/dist/index.js",
+        },
+      },
+      verticals: [{ id: "a", url: "/a/peer.js" }],
+    }),
+  );
+  try {
+    const out = execSync(`node ${CLI} doctor ${manifest} 2>&1`, { encoding: "utf8" });
+    expect(out).toContain('platform.imports is missing "mountly-react"');
+    expect(out).toContain("dist/peer.js");
+    expect(out).not.toContain("use self-contained dist/index.js");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test("cli rejects unknown framework with exit 1", () => {
   const dir = mkdtempSync(join(tmpdir(), "mountly-cli-"));
   let exitCode = 0;

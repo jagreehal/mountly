@@ -60,6 +60,11 @@ jobs:
       - name: Build packages
         run: pnpm build
 
+      - name: Validate example manifests
+        run: |
+          pnpm --filter multi-vertical-host-example run validate
+          pnpm --filter platform-embed-host-example run doctor
+
       - name: Type check
         run: pnpm typecheck
 

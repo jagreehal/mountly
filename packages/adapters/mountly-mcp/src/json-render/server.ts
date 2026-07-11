@@ -3,6 +3,7 @@ import {
   type Catalog,
   type Spec,
   type SpecValidationIssues,
+  type UIElement,
   autoFixSpec,
   buildUserPrompt,
   validateSpec,
@@ -12,6 +13,49 @@ import { compileTextStreamToSpecs } from "./spec-stream.js";
 // The pure stream driver lives in `./spec-stream` (no AI-SDK coupling); re-export
 // it here so it sits next to `streamSpec` for server-side consumers.
 export { compileTextStreamToSpecs } from "./spec-stream.js";
+
+// Ports of unreleased upstream json-render fixes (on main past v0.19.0); both
+// become redundant — delete them here — once `@json-render/core` is bumped
+// past 0.19.0.
+
+// vercel-labs/json-render#299: models omit `children` on roughly a third of
+// first attempts, and the schema requires it. Upstream adds this rule to the
+// default catalog prompt; until that ships we append it ourselves.
+export const REQUIRED_FIELDS_RULE =
+  'REQUIRED FIELDS: Every element MUST include a "children" array. Leaf elements (text, badges, inputs, images) use an empty array: "children": [].' +
+  " Omitting \"children\" fails validation.";
+
+/**
+ * vercel-labs/json-render#300: drop children references to elements the model
+ * never defined — the dominant first-attempt validation failure, and one
+ * models rarely repair even when told. The renderer already skips missing
+ * children at runtime, so pruning renders identically while letting the spec
+ * validate. A repeat container is never pruned to zero children: that would
+ * trade `missing_child` for `repeat_without_children` and hide the real
+ * problem (the missing template).
+ */
+export function pruneDanglingChildren(
+  spec: Spec,
+  fixes: string[],
+): Spec {
+  const elements = spec.elements as Record<string, UIElement>;
+  const pruned: Record<string, UIElement> = { ...elements };
+  for (const [key, element] of Object.entries(elements)) {
+    if (!element.children || element.children.length === 0) continue;
+    const present = element.children.filter((child) => child in elements);
+    if (present.length === element.children.length) continue;
+    if (element.repeat !== undefined && present.length === 0) continue;
+    for (const child of element.children) {
+      if (!(child in elements)) {
+        fixes.push(
+          `Removed reference to undefined element "${child}" from children of "${key}".`,
+        );
+      }
+    }
+    pruned[key] = { ...element, children: present };
+  }
+  return { ...spec, elements: pruned };
+}
 
 export interface StreamSpecOptions {
   /** The catalog the spec must conform to (drives the system prompt). */
@@ -31,7 +75,7 @@ export interface SpecResult {
   spec: Spec;
   /** Raw model output (JSONL patches). */
   raw: string;
-  /** Repairs `autoFixSpec` applied (props-vs-element fields, dangling refs). */
+  /** Repairs applied: `autoFixSpec` (props-vs-element fields) plus {@link pruneDanglingChildren} (dangling child refs). */
   fixes: string[];
   /** Validation issues against the catalog. */
   issues: SpecValidationIssues;
@@ -114,7 +158,7 @@ export function streamSpec(options: StreamSpecOptions): SpecStream {
     try {
       const stream = streamText({
         model,
-        system: catalog.prompt({ mode: "standalone" }),
+        system: `${catalog.prompt({ mode: "standalone" })}\n\n${REQUIRED_FIELDS_RULE}`,
         prompt: buildUserPrompt({ prompt, state }),
         temperature,
       });
@@ -147,7 +191,8 @@ export function streamSpec(options: StreamSpecOptions): SpecStream {
         );
       }
 
-      const { spec, fixes } = autoFixSpec(compiled as unknown as Spec);
+      const { spec: repaired, fixes } = autoFixSpec(compiled as unknown as Spec);
+      const spec = pruneDanglingChildren(repaired, fixes);
       // A final snapshot with repairs applied, so a live renderer settles on the
       // same spec the awaiting caller receives.
       queue.push(spec);

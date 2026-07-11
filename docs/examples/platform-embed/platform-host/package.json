@@ -1,15 +1,15 @@
 {
-  "name": "{{name}}",
+  "name": "platform-embed-host-example",
+  "version": "0.0.1",
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "serve .",
+    "dev": "serve -l 5184 ../../../../",
     "validate": "mountly manifest validate ./manifest.json",
     "doctor": "mountly doctor ./manifest.json"
   },
   "devDependencies": {
-    "mountly": "^{{mountlyVersion}}",
-    "mountly-manifest": "^0.1.0",
-    "serve": "^14.0.0"
+    "mountly": "workspace:*",
+    "serve": "^14.2.6"
   }
 }

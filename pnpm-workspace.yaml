@@ -1,6 +1,7 @@
 packages:
   - "packages/**/*"
   - "docs/examples/*"
+  - "docs/examples/platform-embed/platform-host"
   - "docs"
 
 overrides:

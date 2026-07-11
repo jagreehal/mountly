@@ -26,19 +26,21 @@ Build output must exist under `packages/mountly/dist/` and each example widget�
 6. **`pokemon-kitchen-sink/`** — Stress-test of triggers, prefetch, custom elements, analytics. For **deep dives**, not first-day onboarding. Vite dev server on **port 5178** (distinct from `plain-html` so they can run side-by-side).
 7. **`mcp-app-demo/`** — MCP Apps reference demo: builds a `ui://` widget resource, registers it on `mountly-mcp/server`, and verifies the full MCP flow in-process (`listTools`, `listResources`, `readResource`, `callTool`). See [mcp-app-demo/README.md](mcp-app-demo/README.md).
 8. **`mcp-generative-demo/`** — Generative UI: an agent emits a JSON spec constrained to a [`@json-render`](https://github.com/vercel-labs/json-render) catalog, and mountly renders it as native components, through the MCP bridge and as a plain widget. See [mcp-generative-demo/README.md](mcp-generative-demo/README.md).
-9. **`multi-vertical-host/`** — Manifest-driven multi-team host: `installPlatformRuntime`, `defineMountlyFeatureFromManifest`, `mountly/contracts` bus. See [multi-vertical-host/README.md](multi-vertical-host/README.md) and [docs/micro-frontends.md](../docs/micro-frontends.md).
+9. **`multi-vertical-host/`** — Manifest-driven multi-team host: `installPlatformRuntime`, `defineMountlyFeatureFromManifest`, `mountly/contracts` bus. See [multi-vertical-host/README.md](multi-vertical-host/README.md) and [docs/micro-frontends.md](../docs/micro-frontends.md). Read [Choosing an architecture](https://jagreehal.github.io/mountly/getting-started/choosing-an-architecture/) first — this is Stage 3, not the default starting point.
 
-10. **`vite-host-import/`** — Vite React host with federation-style `import("demo-widget")` via `mountlyHostPlugin`, plus auto-generated remote typings from built vertical fragments. See [vite-host-import/README.md](vite-host-import/README.md).
+10. **`platform-embed/`** — Product A widget embedded in another team's platform shell (Stage 2). No Module Federation. See [platform-embed/README.md](platform-embed/README.md).
 
-11. **`vite-host-remotes-url/`** — Vite host that declares a remote by **published URL** (`remotes: { "demo-widget": url }`); the host fetches the remote's fragment from that URL to auto-wire the import map + types. See [vite-host-remotes-url/README.md](vite-host-remotes-url/README.md). Proven by [`tests/vite-host-remotes-url.spec.ts`](../tests/vite-host-remotes-url.spec.ts).
+11. **`vite-host-import/`** — Vite React host with federation-style `import("demo-widget")` via `mountlyHostPlugin`, plus auto-generated remote typings from built vertical fragments. See [vite-host-import/README.md](vite-host-import/README.md).
 
-Widget source packages live alongside hosts: **`payment-breakdown`**, **`image-lightbox`**, **`signup-card`** under `docs/examples/<name>/`.
+12. **`vite-host-remotes-url/`** — Vite host that declares a remote by **published URL** (`remotes: { "demo-widget": url }`); the host fetches the remote's fragment from that URL to auto-wire the import map + types. See [vite-host-remotes-url/README.md](vite-host-remotes-url/README.md). Proven by [`tests/vite-host-remotes-url.spec.ts`](../tests/vite-host-remotes-url.spec.ts).
 
-12. **`multi-widget-bundle/`** — Three widgets sharing code in one bundle via `createWidgetBundle`. One JS fetch, one shared CSS stylesheet. No build step for the host. Open via the `plain-html` static server. See [multi-widget-bundle/README.md](multi-widget-bundle/README.md).
+Widget source packages live alongside hosts: **`payment-breakdown`**, **`image-lightbox`**, **`signup-card`**, **`product-a-widget`** under `docs/examples/<name>/`.
 
-13. **`monorepo-component-library/`** — Simulates a monorepo: a shared UI library (`ui-lib.js`) consumed by a widgets bundle, loaded via `createWidgetBundle`. Demonstrates third-party imports flowing through a bundle. Open via the `plain-html` static server. See [monorepo-component-library/README.md](monorepo-component-library/README.md).
+13. **`multi-widget-bundle/`** — Three widgets sharing code in one bundle via `createWidgetBundle`. One JS fetch, one shared CSS stylesheet. No build step for the host. Open via the `plain-html` static server. See [multi-widget-bundle/README.md](multi-widget-bundle/README.md).
 
-14. **`cross-framework-bus/`** — React 19 + Vue + Svelte widgets on one page, communicating through a typed `mountly/bus` event bus. No framework imports another. See [cross-framework-bus/README.md](cross-framework-bus/README.md).
+14. **`monorepo-component-library/`** — Simulates a monorepo: a shared UI library (`ui-lib.js`) consumed by a widgets bundle, loaded via `createWidgetBundle`. Demonstrates third-party imports flowing through a bundle. Open via the `plain-html` static server. See [monorepo-component-library/README.md](monorepo-component-library/README.md).
+
+15. **`cross-framework-bus/`** — React 19 + Vue + Svelte widgets on one page, communicating through a typed `mountly/bus` event bus. No framework imports another. See [cross-framework-bus/README.md](cross-framework-bus/README.md).
 
 ## Run commands and ports
 
@@ -55,6 +57,7 @@ Each example has its own dedicated port, so they all run side-by-side without co
 | `mcp-app-demo` (CLI verify)         | N/A      | `pnpm --filter mcp-app-demo verify`                                       | CLI output                                            |
 | `mcp-generative-demo` (CLI verify)  | N/A      | `pnpm --filter mcp-generative-demo verify`                                | CLI output                                            |
 | `multi-vertical-host` (static)      | **5182** | `cd docs/examples/multi-vertical-host && pnpm dev`                             | <http://localhost:5182/docs/examples/multi-vertical-host/> |
+| `platform-embed` (static)             | **5184** | `cd docs/examples/platform-embed/platform-host && pnpm dev`                  | <http://localhost:5184/docs/examples/platform-embed/platform-host/> |
 | `vite-host-import` (Vite host)      | **5190** | `cd docs/examples/vite-host-import && pnpm run build:remote && pnpm dev`       | <http://localhost:5190>                               |
 | `vite-host-remotes-url` (Vite host) | **5192** | needs a served remote — see [its README](vite-host-remotes-url/README.md) | <http://localhost:5192>                               |
 | `multi-widget-bundle` (static)      | **5175** | (served by `plain-html`'s static server)                                  | <http://localhost:5175/docs/examples/multi-widget-bundle/> |
@@ -91,7 +94,7 @@ Numbers are representative. Measure your own widgets in DevTools. For the runnab
 - Embeddable **widgets** on static sites, CMS pages, or another team’s stack without shipping a full SPA.
 - **Intent-based** activation (hover, click, viewport, idle) with a shared **module + data cache** story.
 - **Multiple widgets** on one page with one shared React (peer builds + import map).
-- **Multi-team verticals** with independent repos/CDN deploys (manifest + import map). See [docs/micro-frontends.md](../docs/micro-frontends.md).
+- **Multi-team widgets** with independent CDN deploys (manifest + import map). See [Choosing an architecture](https://jagreehal.github.io/mountly/getting-started/choosing-an-architecture/) and [docs/micro-frontends.md](../docs/micro-frontends.md).
 
 ## When not to use it
 

@@ -135,7 +135,8 @@ function wrapModuleLoadError(moduleId: string, err: unknown): Error {
   const wrapped = new Error(
     `[mountly] loadModule for "${moduleId}" failed to resolve. ` +
       `If you're in plain HTML, check that your <script type="importmap"> maps the bare specifier — ` +
-      `e.g. { "imports": { "${moduleId}": "/path/to/${moduleId}/dist/index.js" } } — and that installRuntime() runs before any module imports. ` +
+      `e.g. { "imports": { "${moduleId}": "/path/to/${moduleId}/dist/peer.js" } } — and that bootstrapMountly() or installRuntime() runs before any module imports. ` +
+      `On React hosts use dist/peer.js, not dist/index.js, to avoid duplicate React. See /mountly/getting-started/choosing-an-architecture/ ` +
       `Original: ${original.message}`,
   );
   (wrapped as Error & { cause?: unknown }).cause = original;
