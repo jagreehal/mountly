@@ -63,7 +63,7 @@
     "@testing-library/react": "^16.3.2",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
-    "ai": "6.0.208",
+    "ai": "7.0.37",
     "jsdom": "^29.1.1",
     "mountly": "^0.2.2",
     "mountly-react": "workspace:^",
