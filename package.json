@@ -5,7 +5,7 @@
   "description": "On-demand interactive UI platform. Use your React/Vue/Svelte components with no new component model, modernize legacy pages incrementally, and load rich UI only when users need it.",
   "license": "Apache-2.0",
   "scripts": {
-    "build": "turbo run build",
+    "build": "turbo run build --filter=!mountly-docs && turbo run build --filter=mountly-docs",
     "dev": "turbo run dev",
     "typecheck": "turbo run typecheck",
     "clean": "turbo run clean",

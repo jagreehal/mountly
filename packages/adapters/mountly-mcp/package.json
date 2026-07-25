@@ -16,33 +16,33 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
     },
     "./build": {
-      "import": "./dist/build/index.js",
-      "types": "./dist/build/index.d.ts"
+      "types": "./dist/build/index.d.ts",
+      "import": "./dist/build/index.js"
     },
     "./bridge": {
-      "import": "./dist/bridge/index.js",
-      "types": "./dist/bridge/index.d.ts"
+      "types": "./dist/bridge/index.d.ts",
+      "import": "./dist/bridge/index.js"
     },
     "./bridge/iframe-entry.js": "./dist/bridge/iframe-entry.js",
     "./react": {
-      "import": "./dist/react/index.js",
-      "types": "./dist/react/index.d.ts"
+      "types": "./dist/react/index.d.ts",
+      "import": "./dist/react/index.js"
     },
     "./server": {
-      "import": "./dist/server/index.js",
-      "types": "./dist/server/index.d.ts"
+      "types": "./dist/server/index.d.ts",
+      "import": "./dist/server/index.js"
     },
     "./json-render": {
-      "import": "./dist/json-render/index.js",
-      "types": "./dist/json-render/index.d.ts"
+      "types": "./dist/json-render/index.d.ts",
+      "import": "./dist/json-render/index.js"
     },
     "./json-render/server": {
-      "import": "./dist/json-render/server.js",
-      "types": "./dist/json-render/server.d.ts"
+      "types": "./dist/json-render/server.d.ts",
+      "import": "./dist/json-render/server.js"
     }
   },
   "publishConfig": {

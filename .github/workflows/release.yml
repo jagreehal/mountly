@@ -52,6 +52,9 @@ jobs:
         id: changesets
         uses: changesets/action@3841a0683d3cfa6dae0f9bb335290003010fe3f0 # v1.9.0
         with:
+          # Keeps pnpm-lock.yaml in step with the bumped versions, so the next
+          # run's `pnpm install --frozen-lockfile` still resolves.
+          version: pnpm version-packages
           publish: pnpm release
           commit: "chore: release packages"
           title: "chore: release packages"
