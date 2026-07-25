@@ -297,8 +297,10 @@ async function buildViteExamples() {
 }
 
 async function main() {
-  log("building workspace packages and widget dists");
-  run("pnpm --filter '!mountly-docs' build");
+  // Every other workspace package is built before this runs — the root `build`
+  // script does that pass first. Building them here too raced turbo: both
+  // builders hit the same dist/ dirs, and tsup's `clean` wiped one out from
+  // under the other's dts pass (TS7016 on whichever package lost).
 
   cleanPublic();
   mkdirSync(PUBLIC_ROOT, { recursive: true });

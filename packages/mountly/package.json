@@ -26,100 +26,100 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
     },
     "./triggers": {
-      "import": "./dist/triggers.js",
-      "types": "./dist/triggers.d.ts"
+      "types": "./dist/triggers.d.ts",
+      "import": "./dist/triggers.js"
     },
     "./gestures": {
-      "import": "./dist/gestures.js",
-      "types": "./dist/gestures.d.ts"
+      "types": "./dist/gestures.d.ts",
+      "import": "./dist/gestures.js"
     },
     "./attach": {
-      "import": "./dist/attach.js",
-      "types": "./dist/attach.d.ts"
+      "types": "./dist/attach.d.ts",
+      "import": "./dist/attach.js"
     },
     "./elements": {
-      "import": "./dist/elements.js",
-      "types": "./dist/elements.d.ts"
+      "types": "./dist/elements.d.ts",
+      "import": "./dist/elements.js"
     },
     "./island": {
-      "import": "./dist/island.js",
-      "types": "./dist/island.d.ts"
+      "types": "./dist/island.d.ts",
+      "import": "./dist/island.js"
     },
     "./host": {
-      "import": "./dist/host.js",
-      "types": "./dist/host.d.ts"
+      "types": "./dist/host.d.ts",
+      "import": "./dist/host.js"
     },
     "./host/auto": {
-      "import": "./dist/host-entry.js",
-      "types": "./dist/host-entry.d.ts"
+      "types": "./dist/host-entry.d.ts",
+      "import": "./dist/host-entry.js"
     },
     "./bundle": {
-      "import": "./dist/bundle.js",
-      "types": "./dist/bundle.d.ts"
+      "types": "./dist/bundle.d.ts",
+      "import": "./dist/bundle.js"
     },
     "./cache": {
-      "import": "./dist/cache.js",
-      "types": "./dist/cache.d.ts"
+      "types": "./dist/cache.d.ts",
+      "import": "./dist/cache.js"
     },
     "./mount": {
-      "import": "./dist/mount.js",
-      "types": "./dist/mount.d.ts"
+      "types": "./dist/mount.d.ts",
+      "import": "./dist/mount.js"
     },
     "./shadow": {
-      "import": "./dist/shadow.js",
-      "types": "./dist/shadow.d.ts"
+      "types": "./dist/shadow.d.ts",
+      "import": "./dist/shadow.js"
     },
     "./assets": {
-      "import": "./dist/assets.js",
-      "types": "./dist/assets.d.ts"
+      "types": "./dist/assets.d.ts",
+      "import": "./dist/assets.js"
     },
     "./adapter": {
-      "import": "./dist/adapter.js",
-      "types": "./dist/adapter.d.ts"
+      "types": "./dist/adapter.d.ts",
+      "import": "./dist/adapter.js"
     },
     "./analytics": {
-      "import": "./dist/analytics.js",
-      "types": "./dist/analytics.d.ts"
+      "types": "./dist/analytics.d.ts",
+      "import": "./dist/analytics.js"
     },
     "./prefetch": {
-      "import": "./dist/prefetch.js",
-      "types": "./dist/prefetch.d.ts"
+      "types": "./dist/prefetch.d.ts",
+      "import": "./dist/prefetch.js"
     },
     "./devtools": {
-      "import": "./dist/devtools.js",
-      "types": "./dist/devtools.d.ts"
+      "types": "./dist/devtools.d.ts",
+      "import": "./dist/devtools.js"
     },
     "./overlays": {
-      "import": "./dist/positioning.js",
-      "types": "./dist/positioning.d.ts"
+      "types": "./dist/positioning.d.ts",
+      "import": "./dist/positioning.js"
     },
     "./data": {
-      "import": "./dist/data-source.js",
-      "types": "./dist/data-source.d.ts"
+      "types": "./dist/data-source.d.ts",
+      "import": "./dist/data-source.js"
     },
     "./url": {
-      "import": "./dist/url-state.js",
-      "types": "./dist/url-state.d.ts"
+      "types": "./dist/url-state.d.ts",
+      "import": "./dist/url-state.js"
     },
     "./bus": {
-      "import": "./dist/bus.js",
-      "types": "./dist/bus.d.ts"
+      "types": "./dist/bus.d.ts",
+      "import": "./dist/bus.js"
     },
     "./contracts": {
-      "import": "./dist/contracts.js",
-      "types": "./dist/contracts.d.ts"
+      "types": "./dist/contracts.d.ts",
+      "import": "./dist/contracts.js"
     },
     "./test": {
-      "import": "./dist/test-utils.js",
-      "types": "./dist/test-utils.d.ts"
+      "types": "./dist/test-utils.d.ts",
+      "import": "./dist/test-utils.js"
     },
     "./runtime": {
-      "import": "./dist/runtime.js",
-      "types": "./dist/runtime.d.ts"
+      "types": "./dist/runtime.d.ts",
+      "import": "./dist/runtime.js"
     }
   },
   "publishConfig": {
