@@ -1,5 +1,19 @@
 # mountly-svelte
 
+## 2.0.0
+
+### Patch Changes
+
+- 814f6e8: Fix `exports` condition order so the packages are typed for `node16`/`nodenext` consumers.
+
+  Every subpath listed `import` before `types`. Export conditions match in order, so `import` always won and the `types` condition was never reached — anyone on `moduleResolution: node16` or `nodenext` resolved these packages as untyped and fell back to `any`. `bundler` resolution masked it by finding the adjacent `.d.ts` on its own.
+
+  No runtime change; `types` now comes first on all 38 subpaths.
+
+- Updated dependencies [814f6e8]
+- Updated dependencies [ad95cff]
+  - mountly@0.3.0
+
 ## 1.0.1
 
 ### Patch Changes

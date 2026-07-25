@@ -1,5 +1,16 @@
 # cross-framework-bus
 
+## 0.0.10
+
+### Patch Changes
+
+- Updated dependencies [814f6e8]
+- Updated dependencies [ad95cff]
+  - mountly@0.3.0
+  - mountly-react@2.0.0
+  - mountly-svelte@2.0.0
+  - mountly-vue@2.0.0
+
 ## 0.0.9
 
 ### Patch Changes

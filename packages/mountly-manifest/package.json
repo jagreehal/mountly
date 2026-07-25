@@ -1,6 +1,6 @@
 {
   "name": "mountly-manifest",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Vertical registry schema and host helpers for mountly micro-frontends",
   "license": "Apache-2.0",
   "repository": {
@@ -49,7 +49,7 @@
     "typescript": "^6.0.3"
   },
   "peerDependencies": {
-    "mountly": "^0.2.2"
+    "mountly": "^0.3.0"
   },
   "peerDependenciesMeta": {
     "mountly": {
