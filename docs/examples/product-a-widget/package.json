@@ -1,8 +1,10 @@
 {
   "name": "product-a-widget",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "private": true,
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",

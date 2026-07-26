@@ -1,5 +1,15 @@
 # mountly-demo
 
+## 0.0.9
+
+### Patch Changes
+
+- Updated dependencies [814f6e8]
+- Updated dependencies [ad95cff]
+  - mountly@0.3.0
+  - image-lightbox@0.0.9
+  - payment-breakdown@0.0.9
+
 ## 0.0.8
 
 ### Patch Changes

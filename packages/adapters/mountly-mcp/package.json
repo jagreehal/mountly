@@ -1,6 +1,6 @@
 {
   "name": "mountly-mcp",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Publish a Mountly widget as an MCP Apps ui:// resource (SEP-1865).",
   "license": "Apache-2.0",
   "repository": {
@@ -65,7 +65,7 @@
     "@types/react-dom": "^19.2.3",
     "ai": "6.0.208",
     "jsdom": "^29.1.1",
-    "mountly": "^0.2.2",
+    "mountly": "^0.3.0",
     "mountly-react": "workspace:^",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
@@ -77,8 +77,8 @@
     "@json-render/react": "^0.19.0",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "ai": "^6.0.207",
-    "mountly": "^0.2.2",
-    "mountly-react": "^1.0.1",
+    "mountly": "^0.3.0",
+    "mountly-react": "^2.0.0",
     "react": "^19",
     "react-dom": "^19"
   },
