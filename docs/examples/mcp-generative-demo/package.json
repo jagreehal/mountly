@@ -26,7 +26,7 @@
     "ai-sdk-ollama": "3.8.8",
     "mountly-mcp": "workspace:*",
     "mountly-react": "workspace:*",
-    "react": "^19.2.7",
+    "react": "^19.2.8",
     "react-dom": "^19.2.7",
     "zod": "^4.4.3"
   },
