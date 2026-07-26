@@ -353,6 +353,22 @@ function joinRemoteUrl(base: string, segment: string): string {
 }
 
 /**
+ * Apply Vite's `base` to a site-relative import-map URL.
+ *
+ * Import maps are resolved against the document, not the bundler, so a host
+ * deployed under a sub-path (GitHub Pages, a reverse proxy) needs `base` baked
+ * into the emitted URLs — otherwise `/remote/dist/x.js` requests the server
+ * root and 404s. Absolute URLs and data: URIs are left alone.
+ */
+export function applyBaseToImportUrl(url: string, base: string): string {
+  if (/^[a-z][a-z0-9+.-]*:/i.test(url) || url.startsWith("//")) return url;
+  const prefix = base.replace(/\/+$/, "");
+  if (!prefix || prefix === ".") return url;
+  if (url.startsWith("/")) return `${prefix}${url}`;
+  return `${prefix}/${url.replace(/^\.\//, "")}`;
+}
+
+/**
  * Fetch each URL-declared remote's `mountly.manifest.fragment.json` and turn it into vertical
  * entries keyed by the remote name, with asset URLs absolutized against the remote base.
  */
@@ -409,6 +425,7 @@ export function mountlyHostPlugin(options: MountlyHostPluginOptions): Plugin {
   let isProduction = false;
   let sourceFiles: string[] = [];
   let typesOutFile: string | null = null;
+  let viteBase = "/";
 
   const withUrlRemotes = (base: MountlyManifest): MountlyManifest =>
     urlRemoteVerticals.length > 0 ? mergeManifests(base, { verticals: urlRemoteVerticals }) : base;
@@ -479,6 +496,7 @@ export function mountlyHostPlugin(options: MountlyHostPluginOptions): Plugin {
 
     async configResolved(config: ResolvedConfig) {
       root = config.root;
+      viteBase = config.base;
       await ensureUrlRemotes();
       manifest = loadCurrentManifest();
       typesOutFile = resolveTypesOutFile(root, options.manifest, options.types);
@@ -521,7 +539,9 @@ export function mountlyHostPlugin(options: MountlyHostPluginOptions): Plugin {
           const imports = Object.fromEntries(
             Object.entries(manifestToImportMap(manifest)).map(([specifier, url]) => [
               specifier,
-              isProduction ? url : (resolveDevUrl(manifest, specifier, devOrigins) ?? url),
+              isProduction
+                ? applyBaseToImportUrl(url, viteBase)
+                : (resolveDevUrl(manifest, specifier, devOrigins) ?? url),
             ]),
           );
           const snippet = `<script type="importmap">\n${JSON.stringify({ imports }, null, 2)}\n</script>`;

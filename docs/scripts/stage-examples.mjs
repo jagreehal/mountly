@@ -34,6 +34,8 @@ const REPO_ROOT = join(DOCS_ROOT, "..");
 const PUBLIC_ROOT = join(DOCS_ROOT, "public");
 const EXAMPLES_SRC = join(DOCS_ROOT, "examples");
 const BASE = "/mountly";
+/** Port the throwaway server for vite-host-remotes-url's build listens on. */
+const REMOTE_STAGING_PORT = 5291;
 
 const TEXT_EXTENSIONS = new Set([
   ".html",
@@ -110,6 +112,10 @@ function copyDir(src, dest) {
 
 function rewriteContent(text) {
   return text
+    // vite-host-remotes-url is built against a throwaway local server, so that
+    // origin ends up baked into its import map. The same remote dist is staged
+    // under vite-host-import, so repoint it there.
+    .replaceAll(`http://127.0.0.1:${REMOTE_STAGING_PORT}/`, `${BASE}/examples/vite-host-import/remote/dist/`)
     .replaceAll('"/packages/', `"${BASE}/packages/`)
     .replaceAll("'/packages/", `'${BASE}/packages/`)
     .replaceAll('"/docs/examples/', `"${BASE}/examples/`)
@@ -271,7 +277,7 @@ async function buildViteExamples() {
   stageViteDist("vite-host-import");
 
   const remoteRoot = join(EXAMPLES_SRC, "vite-host-import", "remote", "dist");
-  const remotePort = 5291;
+  const remotePort = REMOTE_STAGING_PORT;
   const remoteServer = await staticServer(remoteRoot, remotePort);
   try {
     await runAsync(
@@ -297,10 +303,15 @@ async function buildViteExamples() {
 }
 
 async function main() {
-  // Every other workspace package is built before this runs — the root `build`
-  // script does that pass first. Building them here too raced turbo: both
-  // builders hit the same dist/ dirs, and tsup's `clean` wiped one out from
-  // under the other's dts pass (TS7016 on whichever package lost).
+  // deploy-docs.yml calls `pnpm --filter mountly-docs build` on its own, so
+  // this has to build the packages it stages — nothing else will.
+  //
+  // This must never run concurrently with turbo building the same packages:
+  // both write the same dist/ dirs and tsup's `clean` wipes one out from under
+  // the other's dts pass (TS7016 on whichever loses). The root `build` script
+  // keeps them apart by running turbo in two passes, docs last and alone.
+  log("building workspace packages and widget dists");
+  run("pnpm --filter '!mountly-docs' build");
 
   cleanPublic();
   mkdirSync(PUBLIC_ROOT, { recursive: true });
