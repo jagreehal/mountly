@@ -99,5 +99,14 @@ export default defineConfig({
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
     },
+    {
+      // The built site under its real /mountly base. Every other server here
+      // runs at the origin root, where base-path bugs are invisible.
+      // Requires `pnpm build`; CI builds before it runs Playwright.
+      command: "node tests/support/serve-built-docs.mjs",
+      url: "http://127.0.0.1:5196/mountly/examples/",
+      reuseExistingServer: !process.env.CI,
+      timeout: 30_000,
+    },
   ],
 });
