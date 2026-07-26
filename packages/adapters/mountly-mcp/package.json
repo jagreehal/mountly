@@ -54,7 +54,7 @@
     "dev": "tsup --watch"
   },
   "dependencies": {
-    "@modelcontextprotocol/ext-apps": "^1.7.4"
+    "@modelcontextprotocol/ext-apps": "^1.7.5"
   },
   "devDependencies": {
     "@json-render/core": "0.19.0",
