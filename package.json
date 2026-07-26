@@ -49,7 +49,7 @@
     "jsdom": "^29.1.1",
     "mountly-manifest": "workspace:*",
     "mountly-vite-plugin": "workspace:*",
-    "react": "^19.2.7",
+    "react": "^19.2.8",
     "react-dom": "^19.2.7",
     "serve": "^14.2.6",
     "svelte": "^5.56.3",
@@ -67,7 +67,7 @@
   "packageManager": "pnpm@9.15.0",
   "pnpm": {
     "overrides": {
-      "react": "^19.2.7",
+      "react": "^19.2.8",
       "react-dom": "^19.2.7"
     }
   }
