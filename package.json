@@ -37,7 +37,7 @@
     "@changesets/cli": "^2.31.1",
     "@json-render/core": "0.19.0",
     "@json-render/react": "0.19.0",
-    "@playwright/test": "^1.61.1",
+    "@playwright/test": "^1.62.0",
     "@testing-library/react": "^16.3.2",
     "@types/node": "^25.9.3",
     "@types/react": "^19.2.17",
