@@ -45,7 +45,7 @@
     "@vue/test-utils": "^2.4.11",
     "executable-stories-formatters": "^0.16.0",
     "executable-stories-playwright": "^8.6.7",
-    "executable-stories-vitest": "^8.5.5",
+    "executable-stories-vitest": "^8.5.6",
     "jsdom": "^29.1.1",
     "mountly-manifest": "workspace:*",
     "mountly-vite-plugin": "workspace:*",
