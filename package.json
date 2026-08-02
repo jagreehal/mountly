@@ -46,7 +46,7 @@
     "executable-stories-formatters": "^0.16.0",
     "executable-stories-playwright": "^8.6.7",
     "executable-stories-vitest": "^8.5.5",
-    "jsdom": "^29.1.1",
+    "jsdom": "^30.0.1",
     "mountly-manifest": "workspace:*",
     "mountly-vite-plugin": "workspace:*",
     "react": "^19.2.8",
