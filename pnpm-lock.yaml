@@ -40,8 +40,8 @@ importers:
         specifier: ^2.4.11
         version: 2.4.11(@vue/compiler-dom@3.5.40)(@vue/server-renderer@3.5.40)(vue@3.5.40(typescript@6.0.3))
       executable-stories-formatters:
-        specifier: ^0.16.0
-        version: 0.16.0
+        specifier: ^1.6.0
+        version: 1.6.0(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)
       executable-stories-playwright:
         specifier: ^8.6.7
         version: 8.6.7(@playwright/test@1.62.0)(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)
@@ -3936,11 +3936,6 @@ packages:
   execa@5.1.1:
     resolution: {integrity: sha512-8uSpZZocAZRBAPIEINJj3Lo9HyGitllczc27Eh5YYojjMFMn8yHMDMaUHE2Jqfq05D/wucwI4JGURyXt1vchyg==}
     engines: {node: '>=10'}
-
-  executable-stories-formatters@0.16.0:
-    resolution: {integrity: sha512-C53sIeA8cOThaJshJHCFxnwZQQr+texh2Ux9OjMa7ZurS/FEmbKly5Q7WRgbREklEoQb7KzkXB+zhXsgAf9Vvw==}
-    engines: {node: '>=22'}
-    hasBin: true
 
   executable-stories-formatters@1.5.0:
     resolution: {integrity: sha512-GzIkwsiAwtQfJg+E1XxuiAWG/XE0er11cGM39Ie5x0R5GEq1vHLz2QsH+ozzbMSjv8PJVb8qbyJQP0J/5KV+Iw==}
@@ -9185,14 +9180,6 @@ snapshots:
       onetime: 5.1.2
       signal-exit: 3.0.7
       strip-final-newline: 2.0.0
-
-  executable-stories-formatters@0.16.0:
-    dependencies:
-      '@cucumber/html-formatter': 23.1.0(@cucumber/messages@32.3.1)
-      '@cucumber/messages': 32.3.1
-      ajv: 8.20.0
-      github-slugger: 2.0.0
-      yaml: 2.9.0
 
   executable-stories-formatters@1.5.0(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17):
     dependencies:
