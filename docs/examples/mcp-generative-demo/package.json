@@ -23,7 +23,7 @@
     "@modelcontextprotocol/ext-apps": "^1.7.5",
     "@modelcontextprotocol/sdk": "^1.30.0",
     "ai": "6.0.208",
-    "ai-sdk-ollama": "3.8.8",
+    "ai-sdk-ollama": "4.1.0",
     "mountly-mcp": "workspace:*",
     "mountly-react": "workspace:*",
     "react": "^19.2.8",
