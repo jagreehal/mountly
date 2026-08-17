@@ -101,7 +101,8 @@ useful in tests and controlled reconfiguration.
 
 ## Convenience server adapters
 
-`createMcpAppServer()` and `serveStdio()` keep the original one-View/one-tool
-shape for examples and small standalone processes. They are compatibility
-adapters, not a requirement: production systems should keep server and
-transport ownership and install Mountly at the registration seam.
+`createMcpAppServer()` and `serveStdio()` declare Views and tools with exactly
+the same `views` and `tools` vocabulary — they only own the `McpServer` and,
+for `serveStdio()`, the transport. Reach for them in examples and small
+standalone processes; production systems should keep server and transport
+ownership and install Mountly at the registration seam above.

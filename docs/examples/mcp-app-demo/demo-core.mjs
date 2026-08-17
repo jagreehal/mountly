@@ -115,36 +115,40 @@ export async function createDemoServer() {
   const server = createMcpAppServer({
     name: "mountly-mcp-demo",
     version: "0.0.1",
-    widgets: [
+    // Views and tools are declared independently and linked by resource URI,
+    // so a View can back several tools without being registered twice.
+    views: [
+      { uri: DEMO_URI, artifact: built.htmlPath },
+      { uri: DEMO_APP_ONLY_URI, artifact: builtAppOnly.htmlPath },
+    ],
+    tools: [
       {
-        uri: DEMO_URI,
-        htmlPath: built.htmlPath,
-        tool: {
-          name: DEMO_TOOL,
+        name: DEMO_TOOL,
+        resourceUri: DEMO_URI,
+        config: {
           description: "Quote a payment breakdown (annual or monthly) for the demo widget",
           // Zod raw shape — required by @modelcontextprotocol/sdk's McpServer.
           inputSchema: {
             plan: z.enum(["annual", "monthly"]),
           },
-          handler: async ({ plan }) => ({
-            structuredContent: SAMPLE_PAYMENTS[plan] ?? SAMPLE_PAYMENTS.annual,
-          }),
         },
+        handler: async ({ plan }) => ({
+          structuredContent: SAMPLE_PAYMENTS[plan] ?? SAMPLE_PAYMENTS.annual,
+        }),
       },
       {
-        uri: DEMO_APP_ONLY_URI,
-        htmlPath: builtAppOnly.htmlPath,
-        tool: {
-          name: DEMO_APP_ONLY_TOOL,
+        name: DEMO_APP_ONLY_TOOL,
+        resourceUri: DEMO_APP_ONLY_URI,
+        config: {
           description: "App-only refresh signal for the payment widget",
           inputSchema: {
             plan: z.enum(["annual", "monthly"]).optional(),
           },
-          visibility: ["app"],
-          handler: async ({ plan }) => ({
-            structuredContent: SAMPLE_PAYMENTS[plan] ?? SAMPLE_PAYMENTS.annual,
-          }),
         },
+        visibility: ["app"],
+        handler: async ({ plan }) => ({
+          structuredContent: SAMPLE_PAYMENTS[plan] ?? SAMPLE_PAYMENTS.annual,
+        }),
       },
     ],
   });

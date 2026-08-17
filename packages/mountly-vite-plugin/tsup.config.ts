@@ -7,5 +7,7 @@ export default defineConfig({
   entry: ["src/index.ts"],
   format: ["esm"],
   clean: true,
-  external: ["vite", "mountly-manifest", "typescript"],
+  // `typescript` is matched by pattern so its subpaths stay external too —
+  // `typescript/unstable/sync` is imported dynamically and must not be bundled.
+  external: ["vite", "mountly-manifest", /^typescript(\/|$)/],
 });

@@ -160,12 +160,12 @@ export async function createDemoServer() {
   const server = createMcpAppServer({
     name: "mountly-mcp-generative-demo",
     version: "0.0.1",
-    widgets: [
+    views: [{ uri: DEMO_URI, artifact: built.htmlPath }],
+    tools: [
       {
-        uri: DEMO_URI,
-        htmlPath: built.htmlPath,
-        tool: {
-          name: DEMO_TOOL,
+        name: DEMO_TOOL,
+        resourceUri: DEMO_URI,
+        config: {
           description:
             "Render a dashboard UI for a natural-language request. Returns a " +
             "json-render spec the widget renders as native components; buttons " +
@@ -174,10 +174,10 @@ export async function createDemoServer() {
           inputSchema: {
             prompt: z.string(),
           },
-          handler: async ({ prompt }) => ({
-            structuredContent: { spec: await resolveSpec(prompt) },
-          }),
         },
+        handler: async ({ prompt }) => ({
+          structuredContent: { spec: await resolveSpec(prompt) },
+        }),
       },
     ],
   });

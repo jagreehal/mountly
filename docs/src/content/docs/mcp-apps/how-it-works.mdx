@@ -81,9 +81,15 @@ Static verification checks manifest identity, declarations, files, protocol
 metadata, and the presence of bridge code. Rendering additionally starts the
 two-origin host, loads each View in a real browser, waits for the bridge's
 explicit mounted state, and rejects timeouts, captured mount failures, and
-empty View roots. It cannot prove that non-empty content is correct or predict a
-third-party host's exact width, theme, display-mode policy, or product UI, so
-run one final smoke test in every host you support.
+empty View roots, and audits the mounted View with axe. It cannot prove that
+non-empty content is correct or predict a third-party host's exact width, theme,
+display-mode policy, or product UI, so run one final smoke test in every host
+you support.
+
+The accessibility pass runs against the View as assembled, not against its
+components. That is deliberate: components can each be accessible while the
+View that composes them is not, and the composition is the artifact a host
+actually renders.
 
 That mounted state is a DOM contract, not an internal detail: the bridge sets
 `data-mountly-mcp-state="mounted"` on the View root once your widget's `mount`

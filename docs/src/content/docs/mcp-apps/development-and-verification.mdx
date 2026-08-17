@@ -89,6 +89,34 @@ wrong, so keep assertions for important states in component or end-to-end
 tests. Install Playwright and its Chromium browser in the CI environment that
 runs this tier. `--strict` fails on any advisory warning.
 
+### Accessibility of the assembled View
+
+A View that mounts is also audited with [axe](https://github.com/dequelabs/axe-core),
+reported as `render/a11y` warnings — one per violation, with the rule, its
+impact, and the first element that fails:
+
+```text
+! render/a11y: label (critical impact): Form elements must have labels
+  — 1 element, first at `input[type="text"]`
+```
+
+This is the check no component-level tool can make for you. Every component in
+a View can be individually accessible and the composition still fail, because a
+missing label, a heading order, or a contrast pairing only exists once the parts
+are together — and a View assembled by an agent is exactly where that happens.
+
+They are warnings, so an ordinary run stays green and only `--strict` fails on
+them. Install `axe-core` alongside Playwright to enable the pass; without it,
+rendering proceeds and the audit is skipped.
+
+```bash
+npm i -D playwright axe-core
+```
+
+axe runs through the debugger protocol rather than as page script, so it reaches
+the View without the CSP granting `unsafe-eval` — the audit sees the same
+document a host would render, under the same restrictions.
+
 Transitional builds without a manifest can pass one or more HTML files:
 
 ```bash

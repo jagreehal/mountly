@@ -55,25 +55,13 @@ export interface RegisterMcpAppsOptions {
   tools?: ReadonlyArray<McpAppToolRegistration>;
 }
 
-/** Backward-compatible one-tool/one-View declaration. */
-export interface McpWidgetTool<Args = unknown> extends McpAppToolConfig {
-  name: string;
-  inputSchema: object;
-  visibility?: McpUiToolVisibility | ReadonlyArray<McpUiToolVisibility>;
-  handler: (args: Args) => Promise<McpWidgetToolResult>;
-}
-
-/** @deprecated Prefer independent `views` and `tools` with `registerMcpApps`. */
-export interface McpWidgetRegistration {
-  uri: string;
-  htmlPath: string;
-  tool: McpWidgetTool;
-}
-
-export interface CreateMcpAppServerOptions {
+/**
+ * `createMcpAppServer` declares Views and tools exactly as `registerMcpApps`
+ * does; it only owns the `McpServer` for you. One vocabulary, two entry points.
+ */
+export interface CreateMcpAppServerOptions extends RegisterMcpAppsOptions {
   name: string;
   version: string;
-  widgets: ReadonlyArray<McpWidgetRegistration>;
 }
 
 interface LoadedView {
@@ -301,23 +289,6 @@ export interface RunningMcpAppServer {
   close(): Promise<void>;
 }
 
-function legacyRegistrations(
-  widgets: ReadonlyArray<McpWidgetRegistration>,
-): RegisterMcpAppsOptions {
-  const views = new Map<string, McpAppViewRegistration>();
-  const tools: McpAppToolRegistration[] = [];
-  for (const widget of widgets) {
-    const existing = views.get(widget.uri);
-    if (existing && existing.artifact !== widget.htmlPath) {
-      throw new Error(`mountly-mcp: View '${widget.uri}' has more than one htmlPath`);
-    }
-    views.set(widget.uri, { artifact: widget.htmlPath, uri: widget.uri });
-    const { name, handler, visibility, ...config } = widget.tool;
-    tools.push({ name, resourceUri: widget.uri, config, visibility, handler });
-  }
-  return { views: [...views.values()], tools };
-}
-
 function createConfiguredServer(options: CreateMcpAppServerOptions): McpServer {
   return new McpServer(
     { name: options.name, version: options.version },
@@ -330,7 +301,7 @@ export function createMcpAppServer(options: CreateMcpAppServerOptions): RunningM
   let server: McpServer | undefined;
   async function build(): Promise<McpServer> {
     const next = createConfiguredServer(options);
-    await registerMcpApps(next, legacyRegistrations(options.widgets));
+    await registerMcpApps(next, { views: options.views, tools: options.tools });
     server = next;
     return next;
   }

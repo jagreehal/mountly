@@ -30,9 +30,6 @@
     "prepack": "rm -f LICENSE && cp ../../LICENSE LICENSE",
     "postpack": "rm -f LICENSE && ln -s ../../LICENSE LICENSE"
   },
-  "dependencies": {
-    "typescript": "^7.0.2"
-  },
   "devDependencies": {
     "mountly-manifest": "workspace:*",
     "tsup": "^8.5.1",
@@ -41,6 +38,12 @@
   },
   "peerDependencies": {
     "mountly-manifest": "workspace:*",
+    "typescript": ">=7.0.0",
     "vite": "^8.2.1"
+  },
+  "peerDependenciesMeta": {
+    "typescript": {
+      "optional": true
+    }
   }
 }

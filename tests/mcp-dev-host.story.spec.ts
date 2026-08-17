@@ -205,4 +205,51 @@ test.describe("mountly-mcp verify --render", () => {
       rmSync(dir, { recursive: true });
     }
   });
+
+  test("reports an accessibility violation the composed View introduces", async ({}, testInfo) => {
+    story.init(testInfo, { tags: ["mcp", "verify", "accessibility"] });
+
+    story.given("a View whose parts are fine but whose composition is not");
+    const { buildMcpResource, getBridgeRuntimePath } = await loadBuild();
+    const dir = mkdtempSync(join(tmpdir(), "mountly-mcp-verify-a11y-"));
+    writeFileSync(
+      join(dir, "widget.js"),
+      `globalThis.__mountlyMcpWidget__ = {
+         mount(container) {
+           // An input with no accessible name — exactly the kind of defect that
+           // only exists once components are assembled into a View.
+           container.innerHTML = '<label>Review</label><input type="text">';
+         },
+         unmount(){},
+       };`,
+      "utf8",
+    );
+    const htmlPath = join(dir, "a11y.html");
+    await buildMcpResource({
+      entry: join(dir, "widget.js"),
+      uri: "ui://a11y/view",
+      name: "a11y_view",
+      description: "Composed View with an unlabelled control",
+      output: htmlPath,
+      bridgeRuntimePath: getBridgeRuntimePath(),
+    });
+
+    try {
+      story.when("the View is verified in a browser");
+      const { verifyMcpApps } = await import("../packages/mcp-apps/src/testing/index.js");
+      const report = await verifyMcpApps({ htmlPaths: [htmlPath], render: true });
+
+      story.then("the violation is reported, and it does not fail an ordinary run");
+      const a11y = report.diagnostics.filter((diagnostic) => diagnostic.code === "render/a11y");
+      expect(a11y.length).toBeGreaterThan(0);
+      expect(a11y.map((diagnostic) => diagnostic.message).join("\n")).toContain("label");
+      expect(a11y.every((diagnostic) => diagnostic.severity === "warning")).toBe(true);
+      expect(report.ok).toBe(true);
+
+      story.then("but it is a diagnostic, which is what --strict fails on");
+      expect(report.diagnostics.length).toBeGreaterThan(0);
+    } finally {
+      rmSync(dir, { recursive: true });
+    }
+  });
 });
