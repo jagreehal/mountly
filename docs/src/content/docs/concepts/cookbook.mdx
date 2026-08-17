@@ -62,9 +62,10 @@ attach(widget, {
 function Dashboard({ token, tenant }: { token: string; tenant: string }) {
   const { data } = useQuery({
     queryKey: ["dashboard", tenant],
-    queryFn: () => fetch(`/api/${tenant}/dashboard`, {
-      headers: { Authorization: `Bearer ${token}` },
-    }).then(r => r.json()),
+    queryFn: () =>
+      fetch(`/api/${tenant}/dashboard`, {
+        headers: { Authorization: `Bearer ${token}` },
+      }).then((r) => r.json()),
   });
   // ...
 }
@@ -81,7 +82,7 @@ A widget needs to navigate the host page. Use the event bus — the widget emits
 import { createEventBus } from "mountly/bus";
 
 const bus = createEventBus<{
-  "navigate": { path: string };
+  navigate: { path: string };
 }>();
 
 bus.on("navigate", ({ path }) => {
@@ -119,7 +120,7 @@ function PaymentBreakdown({ paymentId }: { paymentId: string }) {
   useEffect(() => {
     setLoading(true);
     fetch(`/api/payments/${paymentId}`)
-      .then(r => r.json())
+      .then((r) => r.json())
       .then(setData)
       .finally(() => setLoading(false));
   }, [paymentId]);
@@ -135,7 +136,7 @@ For a more sophisticated approach, use mountly's built-in data cache:
 createOnDemandFeature({
   moduleId: "payment-breakdown",
   loadModule: () => import("./payment-breakdown.js"),
-  loadData: (ctx) => fetch(`/api/payments/${ctx.paymentId}`).then(r => r.json()),
+  loadData: (ctx) => fetch(`/api/payments/${ctx.paymentId}`).then((r) => r.json()),
   render: ({ mod, data, container }) => mod.mount(container, data),
 });
 ```
@@ -163,8 +164,22 @@ For per-widget error boundaries (React):
 ```tsx
 function WidgetErrorBoundary({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<Error | null>(null);
-  if (error) return <div class="error">Something went wrong. <button onClick={() => setError(null)}>Retry</button></div>;
-  return <ErrorBoundary fallback={(e) => { setError(e); return null; }}>{children}</ErrorBoundary>;
+  if (error)
+    return (
+      <div class="error">
+        Something went wrong. <button onClick={() => setError(null)}>Retry</button>
+      </div>
+    );
+  return (
+    <ErrorBoundary
+      fallback={(e) => {
+        setError(e);
+        return null;
+      }}
+    >
+      {children}
+    </ErrorBoundary>
+  );
 }
 ```
 
@@ -188,7 +203,9 @@ router.on("/checkout/:id", ({ params }) => {
 Use `feature.abort()` to cancel an in-flight preload when the user navigates away:
 
 ```ts
-router.beforeEach(() => { feature.abort(); });
+router.beforeEach(() => {
+  feature.abort();
+});
 ```
 
 ## Multiple mount targets for one feature
@@ -196,7 +213,7 @@ router.beforeEach(() => { feature.abort(); });
 A single feature can mount into multiple containers — useful for showing the same widget in a sidebar and a modal:
 
 ```ts
-const feature = createOnDemandFeature({ /* ... */ });
+const feature = createOnDemandFeature({/* ... */});
 const sidebarMount = feature.mount(document.getElementById("sidebar"), { mode: "compact" });
 const modalMount = feature.mount(document.getElementById("modal"), { mode: "full" });
 ```

@@ -8,13 +8,13 @@ import {
   REQUIRED_FIELDS_RULE,
   pruneDanglingChildren,
   streamSpec,
-} from "../packages/adapters/mountly-mcp/src/json-render/server";
+} from "../packages/mcp-apps/src/json-render/server";
 import {
   compileTextStreamToSpecs,
   parseSpecStreamLine,
   specToPatchLines,
-} from "../packages/adapters/mountly-mcp/src/json-render/spec-stream";
-import { defaultActionRouter } from "../packages/adapters/mountly-mcp/src/json-render/widget";
+} from "../packages/mcp-apps/src/json-render/spec-stream";
+import { defaultActionRouter } from "../packages/mcp-apps/src/json-render/widget";
 
 // A tiny dashboard spec in the shape json-render's Renderer consumes:
 // { root, state, elements: { key: { type, props, children? } } }.

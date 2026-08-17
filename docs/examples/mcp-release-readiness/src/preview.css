@@ -1,0 +1,20 @@
+@import url("https://fonts.googleapis.com/css2?family=Hubot+Sans:ital,wght@0,200..900;1,200..900&family=JetBrains+Mono:wght@400;500;700&family=Mona+Sans:ital,wght@0,200..900;1,200..900&display=swap");
+
+:root {
+  --font-display: "Hubot Sans", sans-serif;
+  --font-sans: "Mona Sans", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+  color: oklch(93% 0.015 78);
+  background: oklch(13% 0.012 72);
+  font-family: var(--font-sans);
+}
+
+body {
+  min-width: 20rem;
+  min-height: 100vh;
+  margin: 0;
+  padding: clamp(1rem, 5vw, 4rem);
+  background:
+    radial-gradient(circle at 18% 0%, oklch(30% 0.045 72 / 45%), transparent 36rem),
+    oklch(13% 0.012 72);
+}

@@ -5,15 +5,53 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>mountly — Monorepo component library</title>
     <style>
-      body { font-family: system-ui, sans-serif; max-width: 42rem; margin: 2rem auto; padding: 0 1rem; }
-      h1 { font-size: 24px; margin: 0 0 4px; }
-      .sub { color: #64748b; margin-bottom: 8px; }
-      code { font-size: 13px; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; }
-      .row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
-      button { padding: 8px 14px; font-weight: 600; cursor: pointer; border: 1px solid #cbd5e1; border-radius: 8px; background: white; }
-      button:hover { background: #f1f5f9; }
-      .slot { min-height: 48px; }
-      .note { font-size: 14px; color: #64748b; border-left: 3px solid #3c50dc; padding-left: 12px; margin: 16px 0; }
+      body {
+        font-family: system-ui, sans-serif;
+        max-width: 42rem;
+        margin: 2rem auto;
+        padding: 0 1rem;
+      }
+      h1 {
+        font-size: 24px;
+        margin: 0 0 4px;
+      }
+      .sub {
+        color: #64748b;
+        margin-bottom: 8px;
+      }
+      code {
+        font-size: 13px;
+        background: #f1f5f9;
+        padding: 2px 6px;
+        border-radius: 4px;
+      }
+      .row {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+      }
+      button {
+        padding: 8px 14px;
+        font-weight: 600;
+        cursor: pointer;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        background: white;
+      }
+      button:hover {
+        background: #f1f5f9;
+      }
+      .slot {
+        min-height: 48px;
+      }
+      .note {
+        font-size: 14px;
+        color: #64748b;
+        border-left: 3px solid #3c50dc;
+        padding-left: 12px;
+        margin: 16px 0;
+      }
     </style>
     <script type="importmap">
       {
@@ -41,9 +79,9 @@
     <h1>Monorepo component library</h1>
     <p class="sub">Widgets share a <code>@my-org/ui</code> library. Same bundle, one fetch.</p>
     <p class="note">
-      The widgets use <code>Button</code>, <code>Card</code>, and <code>Chip</code> from a shared UI library.
-      In a real monorepo, <code>ui-lib.js</code> would be a workspace package (<code>@my-org/ui</code>)
-      and <code>widgets-bundle.js</code> would consume it as a dependency.
+      The widgets use <code>Button</code>, <code>Card</code>, and <code>Chip</code> from a shared UI
+      library. In a real monorepo, <code>ui-lib.js</code> would be a workspace package
+      (<code>@my-org/ui</code>) and <code>widgets-bundle.js</code> would consume it as a dependency.
     </p>
 
     <div class="row">

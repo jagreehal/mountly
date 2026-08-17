@@ -4,8 +4,7 @@ import { join } from "node:path";
 import { story } from "executable-stories-playwright";
 
 const REPO_ROOT = join(__dirname, "..");
-const HOSTED_QUICKSTART =
-  "https://jagreehal.github.io/mountly/examples/quickstart/host.html";
+const HOSTED_QUICKSTART = "https://jagreehal.github.io/mountly/examples/quickstart/host.html";
 
 test("README Quick Start story: documented URL mounts a widget", async ({ page }, testInfo) => {
   story.init(testInfo, { tags: ["docs", "quickstart"], ticket: "MOUNTLY-DOCS-1" });

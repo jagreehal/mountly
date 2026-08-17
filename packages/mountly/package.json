@@ -126,7 +126,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsup",
+    "build": "tsup && tsc -p tsconfig.json --noEmit false --declaration --emitDeclarationOnly --declarationMap false --outDir dist",
     "typecheck": "tsc --noEmit",
     "dev": "tsup --watch",
     "prepack": "rm -f README.md LICENSE && cp ../../README.md README.md && cp ../../LICENSE LICENSE",
@@ -134,6 +134,6 @@
   },
   "devDependencies": {
     "tsup": "^8.5.1",
-    "typescript": "^6.0.3"
+    "typescript": "^7.0.2"
   }
 }

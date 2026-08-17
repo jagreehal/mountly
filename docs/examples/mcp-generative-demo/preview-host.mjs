@@ -1,6 +1,7 @@
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { sandboxProxyHtml } from "mountly-mcp/dev";
 import { createDemoServer } from "./demo-core.mjs";
 
 /**
@@ -128,29 +129,9 @@ const hostIndex = `<!doctype html>
 
 // Sandbox proxy (§8.4) — identical pattern to mcp-app-demo: inject CSP, srcdoc
 // the widget into an inner iframe, forward messages both ways.
-const sandboxProxy = `<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><title>sandbox proxy</title>
-<style>html,body{margin:0;width:100%;height:100%}#inner{width:100%;height:100%;border:0;background:#fff}</style></head>
-<body><script>
-  const HOST = window.parent;
-  const HOST_ORIGIN = "http://localhost:${HOST_PORT}";
-  function cspMetaTag(csp){
-    const d=["default-src 'none'","script-src 'self' 'unsafe-inline'","style-src 'self' 'unsafe-inline'","img-src 'self' data:","font-src 'self' data:","media-src 'self' data:","connect-src 'none'","frame-src 'none'","base-uri 'self'","object-src 'none'"];
-    return '<meta http-equiv="Content-Security-Policy" content="'+d.join("; ")+'">';
-  }
-  let inner;
-  function boot(p){ if(!p||typeof p.html!=="string"||!p.html) return;
-    const html = /<head[^>]*>/i.test(p.html) ? p.html.replace(/<head[^>]*>/i,(m)=>m+cspMetaTag(p.csp||{})) : cspMetaTag(p.csp||{})+p.html;
-    const f=document.createElement("iframe"); f.id="inner"; f.setAttribute("sandbox","allow-scripts allow-same-origin"); f.setAttribute("srcdoc",html);
-    document.body.appendChild(f); inner=f;
-  }
-  window.addEventListener("message",(e)=>{ const msg=e.data; if(!msg||msg.jsonrpc!=="2.0") return;
-    if (e.source===HOST && msg.method==="ui/notifications/sandbox-resource-ready"){ boot(msg.params||{}); return; }
-    if (e.source===HOST){ if(inner&&inner.contentWindow) inner.contentWindow.postMessage(msg,"*"); return; }
-    if (inner && e.source===inner.contentWindow){ if(typeof msg.method==="string" && msg.method.startsWith("ui/notifications/sandbox-")) return; HOST.postMessage(msg,"*"); }
-  });
-  HOST.postMessage({jsonrpc:"2.0",method:"ui/notifications/sandbox-proxy-ready",params:{}},"*");
-</script></body></html>`;
+// The sandbox proxy is the security boundary. Served from the package so
+// this demo cannot drift from what `mountly-mcp dev` enforces.
+const sandboxProxy = await sandboxProxyHtml(`http://localhost:${HOST_PORT}`);
 
 await writeFile(join(HOST_DIR, "index.html"), hostIndex, "utf8");
 await writeFile(join(SANDBOX_DIR, "sandbox-proxy.html"), sandboxProxy, "utf8");

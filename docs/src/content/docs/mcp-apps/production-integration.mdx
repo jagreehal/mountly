@@ -1,0 +1,107 @@
+---
+title: Production integration
+description: Install App artifacts and linked tools into the MCP server, transport, and authentication lifecycle your application owns.
+---
+
+`registerMcpApps()` is the production seam. It adds only MCP Apps resources,
+linked tools, capability negotiation, and text fallback to an existing,
+unconnected `McpServer`.
+
+```ts
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { readMcpAppManifest } from "mountly-mcp/artifact";
+import { registerMcpApps } from "mountly-mcp/server";
+
+const server = new McpServer(
+  { name: "weather", version: "1.0.0" },
+  { capabilities: { tools: {}, resources: {} } },
+);
+const { artifacts } = await readMcpAppManifest("dist/mountly-mcp.manifest.json");
+
+const apps = await registerMcpApps(server, {
+  views: artifacts.map((artifact) => ({ artifact })),
+  tools: [
+    {
+      name: "get_weather",
+      resourceUri: "ui://weather/dashboard",
+      config: {
+        description: "Show current weather",
+        inputSchema: {
+          type: "object",
+          properties: { location: { type: "string" } },
+          required: ["location"],
+        },
+      },
+      handler: async ({ location }: { location: string }) => ({
+        structuredContent: { location, temperature: 22 },
+      }),
+    },
+  ],
+});
+```
+
+Register before calling `server.connect()`. Your application remains
+responsible for authentication, authorization, transport, prompts, ordinary
+tools, shutdown, telemetry, scaling, and deployment.
+
+## Views and tools are independent
+
+A View is declared once and tools link to it with `resourceUri`. This supports:
+
+- several tools opening the same View;
+- a View with model-visible and app-only tools;
+- a resource with no tool yet;
+- independently replacing tool handlers and View artifacts.
+
+Registration rejects a tool whose URI does not match a declared View, and
+rejects duplicate View names or URIs before the server connects.
+
+## Tool visibility
+
+By default, a linked tool is available to both the model and the View. Use a
+visibility override for UI-only actions:
+
+```ts
+{
+  name: "refresh_weather",
+  resourceUri: "ui://weather/dashboard",
+  visibility: "app",
+  handler: async ({ location }) => ({
+    structuredContent: await refreshWeather(location),
+  }),
+}
+```
+
+`visibility` accepts one value or an array. App-only tools are callable from
+the View but are not exposed to the model. On clients without MCP Apps support,
+Mountly removes app-only tools and UI resources while preserving model-visible
+tools without their UI metadata.
+
+## Schemas and metadata
+
+`config.inputSchema` and `config.outputSchema` accept documented JSON Schema as
+well as schema-library values supported by the MCP SDK. Other official tool
+configuration is passed through. Existing `_meta` is preserved; Mountly merges
+the official `_meta.ui.resourceUri` and visibility fields it owns.
+
+Handlers may return `content`, `structuredContent`, and `isError`. If
+`structuredContent` exists and `content` does not, Mountly adds a JSON text
+block for model and text-only compatibility.
+
+## Remove an installation
+
+The return value owns exactly what that call installed:
+
+```ts
+apps.remove();
+```
+
+This removes every View resource and tool from the registration, which is
+useful in tests and controlled reconfiguration.
+
+## Convenience server adapters
+
+`createMcpAppServer()` and `serveStdio()` keep the original one-View/one-tool
+shape for examples and small standalone processes. They are compatibility
+adapters, not a requirement: production systems should keep server and
+transport ownership and install Mountly at the registration seam.

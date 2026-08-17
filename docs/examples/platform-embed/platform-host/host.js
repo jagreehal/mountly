@@ -18,9 +18,12 @@ globalThis.fetch = async (input, init) => {
 };
 
 const { bootstrapMountly } = await import("/packages/mountly/dist/runtime.js");
-const manifest = await bootstrapMountly("/docs/examples/platform-embed/platform-host/manifest.json", {
-  define: false,
-});
+const manifest = await bootstrapMountly(
+  "/docs/examples/platform-embed/platform-host/manifest.json",
+  {
+    define: false,
+  },
+);
 
 const { defineMountlyFeature, registerCustomElement } = await import("mountly/elements");
 

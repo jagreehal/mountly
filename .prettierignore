@@ -1,0 +1,7 @@
+# Tailwind output, rewritten by `pnpm build` in the examples. Formatting it
+# only sticks until the next regeneration, so every sweep would re-dirty the
+# tree and every check would fail on a file nobody edits by hand.
+**/*.generated.css
+
+# Same story: `gen-schema.mjs` rewrites this on every build from the zod schema.
+packages/mountly-manifest/schema.json

@@ -23,9 +23,7 @@ import styles from "./styles.generated.css";
 const widget = createWidget(MyComponent, { styles });
 
 // Returned object implements mountly's WidgetModule contract:
-widget.mount(container, {
-  /* props */
-});
+widget.mount(container, {/* props */});
 widget.unmount(container);
 ```
 

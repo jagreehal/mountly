@@ -1,0 +1,4 @@
+{
+  "staging": { "service": "checkout-api", "environment": "staging" },
+  "production": { "service": "checkout-api", "environment": "production" }
+}

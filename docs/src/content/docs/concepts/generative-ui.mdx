@@ -10,7 +10,7 @@ constrained to a typed catalog; mountly renders it as **real native components**
 MCP host, and the rendered UI's actions call back into the **agent**.
 
 It is a thin wrapper over [`@json-render`](https://github.com/vercel-labs/json-render)
-(`@json-render/core` + `@json-render/react`), [`mountly-mcp/react`](/concepts/mcp-apps/),
+(`@json-render/core` + `@json-render/react`), [`mountly-mcp/react`](/mcp-apps/),
 and the [`ai`](https://www.npmjs.com/package/ai) SDK. json-render decides _what_ to render;
 mountly decides _where_ it ends up (an agent host) and adds the one thing json-render has no
 concept of, **the agent loop**: a generated button → `App.sendMessage` → the model
@@ -49,7 +49,7 @@ By default an `ask` action with a string `prompt` sends a follow-up turn via
 `onAction(name, params, mcp)`.
 
 The server tool returns the spec as the tool result, exactly like any other MCP Apps widget
-(see [MCP Apps](/concepts/mcp-apps/)):
+(see [MCP Apps](/mcp-apps/)):
 
 ```ts
 handler: async ({ view }) => ({ structuredContent: { spec: SPECS[view] } });
@@ -157,7 +157,7 @@ const Dashboard = createRenderer(catalog, components);
 
 ## See it run
 
-**Live:** [generative UI stream demo]({exampleUrl("mcp-generative-demo/preview/stream-dist/")})
+**Live:** [generative UI stream demo](<{exampleUrl("mcp-generative-demo/preview/stream-dist/")}>)
 
 The [`mcp-generative-demo`](https://github.com/jagreehal/mountly/blob/main/docs/examples/mcp-generative-demo/README.md)
 example is a full, runnable build with local and hosted models, a browser preview, and a real

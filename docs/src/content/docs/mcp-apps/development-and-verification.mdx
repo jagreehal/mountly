@@ -1,0 +1,140 @@
+---
+title: Development and verification
+description: Run Views in the official AppBridge host, connect real server tools, and verify App artifacts in CI.
+---
+
+## Start a development session
+
+```bash
+npx mountly-mcp dev
+```
+
+The CLI reads the `mountlyMcpWidget()` configuration, builds the selected View,
+rebuilds on change, and opens a two-origin local host. The official published
+`AppBridge` drives the handshake; Mountly supplies the host UI and sandbox proxy
+that enforce the artifact's CSP and permissions.
+
+For a build with several Views, select one by its manifest name:
+
+```bash
+npx mountly-mcp dev --app weather_dashboard
+```
+
+Useful options:
+
+```text
+-c, --config <path>    Vite config (default: auto-discover)
+-f, --fixtures <path>  named JSON samples (default: mcp.fixtures.json)
+-s, --server <path>    module default-exporting an MCP server or factory
+-a, --app <name>       View to develop; required for a multi-View build
+-p, --port <number>    host port (default: 5179)
+    --no-open          do not open a browser
+```
+
+Without `--server`, a fixture value is delivered directly as
+`structuredContent`. Each button exercises the real
+`ui/notifications/tool-result` update path.
+
+## Connect a real server
+
+```bash
+npx mountly-mcp dev --server ./dist/create-server.js
+```
+
+The module must default-export an unconnected `McpServer`, a compatible
+Mountly server, or a function that returns one. With a server connected,
+fixture values become arguments to the model-visible tool linked to the View;
+the View receives the handler's actual result. Tool calls initiated by the View
+are routed to that server as well.
+
+Exporting a factory is the safest development shape because each session gets
+a fresh, unconnected server.
+
+The same connection is available programmatically from `mountly-mcp/dev`, so a
+harness can drive real tools without a transport:
+
+```ts
+import { connectMcpServer } from "mountly-mcp/dev";
+
+const server = await connectMcpServer("./dist/create-server.js");
+const toolName = await server.toolFor("ui://weather/dashboard");
+if (!toolName) throw new Error("no tool is bound to that View");
+
+const result = await server.callTool(toolName, { city: "Bristol" });
+await server.close();
+```
+
+`toolFor()` returns the model-visible tool bound to that View — the one a host
+would call. A module that default-exports something other than a server, or a
+factory returning one, is rejected by name rather than failing later inside the
+handshake.
+
+## Verify artifacts
+
+```bash
+npx mountly-mcp verify
+npx mountly-mcp verify --render
+npx mountly-mcp verify --render --strict
+```
+
+By default, verification reads `dist/mountly-mcp.manifest.json` and performs
+offline file and metadata checks. Its summary explicitly says `static checks
+only` because finding bridge strings does not prove a View can boot. Static
+status is not a warning, so `verify --strict` remains a useful offline gate.
+
+`--render` launches a real browser, starts the two-origin host, loads every
+View, waits for the bridge's explicit mounted state, and rejects timeouts,
+captured mount failures, and empty View roots. Non-empty content can still be
+wrong, so keep assertions for important states in component or end-to-end
+tests. Install Playwright and its Chromium browser in the CI environment that
+runs this tier. `--strict` fails on any advisory warning.
+
+Transitional builds without a manifest can pass one or more HTML files:
+
+```bash
+npx mountly-mcp verify --html dist/first.html --html dist/second.html
+```
+
+Use either `--manifest` or `--html`, not both.
+
+## Programmatic conformance
+
+The CLI and test runners share the same engine:
+
+```ts
+import { formatConformanceReport, verifyMcpApps } from "mountly-mcp/testing";
+
+const report = await verifyMcpApps({
+  manifestPath: "dist/mountly-mcp.manifest.json",
+  render: true,
+});
+
+console.log(formatConformanceReport(report));
+if (!report.ok) process.exitCode = 1;
+```
+
+`report.diagnostics` contains stable codes, severities, messages, and optional
+source paths for custom CI output. `report.mode` is `"static"` or `"browser"`,
+so a dashboard can state which tier produced a pass instead of inferring it
+from the options it passed:
+
+```ts
+if (report.mode === "static") {
+  console.warn("no runtime coverage — rerun with render: true");
+}
+```
+
+## Recommended release gate
+
+```json
+{
+  "scripts": {
+    "build:mcp": "mountly-mcp build",
+    "verify:mcp": "mountly-mcp verify --render --strict"
+  }
+}
+```
+
+Run a final smoke test in each real host you support. Local conformance cannot
+prove host-specific theme values, available display modes, viewport policy, or
+surrounding product UI.

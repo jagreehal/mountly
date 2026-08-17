@@ -53,7 +53,7 @@ Your AI agent calls a tool and the result should render as interactive UI in the
 - You hand-roll the `ui://` resource registration, iframe sandbox, bridge protocol, and lifecycle management.
 - Every MCP app reimplements the same mount/unmount/update dance.
 
-With mountly: `mountly-mcp/buildMcpResource()` produces the complete MCP App resource — HTML, sandbox bridge, CSP. `createMcpAppServer()` registers tool + resource + widget in one call. The same widget that runs on your marketing page also runs inside Claude Desktop. Same component, two activation contexts.
+With Mountly, `mountly-mcp build` produces one or many self-contained App artifacts and a versioned manifest. `registerMcpApps()` installs their Views and linked tools into the MCP server your application already owns. The same component that runs on your website can also run inside an MCP Apps host: one component, two activation contexts.
 
 ## The pattern
 

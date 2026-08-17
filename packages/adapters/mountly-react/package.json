@@ -28,20 +28,20 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsup",
+    "build": "tsup && tsc -p tsconfig.json --noEmit false --declaration --emitDeclarationOnly --declarationMap false --outDir dist",
     "typecheck": "tsc --noEmit",
     "dev": "tsup --watch",
     "prepack": "rm -f LICENSE && cp ../../../LICENSE LICENSE",
     "postpack": "rm -f LICENSE && ln -s ../../../LICENSE LICENSE"
   },
   "devDependencies": {
-    "@types/react": "^19.2.17",
+    "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
     "mountly": "^0.3.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "tsup": "^8.5.1",
-    "typescript": "^6.0.3"
+    "typescript": "^7.0.2"
   },
   "peerDependencies": {
     "mountly": "^0.3.0",

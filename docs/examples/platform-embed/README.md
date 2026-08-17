@@ -17,12 +17,12 @@ docs/examples/
 
 ## Why not Module Federation?
 
-| Federation pain | mountly approach |
-| ---------------- | ---------------- |
-| Hand-maintained `shared` block on host and remote | One React pin in the host import map |
-| No types on remote imports | Typed ESM via manifest + fragments (Vite hosts) |
-| Build-time coupling between teams | Widget is a versioned CDN artifact |
-| Orchestrator for a single customization | One `<mountly-feature module-id="product-a-settings">` tag |
+| Federation pain                                   | mountly approach                                           |
+| ------------------------------------------------- | ---------------------------------------------------------- |
+| Hand-maintained `shared` block on host and remote | One React pin in the host import map                       |
+| No types on remote imports                        | Typed ESM via manifest + fragments (Vite hosts)            |
+| Build-time coupling between teams                 | Widget is a versioned CDN artifact                         |
+| Orchestrator for a single customization           | One `<mountly-feature module-id="product-a-settings">` tag |
 
 For a temporary customization before a platform split, Federation is overkill. See the decision ladder in the docs.
 

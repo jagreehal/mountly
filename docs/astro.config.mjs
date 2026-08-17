@@ -60,6 +60,26 @@ export default defineConfig({
           ],
         },
         {
+          label: "MCP Apps",
+          items: [
+            { label: "Overview", slug: "mcp-apps" },
+            { label: "Quick start", slug: "mcp-apps/quick-start" },
+            {
+              label: "Build and artifacts",
+              slug: "mcp-apps/build-and-artifacts",
+            },
+            {
+              label: "Production integration",
+              slug: "mcp-apps/production-integration",
+            },
+            {
+              label: "Development and verification",
+              slug: "mcp-apps/development-and-verification",
+            },
+            { label: "How it works", slug: "mcp-apps/how-it-works" },
+          ],
+        },
+        {
           label: "Concepts",
           items: [
             {
@@ -73,7 +93,6 @@ export default defineConfig({
             { label: "Triggers", slug: "concepts/triggers" },
             { label: "Lifecycle", slug: "concepts/lifecycle" },
             { label: "Cookbook", slug: "concepts/cookbook" },
-            { label: "MCP Apps", slug: "concepts/mcp-apps" },
             { label: "Generative UI", slug: "concepts/generative-ui" },
             { label: "Styling", slug: "concepts/styling" },
             { label: "Multi-widget bundles", slug: "concepts/multi-widget" },

@@ -86,7 +86,7 @@ If two widgets must share React state at runtime, such as a query client, they *
 
 ## Static hosts (no bundler)
 
-The [`docs/examples/plain-html`](https://github.com/jagreehal/mountly/tree/main/docs/examples/plain-html) directory documents this end-to-end. **Live:** [open demo]({exampleUrl("plain-html/")}).
+The [`docs/examples/plain-html`](https://github.com/jagreehal/mountly/tree/main/docs/examples/plain-html) directory documents this end-to-end. **Live:** [open demo](<{exampleUrl("plain-html/")}>).
 
 1. Inline `<script>` calls `installRuntime({ react, reactDom, reactDomClient })` as the **first** thing in `<head>`, before any module imports.
 2. A second `<script type="importmap">` (or `installRuntime`'s) maps each widget specifier to its `peer.js` URL.
@@ -114,4 +114,4 @@ If the host is a Vite/Next/Astro app, you can:
 - Continue to use `peer.js` and let the host's bundler resolve `react`. The published peer build's `react` import is a bare specifier.
 - Or import the widget's `index.js` directly in the host code if you only have one widget.
 
-The [`docs/examples/demo`](https://github.com/jagreehal/mountly/tree/main/docs/examples/demo) directory shows the bundler-host pattern. **Live:** [open demo]({exampleUrl("demo/")}).
+The [`docs/examples/demo`](https://github.com/jagreehal/mountly/tree/main/docs/examples/demo) directory shows the bundler-host pattern. **Live:** [open demo](<{exampleUrl("demo/")}>).

@@ -48,16 +48,16 @@ It's the **wrong** tool when you have a single SPA where the bundler owns every 
 
 Not sure where mountly fits? Start with [Choosing an architecture](/mountly/getting-started/choosing-an-architecture/) — most teams should try a monorepo or widget drop-in before adopting micro-frontend orchestration.
 
-| Approach | When | Pain you accept | Complexity |
-| -------- | ---- | --------------- | ---------- |
-| Monorepo npm lib | Same org, shared CI OK | Merge coordination | Low |
-| Traditional SPA | One app owns every surface | Poor fit for CMS, legacy, or partner-hosted UI | Low |
-| Framework code-splitting | Routes inside one framework app | Does not standardize HTML drops or host-agnostic lifecycle | Medium |
-| **mountly widget drop-in** | **Foreign host, 1–5 interactive regions** | **Import map / version pinning** | **Low** |
-| mountly manifest verticals | 2–5 teams, independent CDN widget deploys | Shared React version agreement | Low |
-| Module Federation | Deep horizontal integration, shared build graph | `shared` blocks, tooling complexity | High |
-| Single-SPA / vendor MFE | Full app shells per route, many teams | Orchestration, routing ownership | High |
-| Microfrontend orchestrators (generic) | Independent apps with org-level ownership | Operationally heavy for component-sized features | High |
+| Approach                              | When                                            | Pain you accept                                            | Complexity |
+| ------------------------------------- | ----------------------------------------------- | ---------------------------------------------------------- | ---------- |
+| Monorepo npm lib                      | Same org, shared CI OK                          | Merge coordination                                         | Low        |
+| Traditional SPA                       | One app owns every surface                      | Poor fit for CMS, legacy, or partner-hosted UI             | Low        |
+| Framework code-splitting              | Routes inside one framework app                 | Does not standardize HTML drops or host-agnostic lifecycle | Medium     |
+| **mountly widget drop-in**            | **Foreign host, 1–5 interactive regions**       | **Import map / version pinning**                           | **Low**    |
+| mountly manifest verticals            | 2–5 teams, independent CDN widget deploys       | Shared React version agreement                             | Low        |
+| Module Federation                     | Deep horizontal integration, shared build graph | `shared` blocks, tooling complexity                        | High       |
+| Single-SPA / vendor MFE               | Full app shells per route, many teams           | Orchestration, routing ownership                           | High       |
+| Microfrontend orchestrators (generic) | Independent apps with org-level ownership       | Operationally heavy for component-sized features           | High       |
 
 ## Where to next
 
