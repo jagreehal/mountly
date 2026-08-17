@@ -3,6 +3,8 @@ title: Choosing an architecture
 description: You probably don't need micro frontends. A decision ladder from monorepo npm libs to mountly widgets to full MFE platforms.
 ---
 
+import Mermaid from "../../../components/Mermaid.astro";
+
 Most teams reach for micro frontends (Module Federation, Single-SPA, vendor MFE platforms) when what they actually need is a **boundary** — a way to ship Product A UI into another team's shell without rewriting either codebase.
 
 For a temporary customization, a full micro-frontend platform is usually a trap. You can spend months on orchestration before you ship the feature.
@@ -26,8 +28,9 @@ If most of these describe your work, mountly is likely the right tool:
 
 ## Decision ladder
 
-```mermaid
-flowchart TD
+<Mermaid
+  title="Decision ladder: start by asking whether you can merge into a monorepo or publish an npm package. If yes, use a monorepo with a shared library and lazy routes. If no, ask whether the host page is one you do not own — if it is a CMS, static, or legacy page, use a mountly widget as a custom element drop-in. If you own the shell, ask whether regions share one Router, Query, or Redux graph: if they do, keep one app shell. If not, ask whether teams need independent CDN deploys: if not, use mountly as an npm dependency. If they do, ask whether you have many teams and need runtime route orchestration: a few teams means a mountly manifest with import-map verticals, many teams means Single-SPA or a vendor MFE platform."
+  chart={`flowchart TD
   start[Need Product A UI in another team's shell]
   q1{Can you merge into a monorepo or publish an npm package?}
   q2{Is the host page you do not own?}
@@ -41,18 +44,18 @@ flowchart TD
   singleSpa[Single-SPA / vendor MFE platform]
   oneApp[One app shell - do not split]
 
-  start --> q1
-  q1 -->|Yes, for now| monorepo
-  q1 -->|No| q2
-  q2 -->|Yes, CMS/static/legacy| mountlyWidget
-  q2 -->|No, same app shell| q3
-  q3 -->|Yes| oneApp
-  q3 -->|No| q4
-  q4 -->|No| mountlyNpm
-  q4 -->|Yes| q5
-  q5 -->|No, a few teams| mountlyManifest
-  q5 -->|Yes| singleSpa
-```
+start --> q1
+q1 -->|Yes, for now| monorepo
+q1 -->|No| q2
+q2 -->|Yes, CMS/static/legacy| mountlyWidget
+q2 -->|No, same app shell| q3
+q3 -->|Yes| oneApp
+q3 -->|No| q4
+q4 -->|No| mountlyNpm
+q4 -->|Yes| q5
+q5 -->|No, a few teams| mountlyManifest
+q5 -->|Yes| singleSpa`}
+/>
 
 ### Comparison at a glance
 

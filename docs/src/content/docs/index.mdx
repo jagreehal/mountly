@@ -24,9 +24,19 @@ pagefind: false
       partner embeds, or framework migrations without a host-app rewrite. Light DOM is the default;
       use <code>shadow: true</code> when you need hard style isolation.
     </p>
+    <p class="hero-lead">
+      The same components ship as <strong>MCP Apps</strong> views that render inside
+      Claude and ChatGPT. One build emits the <code>ui://</code> resource,
+      <code>npx mountly-mcp dev</code> runs it in a real sandboxed host, and
+      <code>registerMcpApps()</code> installs it into a server you own — no second
+      component model for the AI surface.
+    </p>
     <div class="hero-actions">
       <a class="action primary" href="/mountly/getting-started/quick-start/">
         Quick start <span class="arrow">→</span>
+      </a>
+      <a class="action primary" href="/mountly/mcp-apps/quick-start/">
+        MCP Apps <span class="arrow">→</span>
       </a>
       <a class="action ghost" href="/mountly/getting-started/choosing-an-architecture/">
         Choosing an architecture
@@ -55,6 +65,10 @@ pagefind: false
       <div class="hero-stat">
         <span class="value">3</span>
         <span>frameworks, one page</span>
+      </div>
+      <div class="hero-stat">
+        <span class="value">1</span>
+        <span>build, web + MCP hosts</span>
       </div>
     </div>
   </div>
@@ -197,6 +211,12 @@ pagefind: false
       <span class="label">performance</span>
       <span class="name">Intent-paid JavaScript</span>
       <span class="desc">Keep the page shell light. Load heavy UI when users scroll, click, hover, or match a route. ~9KB core, widgets on demand.</span>
+    </div>
+    <div class="trigger-cell">
+      <span class="index">07</span>
+      <span class="label">mcp apps</span>
+      <span class="name">Your components, rendered by an AI host</span>
+      <span class="desc">Ship the same React, Vue, or Svelte component as an <a href="/mountly/mcp-apps/">MCP Apps</a> view that Claude and ChatGPT render when a tool is called. Views install into the MCP server you already own, and <code>verify --render</code> proves each one boots and is accessible before you ship it.</span>
     </div>
   </div>
 </section>
@@ -420,7 +440,7 @@ signup.attach({
   <div class="section-head">
     <span class="eyebrow">07 · Packages</span>
     <h2 class="section-title">
-      One runtime, four adapters, one optional design preset.
+      One runtime, four adapters, an MCP Apps toolchain, one optional design preset.
     </h2>
   </div>
 
@@ -429,6 +449,11 @@ signup.attach({
       <span class="pkg-name">mountly</span>
       <span class="pkg-desc">Core runtime, on-demand loader, lifecycle, custom element, CLI.</span>
       <span class="pkg-meta">~9 KB gz</span>
+    </a>
+    <a class="package" href="/mountly/mcp-apps/">
+      <span class="pkg-name">mountly-mcp</span>
+      <span class="pkg-desc">Build a component into an MCP Apps view: <code>dev</code> host, <code>build</code>, and <code>verify --render</code>.</span>
+      <span class="pkg-meta">SEP-1865</span>
     </a>
     <a class="package" href="/mountly/frameworks/react/">
       <span class="pkg-name">mountly-react</span>

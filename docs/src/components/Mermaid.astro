@@ -1,0 +1,80 @@
+---
+/**
+ * Renders a Mermaid diagram.
+ *
+ * Starlight has no Mermaid support: every fenced block goes to Expressive Code,
+ * so a ```mermaid fence renders as syntax-highlighted source. Rendering in the
+ * browser keeps the build free of a headless-browser step, and Astro only ships
+ * this script on pages that import the component.
+ */
+interface Props {
+  /** Mermaid source, e.g. a `flowchart TD` definition. */
+  chart: string;
+  /** Described to assistive technology in place of the diagram. */
+  title: string;
+}
+
+const { chart, title } = Astro.props;
+---
+
+<figure class="mermaid-figure not-content">
+  <div class="mermaid-diagram" role="img" aria-label={title} data-chart={chart}>
+    <noscript>
+      <pre>{chart}</pre>
+    </noscript>
+  </div>
+</figure>
+
+<script>
+  import mermaid from "mermaid";
+
+  // Starlight writes the chosen theme onto <html>, and the toggle changes it
+  // without a reload — so the diagram is drawn from scratch on every change
+  // rather than left in the palette it was first rendered with.
+  function currentTheme(): "dark" | "default" {
+    return document.documentElement.dataset.theme === "dark" ? "dark" : "default";
+  }
+
+  async function render(): Promise<void> {
+    const diagrams = document.querySelectorAll<HTMLElement>(".mermaid-diagram[data-chart]");
+    if (diagrams.length === 0) return;
+
+    mermaid.initialize({ startOnLoad: false, theme: currentTheme(), securityLevel: "strict" });
+
+    await Promise.all(
+      [...diagrams].map(async (element, index) => {
+        const chart = element.dataset.chart;
+        if (!chart) return;
+        try {
+          const { svg } = await mermaid.render(`mermaid-${index}`, chart);
+          element.innerHTML = svg;
+        } catch (error) {
+          // A malformed diagram must not blank the page: leave the source
+          // visible, which is what the reader would have seen anyway.
+          element.innerHTML = `<pre>${chart}</pre>`;
+          console.error("[mermaid] failed to render diagram", error);
+        }
+      }),
+    );
+  }
+
+  void render();
+  new MutationObserver(() => void render()).observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ["data-theme"],
+  });
+</script>
+
+<style>
+  .mermaid-figure {
+    margin: 1.5rem 0;
+  }
+  .mermaid-diagram :global(svg) {
+    max-width: 100%;
+    height: auto;
+  }
+  /* Wide diagrams scroll inside the figure rather than the page. */
+  .mermaid-figure {
+    overflow-x: auto;
+  }
+</style>
