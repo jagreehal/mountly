@@ -5,3 +5,7 @@
 
 # Same story: `gen-schema.mjs` rewrites this on every build from the zod schema.
 packages/mountly-manifest/schema.json
+
+# And again: `changeset version` writes these on every release, in its own
+# style. Formatting them turns each release PR into a failing format check.
+**/CHANGELOG.md
