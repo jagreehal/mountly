@@ -108,6 +108,7 @@
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
     "ai": "6.0.208",
+    "axe-core": "4.13.0",
     "jsdom": "^30.0.1",
     "mountly": "^0.3.1",
     "mountly-react": "workspace:^",
@@ -123,6 +124,7 @@
     "@json-render/core": "^0.19.0",
     "@json-render/react": "^0.19.0",
     "ai": "^7.0.65",
+    "axe-core": ">=4.10.0",
     "mountly": "^0.3.1",
     "mountly-react": "^2.0.1",
     "mountly-svelte": "^2.0.1",
@@ -161,6 +163,9 @@
       "optional": true
     },
     "vite": {
+      "optional": true
+    },
+    "axe-core": {
       "optional": true
     }
   }

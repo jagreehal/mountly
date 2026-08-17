@@ -4,7 +4,6 @@ import { dirname, join, parse, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Plugin, ResolvedConfig } from "vite";
 import { exportKeyToSubpath } from "mountly-manifest";
-import { API, SymbolFlags } from "typescript/unstable/sync";
 
 export interface ManifestFragmentPluginOptions {
   verticalId: string;
@@ -18,9 +17,27 @@ export interface ManifestFragmentPluginOptions {
   outDir?: string;
 }
 
-/** The `tsc` entry point of whichever TypeScript this plugin resolves. */
-function tscBin(): string {
-  return join(dirname(fileURLToPath(import.meta.resolve("typescript/package.json"))), "bin", "tsc");
+/**
+ * TypeScript is an optional peer: it powers the fragment's `types` block and
+ * declaration emit, and nothing else. A project without it still gets a
+ * fragment — one that carries no types — rather than a failed build.
+ */
+async function loadTypeScript(): Promise<typeof import("typescript/unstable/sync") | undefined> {
+  try {
+    return await import("typescript/unstable/sync");
+  } catch {
+    return undefined;
+  }
+}
+
+/** The `tsc` entry point of the TypeScript this plugin resolves, if any. */
+function tscBin(): string | undefined {
+  try {
+    const packageJson = fileURLToPath(import.meta.resolve("typescript/package.json"));
+    return join(dirname(packageJson), "bin", "tsc");
+  } catch {
+    return undefined;
+  }
 }
 
 /** Write `mountly.manifest.fragment.json` after a vertical build for CI merge into the host manifest. */
@@ -53,10 +70,16 @@ export function mountlyManifestFragmentPlugin(options: ManifestFragmentPluginOpt
    * have a `tsconfig.json` of its own, and an opened file without one still
    * lands in an inferred project the checker can answer for.
    */
-  function collectNamedExports(entries: ReadonlyArray<string>): Map<string, string[]> {
+  async function collectNamedExports(
+    entries: ReadonlyArray<string>,
+  ): Promise<Map<string, string[]>> {
     const sources = entries.filter((entry) => /\.(?:[cm]?[jt]sx?)$/i.test(entry));
     const names = new Map<string, string[]>();
     if (sources.length === 0) return names;
+
+    const typescript = await loadTypeScript();
+    if (!typescript) return names;
+    const { API, SymbolFlags } = typescript;
 
     const api = new API();
     try {
@@ -108,7 +131,8 @@ export function mountlyManifestFragmentPlugin(options: ManifestFragmentPluginOpt
     rootDeclaration?: string;
     exportDeclarations: Record<string, string>;
   } {
-    if (!entry) return { exportDeclarations: {} };
+    const tsc = tscBin();
+    if (!entry || !tsc) return { exportDeclarations: {} };
 
     const sourceEntries = [entry, ...Object.values(exposeEntries)];
     const rootDir = commonDir(sourceEntries);
@@ -143,7 +167,7 @@ export function mountlyManifestFragmentPlugin(options: ManifestFragmentPluginOpt
       }),
     );
     try {
-      execFileSync(process.execPath, [tscBin(), "-p", emitConfigPath], { stdio: "pipe" });
+      execFileSync(process.execPath, [tsc, "-p", emitConfigPath], { stdio: "pipe" });
     } catch {
       // Type errors must not fail the build here — the widget's own typecheck
       // owns that verdict, and the declarations are still emitted.
@@ -168,7 +192,7 @@ export function mountlyManifestFragmentPlugin(options: ManifestFragmentPluginOpt
       root = config.root;
       outDir = resolve(root, options.outDir ?? "dist");
     },
-    closeBundle() {
+    async closeBundle() {
       // Resolve source paths against the Vite root so callers can pass paths relative to
       // their config (resolve(root, abs) leaves an already-absolute path unchanged).
       const entry = options.entry ? resolve(root, options.entry) : undefined;
@@ -189,7 +213,7 @@ export function mountlyManifestFragmentPlugin(options: ManifestFragmentPluginOpt
 
       const declarations = emitDeclarations(entry, exposeEntries);
 
-      const namedExports = collectNamedExports([
+      const namedExports = await collectNamedExports([
         ...(entry ? [entry] : []),
         ...Object.values(exposeEntries),
       ]);

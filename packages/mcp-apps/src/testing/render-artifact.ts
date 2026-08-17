@@ -2,7 +2,12 @@ import type { ConformanceDiagnostic, McpAppArtifact } from "../artifact/index.js
 
 interface FrameLike {
   url(): string;
-  evaluate<T>(fn: () => T): Promise<T>;
+  /**
+   * A string expression is evaluated through the debugger protocol rather than
+   * as page script, which is how axe reaches a View whose CSP withholds
+   * `unsafe-eval` — the same CSP a host enforces in production.
+   */
+  evaluate<T>(fn: (() => T) | string): Promise<T>;
 }
 
 interface PageLike {
@@ -29,6 +34,77 @@ export interface RenderMcpAppArtifactDependencies {
 
 function error(code: string, message: string, source: string): ConformanceDiagnostic {
   return { severity: "error", code, message, source };
+}
+
+function warning(code: string, message: string, source: string): ConformanceDiagnostic {
+  return { severity: "warning", code, message, source };
+}
+
+interface AxeViolation {
+  id: string;
+  impact: string | null;
+  help: string;
+  nodes: number;
+  target: string;
+}
+
+/** axe-core is an optional peer, like Playwright: absent means the pass is skipped. */
+async function loadAxeSource(): Promise<string | undefined> {
+  const specifier: string = "axe-core";
+  try {
+    const mod = (await import(specifier)) as { source?: string; default?: { source?: string } };
+    return mod.source ?? mod.default?.source;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Accessibility of the View as assembled, which component-level checks cannot
+ * see: every part can be accessible and the composition still fail, because a
+ * missing label or a contrast pairing only exists once the parts are together.
+ *
+ * Reported as warnings, so a run stays green unless `--strict` is on. They are
+ * findings about the View you built, not proof the artifact is malformed.
+ */
+async function auditAccessibility(
+  view: FrameLike,
+  artifact: McpAppArtifact,
+): Promise<ConformanceDiagnostic[]> {
+  const axeSource = await loadAxeSource();
+  if (!axeSource) return [];
+
+  let violations: AxeViolation[];
+  try {
+    await view.evaluate(axeSource);
+    violations = await view.evaluate<AxeViolation[]>(`
+      axe.run(document, { resultTypes: ["violations"] }).then((result) =>
+        result.violations.map((violation) => ({
+          id: violation.id,
+          impact: violation.impact ?? null,
+          help: violation.help,
+          nodes: violation.nodes.length,
+          target: String(violation.nodes[0]?.target?.[0] ?? "")
+        }))
+      )
+    `);
+  } catch (caught) {
+    return [
+      warning(
+        "render/a11y-unavailable",
+        `accessibility pass did not run: ${caught instanceof Error ? caught.message : String(caught)}`,
+        artifact.htmlPath,
+      ),
+    ];
+  }
+
+  return violations.map((violation) =>
+    warning(
+      "render/a11y",
+      `${violation.id} (${violation.impact ?? "unknown"} impact): ${violation.help} — ${violation.nodes} element${violation.nodes === 1 ? "" : "s"}, first at \`${violation.target}\``,
+      artifact.htmlPath,
+    ),
+  );
 }
 
 /** Playwright is an optional peer — absent is a diagnostic, not a crash. */
@@ -159,6 +235,11 @@ export async function renderMcpAppArtifactWith(
       failures.push(
         error("render/blank", "View mounted but rendered no content", artifact.htmlPath),
       );
+    } else {
+      // Only a View that actually rendered can be audited — anything else has
+      // already failed, and axe would just report on an empty document.
+      const view = page.frames().find((frame) => frame.url().includes("srcdoc"));
+      if (view) failures.push(...(await auditAccessibility(view, artifact)));
     }
   } catch (caught) {
     failures.push(

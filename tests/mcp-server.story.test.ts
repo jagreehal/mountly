@@ -113,12 +113,12 @@ describe("createMcpAppServer", () => {
     const server = createMcpAppServer({
       name: "weather-server",
       version: "1.0.0",
-      widgets: [
+      views: [{ uri: "ui://weather-server/dashboard", artifact: built.htmlPath }],
+      tools: [
         {
-          uri: "ui://weather-server/dashboard",
-          htmlPath: built.htmlPath,
-          tool: {
-            name: "get_weather",
+          name: "get_weather",
+          resourceUri: "ui://weather-server/dashboard",
+          config: {
             description: "Get weather",
             inputSchema: {
               type: "object",
@@ -135,10 +135,10 @@ describe("createMcpAppServer", () => {
               required: ["temperature", "location"],
               additionalProperties: false,
             },
-            handler: async (args: unknown) => {
-              const { location } = args as { location: string };
-              return { structuredContent: { temperature: 72, location } };
-            },
+          },
+          handler: async (args: unknown) => {
+            const { location } = args as { location: string };
+            return { structuredContent: { temperature: 72, location } };
           },
         },
       ],
@@ -200,15 +200,13 @@ describe("createMcpAppServer", () => {
     const server = createMcpAppServer({
       name: "weather-server",
       version: "1.0.0",
-      widgets: [
+      views: [{ uri: "ui://wrong/path", artifact: out }],
+      tools: [
         {
-          uri: "ui://wrong/path",
-          htmlPath: out,
-          tool: {
-            name: "get_weather",
-            inputSchema: {},
-            handler: async () => ({ structuredContent: {} }),
-          },
+          name: "get_weather",
+          resourceUri: "ui://wrong/path",
+          config: { inputSchema: {} },
+          handler: async () => ({ structuredContent: {} }),
         },
       ],
     });
@@ -249,15 +247,13 @@ describe("createMcpAppServer", () => {
     const server = createMcpAppServer({
       name: "weather-server",
       version: "1.0.0",
-      widgets: [
+      views: [{ uri: "https://weather-server/dashboard", artifact: out }],
+      tools: [
         {
-          uri: "https://weather-server/dashboard",
-          htmlPath: out,
-          tool: {
-            name: "get_weather",
-            inputSchema: {},
-            handler: async () => ({ structuredContent: {} }),
-          },
+          name: "get_weather",
+          resourceUri: "https://weather-server/dashboard",
+          config: { inputSchema: {} },
+          handler: async () => ({ structuredContent: {} }),
         },
       ],
     });
@@ -294,15 +290,13 @@ describe("createMcpAppServer", () => {
     const server = createMcpAppServer({
       name: "weather-server",
       version: "1.0.0",
-      widgets: [
+      views: [{ uri: "ui://weather-server/dashboard", artifact: out }],
+      tools: [
         {
-          uri: "ui://weather-server/dashboard",
-          htmlPath: out,
-          tool: {
-            name: "get_weather",
-            inputSchema: {},
-            handler: async () => ({ structuredContent: {} }),
-          },
+          name: "get_weather",
+          resourceUri: "ui://weather-server/dashboard",
+          config: { inputSchema: {} },
+          handler: async () => ({ structuredContent: {} }),
         },
       ],
     });
@@ -339,15 +333,13 @@ describe("createMcpAppServer", () => {
     const server = createMcpAppServer({
       name: "weather-server",
       version: "1.0.0",
-      widgets: [
+      views: [{ uri: "ui://weather-server/dashboard", artifact: out }],
+      tools: [
         {
-          uri: "ui://weather-server/dashboard",
-          htmlPath: out,
-          tool: {
-            name: "get_weather",
-            inputSchema: {},
-            handler: async () => ({ structuredContent: {} }),
-          },
+          name: "get_weather",
+          resourceUri: "ui://weather-server/dashboard",
+          config: { inputSchema: {} },
+          handler: async () => ({ structuredContent: {} }),
         },
       ],
     });
@@ -387,27 +379,25 @@ describe("createMcpAppServer", () => {
     const server = createMcpAppServer({
       name: "weather-server",
       version: "1.0.0",
-      widgets: [
+      views: [
+        { uri: "ui://weather-server/dashboard", artifact: out },
+        { uri: "ui://weather-server/dashboard-admin", artifact: outAdmin },
+      ],
+      tools: [
         {
-          uri: "ui://weather-server/dashboard",
-          htmlPath: out,
-          tool: {
-            name: "get_weather",
-            // A Zod raw shape can contain JSON-Schema-looking property names;
-            // normalization must preserve it rather than converting it again.
-            inputSchema: { type: z.string() },
-            handler: async () => ({ structuredContent: { mode: "read" } }),
-          },
+          name: "get_weather",
+          resourceUri: "ui://weather-server/dashboard",
+          // A Zod raw shape can contain JSON-Schema-looking property names;
+          // normalization must preserve it rather than converting it again.
+          config: { inputSchema: { type: z.string() } },
+          handler: async () => ({ structuredContent: { mode: "read" } }),
         },
         {
-          uri: "ui://weather-server/dashboard-admin",
-          htmlPath: outAdmin,
-          tool: {
-            name: "refresh_weather",
-            inputSchema: {},
-            visibility: "app",
-            handler: async () => ({ structuredContent: { mode: "refresh" } }),
-          },
+          name: "refresh_weather",
+          resourceUri: "ui://weather-server/dashboard-admin",
+          config: { inputSchema: {} },
+          visibility: "app",
+          handler: async () => ({ structuredContent: { mode: "refresh" } }),
         },
       ],
     });
@@ -457,30 +447,29 @@ describe("createMcpAppServer", () => {
     const server = createMcpAppServer({
       name: "weather-server",
       version: "1.0.0",
-      widgets: [
+      // One View, two tools — declared once each, rather than repeating the
+      // View alongside every tool that renders into it.
+      views: [{ uri: "ui://weather-server/dashboard", artifact: built.htmlPath }],
+      tools: [
         {
-          uri: "ui://weather-server/dashboard",
-          htmlPath: built.htmlPath,
-          tool: {
-            name: "get_weather",
+          name: "get_weather",
+          resourceUri: "ui://weather-server/dashboard",
+          config: {
             inputSchema: {
               type: "object",
               properties: { location: { type: "string" } },
               required: ["location"],
               additionalProperties: false,
             },
-            handler: async () => ({ structuredContent: { temperature: 72 } }),
           },
+          handler: async () => ({ structuredContent: { temperature: 72 } }),
         },
         {
-          uri: "ui://weather-server/dashboard",
-          htmlPath: built.htmlPath,
-          tool: {
-            name: "refresh_weather",
-            inputSchema: {},
-            visibility: ["app"],
-            handler: async () => ({ structuredContent: { refreshed: true } }),
-          },
+          name: "refresh_weather",
+          resourceUri: "ui://weather-server/dashboard",
+          config: { inputSchema: {} },
+          visibility: ["app"],
+          handler: async () => ({ structuredContent: { refreshed: true } }),
         },
       ],
     });
