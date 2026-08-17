@@ -1,0 +1,95 @@
+---
+title: How MCP Apps work
+description: Follow a View from source component through artifact, registration, capability negotiation, and sandboxed rendering.
+---
+
+Mountly keeps four MCP Apps concerns behind separate public modules. The App
+manifest is the shared contract between them.
+
+## End-to-end lifecycle
+
+1. A framework adapter publishes `createMcpWidget(Component)` from a View entry.
+2. `mountly-mcp build` gives each View its own Vite environment and emits a
+   self-contained App artifact.
+3. The build writes a versioned App manifest containing each View's developer
+   name, protocol URI, files, and resource declaration.
+4. `registerMcpApps()` reads those artifacts and installs resources and linked
+   tools into an unconnected MCP server.
+5. A UI-capable client lists or calls a tool and sees its `_meta.ui.resourceUri`.
+6. The host reads the `ui://` resource and renders its HTML through a
+   cross-origin sandbox proxy.
+7. The official bridge performs `ui/initialize`, then the View receives tool
+   input, tool results, and host-context changes.
+
+The View name and URI have different jobs. `name` is the developer-facing key
+used by builds and `dev --app`; `uri` is protocol identity and links tools to a
+View. Both must be unique within an App manifest.
+
+## Capability negotiation
+
+Mountly advertises the official MCP Apps extension and MIME type. When the
+client supports it, the resources and UI metadata remain available. When the
+client does not:
+
+- model-visible tools remain, with UI metadata removed;
+- app-only tools are removed;
+- `ui://` resources are removed;
+- tool results retain their text fallback.
+
+This lets one server work with both interactive and text-only clients.
+
+## Host and View responsibilities
+
+The host owns the iframe sandbox, applies the declared CSP and permissions,
+negotiates capabilities, and supplies host context. Mountly's development host
+uses the official published `AppBridge` for this protocol behavior.
+
+The View must:
+
+- declare every external origin in its CSP;
+- advertise only the display modes it supports;
+- tolerate partial or absent host style variables;
+- treat `toolInputPartial` as loading-state data, never as authorization to
+  perform an operation;
+- avoid APIs forbidden by the sandbox and CSP.
+
+The server must return useful `content` for the model and text-only clients.
+`registerMcpApps()` supplies JSON text when a handler returns
+`structuredContent` but omits `content`.
+
+## Public modules
+
+| Import                                 | Interface                                             |
+| -------------------------------------- | ----------------------------------------------------- |
+| `mountly-mcp`                          | bridge runtime and official spec types                |
+| `mountly-mcp/react`, `/vue`, `/svelte` | component adapters and framework accessors            |
+| `mountly-mcp/vite`                     | single- and multi-View Vite build                     |
+| `mountly-mcp/build`                    | lower-level resource build for other bundlers         |
+| `mountly-mcp/artifact`                 | App artifact and manifest read/write APIs             |
+| `mountly-mcp/server`                   | `registerMcpApps()` and compatibility server adapters |
+| `mountly-mcp/dev`                      | local host and in-process server connectivity         |
+| `mountly-mcp/testing`                  | `verifyMcpApps()` and conformance reports             |
+
+The single-View Vite shape, `vite build`, `createMcpAppServer()`, and
+`serveStdio()` are compatibility adapters. They remain useful for small
+examples, but the canonical production seam is an App manifest installed into
+an application-owned server.
+
+## What local verification proves
+
+Static verification checks manifest identity, declarations, files, protocol
+metadata, and the presence of bridge code. Rendering additionally starts the
+two-origin host, loads each View in a real browser, waits for the bridge's
+explicit mounted state, and rejects timeouts, captured mount failures, and
+empty View roots. It cannot prove that non-empty content is correct or predict a
+third-party host's exact width, theme, display-mode policy, or product UI, so
+run one final smoke test in every host you support.
+
+That mounted state is a DOM contract, not an internal detail: the bridge sets
+`data-mountly-mcp-state="mounted"` on the View root once your widget's `mount`
+resolves, and `"error"` if the error boundary replaced it. The attribute only
+moves forward, so your own end-to-end tests can wait on it exactly as
+`--render` does.
+
+See [Development and verification](/mcp-apps/development-and-verification/) for
+commands and CI guidance.

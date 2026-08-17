@@ -1,6 +1,9 @@
 import { defineConfig, type Options } from "tsup";
 
-const base: Omit<Options, "entry" | "dts"> = {
+// Declarations come from `tsc` in the build script: TypeScript 7 removed the
+// classic compiler API that tsup's dts step (rollup-plugin-dts) needs.
+
+const base: Omit<Options, "entry"> = {
   format: ["esm"],
   minify: true,
   sourcemap: true,
@@ -14,14 +17,12 @@ export default defineConfig([
   {
     ...base,
     entry: { index: "src/index.ts" },
-    dts: true,
     clean: true,
     noExternal: ["react", "react-dom", "mountly-react"],
   },
   {
     ...base,
     entry: { peer: "src/index.ts" },
-    dts: false,
     clean: false,
     external: ["react", "react-dom", "react-dom/client"],
   },

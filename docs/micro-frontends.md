@@ -358,8 +358,8 @@ For SSR-heavy hosts, render the shell with your framework, emit the import map w
 
 ## Examples
 
-| Example                                                  | Role              | Stack                                                            |
-| -------------------------------------------------------- | ----------------- | ---------------------------------------------------------------- |
+| Example                                                       | Role              | Stack                                                            |
+| ------------------------------------------------------------- | ----------------- | ---------------------------------------------------------------- |
 | [`vite-host-import`](../docs/examples/vite-host-import)       | Vite host         | `mountlyHostPlugin`, `import()` remotes + subpaths               |
 | [`multi-vertical-host`](../docs/examples/multi-vertical-host) | Host shell        | Static HTML + `bootstrapMountly` + manifest, loads two verticals |
 | [`payment-breakdown`](../docs/examples/payment-breakdown)     | Vertical          | React widget, `dist/peer.js`, `featureExport`                    |

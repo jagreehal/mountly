@@ -345,10 +345,10 @@ This emits `~/mcp-test/hello.html` + `~/mcp-test/hello.html.meta.json`. Point yo
 Most likely the bridge runtime isn't being inlined as IIFE. Verify:
 
 ```bash
-head -1 packages/adapters/mountly-mcp/dist/bridge/iframe-entry.js
+head -1 packages/mcp-apps/dist/bridge/iframe-entry.js
 ```
 
-Should NOT start with `import` statements. If it does, the tsup config regressed; see `packages/adapters/mountly-mcp/tsup.config.ts`. The second config block must use `format: ["iife"]` with `bundle: true, noExternal: [/.*/]`.
+Should NOT start with `import` statements. If it does, the tsup config regressed; see `packages/mcp-apps/tsup.config.ts`. The second config block must use `format: ["iife"]` with `bundle: true, noExternal: [/.*/]`.
 
 ### "CSP error in Chromium devtools"
 

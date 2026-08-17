@@ -8,6 +8,22 @@ Modernize legacy pages incrementally without rewriting the host app.
 
 **Documentation:** <https://jagreehal.github.io/mountly>
 
+### Two ways in
+
+**Building a web app?** Load widgets on user intent — hover, click, viewport,
+idle — so the page ships a shell instead of everything.
+→ [Quick start](#quick-start-60-seconds)
+
+**Building an MCP server?** Turn a React, Vue or Svelte component into an
+MCP Apps (SEP-1865) view that renders inside Claude and ChatGPT. One build
+emits the `ui://` resource, `npx mountly-mcp dev` runs it in a real sandboxed
+host, and `registerMcpApps()` installs it into a server you own.
+→ [MCP Apps quick start](https://mountly.dev/mcp-apps/quick-start/) ·
+[`mountly-mcp`](packages/mcp-apps/README.md)
+
+Both sit on the same widget model, so a component written for one works in the
+other.
+
 ## The Problem
 
 Modern web apps ship too much JavaScript upfront. Component libraries load everything at once. Microfrontends are operationally heavy. Framework lazy-loading lacks standardized interaction patterns.
@@ -47,16 +63,53 @@ Before mountly:                    After mountly:
 
 ## Packages
 
-| Package                                                          | Purpose                                                                                                                                                                           |
-| ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`mountly`](https://npmjs.com/package/mountly)                   | Core runtime, on-demand loader, lifecycle, custom element, CLI                                                                                                                    |
-| [`mountly-react`](https://npmjs.com/package/mountly-react)       | React adapter, `createWidget(Component, { styles })`                                                                                                                              |
-| [`mountly-vue`](https://npmjs.com/package/mountly-vue)           | Vue adapter, `createWidget(Component, { styles })`                                                                                                                                |
-| [`mountly-svelte`](https://npmjs.com/package/mountly-svelte)     | Svelte adapter, `createWidget(Component, { styles })`                                                                                                                             |
-| [`mountly-tailwind`](https://npmjs.com/package/mountly-tailwind) | Tailwind v4 design preset (opt-in)                                                                                                                                                |
-| [`mountly-vite-plugin`](packages/mountly-vite-plugin)            | Vite lib build plugin, dual `index.js` / `peer.js` widget output                                                                                                                  |
-| [`mountly-manifest`](packages/mountly-manifest)                  | Vertical registry schema, import map + host helpers                                                                                                                               |
-| [`mountly-mcp`](packages/adapters/mountly-mcp/README.md)         | MCP Apps integration + generative UI. Subpaths: `./react`, `./server`, `./json-render` (render [`@json-render`](https://github.com/vercel-labs/json-render) specs as MCP widgets) |
+| Package                                                          | Purpose                                                                                                                                                     |
+| ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`mountly`](https://npmjs.com/package/mountly)                   | Core runtime, on-demand loader, lifecycle, custom element, CLI                                                                                              |
+| [`mountly-react`](https://npmjs.com/package/mountly-react)       | React adapter, `createWidget(Component, { styles })`                                                                                                        |
+| [`mountly-vue`](https://npmjs.com/package/mountly-vue)           | Vue adapter, `createWidget(Component, { styles })`                                                                                                          |
+| [`mountly-svelte`](https://npmjs.com/package/mountly-svelte)     | Svelte adapter, `createWidget(Component, { styles })`                                                                                                       |
+| [`mountly-tailwind`](https://npmjs.com/package/mountly-tailwind) | Tailwind v4 design preset (opt-in)                                                                                                                          |
+| [`mountly-vite-plugin`](packages/mountly-vite-plugin)            | Vite lib build plugin, dual `index.js` / `peer.js` widget output                                                                                            |
+| [`mountly-manifest`](packages/mountly-manifest)                  | Vertical registry schema, import map + host helpers                                                                                                         |
+| [`mountly-mcp`](packages/mcp-apps/README.md)                     | **MCP Apps (SEP-1865)** — build views from React, Vue or Svelte components. Subpaths: `./react`, `./vue`, `./svelte`, `./vite`, `./server`, `./json-render` |
+
+## Build an MCP App from a component you already have
+
+[MCP Apps](https://github.com/modelcontextprotocol/ext-apps) (SEP-1865) lets an
+MCP server render interactive UI inside Claude, ChatGPT and other hosts. Most
+tooling assumes you'll hand-write that view in React. Mountly starts from the
+component you already ship — **in React, Vue or Svelte**:
+
+```ts
+import { createMcpWidget } from "mountly-mcp/vue";
+import Dashboard from "./Dashboard.vue";
+
+(globalThis as { __mountlyMcpWidget__?: unknown }).__mountlyMcpWidget__ =
+  createMcpWidget(Dashboard);
+```
+
+Add `mountlyMcpWidget()` to your Vite config and `vite build` emits the
+`ui://` resource plus its sidecar. Then develop it against a real host —
+sandbox proxy, CSP, the full handshake — without installing one:
+
+```bash
+npx mountly-mcp dev --server ./server.js
+```
+
+`registerMcpApps(server, { views, tools })` installs the result into an MCP
+server you own, so transport, auth and deployment stay yours. The wire protocol
+is delegated to the official
+[`@modelcontextprotocol/ext-apps`](https://www.npmjs.com/package/@modelcontextprotocol/ext-apps)
+SDK, so it tracks the spec rather than reimplementing it.
+
+**If you're on React and starting from scratch, use the official SDK** — this is
+worth reaching for when you have existing components, a Vite build, or a
+framework other than React.
+
+→ [MCP Apps quick start](https://mountly.dev/mcp-apps/quick-start/) ·
+[runnable demo](docs/examples/mcp-app-demo/README.md) ·
+[Agent Skill](plugins/mountly-mcp/skills/create-mcp-widget/SKILL.md)
 
 ## Quick Start (60 seconds)
 
@@ -93,8 +146,8 @@ The widget mounts inside the container in light DOM by default, with bundled sty
 - **Host runtime API**: [packages/mountly/README.md](packages/mountly/README.md).
 - **MCP Apps integration**: [docs/protocol-layering.md](docs/protocol-layering.md) and [docs/how-to-test.md](docs/how-to-test.md).
 - **MCP Apps runnable demo**: [`docs/examples/mcp-app-demo`](docs/examples/mcp-app-demo/README.md) for an end-to-end `ui://` resource + MCP server verification.
-- **Generative UI (agent emits the UI)**: [`mountly-mcp/json-render`](packages/adapters/mountly-mcp/README.md) renders [`@json-render`](https://github.com/vercel-labs/json-render) specs as MCP widgets with an agent-action bridge; `createGenerativeWidget` + `streamSpec`. Self-driving streaming demo: [`docs/examples/mcp-generative-demo`](docs/examples/mcp-generative-demo/README.md).
-- **MCP adapter package docs**: [`mountly-mcp`](packages/adapters/mountly-mcp/README.md), with subpaths `mountly-mcp/react` and `mountly-mcp/server`. All thin wrappers around the official [`@modelcontextprotocol/ext-apps`](https://www.npmjs.com/package/@modelcontextprotocol/ext-apps) SDK (SEP-1865, 2026-01-26).
+- **Generative UI (agent emits the UI)**: [`mountly-mcp/json-render`](packages/mcp-apps/README.md) renders [`@json-render`](https://github.com/vercel-labs/json-render) specs as MCP widgets with an agent-action bridge; `createGenerativeWidget` + `streamSpec`. Self-driving streaming demo: [`docs/examples/mcp-generative-demo`](docs/examples/mcp-generative-demo/README.md).
+- **MCP adapter package docs**: [`mountly-mcp`](packages/mcp-apps/README.md), with subpaths `mountly-mcp/react` and `mountly-mcp/server`. All thin wrappers around the official [`@modelcontextprotocol/ext-apps`](https://www.npmjs.com/package/@modelcontextprotocol/ext-apps) SDK (SEP-1865, 2026-01-26).
 
 ## API Stability
 

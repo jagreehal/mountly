@@ -127,12 +127,46 @@ test.describe("mcp-app-demo preview", () => {
     const outerSandbox = await page.locator("#sandbox").getAttribute("sandbox");
     expect(outerSandbox).toBe("allow-scripts allow-same-origin");
 
+    // The spec grants allow-same-origin to the proxy, not the view: with srcdoc
+    // the view would otherwise inherit the proxy's origin and reach its DOM.
     const inner = page.frameLocator("#sandbox").locator("iframe#inner");
-    await expect(inner).toHaveAttribute("sandbox", "allow-scripts allow-same-origin");
+    await expect(inner).toHaveAttribute("sandbox", "allow-scripts");
 
     const srcdoc = await inner.getAttribute("srcdoc");
     expect(srcdoc).toContain("Content-Security-Policy");
-    expect(srcdoc).toContain("connect-src 'none'");
+    // No 'unsafe-eval': the widget must boot under the CSP the spec mandates.
+    expect(srcdoc).toContain("script-src 'self' 'unsafe-inline'");
+    expect(srcdoc).not.toContain("unsafe-eval");
+
+    story.then("the origin the build declared survives the whole metadata path");
+    // buildMcpResource -> sidecar -> server resources/read -> host -> proxy CSP.
+    // Nothing below this tier can prove the declaration actually constrains the
+    // view, and an undeclared origin must still be refused.
+    expect(srcdoc).toContain("connect-src https://api.example.com");
+    expect(srcdoc).not.toContain("connect-src *");
+  });
+
+  test("a host theme change reaches the view as ui/notifications/host-context-changed", async ({
+    page,
+  }, testInfo) => {
+    story.init(testInfo, {
+      tags: ["mcp", "preview", "host-context"],
+      ticket: "MOUNTLY-MCP-DEMO-7",
+    });
+
+    story.given("the preview is open and the widget has rendered");
+    await page.emulateMedia({ colorScheme: "light" });
+    await page.goto("http://localhost:5179/");
+    const widget = widgetFrameLocator(page);
+    await expect(widget.getByText("Total due")).toBeVisible({ timeout: 5000 });
+
+    story.when("the user's system flips to dark mode");
+    await page.emulateMedia({ colorScheme: "dark" });
+
+    story.then("the host pushes the change down to the view through the sandbox proxy");
+    await expect(page.locator("#log")).toContainText("ui/notifications/host-context-changed", {
+      timeout: 5000,
+    });
   });
 
   test("resource teardown request is acknowledged by the widget bridge", async ({

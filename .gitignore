@@ -28,3 +28,7 @@ docs/examples/mcp-generative-demo/preview-host/
 docs/examples/mcp-generative-demo/preview/stream-dist/
 ___temp
 .opencode
+
+# Vitest browser-mode failure artifacts
+.vitest-attachments
+tests/component/__screenshots__

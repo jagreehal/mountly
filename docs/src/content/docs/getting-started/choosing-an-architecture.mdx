@@ -56,14 +56,14 @@ flowchart TD
 
 ### Comparison at a glance
 
-| Approach | When | Pain you accept |
-| -------- | ---- | --------------- |
-| Monorepo npm lib | Same org, shared CI is OK | Merge coordination |
-| mountly widget drop-in | Foreign host, 1–5 interactive regions | Import map / version pinning |
-| mountly manifest verticals | 2–5 teams, independent CDN deploys | Shared React version agreement |
-| Module Federation | Deep horizontal integration, shared build graph | `shared` blocks, tooling complexity |
-| Single-SPA | Full app shells per route, many teams | Orchestration, routing ownership |
-| Subdomain per product | Fully separate products | No shared page shell; routing at DNS level |
+| Approach                   | When                                            | Pain you accept                            |
+| -------------------------- | ----------------------------------------------- | ------------------------------------------ |
+| Monorepo npm lib           | Same org, shared CI is OK                       | Merge coordination                         |
+| mountly widget drop-in     | Foreign host, 1–5 interactive regions           | Import map / version pinning               |
+| mountly manifest verticals | 2–5 teams, independent CDN deploys              | Shared React version agreement             |
+| Module Federation          | Deep horizontal integration, shared build graph | `shared` blocks, tooling complexity        |
+| Single-SPA                 | Full app shells per route, many teams           | Orchestration, routing ownership           |
+| Subdomain per product      | Fully separate products                         | No shared page shell; routing at DNS level |
 
 mountly does **not** replace subdomain separation. If Product A and the platform are truly separate products with no shared page, deploy them under different subdomains and skip composition entirely.
 
@@ -140,12 +140,12 @@ Key difference from Module Federation: React is shared through the **import map*
 
 ## When to escalate beyond mountly
 
-| Situation | Better fit |
-| --------- | ---------- |
+| Situation                                                        | Better fit                                                                                 |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
 | 30+ teams, runtime route-to-app routing, dedicated platform team | Single-SPA or vendor MFE platform (mountly can load widgets **inside** each team's bundle) |
-| Fully separate products, no shared page | Subdomain per product |
-| Temporary customization in a monorepo you control | Stage 1 monorepo — do not adopt MFE tooling |
-| Shared global client state across every region | One app shell |
+| Fully separate products, no shared page                          | Subdomain per product                                                                      |
+| Temporary customization in a monorepo you control                | Stage 1 monorepo — do not adopt MFE tooling                                                |
+| Shared global client state across every region                   | One app shell                                                                              |
 
 ---
 

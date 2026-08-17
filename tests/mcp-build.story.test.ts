@@ -3,13 +3,10 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { story } from "executable-stories-vitest";
 import { describe, expect, it } from "vite-plus/test";
-import { buildMcpResource } from "../packages/adapters/mountly-mcp/src/build/index";
-import { emitHtml } from "../packages/adapters/mountly-mcp/src/build/emit-html";
-import { emitMeta } from "../packages/adapters/mountly-mcp/src/build/emit-meta";
-import {
-  MCP_APPS_MIME,
-  MCP_APPS_PROTOCOL_VERSION,
-} from "../packages/adapters/mountly-mcp/src/schema";
+import { buildMcpResource } from "../packages/mcp-apps/src/build/index";
+import { emitHtml } from "../packages/mcp-apps/src/build/emit-html";
+import { emitMeta } from "../packages/mcp-apps/src/build/emit-meta";
+import { MCP_APPS_MIME, MCP_APPS_PROTOCOL_VERSION } from "../packages/mcp-apps/src/schema";
 
 function makeTempDir(): string {
   return mkdtempSync(join(tmpdir(), "mountly-mcp-test-"));
@@ -102,6 +99,22 @@ describe("emitHtml — cdn", () => {
     expect(html).toContain("self.__bootBridge();");
   });
 
+  it("loads the widget bundle before the bridge (module scripts run in order)", ({ task }) => {
+    story.init(task);
+    const html = emitHtml({
+      mode: "cdn",
+      uri: "ui://weather-server/dashboard",
+      jsUrl: "https://cdn.example.com/weather.js",
+      cssUrl: "https://cdn.example.com/weather.css",
+      bridgeRuntimeJs: "self.__bootBridge();",
+    });
+
+    story.then("the widget's src script precedes the inlined bridge, or the bridge boots first");
+    expect(html.indexOf("https://cdn.example.com/weather.js")).toBeLessThan(
+      html.indexOf("self.__bootBridge();"),
+    );
+  });
+
   it("escapes HTML special chars in uri/jsUrl/cssUrl attributes", ({ task }) => {
     story.init(task);
     const html = emitHtml({
@@ -161,6 +174,41 @@ describe("buildMcpResource", () => {
     expect(meta.uri).toBe("ui://weather-server/dashboard");
     expect(result.htmlPath).toBe(out);
     expect(result.metaPath).toBe(`${out}.meta.json`);
+
+    rmSync(dir, { recursive: true });
+  });
+
+  it("hands the view the same awaitToolResult/displayModes the sidecar declares", async ({
+    task,
+  }) => {
+    story.init(task);
+    const dir = makeTempDir();
+    const entry = join(dir, "widget.js");
+    const out = join(dir, "out.html");
+    const bridgeRuntime = join(dir, "bridge-runtime.js");
+    writeFileSync(entry, "globalThis.__mountlyMcpWidget__ = { mount(){}, unmount(){} };", "utf8");
+    writeFileSync(bridgeRuntime, "/* bridge runtime */", "utf8");
+
+    story.given("a widget built with fullscreen support and immediate mount");
+    const result = await buildMcpResource({
+      entry,
+      uri: "ui://weather-server/dashboard",
+      name: "weather_dashboard",
+      output: out,
+      displayModes: ["inline", "fullscreen"],
+      awaitToolResult: false,
+      bridgeRuntimePath: bridgeRuntime,
+    });
+
+    story.then(
+      "the emitted HTML sets the globals the bridge reads, so ui/initialize matches the sidecar",
+    );
+    const html = readFileSync(out, "utf8");
+    expect(html).toContain(
+      'globalThis.__mountlyMcpAvailableDisplayModes__=["inline","fullscreen"];',
+    );
+    expect(html).toContain("globalThis.__mountlyMcpAwaitToolResult__=false;");
+    expect(result.declaration.displayModes).toEqual(["inline", "fullscreen"]);
 
     rmSync(dir, { recursive: true });
   });

@@ -1,0 +1,179 @@
+---
+title: MCP Apps quick start
+description: Build an existing component as an MCP Apps View and install it into an application-owned MCP server.
+---
+
+This example uses Vue. Replace `/vue` and the Vite framework plugin with the
+React or Svelte equivalents; the artifact and server APIs stay the same.
+
+```bash
+npm install mountly-mcp mountly mountly-vue @modelcontextprotocol/sdk
+npm install -D vite @vitejs/plugin-vue
+```
+
+## 1. Publish the component as a View
+
+```ts
+// src/quote-view.ts
+import { createMcpWidget } from "mountly-mcp/vue";
+import QuoteCard from "./QuoteCard.vue";
+
+(globalThis as { __mountlyMcpWidget__?: unknown }).__mountlyMcpWidget__ =
+  createMcpWidget(QuoteCard);
+```
+
+Tool data and host context are available without changing the component's
+public props:
+
+```vue
+<script setup lang="ts">
+import { useHostContext, useToolResult } from "mountly-mcp/vue";
+
+const result = useToolResult<{
+  structuredContent?: { total: number; currency: string };
+}>();
+const host = useHostContext();
+</script>
+
+<template>
+  <section :data-theme="host?.theme">
+    <h1>Total due</h1>
+    <p>
+      {{ result?.structuredContent?.total }}
+      {{ result?.structuredContent?.currency }}
+    </p>
+  </section>
+</template>
+
+<style>
+section {
+  background: var(--color-background-primary, #fff);
+  color: var(--color-text-primary, #171717);
+  font-family: var(--font-sans, system-ui, sans-serif);
+}
+</style>
+```
+
+Vue composables return computed refs. React provides equivalent hooks. Svelte
+receives `mcp`, `toolInput`, `toolInputPartial`, `toolResult`, and `hostContext`
+as component props.
+
+## 2. Configure the build
+
+```ts
+// vite.config.ts
+import vue from "@vitejs/plugin-vue";
+import { defineConfig } from "vite";
+import { mountlyMcpWidget } from "mountly-mcp/vite";
+
+export default defineConfig({
+  plugins: [
+    vue(),
+    mountlyMcpWidget({
+      apps: [
+        {
+          entry: "src/quote-view.ts",
+          uri: "ui://payments/quote",
+          name: "payment_quote",
+          displayModes: ["inline", "fullscreen"],
+          prefersBorder: true,
+          csp: { connectDomains: ["https://api.example.com"] },
+        },
+      ],
+    }),
+  ],
+});
+```
+
+```bash
+npx mountly-mcp build
+```
+
+The build emits `dist/payment_quote.html`, its transitional metadata file, and
+the canonical `dist/mountly-mcp.manifest.json`. External origins not declared
+in `csp` are blocked by the host.
+
+## 3. Install it into your server
+
+```ts
+// src/create-server.ts
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { readMcpAppManifest } from "mountly-mcp/artifact";
+import { registerMcpApps } from "mountly-mcp/server";
+
+export default async function createServer() {
+  const server = new McpServer(
+    { name: "payments", version: "1.0.0" },
+    { capabilities: { tools: {}, resources: {} } },
+  );
+  const { artifacts } = await readMcpAppManifest("dist/mountly-mcp.manifest.json");
+
+  await registerMcpApps(server, {
+    views: artifacts.map((artifact) => ({ artifact })),
+    tools: [
+      {
+        name: "quote_payment",
+        resourceUri: "ui://payments/quote",
+        config: {
+          description: "Quote a payment plan",
+          inputSchema: {
+            type: "object",
+            properties: { plan: { type: "string" } },
+            required: ["plan"],
+          },
+        },
+        handler: async ({ plan }: { plan: string }) => ({
+          structuredContent: { plan, total: 99, currency: "USD" },
+        }),
+      },
+    ],
+  });
+
+  return server;
+}
+```
+
+Call `registerMcpApps()` before connecting the server. Mountly adds a text
+`content` fallback when a handler returns only `structuredContent`, so the model
+and text-only clients still receive a useful result.
+
+Connect the returned server with the transport your application owns. For a
+stdio process:
+
+```ts
+// src/server.ts
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import createServer from "./create-server.js";
+
+const server = await createServer();
+await server.connect(new StdioServerTransport());
+```
+
+Never write logs to stdout in a stdio server; stdout is the JSON-RPC channel.
+
+## 4. Develop and verify
+
+Create `mcp.fixtures.json`; without a real server, each value is delivered as
+`structuredContent`:
+
+```json
+{
+  "annual": { "plan": "annual", "total": 99, "currency": "USD" },
+  "monthly": { "plan": "monthly", "total": 12, "currency": "USD" }
+}
+```
+
+```bash
+npx mountly-mcp dev
+npx mountly-mcp dev --server ./dist/create-server.js
+npx mountly-mcp verify --render
+```
+
+For a multi-View project, select one in development with
+`--app payment_quote`. For release CI, use `verify --render --strict`; strict
+mode treats every advisory warning as a failure, while rendering also rejects
+Views that time out, throw, or mount without content.
+
+Next, see [Build and artifacts](/mcp-apps/build-and-artifacts/) for multi-View
+configuration and [Production integration](/mcp-apps/production-integration/)
+for visibility, capability downgrade, and removal.

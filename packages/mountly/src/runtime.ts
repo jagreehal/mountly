@@ -142,19 +142,38 @@ export function appendImports(imports: Record<string, string>): void {
 }
 
 const MOUNTLY_SUBPATHS = [
-  "triggers", "gestures", "attach", "elements", "island",
-  "host", "host/auto", "bundle", "cache", "mount", "shadow",
-  "assets", "adapter", "analytics", "prefetch", "devtools",
-  "overlays", "data", "url", "bus", "contracts", "test", "runtime",
+  "triggers",
+  "gestures",
+  "attach",
+  "elements",
+  "island",
+  "host",
+  "host/auto",
+  "bundle",
+  "cache",
+  "mount",
+  "shadow",
+  "assets",
+  "adapter",
+  "analytics",
+  "prefetch",
+  "devtools",
+  "overlays",
+  "data",
+  "url",
+  "bus",
+  "contracts",
+  "test",
+  "runtime",
 ] as const;
 
 const MOUNTLY_FILE_MAP: Record<string, string> = {
   "": "index.js",
   "host/auto": "host-entry.js",
-  "overlays": "positioning.js",
-  "data": "data-source.js",
-  "url": "url-state.js",
-  "test": "test-utils.js",
+  overlays: "positioning.js",
+  data: "data-source.js",
+  url: "url-state.js",
+  test: "test-utils.js",
 };
 
 function deriveMountlySubpathImports(mountlyUrl: string): Record<string, string> {

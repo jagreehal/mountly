@@ -22,9 +22,7 @@ import styles from "./styles.generated.css";
 
 const widget = createWidget(MyComponent, { styles });
 
-widget.mount(container, {
-  /* props */
-});
+widget.mount(container, {/* props */});
 widget.unmount(container);
 ```
 

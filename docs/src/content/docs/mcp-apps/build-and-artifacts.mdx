@@ -1,0 +1,110 @@
+---
+title: Build and artifacts
+description: Build one or many isolated MCP Apps Views and use the versioned App manifest as the deployment contract.
+---
+
+The recommended build declares an `apps` collection and runs
+`mountly-mcp build`. Each View gets an isolated Vite environment, while all
+Views share one versioned App manifest.
+
+```ts
+// vite.config.ts
+import react from "@vitejs/plugin-react";
+import { defineConfig } from "vite";
+import { mountlyMcpWidget } from "mountly-mcp/vite";
+
+export default defineConfig({
+  plugins: [
+    react(),
+    mountlyMcpWidget({
+      apps: [
+        {
+          entry: "src/dashboard.tsx",
+          uri: "ui://weather/dashboard",
+          name: "weather_dashboard",
+          displayModes: ["inline", "fullscreen"],
+        },
+        {
+          entry: "src/settings.tsx",
+          uri: "ui://weather/settings",
+          name: "weather_settings",
+        },
+      ],
+      // Optional. Defaults to dist/mountly-mcp.manifest.json.
+      manifest: "dist/mountly-mcp.manifest.json",
+    }),
+  ],
+});
+```
+
+```bash
+npx mountly-mcp build
+```
+
+Use `--config <path>` when Vite cannot discover the config automatically.
+
+## Output contract
+
+The default output is:
+
+```text
+dist/
+├── mountly-mcp.manifest.json
+├── weather_dashboard.html
+├── weather_dashboard.html.meta.json
+├── weather_settings.html
+└── weather_settings.html.meta.json
+```
+
+Each App artifact contains self-contained HTML plus its resource declaration.
+The per-View `.meta.json` file is transitional compatibility output. The App
+manifest is canonical: build, development, registration, and verification all
+consume the same identities and paths.
+
+App manifest paths are relative to the manifest, so the complete `dist`
+directory can move as one deployable unit. Do not edit generated declarations
+independently; rebuild them from the Vite configuration.
+
+## View options
+
+Every View requires:
+
+- `entry` — source file that publishes `globalThis.__mountlyMcpWidget__`;
+- `name` — unique developer key and default output filename;
+- `uri` — unique protocol identity beginning with `ui://`.
+
+Resource options include `description`, `displayModes`, `prefersBorder`, `csp`,
+`permissions`, `awaitToolResult`, and `streamToolInput`. Declare external
+network, resource, frame, and base origins in `csp`; undeclared origins are
+blocked by a conforming host.
+
+Set an individual `output` to override a View's HTML path. Set `manifest: false`
+only when another system owns the artifact collection; it disables the
+canonical contract used by the Mountly CLI.
+
+## Single-View compatibility
+
+Existing projects can keep the original options and `vite build`:
+
+```ts
+mountlyMcpWidget({
+  entry: "src/view.tsx",
+  uri: "ui://example/view",
+  name: "example_view",
+});
+```
+
+This still emits the View HTML, metadata, and default App manifest. Prefer the
+collection shape for new code so adding a second View is configuration-only.
+
+## Other bundlers
+
+`mountly-mcp/build` exposes `buildMcpResource()` and
+`buildMcpResourceFromSource()` for build systems that cannot use the Vite
+plugin. `mountly-mcp/artifact` exposes `readMcpAppArtifact()`,
+`readMcpAppManifest()`, and `writeMcpAppManifest()` so custom pipelines can
+produce and consume the same contract.
+
+Use these lower-level interfaces only when the Vite adapter is not suitable;
+the adapter earns its depth by handling dependency bundling, CSS inlining,
+bridge injection, metadata, isolated environments, and cleanup together.

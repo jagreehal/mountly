@@ -49,7 +49,12 @@ test.describe("hosted examples", () => {
       page.on("requestfailed", onFailed);
 
       const response = await page.goto(`${SITE}${href}`, { waitUntil: "networkidle" });
-      const body = (await page.locator("body").innerText().catch(() => "")).trim();
+      const body = (
+        await page
+          .locator("body")
+          .innerText()
+          .catch(() => "")
+      ).trim();
 
       page.off("console", onConsole);
       page.off("pageerror", onPageError);

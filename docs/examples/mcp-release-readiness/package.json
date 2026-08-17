@@ -1,0 +1,28 @@
+{
+  "name": "mcp-release-readiness",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite --host 127.0.0.1 --port 5194 --strictPort",
+    "dev:mcp": "mountly-mcp dev --server ./server.mjs",
+    "typecheck": "tsc --noEmit",
+    "verify": "pnpm run build && node ./verify.mjs",
+    "serve:stdio": "pnpm run build && node ./serve-stdio.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/ext-apps": "^1.7.5",
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "mountly-mcp": "workspace:*",
+    "mountly-vue": "workspace:*",
+    "vue": "^3.5.41",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^26.2.0",
+    "@vitejs/plugin-vue": "^6.0.8",
+    "typescript": "^7.0.2",
+    "vite": "^8.2.1"
+  }
+}

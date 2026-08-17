@@ -2,7 +2,7 @@
 
 **A generative UI that builds itself, then navigates itself, inside an agent.**
 
-An AI emits a UI spec constrained to a catalog. [`@json-render`](https://github.com/vercel-labs/json-render)'s streaming compiler assembles it live, native components and all. Click a generated button and it drives the agent to generate the _next_ view, which streams in over the last. No iframe-runtime, no generated code, no arbitrary HTML, and almost no app code, because [`mountly-mcp/json-render`](../../packages/adapters/mountly-mcp) owns the ceremony.
+An AI emits a UI spec constrained to a catalog. [`@json-render`](https://github.com/vercel-labs/json-render)'s streaming compiler assembles it live, native components and all. Click a generated button and it drives the agent to generate the _next_ view, which streams in over the last. No iframe-runtime, no generated code, no arbitrary HTML, and almost no app code, because [`mountly-mcp/json-render`](../../packages/mcp-apps) owns the ceremony.
 
 Built with **Geist** (hi, Vercel) on a dark, OKLCH palette.
 

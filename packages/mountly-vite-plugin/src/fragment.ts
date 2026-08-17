@@ -1,8 +1,10 @@
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, join, relative, resolve } from "node:path";
+import { execFileSync } from "node:child_process";
+import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { dirname, join, parse, relative, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import type { Plugin, ResolvedConfig } from "vite";
 import { exportKeyToSubpath } from "mountly-manifest";
-import ts from "typescript";
+import { API, SymbolFlags } from "typescript/unstable/sync";
 
 export interface ManifestFragmentPluginOptions {
   verticalId: string;
@@ -16,64 +18,72 @@ export interface ManifestFragmentPluginOptions {
   outDir?: string;
 }
 
+/** The `tsc` entry point of whichever TypeScript this plugin resolves. */
+function tscBin(): string {
+  return join(dirname(fileURLToPath(import.meta.resolve("typescript/package.json"))), "bin", "tsc");
+}
+
 /** Write `mountly.manifest.fragment.json` after a vertical build for CI merge into the host manifest. */
 export function mountlyManifestFragmentPlugin(options: ManifestFragmentPluginOptions): Plugin {
   let outDir = options.outDir ?? "dist";
   let root = process.cwd();
 
-  function collectNamedExports(entry: string | undefined): string[] {
-    if (!entry) return [];
-    if (!/\.(?:[cm]?[jt]sx?)$/i.test(entry)) return [];
-
-    const source = readFileSync(entry, "utf8");
-    const sourceFile = ts.createSourceFile(
-      entry,
-      source,
-      ts.ScriptTarget.Latest,
-      true,
-      entry.endsWith("x") ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
-    );
-
-    const names = new Set<string>();
-    const addBindingName = (name: ts.BindingName) => {
-      if (ts.isIdentifier(name)) {
-        names.add(name.text);
-        return;
-      }
-      for (const element of name.elements) {
-        if (ts.isBindingElement(element)) addBindingName(element.name);
-      }
-    };
-    const hasExport = (node: ts.Node) =>
-      (ts.canHaveModifiers(node) ? ts.getModifiers(node) : undefined)?.some(
-        (modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword,
-      ) ?? false;
-
-    for (const statement of sourceFile.statements) {
-      if (ts.isFunctionDeclaration(statement) || ts.isClassDeclaration(statement)) {
-        if (statement.name && hasExport(statement)) names.add(statement.name.text);
-        continue;
-      }
-      if (ts.isVariableStatement(statement) && hasExport(statement)) {
-        for (const declaration of statement.declarationList.declarations) {
-          addBindingName(declaration.name);
-        }
-        continue;
-      }
-      if (ts.isEnumDeclaration(statement) && hasExport(statement)) {
-        names.add(statement.name.text);
-        continue;
-      }
-      if (ts.isExportDeclaration(statement) && statement.exportClause) {
-        if (ts.isNamedExports(statement.exportClause)) {
-          for (const element of statement.exportClause.elements) {
-            names.add(element.name.text);
-          }
-        }
-      }
+  /** Nearest `tsconfig.json` at or above `root`, the way `tsc` itself looks. */
+  function findConfigFile(): string | undefined {
+    let dir = root;
+    for (;;) {
+      const candidate = join(dir, "tsconfig.json");
+      if (existsSync(candidate)) return candidate;
+      const next = dirname(dir);
+      if (next === dir || dir === parse(dir).root) return undefined;
+      dir = next;
     }
+  }
 
-    return [...names].sort();
+  /**
+   * Named runtime exports of each source entry, keyed by absolute path.
+   *
+   * The checker answers this, rather than a hand-walked AST: it sees through
+   * `export * from` and re-exports, which a statement-by-statement scan misses.
+   * Type-only exports are dropped — the manifest describes what a host can
+   * import at runtime. One session serves every entry; each one spawns a
+   * compiler process.
+   *
+   * Entries are opened as files rather than through a config: a widget need not
+   * have a `tsconfig.json` of its own, and an opened file without one still
+   * lands in an inferred project the checker can answer for.
+   */
+  function collectNamedExports(entries: ReadonlyArray<string>): Map<string, string[]> {
+    const sources = entries.filter((entry) => /\.(?:[cm]?[jt]sx?)$/i.test(entry));
+    const names = new Map<string, string[]>();
+    if (sources.length === 0) return names;
+
+    const api = new API();
+    try {
+      const snapshot = api.updateSnapshot({ openFiles: [...sources] });
+      for (const entry of sources) {
+        const project = snapshot.getDefaultProjectForFile(entry);
+        if (!project) continue;
+        const sourceFile = project.program.getSourceFile(entry);
+        const moduleSymbol = sourceFile && project.checker.getSymbolAtLocation(sourceFile);
+        if (!moduleSymbol) continue;
+        names.set(
+          entry,
+          project.checker
+            .getExportsOfModule(moduleSymbol)
+            .filter(
+              (symbol) =>
+                symbol.name !== "default" &&
+                (symbol.flags & (SymbolFlags.Interface | SymbolFlags.TypeAlias)) === 0,
+            )
+            .map((symbol) => symbol.name)
+            .sort(),
+        );
+      }
+    } finally {
+      api.close();
+    }
+    return names;
   }
 
   function commonDir(paths: string[]): string {
@@ -105,30 +115,41 @@ export function mountlyManifestFragmentPlugin(options: ManifestFragmentPluginOpt
     const declarationDir = resolve(outDir, "types");
     mkdirSync(declarationDir, { recursive: true });
 
-    const configPath = ts.findConfigFile(root, (f) => ts.sys.fileExists(f), "tsconfig.json");
-    const parsedConfig = configPath
-      ? ts.parseJsonConfigFileContent(
-          ts.readConfigFile(configPath, (f) => ts.sys.readFile(f)).config,
-          ts.sys,
-          dirname(configPath),
-        )
-      : { options: {} as ts.CompilerOptions };
-
-    const program = ts.createProgram({
-      rootNames: sourceEntries,
-      options: {
-        ...parsedConfig.options,
-        declaration: true,
-        emitDeclarationOnly: true,
-        declarationMap: false,
-        noEmit: false,
-        noEmitOnError: false,
-        outDir: declarationDir,
-        declarationDir,
-        rootDir,
-      },
-    });
-    program.emit(undefined, undefined, undefined, true);
+    // `tsc` owns declaration emit: TypeScript 7's native compiler exposes no
+    // in-process emitter, and driving the binary keeps the project's own
+    // tsconfig authoritative.
+    const emitConfigPath = join(declarationDir, "tsconfig.emit.json");
+    const baseConfigPath = findConfigFile();
+    writeFileSync(
+      emitConfigPath,
+      JSON.stringify({
+        ...(baseConfigPath ? { extends: baseConfigPath } : {}),
+        // `files` and an inherited `include` are additive, and anything outside
+        // `rootDir` escapes the `outDir` mapping and lands beside its source.
+        // Only the entries below may be compiled.
+        include: [],
+        exclude: [],
+        files: sourceEntries,
+        compilerOptions: {
+          declaration: true,
+          emitDeclarationOnly: true,
+          declarationMap: false,
+          noEmit: false,
+          noEmitOnError: false,
+          outDir: declarationDir,
+          declarationDir,
+          rootDir,
+        },
+      }),
+    );
+    try {
+      execFileSync(process.execPath, [tscBin(), "-p", emitConfigPath], { stdio: "pipe" });
+    } catch {
+      // Type errors must not fail the build here — the widget's own typecheck
+      // owns that verdict, and the declarations are still emitted.
+    } finally {
+      rmSync(emitConfigPath, { force: true });
+    }
 
     const exportDeclarations: Record<string, string> = {};
     for (const [exportKey, exportEntry] of Object.entries(exposeEntries)) {
@@ -168,7 +189,11 @@ export function mountlyManifestFragmentPlugin(options: ManifestFragmentPluginOpt
 
       const declarations = emitDeclarations(entry, exposeEntries);
 
-      const moduleTypes = collectNamedExports(entry);
+      const namedExports = collectNamedExports([
+        ...(entry ? [entry] : []),
+        ...Object.values(exposeEntries),
+      ]);
+      const moduleTypes = entry ? [...(namedExports.get(entry) ?? [])] : [];
       if (options.featureExport) moduleTypes.push(options.featureExport);
 
       if (options.exports && Object.keys(options.exports).length > 0) {
@@ -178,7 +203,7 @@ export function mountlyManifestFragmentPlugin(options: ManifestFragmentPluginOpt
         for (const [key, value] of Object.entries(options.exports)) {
           mapped[key] = value.startsWith("./") ? value : `./${exportKeyToSubpath(value)}`;
           const exposeEntry = exposeEntries[key];
-          const exportNames = collectNamedExports(exposeEntry);
+          const exportNames = exposeEntry ? (namedExports.get(exposeEntry) ?? []) : [];
           const declaration = declarations.exportDeclarations[key];
           if (exportNames.length > 0 || declaration) {
             typedExports[key] =

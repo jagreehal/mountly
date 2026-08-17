@@ -53,8 +53,4 @@ export const productASettings = createOnDemandFeature({
 });
 
 export { ProductASettings } from "./Component.js";
-export {
-  mountProductASettings,
-  unmountProductASettings,
-  updateProductASettings,
-} from "./mount.js";
+export { mountProductASettings, unmountProductASettings, updateProductASettings } from "./mount.js";

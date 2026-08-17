@@ -55,7 +55,7 @@ const PACKAGE_DISTS = [
   "adapters/mountly-react",
   "adapters/mountly-vue",
   "adapters/mountly-svelte",
-  "adapters/mountly-mcp",
+  "mcp-apps",
 ];
 
 const WIDGET_PACKAGES = ["payment-breakdown", "image-lightbox", "signup-card"];
@@ -111,19 +111,24 @@ function copyDir(src, dest) {
 }
 
 function rewriteContent(text) {
-  return text
-    // vite-host-remotes-url is built against a throwaway local server, so that
-    // origin ends up baked into its import map. The same remote dist is staged
-    // under vite-host-import, so repoint it there.
-    .replaceAll(`http://127.0.0.1:${REMOTE_STAGING_PORT}/`, `${BASE}/examples/vite-host-import/remote/dist/`)
-    .replaceAll('"/packages/', `"${BASE}/packages/`)
-    .replaceAll("'/packages/", `'${BASE}/packages/`)
-    .replaceAll('"/docs/examples/', `"${BASE}/examples/`)
-    .replaceAll("'/docs/examples/", `'${BASE}/examples/`)
-    .replaceAll('"/examples/', `"${BASE}/examples/`)
-    .replaceAll("'/examples/", `'${BASE}/examples/`)
-    .replaceAll('"/api/payments', `"${BASE}/api/payments`)
-    .replaceAll("'/api/payments", `'${BASE}/api/payments`);
+  return (
+    text
+      // vite-host-remotes-url is built against a throwaway local server, so that
+      // origin ends up baked into its import map. The same remote dist is staged
+      // under vite-host-import, so repoint it there.
+      .replaceAll(
+        `http://127.0.0.1:${REMOTE_STAGING_PORT}/`,
+        `${BASE}/examples/vite-host-import/remote/dist/`,
+      )
+      .replaceAll('"/packages/', `"${BASE}/packages/`)
+      .replaceAll("'/packages/", `'${BASE}/packages/`)
+      .replaceAll('"/docs/examples/', `"${BASE}/examples/`)
+      .replaceAll("'/docs/examples/", `'${BASE}/examples/`)
+      .replaceAll('"/examples/', `"${BASE}/examples/`)
+      .replaceAll("'/examples/", `'${BASE}/examples/`)
+      .replaceAll('"/api/payments', `"${BASE}/api/payments`)
+      .replaceAll("'/api/payments", `'${BASE}/api/payments`)
+  );
 }
 
 function rewriteTree(dir) {

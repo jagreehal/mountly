@@ -2,6 +2,7 @@ import { copyFile, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import { dirname, extname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { sandboxProxyHtml } from "mountly-mcp/dev";
 import { createDemoServer, SAMPLE_PAYMENTS } from "./demo-core.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -247,127 +248,10 @@ const hostIndex = `<!doctype html>
 </html>
 `;
 
-const sandboxProxy = `<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<title>mountly-mcp sandbox proxy</title>
-<style>
-  html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: transparent; }
-  #inner { width: 100%; height: 100%; border: 0; background: white; }
-</style>
-</head>
-<body>
-<script>
-  // MCP Apps spec §8.4: sandbox proxy.
-  //  1. We're on a different origin from the host (the host serves us via cross-port iframe).
-  //  2. Host's outer iframe set sandbox="allow-scripts allow-same-origin" on us.
-  //  3. On load, send ui/notifications/sandbox-proxy-ready to host.
-  //  4. Host responds with ui/notifications/sandbox-resource-ready (html + csp + permissions).
-  //  5. We inject CSP into the HTML, create inner iframe with sandbox attr + allow=, srcdoc the HTML.
-  //  6. Forward all non-sandbox-* messages between inner iframe and host.
-
-  const HOST = window.parent;
-  const HOST_ORIGIN = "http://localhost:${HOST_PORT}";
-
-  function buildCspMeta(csp) {
-    const directives = [];
-    const connect = (csp.connectDomains || []).join(" ").trim();
-    const resource = (csp.resourceDomains || []).join(" ").trim();
-    const frame = (csp.frameDomains || []).join(" ").trim();
-    const baseUri = (csp.baseUriDomains || []).join(" ").trim();
-
-    directives.push("default-src 'none'");
-    // Allow inline scripts because the widget bundle is injected via srcdoc,
-    // and unsafe-eval because the current runtime uses a Function-based
-    // dynamic import helper in the browser bundle.
-    directives.push(
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval'" + (resource ? " " + resource : ""),
-    );
-    directives.push("style-src 'self' 'unsafe-inline'" + (resource ? " " + resource : ""));
-    directives.push("img-src 'self' data:" + (resource ? " " + resource : ""));
-    directives.push("font-src 'self' data:" + (resource ? " " + resource : ""));
-    directives.push("media-src 'self' data:" + (resource ? " " + resource : ""));
-    directives.push("connect-src " + (connect || "'none'"));
-    directives.push("frame-src " + (frame || "'none'"));
-    directives.push("base-uri " + (baseUri || "'self'"));
-    directives.push("object-src 'none'");
-    return '<meta http-equiv="Content-Security-Policy" content="' +
-      directives.join("; ").replace(/"/g, "&quot;") + '">';
-  }
-
-  function buildAllow(permissions) {
-    const parts = [];
-    if (permissions.camera) parts.push("camera");
-    if (permissions.microphone) parts.push("microphone");
-    if (permissions.geolocation) parts.push("geolocation");
-    if (permissions.clipboardWrite) parts.push("clipboard-write");
-    return parts.join("; ");
-  }
-
-  function injectCsp(html, csp) {
-    const meta = buildCspMeta(csp);
-    // Insert immediately after <head>, falling back to top-of-document.
-    if (/<head[^>]*>/i.test(html)) {
-      return html.replace(/<head[^>]*>/i, (m) => m + meta);
-    }
-    return meta + html;
-  }
-
-  let inner;
-
-  function bootInner(payload) {
-    if (!payload || typeof payload.html !== "string" || payload.html.length === 0) {
-      return;
-    }
-    const html = injectCsp(payload.html, payload.csp || {});
-    const iframe = document.createElement("iframe");
-    iframe.id = "inner";
-    iframe.setAttribute(
-      "sandbox",
-      payload.sandbox || "allow-scripts allow-same-origin",
-    );
-    const allow = buildAllow(payload.permissions || {});
-    if (allow) iframe.setAttribute("allow", allow);
-    iframe.setAttribute("srcdoc", html);
-    document.body.appendChild(iframe);
-    inner = iframe;
-  }
-
-  window.addEventListener("message", (e) => {
-    if (e.origin !== HOST_ORIGIN && e.source === HOST) return;
-    const msg = e.data;
-    if (!msg || msg.jsonrpc !== "2.0") return;
-
-    // Host → sandbox proxy (sandbox-resource-ready). Do NOT forward to the view.
-    if (e.source === HOST && msg.method === "ui/notifications/sandbox-resource-ready") {
-      bootInner(msg.params || {});
-      return;
-    }
-
-    // Host → view (everything else from host): forward to inner iframe.
-    if (e.source === HOST) {
-      if (inner && inner.contentWindow) inner.contentWindow.postMessage(msg, "*");
-      return;
-    }
-
-    // View → host: forward upward, except sandbox-* notifications which are
-    // proxy-internal per spec.
-    if (inner && e.source === inner.contentWindow) {
-      if (typeof msg.method === "string" && msg.method.startsWith("ui/notifications/sandbox-")) return;
-      HOST.postMessage(msg, "*");
-    }
-  });
-
-  // Tell the host we're ready to receive the widget HTML.
-  HOST.postMessage(
-    { jsonrpc: "2.0", method: "ui/notifications/sandbox-proxy-ready", params: {} },
-    "*",
-  );
-</script>
-</body>
-</html>
-`;
+// The sandbox proxy is the security boundary — it builds the CSP from the
+// sidecar and decides what the view may execute. Served from the package so
+// this demo cannot drift from what `mountly-mcp dev` enforces.
+const sandboxProxy = await sandboxProxyHtml(`http://localhost:${HOST_PORT}`);
 
 await writeFile(join(HOST_DIR, "index.html"), hostIndex, "utf8");
 await writeFile(join(SANDBOX_DIR, "sandbox-proxy.html"), sandboxProxy, "utf8");

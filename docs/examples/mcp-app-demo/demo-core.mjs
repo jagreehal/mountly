@@ -89,6 +89,12 @@ export async function createDemoServer() {
       output: htmlOut,
       bridgeRuntimePath: getBridgeRuntimePath(),
       awaitToolResult: true,
+      // Declared for real, not left empty: this is the only place the whole
+      // metadata path is exercised — build → sidecar → server → host → the CSP
+      // the sandbox proxy actually enforces on the view.
+      displayModes: ["inline", "fullscreen"],
+      prefersBorder: true,
+      csp: { connectDomains: ["https://api.example.com"] },
     });
     builtAppOnly = await buildMcpResource({
       entry: widgetEntry,

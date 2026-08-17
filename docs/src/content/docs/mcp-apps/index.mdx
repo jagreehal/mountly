@@ -1,0 +1,78 @@
+---
+title: MCP Apps
+description: Turn existing React, Vue, or Svelte components into versioned MCP Apps Views that install into the server you already own.
+---
+
+[MCP Apps](https://github.com/modelcontextprotocol/ext-apps) lets an MCP server
+deliver an interactive View alongside a tool result. The host renders the View
+in a sandboxed iframe and connects it to the server over the MCP Apps protocol.
+
+Mountly starts from a component you already have:
+
+```ts
+import { createMcpWidget } from "mountly-mcp/vue";
+import Dashboard from "./Dashboard.vue";
+
+(globalThis as { __mountlyMcpWidget__?: unknown }).__mountlyMcpWidget__ =
+  createMcpWidget(Dashboard);
+```
+
+One build can turn one or many entries into self-contained `ui://` resources
+and a versioned App manifest. `registerMcpApps()` installs those Views and the
+tools that reference them into an MCP server your application owns.
+
+## Is it a fit?
+
+| Starting point                            | Recommended path                                   |
+| ----------------------------------------- | -------------------------------------------------- |
+| Existing React, Vue, or Svelte components | Use Mountly's framework adapter and Vite build     |
+| Several Views in one MCP server           | Use the multi-View build and App manifest          |
+| An existing production MCP server         | Install with `registerMcpApps()`                   |
+| No component yet and React is fine        | Consider `@modelcontextprotocol/ext-apps` directly |
+
+Mountly deliberately does not own authentication, transports, prompts,
+ordinary tools, process lifecycle, or deployment. That keeps it composable:
+your server owns the application; Mountly owns the MCP Apps-specific seams.
+
+## Install
+
+```bash
+npm install mountly-mcp mountly mountly-vue
+npm install @modelcontextprotocol/sdk  # when your source imports McpServer
+npm install -D vite @vitejs/plugin-vue
+```
+
+Swap `mountly-vue` and `@vitejs/plugin-vue` for the React or Svelte adapters.
+The MCP SDK and official Apps SDK are runtime dependencies of `mountly-mcp`,
+but install the MCP SDK directly when your own source imports it, as the
+production server example does.
+
+## The four modules
+
+- **View adapters** — `mountly-mcp/react`, `/vue`, and `/svelte` wrap an
+  existing component and expose tool data and host context.
+- **Build and artifact** — `mountly-mcp/vite` emits App artifacts;
+  `mountly-mcp/artifact` reads their canonical manifest.
+- **App registration** — `mountly-mcp/server` installs independently declared
+  Views and tools into an unconnected `McpServer`.
+- **Development and conformance** — the CLI runs the official AppBridge host
+  locally and verifies the same artifacts used in production.
+
+The bridge and server wiring delegate to the official
+`@modelcontextprotocol/ext-apps` and `@modelcontextprotocol/sdk` packages. There
+is no second Mountly protocol vocabulary or handwritten protocol host.
+
+## Compatibility adapters
+
+The single-View Vite options, `vite build`, `createMcpAppServer()`, and
+`serveStdio()` remain supported for small servers and existing projects. New
+production integrations should prefer an App manifest and
+`registerMcpApps(existingServer, ...)`.
+
+## Next
+
+- [Quick start](/mcp-apps/quick-start/) — component to composable server
+- [Build and artifacts](/mcp-apps/build-and-artifacts/) — one or many isolated Views
+- [Production integration](/mcp-apps/production-integration/) — install into an existing server
+- [Development and verification](/mcp-apps/development-and-verification/) — local host and CI
+- [How it works](/mcp-apps/how-it-works/) — lifecycle and capability downgrade

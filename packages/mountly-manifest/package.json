@@ -34,7 +34,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsup && node scripts/gen-schema.mjs",
+    "build": "tsup && tsc -p tsconfig.json --noEmit false --declaration --emitDeclarationOnly --declarationMap false --outDir dist && node scripts/gen-schema.mjs",
     "typecheck": "tsc --noEmit",
     "dev": "tsup --watch",
     "prepack": "rm -f LICENSE && cp ../../LICENSE LICENSE",
@@ -46,7 +46,7 @@
   "devDependencies": {
     "mountly": "workspace:*",
     "tsup": "^8.5.1",
-    "typescript": "^6.0.3"
+    "typescript": "^7.0.2"
   },
   "peerDependencies": {
     "mountly": "^0.3.0"

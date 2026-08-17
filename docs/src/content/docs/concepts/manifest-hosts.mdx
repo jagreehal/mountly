@@ -77,6 +77,11 @@ This page covers the host-side toolkit. For composition patterns and custom elem
 
 Manifest v1 is no longer accepted. Bump `"version"` to `"2"`. Add `exports` and `types` when the host imports subpaths or needs generated ambient declarations.
 
+`mountlyManifestFragmentPlugin` fills `types` for you by asking the TypeScript
+checker what each entry exports, so re-exports and `export * from` are included
+and type-only exports are not — `types.module` lists what a host can import at
+runtime.
+
 ## Authoring a remote (Vite)
 
 A vertical adds `mountlyRemote` to its `vite.config` and runs `vite build`, with no build script and no `shared` block to keep in sync with the host. The framework peers are externalized; the host shares them through its import map.
@@ -138,7 +143,7 @@ mountlyHostPlugin({
 });
 ```
 
-This is the federation-style host config, but the host gets typed, discoverable exposes. `vite-plugin-federation` gives neither from a URL remote, and needs a hand-synced `shared` block on both sides. Use `verticals: [{ fragment }]` for remotes built in the same repo. Runnable reference: [vite-host-remotes-url live demo]({exampleUrl("vite-host-remotes-url/")}) · [source](https://github.com/jagreehal/mountly/tree/main/docs/examples/vite-host-remotes-url).
+This is the federation-style host config, but the host gets typed, discoverable exposes. `vite-plugin-federation` gives neither from a URL remote, and needs a hand-synced `shared` block on both sides. Use `verticals: [{ fragment }]` for remotes built in the same repo. Runnable reference: [vite-host-remotes-url live demo](<{exampleUrl("vite-host-remotes-url/")}>) · [source](https://github.com/jagreehal/mountly/tree/main/docs/examples/vite-host-remotes-url).
 
 For custom pipelines or plain HTML hosts, compose a static manifest:
 
@@ -147,7 +152,7 @@ npx mountly manifest compose ./checkout/dist/mountly.manifest.fragment.json --ou
 npx mountly manifest codegen ./manifest.json --out mountly-remotes.d.ts
 ```
 
-Runnable reference: [vite-host-import live demo]({exampleUrl("vite-host-import/")}) · [source](https://github.com/jagreehal/mountly/tree/main/docs/examples/vite-host-import).
+Runnable reference: [vite-host-import live demo](<{exampleUrl("vite-host-import/")}>) · [source](https://github.com/jagreehal/mountly/tree/main/docs/examples/vite-host-import).
 
 Plain HTML and CMS hosts should use `bootstrapMountly()` below. They do not need the Vite plugin.
 
