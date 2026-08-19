@@ -1,5 +1,15 @@
 # mountly-vue
 
+## 2.0.2
+
+### Patch Changes
+
+- 2ad7d91: Improve runtime correctness, host safety, and MCP Apps DX across core and adapters.
+  
+  This patch fixes listener and timer leaks, hardens devtools rendering and controls, improves overlay and prefetch behavior, adds MCP sandbox export and verify JSON output, and aligns bootstrap and manifest validation for non-React hosts.
+- Updated dependencies [2ad7d91]
+  - mountly@0.3.2
+
 ## 2.0.1
 
 ### Patch Changes
