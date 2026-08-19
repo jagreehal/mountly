@@ -21,6 +21,8 @@ export default defineConfig([
       "src/cli.ts",
       "src/server/index.ts",
       "src/json-render/index.ts",
+      "src/json-render/app.ts",
+      "src/json-render/mcp.ts",
       "src/json-render/server.ts",
     ],
     format: ["esm"],

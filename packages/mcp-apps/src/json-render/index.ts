@@ -5,6 +5,22 @@ export {
   defaultActionRouter,
   defineComponents,
 } from "./widget.js";
+export {
+  type JsonRenderToolOptions,
+  type RegisterJsonRenderResourceOptions,
+  type RegisterJsonRenderToolOptions,
+  type CreateJsonRenderMcpAppOptions,
+  createJsonRenderMcpApp,
+  registerJsonRenderTool,
+  registerJsonRenderResource,
+} from "./mcp.js";
+export {
+  type BuildAppHtmlOptions,
+  type UseJsonRenderAppOptions,
+  type UseJsonRenderAppReturn,
+  buildAppHtml,
+  useJsonRenderApp,
+} from "./app.js";
 
 // Convenience re-exports for rendering the same catalog natively (non-MCP) —
 // previews, tests, or a plain mountly feature. Pair with `mountly-react`'s

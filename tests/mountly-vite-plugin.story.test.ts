@@ -51,7 +51,11 @@ describe("mountly-vite-plugin", () => {
 
   it("builds subpath expose entries and manifest fragment", async ({ task }) => {
     story.init(task);
-    const outDir = join(fixtureDir, "dist-exposes");
+    // Build into a directory this test owns. `dist-exposes/` is a committed
+    // fixture that mountly-manifest.story.test.ts reads concurrently, so
+    // deleting and rebuilding it here raced that test into a missing-fragment
+    // failure depending on scheduling.
+    const outDir = join(fixtureDir, "dist-exposes-build");
     rmSync(outDir, { recursive: true, force: true });
 
     const configs = defineMountlyWidgetConfig({

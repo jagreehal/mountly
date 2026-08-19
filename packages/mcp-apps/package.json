@@ -65,6 +65,14 @@
       "types": "./dist/json-render/server.d.ts",
       "import": "./dist/json-render/server.js"
     },
+    "./json-render/app": {
+      "types": "./dist/json-render/app.d.ts",
+      "import": "./dist/json-render/app.js"
+    },
+    "./json-render/mcp": {
+      "types": "./dist/json-render/mcp.d.ts",
+      "import": "./dist/json-render/mcp.js"
+    },
     "./vue": {
       "types": "./dist/vue/index.d.ts",
       "import": "./dist/vue/index.js"
