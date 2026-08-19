@@ -2,10 +2,7 @@ import { describe, expect, it } from "vite-plus/test";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-const cliSource = readFileSync(
-  resolve(__dirname, "../packages/mcp-apps/src/cli.ts"),
-  "utf8",
-);
+const cliSource = readFileSync(resolve(__dirname, "../packages/mcp-apps/src/cli.ts"), "utf8");
 
 describe("verify --json flag", () => {
   it("VerifyArgs interface includes json boolean", () => {

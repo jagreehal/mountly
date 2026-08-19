@@ -6,7 +6,12 @@ import {
   useHostStyleVariables as useHostStyleVariablesBase,
   useHostStyles as useHostStylesBase,
 } from "@modelcontextprotocol/ext-apps/react";
-import type { App, McpUiDisplayMode, McpUiHostContext, McpUiUpdateModelContextRequest } from "@modelcontextprotocol/ext-apps";
+import type {
+  App,
+  McpUiDisplayMode,
+  McpUiHostContext,
+  McpUiUpdateModelContextRequest,
+} from "@modelcontextprotocol/ext-apps";
 import { McpContext } from "./context.js";
 
 function useEnsuredContext() {

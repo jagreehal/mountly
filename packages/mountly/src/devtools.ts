@@ -25,7 +25,9 @@ let stateInterval: ReturnType<typeof setInterval> | null = null;
 
 export function createDevtoolsPanel(options: DevtoolsPanelOptions = {}): { destroy: () => void } {
   if (typeof document === "undefined") {
-    throw new Error("[mountly] createDevtoolsPanel requires a browser environment (document is not defined)");
+    throw new Error(
+      "[mountly] createDevtoolsPanel requires a browser environment (document is not defined)",
+    );
   }
   const { position = "bottom-right", collapsed = false } = options;
 

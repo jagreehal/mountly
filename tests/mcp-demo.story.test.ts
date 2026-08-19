@@ -10,5 +10,7 @@ describe("mcp-app-demo", () => {
     story.when("the verifier runs listTools/listResources/readResource/callTool checks");
     story.then("all MCP app demo assertions pass");
     await expect(runVerification()).resolves.toBeUndefined();
-  });
+    // Bundles the widget with esbuild and runs a full MCP flow; the 5s default
+    // trips under load.
+  }, 30_000);
 });

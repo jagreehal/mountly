@@ -10,12 +10,26 @@ function makeElement(rect: DOMRect): HTMLElement {
 }
 
 function makeDOMRect(x: number, y: number, w: number, h: number): DOMRect {
-  return { x, y, width: w, height: h, left: x, top: y, right: x + w, bottom: y + h, toJSON: () => {} } as DOMRect;
+  return {
+    x,
+    y,
+    width: w,
+    height: h,
+    left: x,
+    top: y,
+    right: x + w,
+    bottom: y + h,
+    toJSON: () => {},
+  } as DOMRect;
 }
 
 describe("mouseTrailPrefetcher distance", () => {
-  beforeEach(() => { vi.useFakeTimers(); });
-  afterEach(() => { vi.useRealTimers(); });
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
 
   it("uses nearest-edge distance, not top-left corner distance", ({ task }) => {
     story.init(task);

@@ -17,7 +17,9 @@ describe("Overlay handleOutsideClick race", () => {
     element.remove();
   });
 
-  it("does not close immediately when the opening click propagates in capture phase", ({ task }) => {
+  it("does not close immediately when the opening click propagates in capture phase", ({
+    task,
+  }) => {
     story.init(task);
     story.given("an overlay that closes on outside click");
 

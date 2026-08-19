@@ -47,7 +47,8 @@ describe("mountly-vite-plugin", () => {
     expect(indexJs.length).toBeGreaterThan(peerJs.length);
     expect(peerJs).toMatch(/from\s+"react"/);
     expect(indexJs).not.toMatch(/from\s+"react"/);
-  });
+    // Runs real Vite builds; the 5s default trips on a cold cache.
+  }, 30_000);
 
   it("builds subpath expose entries and manifest fragment", async ({ task }) => {
     story.init(task);
@@ -91,7 +92,8 @@ describe("mountly-vite-plugin", () => {
       declaration: "./types/Badge.d.ts",
       names: ["Badge"],
     });
-  });
+    // Runs real Vite builds; the 5s default trips on a cold cache.
+  }, 30_000);
 
   it("mountlyHostPlugin externalizes manifest remotes", ({ task }) => {
     story.init(task);
@@ -147,7 +149,8 @@ describe("mountly-vite-plugin", () => {
     expect((config as { optimizeDeps?: { exclude?: string[] } }).optimizeDeps?.exclude).toEqual(
       expect.arrayContaining(["vite-widget", "vite-widget/Badge"]),
     );
-  });
+    // Runs real Vite builds; the 5s default trips on a cold cache.
+  }, 30_000);
 
   it("mountlyHostPlugin fails when fragments are missing", async ({ task }) => {
     story.init(task);

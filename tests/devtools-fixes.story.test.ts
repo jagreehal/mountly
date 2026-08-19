@@ -29,7 +29,7 @@ describe("devtools XSS sanitization (bug 6)", () => {
   });
 
   it("escapes moduleId in feature list to prevent XSS", async () => {
-    const malicious = '<img src=x onerror=alert(1)>';
+    const malicious = "<img src=x onerror=alert(1)>";
     const tracker = createFeatureTimingTracker(malicious);
     tracker.recordPhase("preload_start");
 

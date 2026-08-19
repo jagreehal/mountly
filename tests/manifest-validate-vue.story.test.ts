@@ -14,9 +14,7 @@ describe("validateManifest for non-React hosts (bug 3)", () => {
     } as any;
 
     const issues = validateManifest(manifest);
-    const reactErrors = issues.filter(
-      (i) => i.level === "error" && i.message.includes("react"),
-    );
+    const reactErrors = issues.filter((i) => i.level === "error" && i.message.includes("react"));
 
     expect(reactErrors).toHaveLength(0);
 

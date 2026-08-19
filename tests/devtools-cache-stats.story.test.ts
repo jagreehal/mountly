@@ -17,28 +17,18 @@ describe("devtools cache stats", () => {
 
     const { destroy } = createDevtoolsPanel();
 
-    const statValues = document.querySelectorAll(
+    const statValues = document.querySelectorAll("[data-mountly-devtools-stat-value]");
+    const labels = document.querySelectorAll("[data-mountly-devtools-stat-label]");
+
+    const moduleStat = Array.from(labels).find((l) => l.textContent === "Modules");
+    const dataStat = Array.from(labels).find((l) => l.textContent === "Data entries");
+
+    const moduleValue = moduleStat?.parentElement?.querySelector(
       "[data-mountly-devtools-stat-value]",
-    );
-    const labels = document.querySelectorAll(
-      "[data-mountly-devtools-stat-label]",
-    );
-
-    const moduleStat = Array.from(labels).find(
-      (l) => l.textContent === "Modules",
-    );
-    const dataStat = Array.from(labels).find(
-      (l) => l.textContent === "Data entries",
-    );
-
-    const moduleValue =
-      moduleStat?.parentElement?.querySelector(
-        "[data-mountly-devtools-stat-value]",
-      )?.textContent;
-    const dataValue =
-      dataStat?.parentElement?.querySelector(
-        "[data-mountly-devtools-stat-value]",
-      )?.textContent;
+    )?.textContent;
+    const dataValue = dataStat?.parentElement?.querySelector(
+      "[data-mountly-devtools-stat-value]",
+    )?.textContent;
 
     expect(moduleValue).toBe("2");
     expect(dataValue).toBe("1");

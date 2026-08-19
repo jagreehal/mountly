@@ -76,7 +76,8 @@ describe("mountly-mcp/vite", () => {
     expect(meta._meta.ui.prefersBorder).toBe(true);
 
     rmSync(dir, { recursive: true });
-  });
+    // Runs a real Vite build; the 5s default trips under load.
+  }, 30_000);
 
   it("replaces process.env.NODE_ENV, which has no bundler to resolve it later", async ({
     task,
@@ -114,7 +115,8 @@ describe("mountly-mcp/vite", () => {
     expect(html).toContain("production");
 
     rmSync(dir, { recursive: true });
-  });
+    // Runs a real Vite build; the 5s default trips under load.
+  }, 30_000);
 
   it("bundles dependencies in rather than leaving them as globals", async ({ task }) => {
     story.init(task, { tags: ["mcp", "vite", "multi-view"] });
@@ -181,7 +183,8 @@ describe("mountly-mcp/vite", () => {
     expect(html).not.toMatch(/require\(["']tiny-dep["']\)|from\s*["']tiny-dep["']/);
 
     rmSync(dir, { recursive: true });
-  });
+    // Runs a real Vite build; the 5s default trips under load.
+  }, 30_000);
 
   it("rejects a non-ui:// scheme at config time, before any build runs", ({ task }) => {
     story.init(task, { tags: ["mcp", "vite"] });
@@ -256,7 +259,8 @@ describe("mountly-mcp/vite", () => {
     ]);
 
     rmSync(dir, { recursive: true });
-  });
+    // Runs a real Vite build; the 5s default trips under load.
+  }, 30_000);
 
   it("rejects duplicate developer keys and protocol identities immediately", ({ task }) => {
     story.init(task, { tags: ["mcp", "vite", "identity"] });
