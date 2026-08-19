@@ -249,24 +249,25 @@ export async function bootstrapMountly(
   const react = imports.react;
   const reactDom = imports["react-dom"];
   const reactDomClient = imports["react-dom/client"];
-  if (!react || !reactDom || !reactDomClient) {
-    throw new Error(
-      "[mountly] bootstrapMountly: manifest.platform.imports must include react, react-dom, and react-dom/client",
-    );
-  }
 
   const verticalImports: Record<string, string> = {};
   for (const vertical of manifest.verticals ?? []) {
     verticalImports[vertical.alias ?? vertical.id] = vertical.url;
   }
 
-  installPlatformRuntime({
-    react,
-    reactDom,
-    reactDomClient,
-    reactJsxRuntime: imports["react/jsx-runtime"],
-    imports: { ...imports, ...verticalImports },
-  });
+  const allImports = { ...imports, ...verticalImports };
+
+  if (react && reactDom && reactDomClient) {
+    installPlatformRuntime({
+      react,
+      reactDom,
+      reactDomClient,
+      reactJsxRuntime: imports["react/jsx-runtime"],
+      imports: allImports,
+    });
+  } else {
+    injectImportMap(allImports);
+  }
 
   if (options.define === false) return manifest;
 

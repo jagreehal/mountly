@@ -1,4 +1,4 @@
-import { createApp, h, type App, type Component } from "vue";
+import { createApp, h, reactive, type App, type Component } from "vue";
 import { attachShadow } from "mountly/shadow";
 import { loadCssText, resolveCssUrl } from "mountly/assets";
 import type { AdapterOptions, WidgetModule } from "mountly/adapter";
@@ -21,6 +21,7 @@ export function createWidget<P>(
   options: VueWidgetOptions = {},
 ): WidgetModule {
   const apps = new WeakMap<Element, App>();
+  const propsStates = new WeakMap<Element, Record<string, unknown>>();
   const { moduleUrl, cssUrl } = options;
 
   function unmount(container: Element): void {
@@ -28,6 +29,7 @@ export function createWidget<P>(
     if (!existing) return;
     existing.unmount();
     apps.delete(container);
+    propsStates.delete(container);
   }
 
   function mountWith(
@@ -39,10 +41,11 @@ export function createWidget<P>(
       (container as HTMLElement).style.cssText += `;${options.reserveSize}`;
     }
     const target = attachShadow(container, fetched ? { ...options, styles: fetched } : options);
-    const state = { props: props as P };
+    const state = reactive({ ...(props ?? {}) }) as Record<string, unknown>;
+    propsStates.set(container, state);
     const app = createApp({
       render() {
-        return h(Component as Component, state.props);
+        return h(Component as Component, state);
       },
     });
     app.mount(target);
@@ -62,8 +65,6 @@ export function createWidget<P>(
         cssUrlProp: cssUrlFromProps,
         moduleUrlProp: moduleUrlFromProps,
       });
-      // Fast path: stay synchronous when there's no CSS to fetch — mirrors
-      // the historical behaviour, so callers that don't await keep working.
       const propsRecord = props as Record<string, unknown> | undefined;
       if (!cssUrlResolved) {
         mountWith(container, propsRecord, undefined);
@@ -74,8 +75,17 @@ export function createWidget<P>(
       });
     },
     update(container, props) {
-      // Vue adapter parity path: remount to apply new props deterministically.
-      return this.mount(container, props);
+      const state = propsStates.get(container);
+      if (!state) {
+        return this.mount(container, props);
+      }
+      const newProps = (props ?? {}) as Record<string, unknown>;
+      for (const key of Object.keys(state)) {
+        if (!(key in newProps)) {
+          delete state[key];
+        }
+      }
+      Object.assign(state, newProps);
     },
     unmount,
   };

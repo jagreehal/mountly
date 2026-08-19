@@ -75,8 +75,12 @@ async function getSvelteRuntime(): Promise<{
   return cachedSvelteRuntime;
 }
 
+interface SvelteLegacyInstanceWithSet extends SvelteLegacyInstance {
+  $set?: (props: Record<string, unknown>) => void;
+}
+
 interface ActiveInstance {
-  legacy?: SvelteLegacyInstance;
+  legacy?: SvelteLegacyInstanceWithSet;
   v5?: { handle: Record<string, unknown>; unmount: SvelteV5Unmount };
 }
 
@@ -174,7 +178,21 @@ export function createWidget<P>(
       );
     },
     update(container, props) {
-      // Svelte parity path: remount with next props.
+      const existing = instances.get(container);
+      if (!existing) {
+        return this.mount(container, props);
+      }
+      const newProps = (props ?? {}) as Record<string, unknown>;
+      if (existing.legacy) {
+        if (typeof existing.legacy.$set === "function") {
+          existing.legacy.$set(newProps);
+        }
+        return;
+      }
+      if (existing.v5) {
+        Object.assign(existing.v5.handle, newProps);
+        return;
+      }
       return this.mount(container, props);
     },
     unmount,

@@ -37,15 +37,19 @@ export function eachSwipe(
   let startX = 0;
   let startY = 0;
   let startTime = 0;
+  let started = false;
 
   const onStart = (e: TouchEvent | MouseEvent) => {
     const point = "touches" in e ? e.touches[0]! : e;
     startX = point.clientX;
     startY = point.clientY;
     startTime = Date.now();
+    started = true;
   };
 
   const onEnd = (e: TouchEvent | MouseEvent) => {
+    if (!started) return;
+    started = false;
     const point = "changedTouches" in e ? e.changedTouches[0]! : e;
     const deltaX = point.clientX - startX;
     const deltaY = point.clientY - startY;

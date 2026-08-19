@@ -318,6 +318,7 @@ function scanAliasTags(
 }
 
 function defineAliasElement(tagName: string, aliasTag: string, moduleId: string): void {
+  if (typeof customElements === "undefined") return;
   if (!aliasTag.includes("-")) return;
   if (customElements.get(aliasTag)) return;
 
@@ -408,6 +409,7 @@ function defineAliasElements(
 }
 
 export function defineMountlyFeature(input: string | DefineMountlyFeatureOptions = {}): void {
+  if (typeof customElements === "undefined") return;
   const options = normalizeDefineOptions(input);
   const tagName = options.tagName ?? "mountly-feature";
   const scan = options.scan ?? options.auto ?? true;

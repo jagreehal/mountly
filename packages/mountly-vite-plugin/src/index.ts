@@ -36,12 +36,29 @@ export function getSelfContainedExternals(
   ];
 }
 
-export function mountlyCssAsText(): Plugin {
+export interface MountlyCssAsTextOptions {
+  include?: string | RegExp | (string | RegExp)[];
+}
+
+function matchesFilter(id: string, include: (string | RegExp)[]): boolean {
+  return include.some((pattern) =>
+    typeof pattern === "string" ? id.includes(pattern) : pattern.test(id),
+  );
+}
+
+export function mountlyCssAsText(options: MountlyCssAsTextOptions = {}): Plugin {
+  const includePatterns = options.include
+    ? Array.isArray(options.include)
+      ? options.include
+      : [options.include]
+    : null;
+
   return {
     name: "mountly-css-as-text",
     enforce: "pre",
     load(id) {
       if (!id.endsWith(".css")) return null;
+      if (includePatterns && !matchesFilter(id, includePatterns)) return null;
       const source = readFileSync(id, "utf8");
       return {
         code: `export default ${JSON.stringify(source)};`,

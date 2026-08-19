@@ -36,7 +36,7 @@ export function validateManifest(manifest: MountlyManifest): ManifestIssue[] {
   for (const key of ["react", "react-dom", "react-dom/client"] as const) {
     if (!imports[key]) {
       issues.push({
-        level: "error",
+        level: "warning",
         message: `platform.imports is missing "${key}" — host runtime needs it. Add a pin under platform.imports (see /mountly/concepts/manifest-hosts/)`,
       });
     }

@@ -23,8 +23,7 @@ export interface BaseTriggerOptions {
 
 export type UrlChangeEventType = "popstate" | "hashchange" | "pushstate" | "replacestate";
 
-const aborted = (signal?: AbortSignal): Error => {
-  void signal;
+const aborted = (): Error => {
   return new DOMException("Aborted", "AbortError");
 };
 
@@ -296,7 +295,7 @@ function oncePromise<O extends BaseTriggerOptions>(
   return (opts: O) =>
     new Promise<TriggerEvent>((resolve, reject) => {
       if (opts.signal?.aborted) {
-        reject(aborted(opts.signal));
+        reject(aborted());
         return;
       }
       const cleanup = setup((ev) => {
@@ -305,7 +304,7 @@ function oncePromise<O extends BaseTriggerOptions>(
       }, opts);
       onAbort(opts.signal, () => {
         cleanup();
-        reject(aborted(opts.signal));
+        reject(aborted());
       });
     });
 }

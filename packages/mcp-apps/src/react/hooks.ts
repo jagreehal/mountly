@@ -6,7 +6,7 @@ import {
   useHostStyleVariables as useHostStyleVariablesBase,
   useHostStyles as useHostStylesBase,
 } from "@modelcontextprotocol/ext-apps/react";
-import type { App, McpUiDisplayMode, McpUiHostContext } from "@modelcontextprotocol/ext-apps";
+import type { App, McpUiDisplayMode, McpUiHostContext, McpUiUpdateModelContextRequest } from "@modelcontextprotocol/ext-apps";
 import { McpContext } from "./context.js";
 
 function useEnsuredContext() {
@@ -96,6 +96,21 @@ export function useHostStyles(): void {
 /** Track the document theme reactively. */
 export function useDocumentTheme() {
   return useDocumentThemeBase();
+}
+
+/**
+ * Return a function that calls `app.updateModelContext(params)`.
+ *
+ * Context updates are available to the model in future turns without
+ * triggering an immediate response. Only the last update is kept.
+ */
+export function useUpdateModelContext(): (
+  params: McpUiUpdateModelContextRequest["params"],
+) => Promise<void> {
+  const { app } = useEnsuredContext();
+  return async (params) => {
+    await app.updateModelContext(params);
+  };
 }
 
 /** Manually control auto-resize (rarely needed — the bridge calls setupSizeChangedNotifications by default). */

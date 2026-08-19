@@ -186,6 +186,7 @@ export function applyPosition(options: PositionOptions): PositionResult {
 
 export interface OverlayOptions {
   element: HTMLElement;
+  position?: PositionOptions;
   zIndex?: number;
   closeOnEsc?: boolean;
   closeOnOutsideClick?: boolean;
@@ -218,6 +219,7 @@ function escapeOverlay(overlay: OverlayHandle): void {
 export function createOverlay(options: OverlayOptions): OverlayHandle {
   const {
     element,
+    position: positionOpts = null,
     zIndex,
     closeOnEsc = true,
     closeOnOutsideClick = true,
@@ -229,6 +231,7 @@ export function createOverlay(options: OverlayOptions): OverlayHandle {
   let isOpen = false;
   let previousFocus: HTMLElement | null = null;
   let resizeObserver: ResizeObserver | null = null;
+  let openedAt = 0;
 
   const handleEsc = (e: KeyboardEvent) => {
     if (e.key === "Escape" && closeOnEsc && isOpen) {
@@ -238,6 +241,7 @@ export function createOverlay(options: OverlayOptions): OverlayHandle {
 
   const handleOutsideClick = (e: MouseEvent) => {
     if (!closeOnOutsideClick || !isOpen) return;
+    if (Date.now() - openedAt < 10) return;
     if (!element.contains(e.target as Node)) {
       close();
     }
@@ -271,6 +275,7 @@ export function createOverlay(options: OverlayOptions): OverlayHandle {
   const open = (): void => {
     if (isOpen) return;
     isOpen = true;
+    openedAt = Date.now();
 
     previousFocus = document.activeElement as HTMLElement | null;
 
@@ -282,6 +287,13 @@ export function createOverlay(options: OverlayOptions): OverlayHandle {
     document.addEventListener("keydown", handleEsc);
     document.addEventListener("click", handleOutsideClick, true);
     document.addEventListener("keydown", handleTabTrap);
+
+    if (positionOpts && typeof ResizeObserver !== "undefined") {
+      resizeObserver = new ResizeObserver(() => {
+        updatePosition();
+      });
+      resizeObserver.observe(positionOpts.anchor);
+    }
 
     if (trapFocus) {
       const focusable = element.querySelector<HTMLElement>(
@@ -319,6 +331,7 @@ export function createOverlay(options: OverlayOptions): OverlayHandle {
 
   const updatePosition = (): void => {
     if (!isOpen) return;
+    if (positionOpts) applyPosition(positionOpts);
   };
 
   const handle: OverlayHandle = {
