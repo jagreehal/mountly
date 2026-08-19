@@ -16,6 +16,7 @@ export default defineConfig([
       "src/svelte/index.ts",
       "src/vite/index.ts",
       "src/dev/index.ts",
+      "src/sandbox/index.ts",
       "src/testing/index.ts",
       "src/cli.ts",
       "src/server/index.ts",

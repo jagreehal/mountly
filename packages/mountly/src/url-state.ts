@@ -12,6 +12,7 @@ export interface UrlState<S extends QueryState> {
   write: (patch: Partial<S>, options?: { history?: "replace" | "push" }) => void;
   subscribe: (listener: (state: Partial<S>) => void) => () => void;
   toString: (state?: Partial<S>) => string;
+  dispose: () => void;
 }
 
 function normalizeUrl(input?: URL | string): URL {
@@ -92,6 +93,13 @@ export function createUrlState<S extends QueryState = QueryState>(
 
   return {
     read,
+    dispose() {
+      if (typeof window !== "undefined") {
+        window.removeEventListener("popstate", notify);
+        window.removeEventListener("hashchange", notify);
+      }
+      listeners.clear();
+    },
     write(patch, writeOptions = {}) {
       const base = currentUrl();
       const next = patchUrl(base, patch as QueryState);

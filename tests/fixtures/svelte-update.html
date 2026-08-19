@@ -32,6 +32,9 @@
           target.appendChild(el);
           this.el = el;
         }
+        $set(props) {
+          this.el.textContent = String(props?.msg ?? "");
+        }
         $destroy() {
           this.el?.remove();
         }

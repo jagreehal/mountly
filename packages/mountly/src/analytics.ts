@@ -18,6 +18,18 @@ export type AnalyticsCallback = (event: TimingEvent) => void;
 const subscribers = new Set<AnalyticsCallback>();
 const eventLog: TimingEvent[] = [];
 
+let maxEvents = 1000;
+
+export function configureAnalytics(opts: { maxEvents?: number }): void {
+  if (opts.maxEvents !== undefined) maxEvents = opts.maxEvents;
+}
+
+function capArray(arr: TimingEvent[]): void {
+  if (arr.length > maxEvents) {
+    arr.splice(0, arr.length - maxEvents);
+  }
+}
+
 export function onAnalyticsEvent(callback: AnalyticsCallback): () => void {
   subscribers.add(callback);
   return () => subscribers.delete(callback);
@@ -27,12 +39,17 @@ export function getAnalyticsLog(): ReadonlyArray<TimingEvent> {
   return [...eventLog];
 }
 
+export function getRecentEvents(n: number): ReadonlyArray<TimingEvent> {
+  return eventLog.slice(-n);
+}
+
 export function clearAnalyticsLog(): void {
   eventLog.length = 0;
 }
 
 export function emitAnalyticsEvent(event: TimingEvent): void {
   eventLog.push(event);
+  capArray(eventLog);
   for (const callback of subscribers) {
     try {
       callback(event);
@@ -89,6 +106,7 @@ export function createFeatureTimingTracker(moduleId: string): FeatureTimingTrack
     };
 
     timings.push(event);
+    capArray(timings);
     emitAnalyticsEvent(event);
   };
 

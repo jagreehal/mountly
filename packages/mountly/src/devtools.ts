@@ -1,4 +1,9 @@
-import { getAnalyticsLog, getAllModuleTimings } from "./analytics.js";
+import {
+  getRecentEvents,
+  getAllModuleTimings,
+  clearAnalyticsLog,
+  type TimingEvent,
+} from "./analytics.js";
 import { moduleCache, dataCache } from "./cache.js";
 
 export interface DevtoolsPanelOptions {
@@ -6,10 +11,22 @@ export interface DevtoolsPanelOptions {
   collapsed?: boolean;
 }
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 let panel: HTMLElement | null = null;
 let stateInterval: ReturnType<typeof setInterval> | null = null;
 
 export function createDevtoolsPanel(options: DevtoolsPanelOptions = {}): { destroy: () => void } {
+  if (typeof document === "undefined") {
+    throw new Error("[mountly] createDevtoolsPanel requires a browser environment (document is not defined)");
+  }
   const { position = "bottom-right", collapsed = false } = options;
 
   if (panel) {
@@ -292,6 +309,7 @@ export function createDevtoolsPanel(options: DevtoolsPanelOptions = {}): { destr
           dataCache.clear();
           break;
         case "clear-log":
+          clearAnalyticsLog();
           break;
         case "reset":
           moduleCache.clear();
@@ -317,8 +335,8 @@ export function createDevtoolsPanel(options: DevtoolsPanelOptions = {}): { destr
           const state = lastEvent?.phase.replace("_start", "").replace("_end", "") ?? "idle";
           return `
           <div data-mountly-devtools-feature>
-            <span data-mountly-devtools-feature-name>${moduleId}</span>
-            <span data-mountly-devtools-badge class="${state}">${state}</span>
+            <span data-mountly-devtools-feature-name>${escapeHtml(moduleId)}</span>
+            <span data-mountly-devtools-badge class="${escapeHtml(state)}">${escapeHtml(state)}</span>
           </div>
         `;
         })
@@ -329,21 +347,21 @@ export function createDevtoolsPanel(options: DevtoolsPanelOptions = {}): { destr
     cacheContainer.innerHTML = `
       <div data-mountly-devtools-stat>
         <span data-mountly-devtools-stat-label>Modules</span>
-        <span data-mountly-devtools-stat-value>0</span>
+        <span data-mountly-devtools-stat-value>${moduleCache.getStats().entries}</span>
       </div>
       <div data-mountly-devtools-stat>
         <span data-mountly-devtools-stat-label>Data entries</span>
-        <span data-mountly-devtools-stat-value>0</span>
+        <span data-mountly-devtools-stat-value>${dataCache.getStats().entries}</span>
       </div>
     `;
 
-    const logs = getAnalyticsLog().slice(-5).reverse();
+    const logs: TimingEvent[] = [...getRecentEvents(5)].reverse();
     eventsContainer.innerHTML =
       logs
         .map(
           (e) => `
         <div data-mountly-devtools-timing>
-          <span data-mountly-devtools-timing-phase>${e.moduleId} → ${e.phase}</span>
+          <span data-mountly-devtools-timing-phase>${escapeHtml(e.moduleId)} → ${escapeHtml(e.phase)}</span>
           <span data-mountly-devtools-timing-duration>${e.duration ? `${e.duration.toFixed(0)}ms` : "—"}</span>
         </div>
       `,
@@ -351,11 +369,34 @@ export function createDevtoolsPanel(options: DevtoolsPanelOptions = {}): { destr
         .join("") || '<div style="color:#64748b;padding:8px 0">No events yet</div>';
   };
 
-  stateInterval = setInterval(updatePanel, 1000);
+  const startInterval = () => {
+    if (!stateInterval) {
+      stateInterval = setInterval(updatePanel, 1000);
+    }
+  };
+
+  const stopInterval = () => {
+    if (stateInterval) {
+      clearInterval(stateInterval);
+      stateInterval = null;
+    }
+  };
+
+  const handleVisibility = () => {
+    if (document.visibilityState === "hidden") {
+      stopInterval();
+    } else {
+      startInterval();
+    }
+  };
+
+  document.addEventListener("visibilitychange", handleVisibility);
+  startInterval();
   updatePanel();
 
   const destroy = () => {
-    if (stateInterval) clearInterval(stateInterval);
+    stopInterval();
+    document.removeEventListener("visibilitychange", handleVisibility);
     if (panel) {
       panel.remove();
       panel = null;

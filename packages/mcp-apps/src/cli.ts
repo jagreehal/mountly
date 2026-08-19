@@ -26,6 +26,7 @@ interface VerifyArgs {
   html: string[];
   strict: boolean;
   render: boolean;
+  json: boolean;
 }
 
 interface BuildArgs {
@@ -57,7 +58,7 @@ function parseArgs(argv: ReadonlyArray<string>): Args {
 }
 
 function parseVerifyArgs(argv: ReadonlyArray<string>): VerifyArgs {
-  const args: VerifyArgs = { html: [], strict: false, render: false };
+  const args: VerifyArgs = { html: [], strict: false, render: false, json: false };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
     const next = (): string => {
@@ -70,6 +71,7 @@ function parseVerifyArgs(argv: ReadonlyArray<string>): VerifyArgs {
     else if (arg === "--html") args.html.push(next());
     else if (arg === "--strict") args.strict = true;
     else if (arg === "--render") args.render = true;
+    else if (arg === "--json") args.json = true;
     else throw new Error(`mountly-mcp: unknown verify option '${arg}'`);
   }
   if (args.manifest && args.html.length > 0) {
@@ -114,6 +116,7 @@ Verify options:
       --html <path>      transitional single-View HTML; repeat for several
       --strict           fail when warnings are present
       --render           require each View to mount with content in Chromium (needs playwright)
+      --json             output the conformance report as JSON
 
 The widget's entry, uri and name come from the mountlyMcpWidget() plugin in
 your vite config, so there is nothing extra to configure.
@@ -137,7 +140,7 @@ async function verify(args: VerifyArgs): Promise<void> {
     htmlPaths: args.html.length > 0 ? args.html : undefined,
     render: args.render,
   });
-  process.stdout.write(formatConformanceReport(report));
+  process.stdout.write(args.json ? JSON.stringify(report, null, 2) : formatConformanceReport(report));
   if (!report.ok || (args.strict && report.diagnostics.length > 0)) process.exitCode = 1;
 }
 

@@ -25,6 +25,11 @@ export function recordInteraction(featureId: string): void {
   const count = interactionHistory.get(featureId) ?? 0;
   interactionHistory.set(featureId, count + 1);
   lastInteractionTime = Date.now();
+
+  if (interactionHistory.size > 500) {
+    const oldest = interactionHistory.keys().next().value!;
+    interactionHistory.delete(oldest);
+  }
 }
 
 export function getInteractionHistory(): ReadonlyMap<string, number> {
@@ -47,7 +52,6 @@ export function createPredictivePrefetcher(options: PrefetchHeuristicOptions) {
 
   let active = false;
   let aborted = false;
-  let rafId: number | null = null;
 
   const scoredFeatures: ScoredFeature[] = features.map((f) => ({
     feature: f.feature,
@@ -103,20 +107,13 @@ export function createPredictivePrefetcher(options: PrefetchHeuristicOptions) {
   const prefetchStaggered = async () => {
     const sorted = calculateDynamicScores().sort(sortByScore);
 
-    const prefetchNext = async (index: number) => {
-      if (aborted || index >= sorted.length) return;
-
-      const sf = sorted[index]!;
+    for (const sf of sorted) {
+      if (aborted) return;
       await sf.feature.preload().catch(() => {});
-
-      if (index + 1 < sorted.length) {
-        rafId = requestAnimationFrame(() => {
-          void prefetchNext(index + 1);
-        });
+      if (!aborted) {
+        await new Promise((r) => setTimeout(r, staggerDelay));
       }
-    };
-
-    await prefetchNext(0);
+    }
   };
 
   const start = () => {
@@ -154,10 +151,6 @@ export function createPredictivePrefetcher(options: PrefetchHeuristicOptions) {
   const abort = () => {
     aborted = true;
     active = false;
-    if (rafId) {
-      cancelAnimationFrame(rafId);
-      rafId = null;
-    }
   };
 
   const isActive = () => active;
@@ -221,9 +214,9 @@ export function createMouseTrailPrefetcher(options: MouseTrailPrefetchOptions): 
     if (preloaded) return;
 
     const rect = element.getBoundingClientRect();
-    const distance = Math.sqrt(
-      Math.pow(e.clientX - rect.left, 2) + Math.pow(e.clientY - rect.top, 2),
-    );
+    const dx = Math.max(rect.left - e.clientX, 0, e.clientX - rect.right);
+    const dy = Math.max(rect.top - e.clientY, 0, e.clientY - rect.bottom);
+    const distance = Math.sqrt(dx * dx + dy * dy);
 
     if (distance < proximityThreshold) {
       if (timer) clearTimeout(timer);
@@ -231,6 +224,11 @@ export function createMouseTrailPrefetcher(options: MouseTrailPrefetchOptions): 
         preloaded = true;
         feature.preload().catch(() => {});
       }, delay);
+    } else {
+      if (timer) {
+        clearTimeout(timer);
+        timer = null;
+      }
     }
   };
 

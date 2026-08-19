@@ -24,7 +24,7 @@
       }
     </script>
     <script type="module">
-      import { h } from "vue";
+      import { h, nextTick } from "vue";
       import { createWidget } from "/packages/adapters/mountly-vue/dist/index.js";
 
       const C = {
@@ -37,6 +37,7 @@
       const c = document.getElementById("c");
       w.mount(c, { msg: "a" });
       w.update?.(c, { msg: "b" });
+      await nextTick();
       window.__result = { text: c.shadowRoot?.textContent ?? "" };
     </script>
   </body>

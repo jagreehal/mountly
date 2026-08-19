@@ -77,9 +77,11 @@ export class DedupCache<K, V> {
 
       factory().then(
         (result) => {
+          if (options?.signal) options.signal.removeEventListener("abort", onAbort);
           resolve(result);
         },
         (error) => {
+          if (options?.signal) options.signal.removeEventListener("abort", onAbort);
           reject(error);
         },
       );
