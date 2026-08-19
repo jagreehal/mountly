@@ -29,7 +29,15 @@ describe("DedupCache.resolve abort listener cleanup", () => {
     const cache = new DedupCache<string, number>();
 
     story.when("resolve fails with a signal");
-    await cache.resolve("k", async () => { throw new Error("boom"); }, { signal: ac.signal }).catch(() => {});
+    await cache
+      .resolve(
+        "k",
+        async () => {
+          throw new Error("boom");
+        },
+        { signal: ac.signal },
+      )
+      .catch(() => {});
 
     story.then("the abort listener is removed from the signal");
     expect(removeSpy).toHaveBeenCalledWith("abort", expect.any(Function));

@@ -19,8 +19,15 @@ describe("mouseTrailPrefetcher timer clear (bug 1)", () => {
     document.body.appendChild(el);
 
     vi.spyOn(el, "getBoundingClientRect").mockReturnValue({
-      left: 100, right: 200, top: 100, bottom: 200,
-      width: 100, height: 100, x: 100, y: 100, toJSON() {},
+      left: 100,
+      right: 200,
+      top: 100,
+      bottom: 200,
+      width: 100,
+      height: 100,
+      x: 100,
+      y: 100,
+      toJSON() {},
     });
 
     const cleanup = createMouseTrailPrefetcher({

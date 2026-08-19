@@ -37,8 +37,6 @@ describe("contracts – generic createTypedPlatformBus", () => {
       amount: 100,
       currency: "USD",
     });
-    expect(received).toEqual([
-      { paymentId: "p1", amount: 100, currency: "USD" },
-    ]);
+    expect(received).toEqual([{ paymentId: "p1", amount: 100, currency: "USD" }]);
   });
 });

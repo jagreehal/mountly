@@ -7,11 +7,20 @@ import { dirname, join } from "node:path";
 const REPO_ROOT = join(__dirname, "..");
 
 function run(command: string, cwd: string): string {
-  return execSync(command, {
-    cwd,
-    encoding: "utf8",
-    stdio: ["ignore", "pipe", "pipe"],
-  });
+  try {
+    return execSync(command, {
+      cwd,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+  } catch (error) {
+    // execSync's message is just "Command failed: <cmd>" — the reason lives in
+    // the piped streams. Without them a failure here (a registry blip, a bad
+    // tarball, a peer-dep conflict) is indistinguishable from any other.
+    const { stdout, stderr } = error as { stdout?: string; stderr?: string };
+    const detail = [stdout, stderr].filter(Boolean).join("\n").trim();
+    throw new Error(`Command failed in ${cwd}:\n  ${command}\n${detail}`);
+  }
 }
 
 function write(path: string, contents: string): void {
@@ -56,6 +65,21 @@ async function startVite(cwd: string, port: number): Promise<ChildProcessWithout
 }
 
 async function renderedText(page: Page): Promise<string> {
+  try {
+    return await readRenderedText(page);
+  } catch (error) {
+    // Vite reloads the page once it has pre-bundled the consumer's deps, which
+    // destroys the execution context an in-flight evaluate is running in. The
+    // caller polls, so report "nothing rendered yet" and let it retry rather
+    // than failing the run on a transient reload. A page that never renders
+    // still fails, on the poll's own timeout.
+    const message = error instanceof Error ? error.message : String(error);
+    if (/Execution context was destroyed|frame was detached|navigating/i.test(message)) return "";
+    throw error;
+  }
+}
+
+async function readRenderedText(page: Page): Promise<string> {
   return page.evaluate(() => {
     function textDeep(node: Node): string {
       let text = node.nodeType === Node.TEXT_NODE ? (node.textContent ?? "") : "";

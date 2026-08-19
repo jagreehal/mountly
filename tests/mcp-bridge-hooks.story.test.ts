@@ -25,9 +25,7 @@ describe("useUpdateModelContext hook", () => {
     story.init(task);
 
     story.given("useUpdateModelContext imported from react hooks");
-    const { useUpdateModelContext } = await import(
-      "../packages/mcp-apps/src/react/hooks"
-    );
+    const { useUpdateModelContext } = await import("../packages/mcp-apps/src/react/hooks");
 
     const ctx = fakeContext();
     const spy = vi.spyOn(ctx.app, "updateModelContext").mockResolvedValue({});

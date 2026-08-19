@@ -180,6 +180,70 @@ const quote = computed(() => result.value?.structuredContent);
 
 Svelte reads the props directly via `$props()` — see `mountly-mcp/svelte`.
 
+## json-render MCP Apps integration
+
+Mountly now exposes a first-class json-render MCP facade so catalog-driven UIs
+can be shipped as MCP Apps with minimal protocol code:
+
+```ts
+import { createJsonRenderMcpApp } from "mountly-mcp/json-render/mcp";
+import { catalog } from "./catalog.js";
+import { html } from "./dist/app-html.js";
+
+const app = createJsonRenderMcpApp({
+  name: "json-render-dashboard",
+  version: "1.0.0",
+  catalog,
+  html,
+  tool: {
+    name: "render_ui",
+    title: "Render UI",
+    description: "Render an interactive dashboard from a json-render spec.",
+    resourceUri: "ui://json-render-dashboard/view.html",
+  },
+});
+```
+
+For iframe-side React hosts, use `mountly-mcp/json-render/app`:
+
+```tsx
+import { useJsonRenderApp } from "mountly-mcp/json-render/app";
+
+function View() {
+  const { spec, loading, connected, error } = useJsonRenderApp({
+    name: "json-render-dashboard",
+    version: "1.0.0",
+  });
+
+  if (error) return <div>{error.message}</div>;
+  if (!connected || loading || !spec) return <div>Waiting…</div>;
+  return <pre>{JSON.stringify(spec, null, 2)}</pre>;
+}
+```
+
+`buildAppHtml({ title, js, css })` is also exported from
+`mountly-mcp/json-render/app` to generate a self-contained HTML resource.
+
+### Interoperability with `@json-render/mcp`
+
+Mountly's facade is wire-compatible with [`@json-render/mcp`](https://www.npmjs.com/package/@json-render/mcp) in both
+directions, so you can mix the two without a bridge:
+
+- **Tool input** is `{ spec }`, typed from `catalog.zodSchema()`, and the tool
+  description carries `catalog.prompt()` — the model sees the full component
+  vocabulary.
+- **Tool output** carries the spec twice: as JSON in `content[0].text` (the
+  shape `@json-render/mcp`'s iframe hook reads) and as `structuredContent.spec`
+  (what Mountly's own hosts read).
+- **`useJsonRenderApp`** reads either shape, so an iframe built with Mountly
+  renders a `@json-render/mcp` server unchanged, and vice versa.
+
+One deliberate difference: `@json-render/core` 0.19 generates a _strict_ catalog
+schema that requires `visible` and `children` on every element, which rejects
+most first-attempt model output at the SDK's input gate. Mountly accepts the
+catalog schema **or** a looser spec shape, then validates in the handler and
+renders what it can. Drop the loose branch once core relaxes those fields.
+
 ## Exports
 
 | Entry                  | What's in it                                             |

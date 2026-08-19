@@ -7,9 +7,7 @@ describe("sandbox proxy export", () => {
     story.init(task);
 
     story.given("sandboxProxyHtml imported from the sandbox subpath");
-    const { sandboxProxyHtml } = await import(
-      "../packages/mcp-apps/src/sandbox/index"
-    );
+    const { sandboxProxyHtml } = await import("../packages/mcp-apps/src/sandbox/index");
 
     story.when("called with a host origin");
     const html = sandboxProxyHtml("https://host.example.com");
@@ -25,9 +23,7 @@ describe("sandbox proxy export", () => {
     story.init(task);
 
     story.given("a malicious host origin containing script tags");
-    const { sandboxProxyHtml } = await import(
-      "../packages/mcp-apps/src/sandbox/index"
-    );
+    const { sandboxProxyHtml } = await import("../packages/mcp-apps/src/sandbox/index");
 
     story.when("called with the malicious origin");
     const html = sandboxProxyHtml('https://evil.com"<script>alert(1)</script>');

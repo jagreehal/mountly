@@ -32,3 +32,5 @@ ___temp
 # Vitest browser-mode failure artifacts
 .vitest-attachments
 tests/component/__screenshots__
+tests/fixtures/vite-widget/dist-exposes-build/
+docs/examples/json-render-mcp/.build-*/

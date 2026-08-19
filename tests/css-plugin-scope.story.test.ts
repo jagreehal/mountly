@@ -3,7 +3,8 @@ import { mountlyCssAsText } from "../packages/mountly-vite-plugin/src/index.ts";
 type LoadablePlugin = { load?: unknown };
 
 function getLoadHook(plugin: LoadablePlugin): (id: string) => unknown {
-  if (typeof plugin.load === "function") return (plugin.load as (id: string) => unknown).bind(plugin);
+  if (typeof plugin.load === "function")
+    return (plugin.load as (id: string) => unknown).bind(plugin);
   throw new Error("load hook is not a plain function");
 }
 

@@ -16,9 +16,7 @@ describe("bootstrapMountly without React", () => {
       verticals: [],
     };
 
-    await expect(
-      bootstrapMountly(manifest, { define: false }),
-    ).resolves.toBeDefined();
+    await expect(bootstrapMountly(manifest, { define: false })).resolves.toBeDefined();
   });
 
   it("does not throw when manifest only includes Svelte imports", async () => {
@@ -34,9 +32,7 @@ describe("bootstrapMountly without React", () => {
       verticals: [],
     };
 
-    await expect(
-      bootstrapMountly(manifest, { define: false }),
-    ).resolves.toBeDefined();
+    await expect(bootstrapMountly(manifest, { define: false })).resolves.toBeDefined();
   });
 
   it("still works when React imports are present", async () => {
@@ -53,8 +49,6 @@ describe("bootstrapMountly without React", () => {
       verticals: [],
     };
 
-    await expect(
-      bootstrapMountly(manifest, { define: false }),
-    ).resolves.toBeDefined();
+    await expect(bootstrapMountly(manifest, { define: false })).resolves.toBeDefined();
   });
 });

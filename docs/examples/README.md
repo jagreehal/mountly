@@ -26,22 +26,23 @@ Build output must exist under `packages/mountly/dist/` and each example widget�
 6. **`pokemon-kitchen-sink/`** — Stress-test of triggers, prefetch, custom elements, analytics. For **deep dives**, not first-day onboarding. Vite dev server on **port 5178** (distinct from `plain-html` so they can run side-by-side).
 7. **`mcp-app-demo/`** — MCP Apps reference demo: builds a `ui://` widget resource, registers it on `mountly-mcp/server`, and verifies the full MCP flow in-process (`listTools`, `listResources`, `readResource`, `callTool`). See [mcp-app-demo/README.md](mcp-app-demo/README.md).
 8. **`mcp-generative-demo/`** — Generative UI: an agent emits a JSON spec constrained to a [`@json-render`](https://github.com/vercel-labs/json-render) catalog, and mountly renders it as native components, through the MCP bridge and as a plain widget. See [mcp-generative-demo/README.md](mcp-generative-demo/README.md).
-9. **`mcp-release-readiness/`** — Production-shaped Vue MCP App: a reusable component, Mountly's Vite resource build, official SDK server registration, and an app-only decision action. See [mcp-release-readiness/README.md](mcp-release-readiness/README.md).
-10. **`multi-vertical-host/`** — Manifest-driven multi-team host: `installPlatformRuntime`, `defineMountlyFeatureFromManifest`, `mountly/contracts` bus. See [multi-vertical-host/README.md](multi-vertical-host/README.md) and [docs/micro-frontends.md](../docs/micro-frontends.md). Read [Choosing an architecture](https://jagreehal.github.io/mountly/getting-started/choosing-an-architecture/) first — this is Stage 3, not the default starting point.
+9. **`json-render-mcp/`** — Minimal `createJsonRenderMcpApp` example: one catalog drives the MCP tool schema, the tool description, and the React components in the sandboxed iframe. Wire-compatible with [`@json-render/mcp`](https://www.npmjs.com/package/@json-render/mcp). See [json-render-mcp/README.md](json-render-mcp/README.md).
+10. **`mcp-release-readiness/`** — Production-shaped Vue MCP App: a reusable component, Mountly's Vite resource build, official SDK server registration, and an app-only decision action. See [mcp-release-readiness/README.md](mcp-release-readiness/README.md).
+11. **`multi-vertical-host/`** — Manifest-driven multi-team host: `installPlatformRuntime`, `defineMountlyFeatureFromManifest`, `mountly/contracts` bus. See [multi-vertical-host/README.md](multi-vertical-host/README.md) and [docs/micro-frontends.md](../docs/micro-frontends.md). Read [Choosing an architecture](https://jagreehal.github.io/mountly/getting-started/choosing-an-architecture/) first — this is Stage 3, not the default starting point.
 
-11. **`platform-embed/`** — Product A widget embedded in another team's platform shell (Stage 2). No Module Federation. See [platform-embed/README.md](platform-embed/README.md).
+12. **`platform-embed/`** — Product A widget embedded in another team's platform shell (Stage 2). No Module Federation. See [platform-embed/README.md](platform-embed/README.md).
 
-12. **`vite-host-import/`** — Vite React host with federation-style `import("demo-widget")` via `mountlyHostPlugin`, plus auto-generated remote typings from built vertical fragments. See [vite-host-import/README.md](vite-host-import/README.md).
+13. **`vite-host-import/`** — Vite React host with federation-style `import("demo-widget")` via `mountlyHostPlugin`, plus auto-generated remote typings from built vertical fragments. See [vite-host-import/README.md](vite-host-import/README.md).
 
-13. **`vite-host-remotes-url/`** — Vite host that declares a remote by **published URL** (`remotes: { "demo-widget": url }`); the host fetches the remote's fragment from that URL to auto-wire the import map + types. See [vite-host-remotes-url/README.md](vite-host-remotes-url/README.md). Proven by [`tests/vite-host-remotes-url.spec.ts`](../tests/vite-host-remotes-url.spec.ts).
+14. **`vite-host-remotes-url/`** — Vite host that declares a remote by **published URL** (`remotes: { "demo-widget": url }`); the host fetches the remote's fragment from that URL to auto-wire the import map + types. See [vite-host-remotes-url/README.md](vite-host-remotes-url/README.md). Proven by [`tests/vite-host-remotes-url.spec.ts`](../tests/vite-host-remotes-url.spec.ts).
 
 Widget source packages live alongside hosts: **`payment-breakdown`**, **`image-lightbox`**, **`signup-card`**, **`product-a-widget`** under `docs/examples/<name>/`.
 
-14. **`multi-widget-bundle/`** — Three widgets sharing code in one bundle via `createWidgetBundle`. One JS fetch, one shared CSS stylesheet. No build step for the host. Open via the `plain-html` static server. See [multi-widget-bundle/README.md](multi-widget-bundle/README.md).
+15. **`multi-widget-bundle/`** — Three widgets sharing code in one bundle via `createWidgetBundle`. One JS fetch, one shared CSS stylesheet. No build step for the host. Open via the `plain-html` static server. See [multi-widget-bundle/README.md](multi-widget-bundle/README.md).
 
-15. **`monorepo-component-library/`** — Simulates a monorepo: a shared UI library (`ui-lib.js`) consumed by a widgets bundle, loaded via `createWidgetBundle`. Demonstrates third-party imports flowing through a bundle. Open via the `plain-html` static server. See [monorepo-component-library/README.md](monorepo-component-library/README.md).
+16. **`monorepo-component-library/`** — Simulates a monorepo: a shared UI library (`ui-lib.js`) consumed by a widgets bundle, loaded via `createWidgetBundle`. Demonstrates third-party imports flowing through a bundle. Open via the `plain-html` static server. See [monorepo-component-library/README.md](monorepo-component-library/README.md).
 
-16. **`cross-framework-bus/`** — React 19 + Vue + Svelte widgets on one page, communicating through a typed `mountly/bus` event bus. No framework imports another. See [cross-framework-bus/README.md](cross-framework-bus/README.md).
+17. **`cross-framework-bus/`** — React 19 + Vue + Svelte widgets on one page, communicating through a typed `mountly/bus` event bus. No framework imports another. See [cross-framework-bus/README.md](cross-framework-bus/README.md).
 
 ## Run commands and ports
 
@@ -57,6 +58,7 @@ Each example has its own dedicated port, so they all run side-by-side without co
 | `pokemon-kitchen-sink` (Vite)         | **5178** | `pnpm --filter pokemon-kitchen-sink dev`                                  | <http://localhost:5178/>                                            |
 | `mcp-app-demo` (CLI verify)           | N/A      | `pnpm --filter mcp-app-demo verify`                                       | CLI output                                                          |
 | `mcp-generative-demo` (CLI verify)    | N/A      | `pnpm --filter mcp-generative-demo verify`                                | CLI output                                                          |
+| `json-render-mcp` (CLI verify)        | N/A      | `pnpm --filter json-render-mcp-example verify`                            | CLI output                                                          |
 | `mcp-release-readiness` (CLI verify)  | N/A      | `pnpm --filter mcp-release-readiness verify`                              | CLI output                                                          |
 | `multi-vertical-host` (static)        | **5182** | `cd docs/examples/multi-vertical-host && pnpm dev`                        | <http://localhost:5182/docs/examples/multi-vertical-host/>          |
 | `platform-embed` (static)             | **5184** | `cd docs/examples/platform-embed/platform-host && pnpm dev`               | <http://localhost:5184/docs/examples/platform-embed/platform-host/> |

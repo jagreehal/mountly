@@ -140,7 +140,9 @@ async function verify(args: VerifyArgs): Promise<void> {
     htmlPaths: args.html.length > 0 ? args.html : undefined,
     render: args.render,
   });
-  process.stdout.write(args.json ? JSON.stringify(report, null, 2) : formatConformanceReport(report));
+  process.stdout.write(
+    args.json ? JSON.stringify(report, null, 2) : formatConformanceReport(report),
+  );
   if (!report.ok || (args.strict && report.diagnostics.length > 0)) process.exitCode = 1;
 }
 

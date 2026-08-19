@@ -37,7 +37,9 @@ function injectGlobalStyles(_container: Element, css: string): void {
 
 export function attachShadow(container: Element, options: AdapterOptions): HTMLDivElement {
   if (typeof document === "undefined") {
-    throw new Error("[mountly] attachShadow requires a browser environment (document is not defined)");
+    throw new Error(
+      "[mountly] attachShadow requires a browser environment (document is not defined)",
+    );
   }
   const existing = mountNodes.get(container);
   if (existing) return existing;
