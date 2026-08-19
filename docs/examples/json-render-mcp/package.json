@@ -1,0 +1,26 @@
+{
+  "name": "json-render-mcp-example",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "verify": "node ./verify.mjs",
+    "serve:stdio": "node ./serve-stdio.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@json-render/core": "0.20.0",
+    "@json-render/react": "0.20.0",
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "mountly-mcp": "workspace:*",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "esbuild": "^0.28.2",
+    "typescript": "^7.0.2"
+  }
+}

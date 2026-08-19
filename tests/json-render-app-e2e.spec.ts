@@ -7,6 +7,8 @@ test("buildAppHtml executes bundled iframe script", async ({ page }) => {
     js: "window.__jsonRenderReady = 'ok';",
   });
   await page.setContent(html, { waitUntil: "domcontentloaded" });
-  const ready = await page.evaluate(() => (window as { __jsonRenderReady?: string }).__jsonRenderReady);
+  const ready = await page.evaluate(
+    () => (window as { __jsonRenderReady?: string }).__jsonRenderReady,
+  );
   await expect(ready).toBe("ok");
 });

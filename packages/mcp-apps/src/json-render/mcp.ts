@@ -59,12 +59,12 @@ const DEFAULT_TOOL_NAME = "render_ui";
 
 /**
  * A spec shape loose enough to survive real model output. `@json-render/core`
- * 0.19 generates a *strict* catalog schema — every element requires `visible`,
- * every element requires `children` — so gating tool input on it alone rejects
- * the majority of first-attempt specs at the SDK layer, before the handler can
- * repair them. (`@json-render/mcp` passes the strict schema straight through
- * and inherits that failure.) Delete this branch once core's generated schema
- * marks those fields optional.
+ * generates a *strict* catalog schema: as of 0.20 `visible` is optional, but
+ * `children` is still required on every element — the omission models make on
+ * roughly a third of first attempts. Gating tool input on the strict schema
+ * alone turns that into an SDK-level rejection before the handler can repair
+ * anything. (`@json-render/mcp` passes the strict schema straight through and
+ * inherits that failure.) Delete this branch once `children` is optional too.
  */
 const LOOSE_SPEC_SCHEMA = z.looseObject({
   root: z.string(),
@@ -97,9 +97,9 @@ function resolveInputSchema(options: RegisterJsonRenderToolOptions): object {
  */
 function resolveDescription(options: RegisterJsonRenderToolOptions): string {
   if (options.description) return options.description;
-  const base = "Render an interactive UI. The `spec` argument must be a json-render spec conforming to the catalog.";
-  const prompt =
-    typeof options.catalog.prompt === "function" ? options.catalog.prompt() : "";
+  const base =
+    "Render an interactive UI. The `spec` argument must be a json-render spec conforming to the catalog.";
+  const prompt = typeof options.catalog.prompt === "function" ? options.catalog.prompt() : "";
   return prompt ? `${base}\n\n${prompt}` : base;
 }
 
@@ -117,7 +117,9 @@ function pickToolInputSpec(args: unknown): unknown {
 
 function assertUiUri(uri: string): void {
   if (!uri.startsWith("ui://")) {
-    throw new Error(`mountly-mcp/json-render: resourceUri must use 'ui://' scheme (received '${uri}')`);
+    throw new Error(
+      `mountly-mcp/json-render: resourceUri must use 'ui://' scheme (received '${uri}')`,
+    );
   }
 }
 

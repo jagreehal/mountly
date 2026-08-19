@@ -238,7 +238,7 @@ directions, so you can mix the two without a bridge:
 - **`useJsonRenderApp`** reads either shape, so an iframe built with Mountly
   renders a `@json-render/mcp` server unchanged, and vice versa.
 
-One deliberate difference: `@json-render/core` 0.19 generates a *strict* catalog
+One deliberate difference: `@json-render/core` 0.19 generates a _strict_ catalog
 schema that requires `visible` and `children` on every element, which rejects
 most first-attempt model output at the SDK's input gate. Mountly accepts the
 catalog schema **or** a looser spec shape, then validates in the handler and

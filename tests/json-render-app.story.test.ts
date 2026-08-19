@@ -26,7 +26,10 @@ describe("useJsonRenderApp", () => {
     const closeSpy = vi.spyOn(App.prototype, "close").mockResolvedValue(undefined as never);
     const callSpy = vi.spyOn(App.prototype, "callServerTool").mockResolvedValue({
       structuredContent: {
-        spec: { root: "root", elements: { root: { type: "Text", props: { text: "Server spec" } } } },
+        spec: {
+          root: "root",
+          elements: { root: { type: "Text", props: { text: "Server spec" } } },
+        },
       },
     } as never);
 

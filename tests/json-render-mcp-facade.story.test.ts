@@ -61,7 +61,10 @@ describe("json-render MCP facade", () => {
 
     // No `visible` field — core 0.19's generated catalog schema marks it
     // required, so a strict input gate would reject this ordinary spec.
-    const spec = { root: "root", elements: { root: { type: "Text", props: { text: "Hello" }, children: [] } } };
+    const spec = {
+      root: "root",
+      elements: { root: { type: "Text", props: { text: "Hello" }, children: [] } },
+    };
     const result = (await client.callTool({ name: "render-ui", arguments: { spec } })) as {
       structuredContent?: { spec?: unknown };
       content?: Array<{ type: string; text: string }>;
@@ -87,9 +90,8 @@ describe("json-render MCP facade", () => {
       import(sdk("@modelcontextprotocol/sdk/client/index.js")),
       import(sdk("@modelcontextprotocol/sdk/inMemory.js")),
     ]);
-    const { EXTENSION_ID, RESOURCE_MIME_TYPE } = await import(
-      "../packages/mcp-apps/src/server/index"
-    );
+    const { EXTENSION_ID, RESOURCE_MIME_TYPE } =
+      await import("../packages/mcp-apps/src/server/index");
     const server = new McpServer(
       { name: "hosted-server", version: "1.0.0" },
       { capabilities: { resources: {}, tools: {} } },
@@ -110,10 +112,9 @@ describe("json-render MCP facade", () => {
 
     const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
     await server.connect(serverTransport);
-    const client = new Client(
-      { name: "test-client", version: "1.0.0" },
-      { capabilities: { extensions: { [EXTENSION_ID]: { mimeTypes: [RESOURCE_MIME_TYPE] } } } } as never,
-    );
+    const client = new Client({ name: "test-client", version: "1.0.0" }, {
+      capabilities: { extensions: { [EXTENSION_ID]: { mimeTypes: [RESOURCE_MIME_TYPE] } } },
+    } as never);
     await client.connect(clientTransport);
 
     const tools = await client.listTools();
