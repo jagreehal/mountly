@@ -1,5 +1,13 @@
 # mountly-manifest
 
+## 1.0.3
+
+### Patch Changes
+
+- Updated dependencies [a72d1b0]
+- Updated dependencies [a72d1b0]
+  - mountly@0.4.0
+
 ## 1.0.2
 
 ### Patch Changes

@@ -1,5 +1,13 @@
 # mountly-react
 
+## 2.0.2
+
+### Patch Changes
+
+- Updated dependencies [a72d1b0]
+- Updated dependencies [a72d1b0]
+  - mountly@0.4.0
+
 ## 2.0.1
 
 ### Patch Changes
