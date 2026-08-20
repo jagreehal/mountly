@@ -1,6 +1,6 @@
 {
   "name": "mountly-vite-plugin",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "Vite lib build plugin for mountly vertical widgets (dual ESM output)",
   "license": "Apache-2.0",
   "repository": {
