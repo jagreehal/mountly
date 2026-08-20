@@ -73,6 +73,14 @@
       "types": "./dist/shadow.d.ts",
       "import": "./dist/shadow.js"
     },
+    "./iframe": {
+      "types": "./dist/iframe.d.ts",
+      "import": "./dist/iframe.js"
+    },
+    "./iframe/child": {
+      "types": "./dist/iframe-child.d.ts",
+      "import": "./dist/iframe-child.js"
+    },
     "./assets": {
       "types": "./dist/assets.d.ts",
       "import": "./dist/assets.js"
@@ -133,7 +141,16 @@
     "postpack": "rm -f README.md LICENSE && ln -s ../../README.md README.md && ln -s ../../LICENSE LICENSE"
   },
   "devDependencies": {
+    "resize-iframe": "^0.1.1",
     "tsup": "^8.5.1",
     "typescript": "^7.0.2"
+  },
+  "peerDependencies": {
+    "resize-iframe": ">=0.1.1"
+  },
+  "peerDependenciesMeta": {
+    "resize-iframe": {
+      "optional": true
+    }
   }
 }

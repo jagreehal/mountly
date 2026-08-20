@@ -3,7 +3,12 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**", "!**/node_modules/**"]
+      "outputs": [
+        "dist/**",
+        "!**/node_modules/**",
+        "mountly-remotes.d.ts",
+        "src/mountly-remotes.d.ts"
+      ]
     },
     "dev": {
       "cache": false,

@@ -64,6 +64,7 @@ q5 -->|Yes| singleSpa`}
 | Monorepo npm lib           | Same org, shared CI is OK                       | Merge coordination                         |
 | mountly widget drop-in     | Foreign host, 1–5 interactive regions           | Import map / version pinning               |
 | mountly manifest verticals | 2–5 teams, independent CDN deploys              | Shared React version agreement             |
+| mountly iframe widgets     | Untrusted or legacy verticals, one shared page  | A framework bootstrap per widget           |
 | Module Federation          | Deep horizontal integration, shared build graph | `shared` blocks, tooling complexity        |
 | Single-SPA                 | Full app shells per route, many teams           | Orchestration, routing ownership           |
 | Subdomain per product      | Fully separate products                         | No shared page shell; routing at DNS level |
@@ -138,6 +139,44 @@ This is **Stage 2**, not Stage 4. Do not jump to manifest-driven multi-vertical 
 - [Micro-frontends guide](https://github.com/jagreehal/mountly/blob/main/docs/micro-frontends.md) (advanced — read Stage 1 and 2 first)
 
 Key difference from Module Federation: React is shared through the **import map**, not a runtime `shared` negotiation block. The remote's fragment auto-wires types and exposes.
+
+---
+
+---
+
+## Stage 3b: Iframe widgets, when the shared context is the problem
+
+**Best when:** the reason you want a boundary is that you cannot trust what a
+vertical does to the page — legacy globals, `window` mutation, prototype
+patching, CSS written before anyone thought about isolation.
+
+Stages 1–3 all share one JavaScript context. Shadow DOM scopes styles, but a
+vertical can still reach `window`, register global listeners and break another
+team at runtime — which quietly costs you the independent deployability the
+split was for. If that describes your codebase, the browser will enforce the
+boundary for you:
+
+```ts
+import { iframeFeature } from "mountly/iframe";
+
+const billing = iframeFeature({
+  moduleId: "billing",
+  src: "https://billing.acme.com/widget",
+  title: "Billing breakdown",
+  sandbox: "allow-scripts",
+});
+```
+
+Same triggers, same lifecycle, same `<mountly-feature>` element. The widget runs
+in its own document, so its globals and styles cannot reach the host or another
+vertical.
+
+The trade is real: each widget bootstraps its own framework, so this is slower
+than Stage 3 and you should not reach for it by default. mountly prefetches the
+frame document at preload time — hover, viewport, idle — which buys back the
+network half but not the runtime half.
+
+See [Iframe widgets](https://github.com/jagreehal/mountly/blob/main/docs/micro-frontends.md#iframe-widgets-strong-isolation).
 
 ---
 

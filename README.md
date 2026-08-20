@@ -56,6 +56,7 @@ Before mountly:                    After mountly:
 - **Multiple instances**: mount the same feature multiple times on one page
 - **Small core**: ~9 KB gzipped; widgets load on demand, not on page load
 - **Custom element**: `<mountly-feature>` web component for declarative usage
+- **Isolation when you need it**: light DOM, shadow DOM, or a cross-origin iframe — the host chooses, the widget source does not change
 - **Analytics**: built-in interaction timing and performance tracking
 - **Predictive prefetch**: idle-time loading scored by interaction history
 - **Plugin triggers**: swipe, long-press, keyboard, URL-change, and custom trigger plugins
@@ -140,6 +141,7 @@ The widget mounts inside the container in light DOM by default, with bundled sty
 - **Plain-HTML host (no bundler)**: `installRuntime({...})` injects a shared-React import map. For direct browser import maps, also map used `mountly/*` subpaths (for example `mountly/attach`, `mountly/elements`, `mountly/shadow`, `mountly/assets`, `mountly/adapter`). See [docs/examples/plain-html](docs/examples/plain-html/README.md).
 - **Pick a distribution (self-contained vs shared React)**: when to ship one widget vs many, when to share React. See [docs/examples/README.md#choosing-a-distribution](docs/examples/README.md#choosing-a-distribution).
 - **Choosing an architecture**: monorepo first, widget drop-in, manifest verticals — when you do and do not need micro frontends. See [Choosing an architecture](https://jagreehal.github.io/mountly/getting-started/choosing-an-architecture/).
+- **Strong isolation (iframe widgets)**: `mountly/iframe` runs a vertical in its own document — its own `window`, its own styles — with the same triggers and lifecycle. The same `createWidget` output works in light DOM, shadow DOM or a frame, so the host picks the boundary. See [docs/micro-frontends.md#iframe-widgets-strong-isolation](docs/micro-frontends.md#iframe-widgets-strong-isolation).
 - **Import-map verticals (advanced)**: independent **widget** repos via manifest + CDN, not Webpack federation. See [docs/micro-frontends.md](docs/micro-frontends.md) and [docs/examples/multi-vertical-host](docs/examples/multi-vertical-host/README.md). Read the architecture guide first.
 - **When _not_ to use mountly**: single SPA, full SSR-hydration ownership, MFE orchestration control plane. See [When not to use mountly](https://jagreehal.github.io/mountly/concepts/when-not-to-use/).
 - **All runnable examples**: [docs/examples/README.md](docs/examples/README.md).
