@@ -4,7 +4,7 @@
     "build": {
       "dependsOn": ["^build"],
       "outputs": [
-        "dist/**",
+        "**/dist/**",
         "!**/node_modules/**",
         "mountly-remotes.d.ts",
         "src/mountly-remotes.d.ts"
