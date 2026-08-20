@@ -199,6 +199,92 @@ defineMountlyFeatureFromManifest(parseManifest(raw));
 
 See the runnable reference: [`docs/examples/multi-vertical-host`](../docs/examples/multi-vertical-host/README.md).
 
+## Iframe widgets (strong isolation)
+
+Everything above shares one JavaScript context. That is what makes it fast: one
+React, no bootstrap per widget, no serialization at the boundary. It is also the
+limit of the isolation — shadow DOM scopes styles, but a vertical can still
+mutate `window`, patch a prototype or register a global listener, and break
+another team at runtime. When that is possible, "independently deployable" is a
+convention teams follow rather than a guarantee the platform makes.
+
+When you cannot rely on that convention — a decade-old vertical, code from
+before anyone thought about boundaries, a widget you did not write — put the
+browser in charge instead:
+
+```ts
+import { iframeFeature } from "mountly/iframe";
+import { registerCustomElement } from "mountly/elements";
+
+registerCustomElement("billing", () =>
+  iframeFeature({
+    moduleId: "billing",
+    src: "https://billing.acme.com/widget",
+    title: "Billing breakdown",
+    sandbox: "allow-scripts",
+  }),
+);
+```
+
+```html
+<mountly-feature module-id="billing" trigger="hover">
+  <button type="button">Show billing</button>
+  <div data-mountly-mount></div>
+</mountly-feature>
+```
+
+Same triggers, same lifecycle, same element. The widget runs in its own
+document, so its globals and styles cannot reach the host or another vertical.
+
+The framed page loads the widget you already ship:
+
+```html
+<script src="https://unpkg.com/resize-iframe/resize-iframe-child.js"></script>
+<script type="module">
+  import { mountAsFrame } from "mountly/iframe/child";
+  import widget from "./billing-widget.js"; // the same createWidget(...) output
+  mountAsFrame(widget);
+</script>
+```
+
+`createWidget(Component)` output runs unchanged in light DOM, in a shadow root
+and in a frame, so **the host chooses the isolation level, not the widget
+author**. Moving a vertical behind a frame is a manifest change, not a rewrite.
+
+### What it costs
+
+|                     | Shared context (`moduleUrl`)              | Iframe (`src`)           |
+| ------------------- | ----------------------------------------- | ------------------------ |
+| Framework instances | One, via the import map                   | One per widget           |
+| Style isolation     | Host CSS reaches in unless `shadow: true` | Enforced by the browser  |
+| `window` / globals  | Shared with every vertical                | Private to the widget    |
+| Props               | Any value, passed directly                | Structured-clonable only |
+| SSR / hydration     | Not supported either way                  | Not supported either way |
+
+Each frame bootstraps its own framework. mountly prefetches the frame document
+at preload time — the same hover, viewport and idle triggers — which recovers
+the network half of that cost, not the runtime half. Reach for `moduleUrl`
+first; reach for `src` when the shared context is the thing you are trying to
+escape.
+
+### Wiring
+
+- `resize-iframe` (0.2.0+) is an optional peer, and supplies both halves: the
+  frame sizes itself to its content, and `postMessage` is matched against the
+  frame's own window rather than an origin allowlist.
+- Props cross on a handshake, not on load: the framed page announces itself once
+  `mountAsFrame` is listening, and the host replies with the current props.
+  Sizing cannot be the signal — nothing is mounted yet, so the frame measures
+  zero and a zero size is never reported.
+- `mountAsFrame` mounts with `standaloneProps` when the page is opened directly,
+  so the widget page stays developable outside a host.
+- Cross-site embeds are storage-partitioned. If the widget needs its own
+  cookies, pass `allow: "storage-access"` and follow the
+  [Storage Access flow](https://github.com/jagreehal/resize-iframe#third-party-embedding-and-cookies).
+- `loadData`, a custom cache key or your own render step: use `iframeModule(src,
+options)` inside `createOnDemandFeature({ loadModule })` instead of
+  `iframeFeature`.
+
 ## Runtime verticals (load remotes after boot)
 
 The vertical list is not always known at boot. A host may fetch a per-user plugin list after the page loads. `setVertical()` registers one vertical at runtime (the equivalent of adding it to `manifest.verticals`): it appends the vertical's URL to the import map and registers its `<mountly-feature>` element. `loadVertical()` / `unwrapDefault()` import a module directly.

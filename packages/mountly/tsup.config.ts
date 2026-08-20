@@ -17,6 +17,8 @@ export default defineConfig({
     "src/cache.ts",
     "src/mount.ts",
     "src/shadow.ts",
+    "src/iframe.ts",
+    "src/iframe-child.ts",
     "src/assets.ts",
     "src/adapter.ts",
     "src/analytics.ts",
