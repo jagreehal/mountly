@@ -8,6 +8,12 @@ import { join } from "node:path";
 const REPO_ROOT = join(__dirname, "..");
 const CLI = join(REPO_ROOT, "packages", "mcp-apps", "dist", "cli.js");
 
+// `link:` symlinks this checkout; `file:` packs it and then resolves its *own*
+// deps from the registry. On a release PR changesets has already bumped those
+// to versions that publish after CI, so `file:` failed with
+// ERR_PNPM_NO_MATCHING_VERSION — green only once the release it gates is out.
+const LOCAL_MCP = `link:${join(REPO_ROOT, "packages", "mcp-apps")}`;
+
 function run(command: string, cwd: string): string {
   try {
     return execSync(command, {
@@ -57,10 +63,7 @@ test("mountly-mcp create scaffolds react app that builds and verifies", () => {
     };
     expect(pkg.dependencies.mountly).toBeUndefined();
     expect(pkg.dependencies["mountly-react"]).toBeUndefined();
-    pkg.dependencies["mountly-mcp"] = `file:${join(REPO_ROOT, "packages/mcp-apps")}`;
-    // Transitive deps of mountly-mcp — pin local packages for the file: install.
-    pkg.dependencies.mountly = `file:${join(REPO_ROOT, "packages/mountly")}`;
-    pkg.dependencies["mountly-react"] = `file:${join(REPO_ROOT, "packages/adapters/mountly-react")}`;
+    pkg.dependencies["mountly-mcp"] = LOCAL_MCP;
     writeFileSync(pkgPath, `${JSON.stringify(pkg, null, 2)}\n`);
 
     story.and("dependencies are installed");
@@ -125,8 +128,7 @@ test("mountly-mcp create scaffolds a vanilla app that needs no framework at all"
       expect(deps[`mountly-${framework}`]).toBeUndefined();
     }
 
-    pkg.dependencies["mountly-mcp"] = `file:${join(REPO_ROOT, "packages/mcp-apps")}`;
-    pkg.dependencies.mountly = `file:${join(REPO_ROOT, "packages/mountly")}`;
+    pkg.dependencies["mountly-mcp"] = LOCAL_MCP;
     writeFileSync(pkgPath, `${JSON.stringify(pkg, null, 2)}\n`);
 
     run("pnpm install", appDir);
