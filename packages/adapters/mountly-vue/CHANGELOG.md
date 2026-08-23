@@ -1,5 +1,12 @@
 # mountly-vue
 
+## 2.0.4
+
+### Patch Changes
+
+- Updated dependencies [4c8bece]
+  - mountly@0.5.0
+
 ## 2.0.3
 
 ### Patch Changes
