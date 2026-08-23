@@ -149,7 +149,7 @@
     "postpack": "rm -f README.md LICENSE && ln -s ../../README.md README.md && ln -s ../../LICENSE LICENSE"
   },
   "devDependencies": {
-    "resize-iframe": "^0.1.1",
+    "resize-iframe": "^0.2.0",
     "tsup": "^8.5.1",
     "typescript": "^7.0.2"
   },
