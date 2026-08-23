@@ -7,7 +7,7 @@ import type {
   ReleaseReport,
 } from "../../docs/examples/mcp-release-readiness/src/types";
 import { App, runBridge } from "../../packages/mcp-apps/dist/bridge/index.js";
-import { createMcpWidget } from "../../packages/mcp-apps/dist/vue/index.js";
+import { createMcpView } from "../../packages/mcp-apps/dist/vue/index.js";
 
 const report: ReleaseReport = {
   releaseId: "rel_checkout_api_042",
@@ -71,7 +71,7 @@ test("the MCP adapter renders tool data and calls the app-only decision tool", a
   const bridge = runBridge({
     app,
     container,
-    widget: createMcpWidget(McpReleaseReadiness),
+    view: createMcpView(McpReleaseReadiness),
   });
   await bridge.ready;
 

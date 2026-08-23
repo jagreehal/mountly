@@ -1,7 +1,7 @@
 /* Generative UI — design tokens + component styles.
  * Dark-first, neutrals tinted toward blue-grey (OKLCH), one warm amber accent.
  * Geist (Vercel's typeface) for UI + Geist Mono for figures; graceful system
- * fallback under strict CSP. Imported as a text string into the widget bundle. */
+ * fallback under strict CSP. Imported as a text string into the View bundle. */
 
 @import url("https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap");
 

@@ -90,8 +90,8 @@ export function emitHtml(input: EmitHtmlInput): string {
   }
 
   head.push(`<link rel="stylesheet" href="${escapeAttr(input.cssUrl)}">`);
-  // The widget bundle MUST load before the bridge: module scripts execute in
-  // document order, and the bridge reads `__mountlyMcpWidget__` synchronously.
+  // The View bundle MUST load before the bridge: module scripts execute in
+  // document order, and the bridge reads the published View synchronously.
   const body = [
     `<div id="mountly-mcp-root"></div>`,
     ...configScript(input.config),

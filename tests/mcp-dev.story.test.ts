@@ -11,12 +11,12 @@ import {
 } from "../packages/mcp-apps/src/dev/index";
 import { escapeInlineScript, serializeInlineScriptValue } from "../packages/mcp-apps/src/html";
 
-async function buildWidget(dir: string): Promise<string> {
-  writeFileSync(join(dir, "widget.js"), "globalThis.__mountlyMcpWidget__ = {};", "utf8");
+async function buildView(dir: string): Promise<string> {
+  writeFileSync(join(dir, "view.js"), "globalThis.__mountlyMcpView__ = {};", "utf8");
   writeFileSync(join(dir, "bridge.js"), "/* bridge runtime */", "utf8");
-  const output = join(dir, "widget.html");
+  const output = join(dir, "view.html");
   await buildMcpResource({
-    entry: join(dir, "widget.js"),
+    entry: join(dir, "view.js"),
     uri: "ui://dev-server/quote",
     name: "quote_payment",
     output,
@@ -28,12 +28,12 @@ async function buildWidget(dir: string): Promise<string> {
 }
 
 describe("mountly-mcp/dev", () => {
-  it("serves a built widget from a two-origin sandboxed host", async ({ task }) => {
+  it("serves a built View from a two-origin sandboxed host", async ({ task }) => {
     story.init(task, { tags: ["mcp", "dev"] });
     const dir = mkdtempSync(join(tmpdir(), "mountly-mcp-dev-"));
 
     story.given("a built ui:// resource and its sidecar");
-    const htmlPath = await buildWidget(dir);
+    const htmlPath = await buildView(dir);
 
     story.when("the dev host starts");
     const host = await startDevHost({
@@ -60,10 +60,10 @@ describe("mountly-mcp/dev", () => {
       const hostRuntime = await fetch(`${host.hostUrl}/host.js`).then((r) => r.text());
       expect(hostRuntime).toContain("AppBridge received");
 
-      story.then("the widget and its sidecar are served for the page to fetch");
-      const served = await fetch(`${host.hostUrl}/widget.html`).then((r) => r.text());
-      expect(served).toContain("__mountlyMcpWidget__");
-      const meta = await fetch(`${host.hostUrl}/widget.meta.json`).then((r) => r.json());
+      story.then("the View and its sidecar are served for the page to fetch");
+      const served = await fetch(`${host.hostUrl}/view.html`).then((r) => r.text());
+      expect(served).toContain("__mountlyMcpView__");
+      const meta = await fetch(`${host.hostUrl}/view.meta.json`).then((r) => r.json());
       expect(meta.uri).toBe("ui://dev-server/quote");
 
       story.then("the sandbox proxy enforces the sidecar's CSP without unsafe-eval");
@@ -85,7 +85,7 @@ describe("mountly-mcp/dev", () => {
   it("routes tool calls to a connected server", async ({ task }) => {
     story.init(task, { tags: ["mcp", "dev"] });
     const dir = mkdtempSync(join(tmpdir(), "mountly-mcp-dev-"));
-    const htmlPath = await buildWidget(dir);
+    const htmlPath = await buildView(dir);
 
     story.given("a dev host wired to a real tool");
     const calls: Array<{ name: string; args: unknown }> = [];
@@ -196,7 +196,7 @@ describe("mountly-mcp/dev", () => {
   it("picks a free port instead of failing when one is taken", async ({ task }) => {
     story.init(task, { tags: ["mcp", "dev"] });
     const dir = mkdtempSync(join(tmpdir(), "mountly-mcp-dev-"));
-    const htmlPath = await buildWidget(dir);
+    const htmlPath = await buildView(dir);
 
     story.given("a dev host already holding the default port");
     const first = await startDevHost({ htmlPath, hostPort: 5320 });

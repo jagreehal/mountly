@@ -18,10 +18,10 @@ describe("createMcpAppServer", () => {
   it("installs Views and linked tools into an application-owned MCP server", async ({ task }) => {
     story.init(task, { tags: ["mcp", "server", "composition"] });
     const dir = mkdtempSync(join(tmpdir(), "mountly-mcp-register-"));
-    const entry = join(dir, "widget.js");
+    const entry = join(dir, "view.js");
     const bridgeRuntime = join(dir, "bridge.js");
     const out = join(dir, "weather.html");
-    writeFileSync(entry, "globalThis.__mountlyMcpWidget__ = { mount(){}, unmount(){} };", "utf8");
+    writeFileSync(entry, "globalThis.__mountlyMcpView__ = { mount(){}, unmount(){} };", "utf8");
     writeFileSync(bridgeRuntime, "/* bridge */", "utf8");
     const built = await buildMcpResource({
       entry,
@@ -92,13 +92,13 @@ describe("createMcpAppServer", () => {
     rmSync(dir, { recursive: true });
   });
 
-  it("registers a widget's html and tool, then handles a tools/call", async ({ task }) => {
+  it("registers a View's html and tool, then handles a tools/call", async ({ task }) => {
     story.init(task);
     const dir = mkdtempSync(join(tmpdir(), "mountly-mcp-server-"));
-    const entry = join(dir, "widget.js");
+    const entry = join(dir, "view.js");
     const bridgeRuntime = join(dir, "bridge.js");
     const out = join(dir, "weather.html");
-    writeFileSync(entry, "globalThis.__mountlyMcpWidget__ = { mount(){}, unmount(){} };", "utf8");
+    writeFileSync(entry, "globalThis.__mountlyMcpView__ = { mount(){}, unmount(){} };", "utf8");
     writeFileSync(bridgeRuntime, "/* bridge */", "utf8");
 
     const built = await buildMcpResource({
@@ -109,7 +109,7 @@ describe("createMcpAppServer", () => {
       bridgeRuntimePath: bridgeRuntime,
     });
 
-    story.given("a server with one widget+tool registered");
+    story.given("a server with one View+tool registered");
     const server = createMcpAppServer({
       name: "weather-server",
       version: "1.0.0",
@@ -183,10 +183,10 @@ describe("createMcpAppServer", () => {
   it("throws at boot when registration uri doesn't match sidecar", async ({ task }) => {
     story.init(task);
     const dir = mkdtempSync(join(tmpdir(), "mountly-mcp-server-mismatch-"));
-    const entry = join(dir, "widget.js");
+    const entry = join(dir, "view.js");
     const bridgeRuntime = join(dir, "bridge.js");
     const out = join(dir, "weather.html");
-    writeFileSync(entry, "globalThis.__mountlyMcpWidget__ = { mount(){}, unmount(){} };", "utf8");
+    writeFileSync(entry, "globalThis.__mountlyMcpView__ = { mount(){}, unmount(){} };", "utf8");
     writeFileSync(bridgeRuntime, "/* bridge */", "utf8");
 
     await buildMcpResource({
@@ -196,7 +196,7 @@ describe("createMcpAppServer", () => {
       output: out,
       bridgeRuntimePath: bridgeRuntime,
     });
-    story.given("a server registering the widget under the WRONG uri");
+    story.given("a server registering the View under the WRONG uri");
     const server = createMcpAppServer({
       name: "weather-server",
       version: "1.0.0",
@@ -222,11 +222,11 @@ describe("createMcpAppServer", () => {
   it("throws at boot when registration uri does not use ui://", async ({ task }) => {
     story.init(task);
     const dir = mkdtempSync(join(tmpdir(), "mountly-mcp-server-invalid-scheme-"));
-    const entry = join(dir, "widget.js");
+    const entry = join(dir, "view.js");
     const bridgeRuntime = join(dir, "bridge.js");
     const out = join(dir, "weather.html");
     const outAdmin = join(dir, "weather-admin.html");
-    writeFileSync(entry, "globalThis.__mountlyMcpWidget__ = { mount(){}, unmount(){} };", "utf8");
+    writeFileSync(entry, "globalThis.__mountlyMcpView__ = { mount(){}, unmount(){} };", "utf8");
     writeFileSync(bridgeRuntime, "/* bridge */", "utf8");
 
     await buildMcpResource({
@@ -268,10 +268,10 @@ describe("createMcpAppServer", () => {
   it("throws at boot when sidecar mimeType is not MCP Apps HTML", async ({ task }) => {
     story.init(task);
     const dir = mkdtempSync(join(tmpdir(), "mountly-mcp-server-invalid-mime-"));
-    const entry = join(dir, "widget.js");
+    const entry = join(dir, "view.js");
     const bridgeRuntime = join(dir, "bridge.js");
     const out = join(dir, "weather.html");
-    writeFileSync(entry, "globalThis.__mountlyMcpWidget__ = { mount(){}, unmount(){} };", "utf8");
+    writeFileSync(entry, "globalThis.__mountlyMcpView__ = { mount(){}, unmount(){} };", "utf8");
     writeFileSync(bridgeRuntime, "/* bridge */", "utf8");
 
     await buildMcpResource({
@@ -311,10 +311,10 @@ describe("createMcpAppServer", () => {
   it("throws at boot when sidecar protocolVersion is not current", async ({ task }) => {
     story.init(task);
     const dir = mkdtempSync(join(tmpdir(), "mountly-mcp-server-invalid-protocol-"));
-    const entry = join(dir, "widget.js");
+    const entry = join(dir, "view.js");
     const bridgeRuntime = join(dir, "bridge.js");
     const out = join(dir, "weather.html");
-    writeFileSync(entry, "globalThis.__mountlyMcpWidget__ = { mount(){}, unmount(){} };", "utf8");
+    writeFileSync(entry, "globalThis.__mountlyMcpView__ = { mount(){}, unmount(){} };", "utf8");
     writeFileSync(bridgeRuntime, "/* bridge */", "utf8");
 
     await buildMcpResource({
@@ -354,11 +354,11 @@ describe("createMcpAppServer", () => {
   it("supports multiple tools including app-only visibility metadata", async ({ task }) => {
     story.init(task);
     const dir = mkdtempSync(join(tmpdir(), "mountly-mcp-server-shared-uri-"));
-    const entry = join(dir, "widget.js");
+    const entry = join(dir, "view.js");
     const bridgeRuntime = join(dir, "bridge.js");
     const out = join(dir, "weather.html");
     const outAdmin = join(dir, "weather-admin.html");
-    writeFileSync(entry, "globalThis.__mountlyMcpWidget__ = { mount(){}, unmount(){} };", "utf8");
+    writeFileSync(entry, "globalThis.__mountlyMcpView__ = { mount(){}, unmount(){} };", "utf8");
     writeFileSync(bridgeRuntime, "/* bridge */", "utf8");
 
     await buildMcpResource({
@@ -429,10 +429,10 @@ describe("createMcpAppServer", () => {
   }) => {
     story.init(task);
     const dir = mkdtempSync(join(tmpdir(), "mountly-mcp-server-nofallback-"));
-    const entry = join(dir, "widget.js");
+    const entry = join(dir, "view.js");
     const bridgeRuntime = join(dir, "bridge.js");
     const out = join(dir, "weather.html");
-    writeFileSync(entry, "globalThis.__mountlyMcpWidget__ = { mount(){}, unmount(){} };", "utf8");
+    writeFileSync(entry, "globalThis.__mountlyMcpView__ = { mount(){}, unmount(){} };", "utf8");
     writeFileSync(bridgeRuntime, "/* bridge */", "utf8");
 
     const built = await buildMcpResource({

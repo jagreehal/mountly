@@ -8,9 +8,9 @@ import { buildMcpResource } from "../packages/mcp-apps/src/build/index";
 import { formatConformanceReport, verifyMcpApps } from "../packages/mcp-apps/src/testing/index";
 
 async function fixture(dir: string, description?: string) {
-  const entry = join(dir, "widget.js");
+  const entry = join(dir, "view.js");
   const bridge = join(dir, "bridge.js");
-  writeFileSync(entry, "globalThis.__mountlyMcpWidget__ = { mount(){}, unmount(){} };", "utf8");
+  writeFileSync(entry, "globalThis.__mountlyMcpView__ = { mount(){}, unmount(){} };", "utf8");
   writeFileSync(bridge, "/* ui/initialize ui/notifications/initialized */", "utf8");
   return buildMcpResource({
     entry,

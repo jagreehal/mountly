@@ -5,7 +5,7 @@
  * are the vocabulary users already learned, and every alias is one more thing
  * to translate and one more place to drift.
  *
- * Only genuinely mountly-specific types live here: the props a widget's
+ * Only genuinely mountly-specific types live here: the props a View's
  * `mount()` receives, and the sidecar declaration written next to the built HTML.
  */
 export type {
@@ -38,13 +38,13 @@ import type {
 import type { MCP_APPS_MIME, MCP_APPS_PROTOCOL_VERSION } from "./schema.js";
 
 /**
- * Props passed to a `WidgetModule.mount(container, props)` call.
+ * Props passed to an `McpView.mount(container, props)` call.
  *
  * The bridge surfaces the App handle plus the latest tool input/result and a
- * snapshot of host context. Widgets receive new props through `update()` as
+ * snapshot of host context. Views receive new props through `update()` as
  * notifications arrive — see `runBridge` in `bridge/index.ts`.
  */
-export interface McpWidgetProps {
+export interface McpViewProps {
   /** The view-side ext-apps App; exposes the full spec-compliant API surface. */
   mcp: App;
   /** Tool arguments (after `ui/notifications/tool-input`). */
@@ -80,3 +80,14 @@ export interface McpResourceDeclaration {
     ui: McpUiResourceMeta;
   };
 }
+
+/**
+ * A built MCP Apps View: the `mount`/`update`/`unmount` module the bridge drives
+ * inside the sandboxed iframe.
+ *
+ * Structurally this is core mountly's `WidgetModule` — core is a general-purpose
+ * UI platform and keeps its own vocabulary. `mountly-mcp` speaks the MCP Apps
+ * spec, where the iframe side of an App is the **View**, so that is the only
+ * name this package's public API uses.
+ */
+export type { WidgetModule as McpView } from "mountly/adapter";

@@ -140,4 +140,4 @@ same `mcpServers` block.
 
 - `mcp-generative-demo/` — the agent loop: a model _generates_ the spec and a
   button in the rendered UI drives the next turn.
-- `mcp-app-demo/` — MCP Apps without json-render, using a plain React widget.
+- `mcp-app-demo/` — MCP Apps without json-render, using a plain React View.

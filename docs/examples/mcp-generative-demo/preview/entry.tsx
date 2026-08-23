@@ -2,8 +2,8 @@ import { createRoot } from "react-dom/client";
 import { GeneratedUI } from "../src/registry.js";
 
 // Browser preview of the generative render path: a json-render spec (injected
-// as window.__SPEC__) rendered through the SAME registry the MCP widget uses.
-// `onAction` stands in for the MCP host bridge — in the real widget this calls
+// as window.__SPEC__) rendered through the SAME registry the MCP View uses.
+// `onAction` stands in for the MCP host bridge — in the real View this calls
 // `App.sendMessage`; here it just logs so the click is visible.
 const g = globalThis as {
   __SPEC__?: unknown;

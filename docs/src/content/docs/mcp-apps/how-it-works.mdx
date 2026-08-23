@@ -8,7 +8,7 @@ manifest is the shared contract between them.
 
 ## End-to-end lifecycle
 
-1. A framework adapter publishes `createMcpWidget(Component)` from a View entry.
+1. A framework adapter publishes `createMcpView(Component)` from a View entry.
 2. `mountly-mcp build` gives each View its own Vite environment and emits a
    self-contained App artifact.
 3. The build writes a versioned App manifest containing each View's developer
@@ -92,7 +92,7 @@ View that composes them is not, and the composition is the artifact a host
 actually renders.
 
 That mounted state is a DOM contract, not an internal detail: the bridge sets
-`data-mountly-mcp-state="mounted"` on the View root once your widget's `mount`
+`data-mountly-mcp-state="mounted"` on the View root once your View's `mount`
 resolves, and `"error"` if the error boundary replaced it. The attribute only
 moves forward, so your own end-to-end tests can wait on it exactly as
 `--render` does.

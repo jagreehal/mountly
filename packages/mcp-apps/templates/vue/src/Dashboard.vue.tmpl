@@ -1,0 +1,159 @@
+<script setup lang="ts">
+import { computed, ref, watch } from "vue";
+import { useMcpApp, useToolResult } from "mountly-mcp/vue";
+
+interface DashboardCard {
+  label: string;
+  value: string | number;
+}
+
+interface DashboardData {
+  topic?: string;
+  refreshedAt?: string;
+  cards?: DashboardCard[];
+}
+
+interface DashboardResult {
+  structuredContent?: DashboardData;
+}
+
+const mcp = useMcpApp();
+const result = useToolResult<DashboardResult>();
+const data = ref<DashboardData | undefined>();
+const busy = ref(false);
+const status = ref("Connected.");
+
+watch(
+  result,
+  (value) => {
+    if (value?.structuredContent) data.value = value.structuredContent;
+  },
+  { immediate: true },
+);
+
+const cards = computed(() => data.value?.cards ?? []);
+const title = computed(() =>
+  data.value?.topic ? `${data.value.topic} Dashboard` : "Dashboard",
+);
+
+async function refresh() {
+  busy.value = true;
+  status.value = "Refreshing…";
+  try {
+    const next = (await mcp.callServerTool({
+      name: "refreshDashboard",
+      arguments: { reason: "User clicked refresh" },
+    })) as DashboardResult;
+    const content = next.structuredContent;
+    if (content) {
+      data.value = {
+        ...data.value,
+        ...content,
+        topic: content.topic ?? data.value?.topic,
+      };
+    }
+    status.value = content?.refreshedAt
+      ? `Refreshed ${new Date(content.refreshedAt).toLocaleTimeString()}`
+      : "Refreshed.";
+  } catch (error) {
+    status.value = error instanceof Error ? error.message : "Refresh failed.";
+  } finally {
+    busy.value = false;
+  }
+}
+</script>
+
+<template>
+  <div class="card">
+    <p class="eyebrow">MCP App · Mountly</p>
+    <h1>{{ title }}</h1>
+    <p class="subtitle">
+      Built with <code>mountly-mcp</code> — try Refresh to call an app-only tool.
+    </p>
+    <div class="grid">
+      <div v-if="cards.length === 0" v-for="i in 3" :key="i" class="metric">
+        <div class="label">—</div>
+        <div class="value">—</div>
+      </div>
+      <div v-for="c in cards" :key="c.label" class="metric">
+        <div class="label">{{ c.label }}</div>
+        <div class="value">{{ c.value }}</div>
+      </div>
+    </div>
+    <div class="row">
+      <button type="button" :disabled="busy" @click="refresh">Refresh data</button>
+      <span class="status">{{ status }}</span>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.card {
+  border: 1px solid var(--color-border-primary, #e5e5e5);
+  border-radius: 12px;
+  padding: 20px;
+  background: var(--color-background-secondary, #fafafa);
+}
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--color-text-secondary, #737373);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+h1 {
+  margin: 0 0 4px;
+  font-size: 20px;
+  font-weight: 600;
+}
+.subtitle {
+  color: var(--color-text-secondary, #737373);
+  font-size: 14px;
+  margin: 0 0 16px;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.metric {
+  border: 1px solid var(--color-border-primary, #e5e5e5);
+  border-radius: 8px;
+  padding: 12px;
+  background: var(--color-background-primary, #ffffff);
+}
+.label {
+  color: var(--color-text-secondary, #737373);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.value {
+  margin-top: 4px;
+  font-size: 22px;
+  font-weight: 600;
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+button {
+  border: 1px solid var(--color-border-primary, #e5e5e5);
+  border-radius: 8px;
+  padding: 8px 14px;
+  background: var(--color-background-primary, #ffffff);
+  color: inherit;
+  cursor: pointer;
+  font-size: 13px;
+}
+button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+.status {
+  font-size: 12px;
+  color: var(--color-text-secondary, #737373);
+}
+</style>

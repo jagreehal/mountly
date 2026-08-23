@@ -1,0 +1,160 @@
+import { useEffect, useState } from "react";
+import {
+  createMcpView,
+  useHostStyles,
+  useMcpApp,
+  useToolResult,
+} from "mountly-mcp/react";
+
+interface DashboardCard {
+  label: string;
+  value: string | number;
+}
+
+interface DashboardData {
+  topic?: string;
+  refreshedAt?: string;
+  cards?: DashboardCard[];
+}
+
+interface DashboardResult {
+  structuredContent?: DashboardData;
+}
+
+const styles = `
+:root {
+  color-scheme: light dark;
+  font-family: system-ui, -apple-system, sans-serif;
+  background: var(--color-background-primary, #ffffff);
+  color: var(--color-text-primary, #171717);
+}
+body { margin: 0; padding: 20px; }
+.card {
+  border: 1px solid var(--color-border-primary, #e5e5e5);
+  border-radius: 12px;
+  padding: 20px;
+  background: var(--color-background-secondary, #fafafa);
+}
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--color-text-secondary, #737373);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+}
+h1 { margin: 0 0 4px; font-size: 20px; font-weight: 600; }
+.subtitle {
+  color: var(--color-text-secondary, #737373);
+  font-size: 14px;
+  margin: 0 0 16px;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.metric {
+  border: 1px solid var(--color-border-primary, #e5e5e5);
+  border-radius: 8px;
+  padding: 12px;
+  background: var(--color-background-primary, #ffffff);
+}
+.label {
+  color: var(--color-text-secondary, #737373);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+.value { margin-top: 4px; font-size: 22px; font-weight: 600; }
+.row { display: flex; align-items: center; gap: 10px; }
+button {
+  border: 1px solid var(--color-border-primary, #e5e5e5);
+  border-radius: 8px;
+  padding: 8px 14px;
+  background: var(--color-background-primary, #ffffff);
+  color: inherit;
+  cursor: pointer;
+  font-size: 13px;
+}
+button:hover:not(:disabled) { background: var(--color-background-secondary, #f5f5f5); }
+button:disabled { opacity: 0.6; cursor: wait; }
+.status { font-size: 12px; color: var(--color-text-secondary, #737373); }
+`;
+
+function Dashboard() {
+  useHostStyles();
+  const app = useMcpApp();
+  const result = useToolResult<DashboardResult>();
+  const [data, setData] = useState<DashboardData | undefined>(result?.structuredContent);
+  const [busy, setBusy] = useState(false);
+  const [status, setStatus] = useState("Connected.");
+
+  useEffect(() => {
+    if (result?.structuredContent) setData(result.structuredContent);
+  }, [result]);
+
+  const cards = data?.cards ?? [];
+  const title = data?.topic ? `${data.topic} Dashboard` : "Dashboard";
+
+  async function refresh() {
+    setBusy(true);
+    setStatus("Refreshing…");
+    try {
+      const next = await app.callServerTool({
+        name: "refreshDashboard",
+        arguments: { reason: "User clicked refresh" },
+      });
+      const content = (next as DashboardResult).structuredContent;
+      if (content) {
+        setData((prev) => ({
+          ...prev,
+          ...content,
+          topic: content.topic ?? prev?.topic,
+        }));
+      }
+      setStatus(
+        content?.refreshedAt
+          ? `Refreshed ${new Date(content.refreshedAt).toLocaleTimeString()}`
+          : "Refreshed.",
+      );
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Refresh failed.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="card">
+      <p className="eyebrow">MCP App · Mountly</p>
+      <h1>{title}</h1>
+      <p className="subtitle">
+        Built with <code>mountly-mcp</code> — try Refresh to call an app-only tool.
+      </p>
+      <div className="grid">
+        {cards.length === 0
+          ? [1, 2, 3].map((i) => (
+              <div className="metric" key={i}>
+                <div className="label">—</div>
+                <div className="value">—</div>
+              </div>
+            ))
+          : cards.map((c) => (
+              <div className="metric" key={c.label}>
+                <div className="label">{c.label}</div>
+                <div className="value">{String(c.value)}</div>
+              </div>
+            ))}
+      </div>
+      <div className="row">
+        <button type="button" disabled={busy} onClick={() => void refresh()}>
+          Refresh data
+        </button>
+        <span className="status">{status}</span>
+      </div>
+    </div>
+  );
+}
+
+createMcpView(Dashboard, { shadow: true, styles });

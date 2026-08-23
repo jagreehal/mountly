@@ -227,7 +227,7 @@ export async function renderMcpAppArtifactWith(
       failures.push(
         error(
           "render/timeout",
-          "View never mounted: the handshake or widget mount did not complete",
+          "View never mounted: the handshake or View mount did not complete",
           artifact.htmlPath,
         ),
       );

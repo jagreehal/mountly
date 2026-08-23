@@ -15,7 +15,7 @@ import type { McpUiToolMeta, McpUiToolVisibility } from "@modelcontextprotocol/e
 import { z } from "zod";
 import { readMcpAppArtifact, type McpAppArtifact } from "../artifact/index.js";
 
-export interface McpWidgetToolResult {
+export interface McpAppToolResult {
   structuredContent?: unknown;
   content?: ReadonlyArray<{ type: string; [key: string]: unknown }>;
   isError?: boolean;
@@ -47,7 +47,7 @@ export interface McpAppToolRegistration<Args = unknown> {
   config?: McpAppToolConfig;
   /** Convenience override for `_meta.ui.visibility`. */
   visibility?: McpUiToolVisibility | ReadonlyArray<McpUiToolVisibility>;
-  handler: (args: Args, extra?: unknown) => Promise<McpWidgetToolResult>;
+  handler: (args: Args, extra?: unknown) => Promise<McpAppToolResult>;
 }
 
 export interface RegisterMcpAppsOptions {
@@ -117,7 +117,7 @@ function normalizeToolSchema(schema: object | undefined): object | undefined {
     : schema;
 }
 
-function withTextFallback(result: McpWidgetToolResult): McpWidgetToolResult {
+function withTextFallback(result: McpAppToolResult): McpAppToolResult {
   if (result.content && result.content.length > 0) return result;
   if (result.structuredContent === undefined) return result;
   return {

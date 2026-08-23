@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { useMcpHost, useToolResult } from "mountly-mcp/vue";
+import { useMcpApp, useToolResult } from "mountly-mcp/vue";
 import ReleaseReadiness from "./ReleaseReadiness.vue";
 import type { DecisionState, ReleaseDecision, ReleaseToolResult } from "./types";
 
-const mcp = useMcpHost();
+const mcp = useMcpApp();
 const result = useToolResult<ReleaseToolResult>();
 const report = computed(() => result.value?.structuredContent);
 const decisionState = ref<DecisionState>("idle");

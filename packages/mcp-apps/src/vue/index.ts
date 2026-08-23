@@ -1,12 +1,11 @@
 /**
- * Vue entry point: turn a Vue component into an MCP App view.
+ * Vue entry point: turn a Vue component into an MCP App View.
  *
  * ```ts
- * import { createMcpWidget } from "mountly-mcp/vue";
+ * import { createMcpView } from "mountly-mcp/vue";
  * import Dashboard from "./Dashboard.vue";
  *
- * const widget = createMcpWidget(Dashboard);
- * (globalThis as { __mountlyMcpWidget__?: unknown }).__mountlyMcpWidget__ = widget;
+ * createMcpView(Dashboard);
  * ```
  *
  * The component receives the bridge's props (`mcp`, `toolInput`, `toolResult`,
@@ -24,30 +23,27 @@ import {
   type InjectionKey,
 } from "vue";
 import { createWidget } from "mountly-vue";
-import type { AdapterOptions, WidgetModule } from "mountly/adapter";
+import type { AdapterOptions } from "mountly/adapter";
 import type { App, McpUiDisplayMode, McpUiHostContext } from "@modelcontextprotocol/ext-apps";
-import type { McpWidgetProps } from "../types.js";
+import type { McpView, McpViewProps } from "../types.js";
+import { publishMcpView } from "../publish.js";
 
-/** What {@link createMcpWidget} provides to descendants. */
+/** What {@link createMcpView} provides to descendants. */
 export interface McpVueContext {
   app: App;
-  toolInput?: McpWidgetProps["toolInput"];
-  toolInputPartial?: McpWidgetProps["toolInputPartial"];
-  toolResult?: McpWidgetProps["toolResult"];
+  toolInput?: McpViewProps["toolInput"];
+  toolInputPartial?: McpViewProps["toolInputPartial"];
+  toolResult?: McpViewProps["toolResult"];
   hostContext?: McpUiHostContext;
 }
 
 export const McpInjectionKey: InjectionKey<ComputedRef<McpVueContext>> = Symbol("mountly-mcp");
 
-/**
- * Wraps a Vue component as a mountly `WidgetModule` driven by the mountly-mcp
- * bridge. The component's own props/attrs pass through unchanged; MCP bridge
- * props are consumed by the wrapper and provided to the subtree.
- */
-export function createMcpWidget<P extends object>(
+/** Wraps a Vue component as an MCP Apps View and publishes it for the bridge. */
+export function createMcpView<P extends object>(
   Component: Component<P>,
   options?: AdapterOptions,
-): WidgetModule {
+): McpView {
   const Wrapped = defineComponent({
     name: "MountlyMcpProvider",
     inheritAttrs: false,
@@ -70,21 +66,21 @@ export function createMcpWidget<P extends object>(
       return () => h(Component as Component, attrs);
     },
   });
-  return createWidget(Wrapped, options);
+  return publishMcpView(createWidget(Wrapped, options));
 }
 
 function useEnsuredContext(): ComputedRef<McpVueContext> {
   const context = inject(McpInjectionKey, null);
   if (!context) {
     throw new Error(
-      "mountly-mcp/vue: useMcpHost/useToolResult/etc must be used inside a component wrapped with createMcpWidget().",
+      "mountly-mcp/vue: useMcpApp/useToolResult/etc must be used inside a component wrapped with createMcpView().",
     );
   }
   return context;
 }
 
 /** The view-side ext-apps App: call server tools, send messages, open links. */
-export function useMcpHost(): App {
+export function useMcpApp(): App {
   return useEnsuredContext().value.app;
 }
 

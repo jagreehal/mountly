@@ -1,0 +1,22 @@
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import { mountlyMcpViews } from "mountly-mcp/vite";
+
+export default defineConfig({
+  plugins: [
+    react(),
+    mountlyMcpViews({
+      apps: [
+        {
+          entry: "src/view.tsx",
+          uri: "{{uri}}",
+          name: "dashboard",
+          description: "Interactive metrics dashboard",
+          displayModes: ["inline", "fullscreen"],
+          prefersBorder: true,
+          awaitToolResult: true,
+        },
+      ],
+    }),
+  ],
+});

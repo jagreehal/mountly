@@ -15,13 +15,13 @@ export const MCP_APPS_URI_SCHEME = "ui://" as const;
 /**
  * Implementation-specific error codes for mountly-mcp's host/bridge layer.
  * The spec doesn't standardize these; they appear in `notifications/message`
- * params so hosts can categorize widget failures.
+ * params so hosts can categorize View failures.
  */
 export const MCP_ERROR_CODES = {
   INITIALIZE_FAILED: "mountly-mcp/initialize-failed",
   INITIALIZE_TIMEOUT: "mountly-mcp/initialize-timeout",
   TOOL_CALL_FAILED: "mountly-mcp/tool-call-failed",
-  WIDGET_MOUNT_THREW: "mountly-mcp/widget-mount-threw",
+  VIEW_MOUNT_THREW: "mountly-mcp/view-mount-threw",
   INVALID_ORIGIN: "mountly-mcp/invalid-origin",
 } as const;
 

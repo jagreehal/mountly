@@ -1,16 +1,16 @@
 #!/usr/bin/env node
 /**
- * `mountly-mcp dev` — build the widget, serve it in a real sandboxed MCP Apps
+ * `mountly-mcp dev` — build the View, serve it in a real sandboxed MCP Apps
  * host, and rebuild on change.
  *
- * Config comes from the `mountlyMcpWidget()` plugin already in vite.config.ts,
+ * Config comes from the `mountlyMcpViews()` plugin already in vite.config.ts,
  * so there is nothing new to configure.
  */
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { startDevHost } from "./dev/index.js";
 import type { ConnectedMcpServer } from "./dev/connect-server.js";
-import type { MountlyMcpViteApi, MountlyMcpWidgetOptions } from "./vite/index.js";
+import type { MountlyMcpViteApi, MountlyMcpViewOptions } from "./vite/index.js";
 
 interface Args {
   config?: string;
@@ -95,15 +95,20 @@ function parseBuildArgs(argv: ReadonlyArray<string>): BuildArgs {
 }
 
 function printUsage(): void {
-  process.stdout.write(`mountly-mcp — build, develop, and verify MCP Apps
+  process.stdout.write(`mountly-mcp — create, build, develop, and verify MCP Apps
 
 Usage:
+  mountly-mcp create <name> [options]
   mountly-mcp build [options]
   mountly-mcp dev [options]
   mountly-mcp verify [options]
 
-Options:
-  -c, --config <path>    vite config to read the widget from (default: auto)
+Create options:
+  -f, --framework <name>  react | vue | svelte (default: react)
+      --dir <path>        output directory (default: ./<name>)
+
+Dev / build options:
+  -c, --config <path>    vite config to read the View from (default: auto)
   -f, --fixtures <path>  JSON of named samples (default: mcp.fixtures.json)
   -s, --server <path>    module default-exporting your MCP server, to call real tools
   -a, --app <name>       View to develop (required when the manifest has several)
@@ -118,7 +123,9 @@ Verify options:
       --render           require each View to mount with content in Chromium (needs playwright)
       --json             output the conformance report as JSON
 
-The widget's entry, uri and name come from the mountlyMcpWidget() plugin in
+Greenfield: prefer \`mountly-mcp create\` — do not clone the Mountly monorepo.
+
+The View's entry, uri and name come from the mountlyMcpViews() plugin in
 your vite config, so there is nothing extra to configure.
 
 Without --server each fixture value is delivered as structuredContent. With
@@ -147,18 +154,18 @@ async function verify(args: VerifyArgs): Promise<void> {
 }
 
 /**
- * Read the widget's options back out of the vite config. The plugin publishes
+ * Read the View's options back out of the vite config. The plugin publishes
  * them on `api.mountlyMcp`, so this stays correct if its option shape changes.
  */
-async function loadWidgetOptions(
+async function loadViewOptions(
   configFile: string | undefined,
   appName: string | undefined,
-): Promise<{ options: MountlyMcpWidgetOptions; outDir: string; root: string }> {
+): Promise<{ options: MountlyMcpViewOptions; outDir: string; root: string }> {
   const { loadConfigFromFile } = await import("vite");
   const loaded = await loadConfigFromFile({ command: "build", mode: "development" }, configFile);
   if (!loaded) {
     throw new Error(
-      "mountly-mcp: no vite config found. Pass --config, or add mountlyMcpWidget() to vite.config.ts.",
+      "mountly-mcp: no vite config found. Pass --config, or add mountlyMcpViews() to vite.config.ts.",
     );
   }
   // Flattened as unknown[]: vite's PluginOption is recursively nested, and
@@ -169,7 +176,7 @@ async function loadWidgetOptions(
   const plugin = plugins.find((p) => p?.api?.mountlyMcp);
   if (!plugin?.api?.mountlyMcp) {
     throw new Error(
-      `mountly-mcp: no mountlyMcpWidget() plugin in ${loaded.path}. Add it to the plugins array.`,
+      `mountly-mcp: no mountlyMcpViews() plugin in ${loaded.path}. Add it to the plugins array.`,
     );
   }
   const apps = plugin.api.mountlyMcp.apps;
@@ -223,7 +230,7 @@ async function loadFixtures(path: string | undefined): Promise<Record<string, un
 }
 
 async function dev(args: Args): Promise<void> {
-  const { options, outDir, root } = await loadWidgetOptions(args.config, args.app);
+  const { options, outDir, root } = await loadViewOptions(args.config, args.app);
   const fixtures = await loadFixtures(args.fixtures);
 
   // Connected after the first build, not here: a server module typically reads
@@ -253,7 +260,7 @@ async function dev(args: Args): Promise<void> {
   });
 
   // `build({ watch })` returns a rollup watcher; the first BUNDLE_END means the
-  // widget exists on disk and the host has something to serve.
+  // View exists on disk and the host has something to serve.
   const rollupWatcher = watcher as unknown as {
     on(event: "event", cb: (e: { code: string; error?: Error }) => void): void;
     close(): Promise<void>;
@@ -300,7 +307,7 @@ async function dev(args: Args): Promise<void> {
         `\n  mountly-mcp dev\n` +
           `  host     ${host.hostUrl}\n` +
           `  sandbox  ${host.sandboxUrl}\n` +
-          `  widget   ${htmlPath}\n` +
+          `  view     ${htmlPath}\n` +
           `  fixtures ${Object.keys(fixtures).length || "none — pass --fixtures"}\n` +
           `  server   ${server ? `${args.server} → ${toolName ?? "no tool bound to " + options.uri}` : "none — fixtures deliver directly"}\n\n` +
           `  watching for changes; ctrl+c to stop\n\n`,
@@ -340,6 +347,10 @@ async function main(): Promise<void> {
   if (command === undefined || command === "--help" || command === "-h") {
     printUsage();
     process.exit(command === undefined ? 1 : 0);
+  }
+  if (command === "create") {
+    const { createProject, parseCreateArgs } = await import("./create.js");
+    return createProject(parseCreateArgs(rest));
   }
   if (command === "dev") return dev(parseArgs(rest));
   if (command === "build") return buildApps(parseBuildArgs(rest));

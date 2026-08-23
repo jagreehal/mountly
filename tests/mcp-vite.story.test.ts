@@ -6,23 +6,23 @@ import { pathToFileURL } from "node:url";
 import { story } from "executable-stories-vitest";
 import { build } from "vite-plus";
 import { describe, expect, it } from "vite-plus/test";
-import { mountlyMcpWidget } from "../packages/mcp-apps/src/vite/index";
+import { mountlyMcpViews } from "../packages/mcp-apps/src/vite/index";
 
 function makeProject(): string {
   const dir = mkdtempSync(join(tmpdir(), "mountly-mcp-vite-"));
   mkdirSync(join(dir, "src"), { recursive: true });
-  // A framework-free widget: the plugin's job is bundling + emitting, and the
+  // A framework-free View: the plugin's job is bundling + emitting, and the
   // adapters are covered elsewhere.
   writeFileSync(
-    join(dir, "src/widget.ts"),
-    `import "./widget.css";
-     globalThis.__mountlyMcpWidget__ = {
+    join(dir, "src/view.ts"),
+    `import "./view.css";
+     globalThis.__mountlyMcpView__ = {
        mount(container){ container.textContent = "built by vite"; },
        unmount(container){ container.textContent = ""; },
      };`,
     "utf8",
   );
-  writeFileSync(join(dir, "src/widget.css"), ".widget { color: rebeccapurple; }", "utf8");
+  writeFileSync(join(dir, "src/view.css"), ".view { color: rebeccapurple; }", "utf8");
   writeFileSync(join(dir, "bridge.js"), "/* bridge runtime */", "utf8");
   return dir;
 }
@@ -32,13 +32,13 @@ describe("mountly-mcp/vite", () => {
     story.init(task, { tags: ["mcp", "vite", "build"] });
     const dir = makeProject();
 
-    story.given("a project whose vite config uses mountlyMcpWidget()");
+    story.given("a project whose vite config uses mountlyMcpViews()");
     await build({
       root: dir,
       logLevel: "silent",
       plugins: [
-        mountlyMcpWidget({
-          entry: join(dir, "src/widget.ts"),
+        mountlyMcpViews({
+          entry: join(dir, "src/view.ts"),
           uri: "ui://weather-server/dashboard",
           name: "weather_dashboard",
           description: "Interactive weather dashboard",
@@ -58,9 +58,9 @@ describe("mountly-mcp/vite", () => {
 
     expect(html).toContain("<!doctype html>");
     expect(html).toContain('<div id="mountly-mcp-root"></div>');
-    story.then("the widget bundle and its CSS are inlined, not linked");
+    story.then("the View bundle and its CSS are inlined, not linked");
     expect(html).toContain("built by vite");
-    expect(html).toContain(".widget{"); // minified: rebeccapurple becomes #639
+    expect(html).toContain(".view{"); // minified: rebeccapurple becomes #639
     expect(html).not.toContain('<script type="module" src=');
 
     story.then("the view is told what the sidecar declares");
@@ -85,11 +85,11 @@ describe("mountly-mcp/vite", () => {
     story.init(task, { tags: ["mcp", "vite", "build"] });
     const dir = makeProject();
 
-    story.given("a widget that branches on NODE_ENV, as React and Vue both do");
+    story.given("a View that branches on NODE_ENV, as React and Vue both do");
     writeFileSync(
-      join(dir, "src/widget.ts"),
+      join(dir, "src/view.ts"),
       `const mode = process.env.NODE_ENV;
-       globalThis.__mountlyMcpWidget__ = {
+       globalThis.__mountlyMcpView__ = {
          mount(container){ container.textContent = "mode:" + mode; },
          unmount(container){ container.textContent = ""; },
        };`,
@@ -100,8 +100,8 @@ describe("mountly-mcp/vite", () => {
       root: dir,
       logLevel: "silent",
       plugins: [
-        mountlyMcpWidget({
-          entry: join(dir, "src/widget.ts"),
+        mountlyMcpViews({
+          entry: join(dir, "src/view.ts"),
           uri: "ui://weather-server/dashboard",
           name: "weather_dashboard",
           bridgeRuntimePath: join(dir, "bridge.js"),
@@ -137,9 +137,9 @@ describe("mountly-mcp/vite", () => {
       "utf8",
     );
     writeFileSync(
-      join(dir, "src/widget.ts"),
+      join(dir, "src/view.ts"),
       `import { tinyDepMarker } from "tiny-dep";
-       globalThis.__mountlyMcpWidget__ = {
+       globalThis.__mountlyMcpView__ = {
          mount(container){ container.textContent = tinyDepMarker(); },
          unmount(container){ container.textContent = ""; },
        };`,
@@ -159,10 +159,10 @@ describe("mountly-mcp/vite", () => {
         root: dir,
         logLevel: "silent",
         plugins: [
-          mountlyMcpWidget({
+          mountlyMcpViews({
             apps: [
               {
-                entry: join(dir, "src/widget.ts"),
+                entry: join(dir, "src/view.ts"),
                 uri: "ui://weather-server/dashboard",
                 name: "weather_dashboard",
                 bridgeRuntimePath: join(dir, "bridge.js"),
@@ -191,8 +191,8 @@ describe("mountly-mcp/vite", () => {
 
     story.then("constructing the plugin throws, so the failure is instant");
     expect(() =>
-      mountlyMcpWidget({
-        entry: "src/widget.ts",
+      mountlyMcpViews({
+        entry: "src/view.ts",
         uri: "https://example.com/dashboard",
         name: "weather_dashboard",
       }),
@@ -204,7 +204,7 @@ describe("mountly-mcp/vite", () => {
     const dir = makeProject();
     writeFileSync(
       join(dir, "src/admin.ts"),
-      `globalThis.__mountlyMcpWidget__ = { mount(container){ container.textContent = "admin"; }, unmount(){} };`,
+      `globalThis.__mountlyMcpView__ = { mount(container){ container.textContent = "admin"; }, unmount(){} };`,
       "utf8",
     );
 
@@ -216,10 +216,10 @@ describe("mountly-mcp/vite", () => {
         root: dir,
         logLevel: "silent",
         plugins: [
-          mountlyMcpWidget({
+          mountlyMcpViews({
             apps: [
               {
-                entry: join(dir, "src/widget.ts"),
+                entry: join(dir, "src/view.ts"),
                 uri: "ui://weather-server/dashboard",
                 name: "weather_dashboard",
                 bridgeRuntimePath: join(dir, "bridge.js"),
@@ -264,11 +264,11 @@ describe("mountly-mcp/vite", () => {
 
   it("rejects duplicate developer keys and protocol identities immediately", ({ task }) => {
     story.init(task, { tags: ["mcp", "vite", "identity"] });
-    const app = { entry: "src/widget.ts", uri: "ui://weather/dashboard", name: "weather" };
-    expect(() => mountlyMcpWidget({ apps: [app, { ...app, uri: "ui://weather/admin" }] })).toThrow(
+    const app = { entry: "src/view.ts", uri: "ui://weather/dashboard", name: "weather" };
+    expect(() => mountlyMcpViews({ apps: [app, { ...app, uri: "ui://weather/admin" }] })).toThrow(
       /duplicate app name 'weather'/,
     );
-    expect(() => mountlyMcpWidget({ apps: [app, { ...app, name: "admin" }] })).toThrow(
+    expect(() => mountlyMcpViews({ apps: [app, { ...app, name: "admin" }] })).toThrow(
       /duplicate app uri 'ui:\/\/weather\/dashboard'/,
     );
   });

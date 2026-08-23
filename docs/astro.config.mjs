@@ -63,6 +63,7 @@ export default defineConfig({
           label: "MCP Apps",
           items: [
             { label: "Overview", slug: "mcp-apps" },
+            { label: "Agent Skills", slug: "mcp-apps/agent-skills" },
             { label: "Quick start", slug: "mcp-apps/quick-start" },
             {
               label: "Build and artifacts",

@@ -15,7 +15,7 @@ import { emitMeta } from "./emit-meta.js";
  * Absolute path to the iframe bridge runtime shipped with this package.
  *
  * `buildMcpResource` inlines this file's contents into the emitted HTML so
- * the widget can speak the MCP Apps postMessage protocol. Use this when you
+ * the View can speak the MCP Apps postMessage protocol. Use this when you
  * need to point another build tool at the runtime, or when you want a
  * stable, version-pinned alternative to passing `bridgeRuntimePath` yourself.
  *
@@ -73,9 +73,9 @@ export interface BuildFromSourceOptions extends Omit<
   BuildSelfContainedOptions,
   "entry" | "cssEntry"
 > {
-  /** The bundled widget JS. */
+  /** The bundled View JS. */
   js: string;
-  /** The widget's CSS, if it has any. */
+  /** The View's CSS, if it has any. */
   css?: string;
 }
 

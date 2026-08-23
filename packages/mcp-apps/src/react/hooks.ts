@@ -18,14 +18,14 @@ function useEnsuredContext() {
   const ctx = useContext(McpContext);
   if (!ctx) {
     throw new Error(
-      "mountly-mcp/react: useMcpHost/useToolInput/etc must be used inside a widget wrapped with createMcpWidget().",
+      "mountly-mcp/react: useMcpApp/useToolInput/etc must be used inside a View wrapped with createMcpView().",
     );
   }
   return ctx;
 }
 
 /** The view-side ext-apps App. Use this to call server tools, send messages, open links, etc. */
-export function useMcpHost(): App {
+export function useMcpApp(): App {
   return useEnsuredContext().app;
 }
 

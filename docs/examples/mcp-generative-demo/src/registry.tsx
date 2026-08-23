@@ -21,7 +21,7 @@ const TREND_GLYPH = { up: "▲", down: "▼", flat: "—" } as const;
 
 /**
  * Native React implementations for the catalog. Defined once (typed against the
- * catalog, so `element.props` infers), reused by the MCP widget and the native
+ * catalog, so `element.props` infers), reused by the MCP View and the native
  * streaming preview. Class names map to the design tokens in `styles.css`.
  */
 export const components = defineComponents(catalog, {

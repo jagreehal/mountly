@@ -19,6 +19,7 @@ export default defineConfig([
       "src/sandbox/index.ts",
       "src/testing/index.ts",
       "src/cli.ts",
+      "src/create.ts",
       "src/server/index.ts",
       "src/json-render/index.ts",
       "src/json-render/app.ts",

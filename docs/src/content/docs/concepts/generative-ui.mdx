@@ -1,6 +1,6 @@
 ---
 title: Generative UI
-description: Render @json-render specs as MCP Apps widgets, with the agent-action bridge — an AI emits a UI spec, mountly renders it as real native components inside an agent host.
+description: Render @json-render specs as MCP Apps Views, with the agent-action bridge — an AI emits a UI spec, mountly renders it as real native components inside an agent host.
 ---
 
 import { exampleUrl } from "../../../lib/example-urls.ts";
@@ -16,7 +16,7 @@ mountly decides _where_ it ends up (an agent host) and adds the one thing json-r
 concept of, **the agent loop**: a generated button → `App.sendMessage` → the model
 generates the next view.
 
-Reach for this instead of a hand-built widget when you want the **UI itself to be
+Reach for this instead of a hand-built View when you want the **UI itself to be
 generated** by a model, not its data alone. The catalog is the contract. The model can only
 compose the types you allow, each validated by its Zod schema.
 
@@ -28,27 +28,26 @@ npm i mountly-mcp @json-render/core @json-render/react mountly-react
 npm i ai
 ```
 
-## The widget — one call
+## The View — one call
 
-`createGenerativeWidget` collapses catalog → registry → renderer → `$state` →
+`createGenerativeView` collapses catalog → registry → renderer → `$state` →
 action-bridge into a single call. It reads the spec from the tool result, resolves `$state`
 bindings from `spec.state`, and routes actions to the MCP host.
 
 ```tsx
-import { createGenerativeWidget } from "mountly-mcp/json-render";
+import { createGenerativeView } from "mountly-mcp/json-render";
 import { catalog } from "./catalog"; // defineCatalog(schema, {...})
 import { components } from "./registry"; // { Card, Metric, Button, ... }
 import styles from "./styles.css";
 
-const widget = createGenerativeWidget({ catalog, components, styles, shadow: true });
-(globalThis as { __mountlyMcpWidget__?: unknown }).__mountlyMcpWidget__ = widget;
+createGenerativeView({ catalog, components, styles, shadow: true });
 ```
 
 By default an `ask` action with a string `prompt` sends a follow-up turn via
 `App.sendMessage`, which is the agent loop. Override the routing with
 `onAction(name, params, mcp)`.
 
-The server tool returns the spec as the tool result, exactly like any other MCP Apps widget
+The server tool returns the spec as the tool result, exactly like any other MCP Apps View
 (see [MCP Apps](/mcp-apps/)):
 
 ```ts
@@ -145,7 +144,7 @@ const Dashboard = createRenderer(catalog, components);
 
 | Export                                                                        | Entry            | Purpose                                                                                           |
 | ----------------------------------------------------------------------------- | ---------------- | ------------------------------------------------------------------------------------------------- |
-| `createGenerativeWidget(opts)`                                                | `.`              | catalog + components → MCP widget                                                                 |
+| `createGenerativeView(opts)`                                                | `.`              | catalog + components → MCP View                                                                 |
 | `defineComponents(catalog, map)`                                              | `.`              | type a components map once, reuse it                                                              |
 | `defaultActionRouter` / `ActionRouter`                                        | `.`              | the `ask` → `sendMessage` bridge (overridable)                                                    |
 | `useSpecStream(spec, opts?)`                                                  | `.`              | **replay** a known spec progressively (compiler + cancellation, included)                         |

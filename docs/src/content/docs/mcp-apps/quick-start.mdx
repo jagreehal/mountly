@@ -1,13 +1,29 @@
 ---
 title: MCP Apps quick start
-description: Build an existing component as an MCP Apps View and install it into an application-owned MCP server.
+description: Build a React, Vue, or Svelte component as an MCP Apps View and install it into an application-owned MCP server.
 ---
 
-This example uses Vue. Replace `/vue` and the Vite framework plugin with the
-React or Svelte equivalents; the artifact and server APIs stay the same.
+Prefer the scaffolder for a complete project:
 
 ```bash
-npm install mountly-mcp mountly mountly-vue @modelcontextprotocol/sdk
+npx mountly-mcp create my-app --framework vue
+cd my-app && pnpm install && pnpm dev
+```
+
+Or install [Agent Skills](/mcp-apps/agent-skills/) and ask your coding agent to
+create an MCP App. The walkthrough below is the same shape the scaffold emits.
+
+This example uses Vue. Replace `/vue` and the Vite framework plugin with the
+React or Svelte equivalents; the artifact and server APIs stay the same. The
+same steps apply to a greenfield one-screen dashboard.
+
+```bash
+# React (default)
+npm install mountly-mcp react react-dom @modelcontextprotocol/sdk
+npm install -D vite @vitejs/plugin-react
+
+# Vue (this walkthrough)
+npm install mountly-mcp mountly-vue @modelcontextprotocol/sdk
 npm install -D vite @vitejs/plugin-vue
 ```
 
@@ -15,11 +31,10 @@ npm install -D vite @vitejs/plugin-vue
 
 ```ts
 // src/quote-view.ts
-import { createMcpWidget } from "mountly-mcp/vue";
+import { createMcpView } from "mountly-mcp/vue";
 import QuoteCard from "./QuoteCard.vue";
 
-(globalThis as { __mountlyMcpWidget__?: unknown }).__mountlyMcpWidget__ =
-  createMcpWidget(QuoteCard);
+createMcpView(QuoteCard);
 ```
 
 Tool data and host context are available without changing the component's
@@ -64,12 +79,12 @@ as component props.
 // vite.config.ts
 import vue from "@vitejs/plugin-vue";
 import { defineConfig } from "vite";
-import { mountlyMcpWidget } from "mountly-mcp/vite";
+import { mountlyMcpViews } from "mountly-mcp/vite";
 
 export default defineConfig({
   plugins: [
     vue(),
-    mountlyMcpWidget({
+    mountlyMcpViews({
       apps: [
         {
           entry: "src/quote-view.ts",

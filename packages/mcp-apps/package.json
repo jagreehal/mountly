@@ -1,7 +1,7 @@
 {
   "name": "mountly-mcp",
   "version": "3.1.0",
-  "description": "Build MCP Apps (SEP-1865) views from your React, Vue or Svelte components — one build emits the ui:// resource, its sidecar, and the MCP server wiring.",
+  "description": "Build MCP Apps (SEP-1865) views from React, Vue or Svelte components — new or existing. One build emits the ui:// resource, its sidecar, and the MCP server wiring.",
   "keywords": [
     "chatgpt",
     "claude",
@@ -14,7 +14,7 @@
     "svelte",
     "vite-plugin",
     "vue",
-    "widget"
+    "mcp-view"
   ],
   "license": "Apache-2.0",
   "repository": {
@@ -26,7 +26,8 @@
     "mountly-mcp": "./dist/cli.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "templates"
   ],
   "type": "module",
   "main": "./dist/index.js",
@@ -111,6 +112,8 @@
   "dependencies": {
     "@modelcontextprotocol/ext-apps": "^1.7.5",
     "@modelcontextprotocol/sdk": "^1.30.0",
+    "mountly": "^0.4.0",
+    "mountly-react": "^2.0.2",
     "zod": "^4.4.3"
   },
   "devDependencies": {
@@ -122,8 +125,6 @@
     "ai": "6.0.208",
     "axe-core": "4.13.0",
     "jsdom": "^30.0.1",
-    "mountly": "^0.4.0",
-    "mountly-react": "workspace:^",
     "mountly-svelte": "workspace:^",
     "mountly-vue": "workspace:^",
     "react": "^19.2.8",
@@ -137,8 +138,6 @@
     "@json-render/react": "^0.20.0",
     "ai": "^7.0.65",
     "axe-core": ">=4.10.0",
-    "mountly": "^0.4.0",
-    "mountly-react": "^2.0.2",
     "mountly-svelte": "^2.0.3",
     "mountly-vue": "^2.0.3",
     "playwright": ">=1.62.1",
@@ -154,9 +153,6 @@
       "optional": true
     },
     "ai": {
-      "optional": true
-    },
-    "mountly-react": {
       "optional": true
     },
     "react": {

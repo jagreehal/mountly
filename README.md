@@ -15,10 +15,15 @@ idle — so the page ships a shell instead of everything.
 → [Quick start](#quick-start-60-seconds)
 
 **Building an MCP server?** Turn a React, Vue or Svelte component into an
-MCP Apps (SEP-1865) view that renders inside Claude and ChatGPT. One build
-emits the `ui://` resource, `npx mountly-mcp dev` runs it in a real sandboxed
-host, and `registerMcpApps()` installs it into a server you own.
-→ [MCP Apps quick start](https://mountly.dev/mcp-apps/quick-start/) ·
+MCP Apps (SEP-1865) view that renders inside Claude and ChatGPT.
+
+```bash
+npx mountly-mcp create my-app --framework react
+cd my-app && pnpm install && pnpm dev
+```
+
+→ [Agent Skills](https://mountly.dev/mcp-apps/agent-skills/) ·
+[MCP Apps quick start](https://mountly.dev/mcp-apps/quick-start/) ·
 [`mountly-mcp`](packages/mcp-apps/README.md)
 
 Both sit on the same widget model, so a component written for one works in the
@@ -75,23 +80,48 @@ Before mountly:                    After mountly:
 | [`mountly-manifest`](packages/mountly-manifest)                  | Vertical registry schema, import map + host helpers                                                                                                         |
 | [`mountly-mcp`](packages/mcp-apps/README.md)                     | **MCP Apps (SEP-1865)** — build views from React, Vue or Svelte components. Subpaths: `./react`, `./vue`, `./svelte`, `./vite`, `./server`, `./json-render` |
 
+## Build with Agent Skills
+
+The fastest way to build an MCP App View is to let your coding agent do it.
+Install the Mountly skills once, then ask:
+
+| Skill | What it does | Try it |
+| --- | --- | --- |
+| [`create-mcp-app`](plugins/mountly-mcp/skills/create-mcp-app/SKILL.md) | Scaffolds via `mountly-mcp create` | _"Create an MCP App"_ |
+| [`add-app-to-server`](plugins/mountly-mcp/skills/add-app-to-server/SKILL.md) | Adds Views to an existing server | _"Add UI to my MCP server"_ |
+| [`convert-web-app`](plugins/mountly-mcp/skills/convert-web-app/SKILL.md) | Wraps an existing component | _"Turn my component into an MCP App"_ |
+| [`migrate-ext-apps`](plugins/mountly-mcp/skills/migrate-ext-apps/SKILL.md) | Migrates official ext-apps Views | _"Migrate from ext-apps"_ |
+
+```
+/plugin marketplace add jagreehal/mountly
+/plugin install mountly-mcp@mountly
+```
+
+Or: `npx skills add jagreehal/mountly` · full install notes:
+[Agent Skills](https://mountly.dev/mcp-apps/agent-skills/).
+
 ## Build an MCP App from a component you already have
 
 [MCP Apps](https://github.com/modelcontextprotocol/ext-apps) (SEP-1865) lets an
-MCP server render interactive UI inside Claude, ChatGPT and other hosts. Most
-tooling assumes you'll hand-write that view in React. Mountly starts from the
-component you already ship — **in React, Vue or Svelte**:
+MCP server render interactive UI inside Claude, ChatGPT and other hosts. Mountly
+is the default View layer — new dashboards and existing website components use
+the same path:
 
 ```ts
-import { createMcpWidget } from "mountly-mcp/vue";
+import { createMcpView } from "mountly-mcp/vue";
 import Dashboard from "./Dashboard.vue";
 
-(globalThis as { __mountlyMcpWidget__?: unknown }).__mountlyMcpWidget__ =
-  createMcpWidget(Dashboard);
+createMcpView(Dashboard);
 ```
 
-Add `mountlyMcpWidget()` to your Vite config and `vite build` emits the
-`ui://` resource plus its sidecar. Then develop it against a real host —
+Greenfield without an agent:
+
+```bash
+npx mountly-mcp create my-app --framework react
+```
+
+Add `mountlyMcpViews()` to your Vite config and `npx mountly-mcp build` emits
+the `ui://` resource plus its sidecar. Then develop it against a real host —
 sandbox proxy, CSP, the full handshake — without installing one:
 
 ```bash
@@ -104,13 +134,9 @@ is delegated to the official
 [`@modelcontextprotocol/ext-apps`](https://www.npmjs.com/package/@modelcontextprotocol/ext-apps)
 SDK, so it tracks the spec rather than reimplementing it.
 
-**If you're on React and starting from scratch, use the official SDK** — this is
-worth reaching for when you have existing components, a Vite build, or a
-framework other than React.
-
-→ [MCP Apps quick start](https://mountly.dev/mcp-apps/quick-start/) ·
-[runnable demo](docs/examples/mcp-app-demo/README.md) ·
-[Agent Skill](plugins/mountly-mcp/skills/create-mcp-widget/SKILL.md)
+→ [Agent Skills](https://mountly.dev/mcp-apps/agent-skills/) ·
+[MCP Apps quick start](https://mountly.dev/mcp-apps/quick-start/) ·
+[protocol harness demo](docs/examples/mcp-app-demo/README.md)
 
 ## Quick Start (60 seconds)
 
@@ -148,7 +174,7 @@ The widget mounts inside the container in light DOM by default, with bundled sty
 - **Host runtime API**: [packages/mountly/README.md](packages/mountly/README.md).
 - **MCP Apps integration**: [docs/protocol-layering.md](docs/protocol-layering.md) and [docs/how-to-test.md](docs/how-to-test.md).
 - **MCP Apps runnable demo**: [`docs/examples/mcp-app-demo`](docs/examples/mcp-app-demo/README.md) for an end-to-end `ui://` resource + MCP server verification.
-- **Generative UI (agent emits the UI)**: [`mountly-mcp/json-render`](packages/mcp-apps/README.md) renders [`@json-render`](https://github.com/vercel-labs/json-render) specs as MCP widgets with an agent-action bridge; `createGenerativeWidget` + `streamSpec`. Self-driving streaming demo: [`docs/examples/mcp-generative-demo`](docs/examples/mcp-generative-demo/README.md).
+- **Generative UI (agent emits the UI)**: [`mountly-mcp/json-render`](packages/mcp-apps/README.md) renders [`@json-render`](https://github.com/vercel-labs/json-render) specs as MCP widgets with an agent-action bridge; `createGenerativeView` + `streamSpec`. Self-driving streaming demo: [`docs/examples/mcp-generative-demo`](docs/examples/mcp-generative-demo/README.md).
 - **MCP adapter package docs**: [`mountly-mcp`](packages/mcp-apps/README.md), with subpaths `mountly-mcp/react` and `mountly-mcp/server`. All thin wrappers around the official [`@modelcontextprotocol/ext-apps`](https://www.npmjs.com/package/@modelcontextprotocol/ext-apps) SDK (SEP-1865, 2026-01-26).
 
 ## API Stability

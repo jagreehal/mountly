@@ -1,0 +1,14 @@
+import { createMcpView } from "mountly-mcp/vue";
+import Dashboard from "./Dashboard.vue";
+
+const styles = `
+:root {
+  color-scheme: light dark;
+  font-family: system-ui, -apple-system, sans-serif;
+  background: var(--color-background-primary, #ffffff);
+  color: var(--color-text-primary, #171717);
+}
+body { margin: 0; padding: 20px; }
+`;
+
+createMcpView(Dashboard, { shadow: true, styles });

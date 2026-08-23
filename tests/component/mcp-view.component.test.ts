@@ -1,7 +1,7 @@
 import { expect, test, vi } from "vitest";
 import { App, runBridge } from "../../packages/mcp-apps/src/bridge/index";
-import { createMcpWidget as createVueWidget } from "../../packages/mcp-apps/src/vue/index";
-import { createMcpWidget as createSvelteWidget } from "../../packages/mcp-apps/src/svelte/index";
+import { createMcpView as createVueView } from "../../packages/mcp-apps/src/vue/index";
+import { createMcpView as createSvelteView } from "../../packages/mcp-apps/src/svelte/index";
 import type { AdapterOptions } from "mountly/adapter";
 import VueQuote from "./fixtures/Quote.vue";
 import SvelteQuote from "./fixtures/Quote.svelte";
@@ -23,14 +23,14 @@ import SvelteQuote from "./fixtures/Quote.svelte";
  * milliseconds. Nothing is proved twice.
  */
 
-async function mountWidget(
-  widget: Parameters<typeof runBridge>[0]["widget"],
+async function mountView(
+  view: Parameters<typeof runBridge>[0]["view"],
 ): Promise<{ app: App; container: HTMLElement }> {
   const container = document.createElement("div");
   document.body.appendChild(container);
   const bridge = runBridge({
     app: new App({ name: "component-test", version: "0" }),
-    widget,
+    view,
     container,
   });
   await bridge.ready;
@@ -54,7 +54,7 @@ function emitToolResult(app: App, params: unknown): void {
   });
 }
 
-/** Widgets mount into the light DOM unless a widget opts into `shadow: true`. */
+/** Views mount into the light DOM unless a View opts into `shadow: true`. */
 function quote(root: ParentNode): HTMLElement | null {
   return root.querySelector("[data-testid='quote']");
 }
@@ -63,8 +63,8 @@ function total(root: ParentNode): string {
   return root.querySelector("[data-testid='total']")?.textContent?.trim() ?? "";
 }
 
-test("a Vue widget renders tool-result, with its stylesheet really applied", async () => {
-  const { container } = await mountWidget(createVueWidget(VueQuote));
+test("a Vue View renders tool-result, with its stylesheet really applied", async () => {
+  const { container } = await mountView(createVueView(VueQuote));
 
   await vi.waitFor(() => expect(total(container)).toContain("99"));
   expect(total(container)).toContain("USD");
@@ -74,7 +74,7 @@ test("a Vue widget renders tool-result, with its stylesheet really applied", asy
 });
 
 test("a second tool-result updates the same instance rather than remounting", async () => {
-  const { app, container } = await mountWidget(createVueWidget(VueQuote));
+  const { app, container } = await mountView(createVueView(VueQuote));
   await vi.waitFor(() => expect(total(container)).toContain("99"));
 
   emitToolResult(app, { structuredContent: { total: 12, currency: "GBP" } });
@@ -83,8 +83,8 @@ test("a second tool-result updates the same instance rather than remounting", as
   expect(container.querySelectorAll("[data-testid='quote']").length).toBe(1);
 });
 
-test("a Svelte widget renders tool-result from props, with its stylesheet really applied", async () => {
-  const { container } = await mountWidget(createSvelteWidget(SvelteQuote));
+test("a Svelte View renders tool-result from props, with its stylesheet really applied", async () => {
+  const { container } = await mountView(createSvelteView(SvelteQuote));
 
   await vi.waitFor(() => expect(total(container)).toContain("99"));
   expect(total(container)).toContain("USD");
@@ -98,7 +98,7 @@ test("a Svelte widget renders tool-result from props, with its stylesheet really
 // handler by hand would assert against a context that is permanently empty —
 // green, and meaningless. The journey tier drives a real host and owns it.
 
-test("shadow: true isolates the widget from page styles", async () => {
+test("shadow: true isolates the View from page styles", async () => {
   const leak = document.createElement("style");
   leak.textContent = "[data-testid='quote'] { color: rgb(255, 0, 0); }";
   document.head.appendChild(leak);
@@ -107,13 +107,13 @@ test("shadow: true isolates the widget from page styles", async () => {
     shadow: true,
     styles: "[data-testid='quote'] { color: rgb(0, 128, 0); }",
   };
-  const { container } = await mountWidget(createVueWidget(VueQuote, options));
+  const { container } = await mountView(createVueView(VueQuote, options));
 
   await vi.waitFor(() => expect(container.shadowRoot).not.toBeNull());
   const shadow = container.shadowRoot as ShadowRoot;
   await vi.waitFor(() => expect(total(shadow)).toContain("99"));
 
-  // The page's rule does not cross the boundary; the widget's own does.
+  // The page's rule does not cross the boundary; the View's own does.
   expect(getComputedStyle(quote(shadow) as HTMLElement).color).toBe("rgb(0, 128, 0)");
 
   leak.remove();

@@ -37,7 +37,7 @@ describe("native generative render", () => {
   // The differentiator: a generated UI's action reaches the agent. json-render
   // resolves the button's `on.click` binding and fires `onAction`; the widget
   // routes that to `App.sendMessage`. Here we assert the json-render half of
-  // the bridge (the MCP half is `mcp.sendMessage` in widget.tsx).
+  // the bridge (the MCP half is `mcp.sendMessage` in view.tsx).
   it("a generated button's action fires onAction with its params", async () => {
     const seen: Array<[string, unknown]> = [];
     const spec = {
