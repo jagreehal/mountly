@@ -36,7 +36,7 @@
     "test:component:watch": "vitest --config vitest.component.config.ts"
   },
   "devDependencies": {
-    "@changesets/cli": "^3.0.0",
+    "@changesets/cli": "^3.0.1",
     "@json-render/core": "0.20.0",
     "@json-render/react": "0.20.0",
     "@playwright/test": "^1.62.1",
