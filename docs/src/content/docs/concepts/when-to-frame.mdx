@@ -47,13 +47,13 @@ registerCustomElement("legacy-billing", () =>
 
 ## What framing buys — and costs
 
-| | Shared (`moduleUrl`) | Iframe (`isolation: "iframe"`) |
-| --- | --- | --- |
-| Framework instances | One via import map | One per widget |
-| Style isolation | Opt-in `shadow: true` | Browser-enforced |
-| `window` / globals | Shared | Private |
-| Props | Any value | Structured-clonable only |
-| Overlays / modals | Light-DOM portals | Use [host overlay breakout](/mountly/concepts/frame-protocols/) |
+|                     | Shared (`moduleUrl`)  | Iframe (`isolation: "iframe"`)                                  |
+| ------------------- | --------------------- | --------------------------------------------------------------- |
+| Framework instances | One via import map    | One per widget                                                  |
+| Style isolation     | Opt-in `shadow: true` | Browser-enforced                                                |
+| `window` / globals  | Shared                | Private                                                         |
+| Props               | Any value             | Structured-clonable only                                        |
+| Overlays / modals   | Light-DOM portals     | Use [host overlay breakout](/mountly/concepts/frame-protocols/) |
 
 ## Enterprise migration without a control plane
 

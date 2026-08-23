@@ -10,7 +10,7 @@ It's optional, and most apps don't need it. When you do, it takes three calls.
 ## The basic pattern
 
 ```ts
-import { createPredictivePrefetcher, recordInteraction } from "mountly";
+import { createPredictivePrefetcher, recordInteraction } from "mountly/prefetch";
 
 const prefetcher = createPredictivePrefetcher({
   features: [signupFeature, paymentFeature, lightboxFeature],
@@ -35,7 +35,7 @@ Mountly ships two prefetchers:
 Scores features by proximity to the viewport. Features just below the fold preload before the user scrolls to them.
 
 ```ts
-import { createScrollPrefetcher } from "mountly";
+import { createScrollPrefetcher } from "mountly/prefetch";
 
 createScrollPrefetcher({
   features: [embedFeature, panelFeature],
@@ -48,7 +48,7 @@ createScrollPrefetcher({
 Uses cursor velocity and direction to predict which trigger is about to be hovered. Useful for dense interfaces (toolbars, menu bars) where the user's path implies intent.
 
 ```ts
-import { createMouseTrailPrefetcher } from "mountly";
+import { createMouseTrailPrefetcher } from "mountly/prefetch";
 
 createMouseTrailPrefetcher({
   features: toolbarFeatures,
@@ -61,7 +61,11 @@ createMouseTrailPrefetcher({
 `recordInteraction(moduleId, kind)` accumulates per-session data. `getInteractionHistory()` exposes it; `resetInteractionHistory()` clears.
 
 ```ts
-import { recordInteraction, getInteractionHistory, resetInteractionHistory } from "mountly";
+import {
+  recordInteraction,
+  getInteractionHistory,
+  resetInteractionHistory,
+} from "mountly/prefetch";
 
 recordInteraction("signup-card", "hover");
 recordInteraction("signup-card", "mount");

@@ -61,9 +61,10 @@ export interface RunningBridge {
 
 /**
  * `data-mountly-mcp-state` is the View's machine-readable outcome, read by
- * `verify --render`. It only ever moves forward — `mounted` once the View
- * has mounted, `error` if the boundary replaced it — so a state written here
- * can never be clobbered by a later lifecycle step.
+ * `verify --render`. Once the boundary writes `error` the state latches:
+ * a View that threw is a defect worth reporting even if a later notification
+ * happens to render it successfully. The UI still recovers — only the recorded
+ * outcome is sticky. See the `failed` flag in `runBridge`.
  */
 function renderErrorBoundary(container: Element, code: string, message?: string): void {
   container.setAttribute("data-mountly-mcp-state", "error");
@@ -97,6 +98,8 @@ export function runBridge(options: RunBridgeOptions): RunningBridge {
   let toolResult: McpUiToolResultNotification["params"] | undefined;
   let mounted = false;
   let stopped = false;
+  /** Latches once the error boundary has fired; see `renderErrorBoundary`. */
+  let failed = false;
   let pending: Promise<void> = Promise.resolve();
 
   function currentProps(): McpViewProps {
@@ -110,6 +113,7 @@ export function runBridge(options: RunBridgeOptions): RunningBridge {
   }
 
   function notifyError(code: string, error: unknown): void {
+    failed = true;
     const message = error instanceof Error ? error.message : String(error);
     try {
       void app.sendLog({ level: "error", data: { code, message } }).catch(() => undefined);
@@ -127,7 +131,9 @@ export function runBridge(options: RunBridgeOptions): RunningBridge {
           const r = view.mount(container, props);
           if (r instanceof Promise) await r;
           mounted = true;
-          container.setAttribute("data-mountly-mcp-state", "mounted");
+          // Recovering the UI is good; pretending the earlier throw did not
+          // happen is not. The attribute stays `error` once it has been set.
+          if (!failed) container.setAttribute("data-mountly-mcp-state", "mounted");
         } else if (view.update) {
           const r = view.update(container, props);
           if (r instanceof Promise) await r;

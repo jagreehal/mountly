@@ -7,12 +7,5 @@
   },
   "repository": "https://github.com/jagreehal/mountly",
   "license": "Apache-2.0",
-  "keywords": [
-    "mcp",
-    "mcp-apps",
-    "mountly",
-    "model-context-protocol",
-    "ui",
-    "interactive"
-  ]
+  "keywords": ["mcp", "mcp-apps", "mountly", "model-context-protocol", "ui", "interactive"]
 }

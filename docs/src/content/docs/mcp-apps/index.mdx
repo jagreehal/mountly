@@ -17,12 +17,12 @@ cd my-app && pnpm install && pnpm dev
 
 ## Build with Agent Skills
 
-| Skill | What it does | Try it |
-| --- | --- | --- |
-| [`create-mcp-app`](https://github.com/jagreehal/mountly/blob/main/plugins/mountly-mcp/skills/create-mcp-app/SKILL.md) | Scaffolds via `mountly-mcp create` | _"Create an MCP App"_ |
-| [`add-app-to-server`](https://github.com/jagreehal/mountly/blob/main/plugins/mountly-mcp/skills/add-app-to-server/SKILL.md) | Adds Views to an existing server | _"Add UI to my MCP server"_ |
-| [`convert-web-app`](https://github.com/jagreehal/mountly/blob/main/plugins/mountly-mcp/skills/convert-web-app/SKILL.md) | Wraps an existing component | _"Turn my component into an MCP App"_ |
-| [`migrate-ext-apps`](https://github.com/jagreehal/mountly/blob/main/plugins/mountly-mcp/skills/migrate-ext-apps/SKILL.md) | Migrates official ext-apps Views | _"Migrate from ext-apps"_ |
+| Skill                                                                                                                       | What it does                       | Try it                                |
+| --------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ------------------------------------- |
+| [`create-mcp-app`](https://github.com/jagreehal/mountly/blob/main/plugins/mountly-mcp/skills/create-mcp-app/SKILL.md)       | Scaffolds via `mountly-mcp create` | _"Create an MCP App"_                 |
+| [`add-app-to-server`](https://github.com/jagreehal/mountly/blob/main/plugins/mountly-mcp/skills/add-app-to-server/SKILL.md) | Adds Views to an existing server   | _"Add UI to my MCP server"_           |
+| [`convert-web-app`](https://github.com/jagreehal/mountly/blob/main/plugins/mountly-mcp/skills/convert-web-app/SKILL.md)     | Wraps an existing component        | _"Turn my component into an MCP App"_ |
+| [`migrate-ext-apps`](https://github.com/jagreehal/mountly/blob/main/plugins/mountly-mcp/skills/migrate-ext-apps/SKILL.md)   | Migrates official ext-apps Views   | _"Migrate from ext-apps"_             |
 
 Install: [Agent Skills](/mcp-apps/agent-skills/).
 
@@ -39,12 +39,12 @@ that reference them into an MCP server your application owns.
 
 ## Is it a fit?
 
-| Starting point                            | Recommended path                               |
-| ----------------------------------------- | ---------------------------------------------- |
-| Tiny React dashboard for one host         | Use Mountly — same path as production Views    |
-| Existing React, Vue, or Svelte components | Framework adapter + Vite build                 |
-| Several Views in one MCP server           | Multi-View build and App manifest              |
-| An existing production MCP server         | Install with `registerMcpApps()`               |
+| Starting point                            | Recommended path                            |
+| ----------------------------------------- | ------------------------------------------- |
+| Tiny React dashboard for one host         | Use Mountly — same path as production Views |
+| Existing React, Vue, or Svelte components | Framework adapter + Vite build              |
+| Several Views in one MCP server           | Multi-View build and App manifest           |
+| An existing production MCP server         | Install with `registerMcpApps()`            |
 
 Mountly deliberately does not own authentication, transports, prompts,
 ordinary tools, process lifecycle, or deployment. That keeps it composable:

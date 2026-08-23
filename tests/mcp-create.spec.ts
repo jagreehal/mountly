@@ -148,9 +148,9 @@ test("scaffolds pin the mountly-mcp that generated them, not a hardcoded version
   // not have. The pin now comes from the CLI, and this keeps it that way
   // without needing the registry.
   const own = (
-    JSON.parse(
-      readFileSync(join(REPO_ROOT, "packages/mcp-apps/package.json"), "utf8"),
-    ) as { version: string }
+    JSON.parse(readFileSync(join(REPO_ROOT, "packages/mcp-apps/package.json"), "utf8")) as {
+      version: string;
+    }
   ).version;
   const ownMajor = own.split(".")[0];
 

@@ -1,82 +1,138 @@
-import type { OnDemandFeature, FeatureContext, CreateOnDemandFeatureOptions } from "./feature.js";
-import { createOnDemandFeature } from "./feature.js";
-import { attach, onTrigger, type TriggerSource } from "./attach.js";
-import type { TriggerType, UrlChangeEventType } from "./triggers.js";
+import type { OnDemandFeature, CreateOnDemandFeatureOptions } from "./feature.js";
+import type { WidgetModule } from "./adapter.js";
+import type { TriggerType } from "./triggers.js";
+import { importBySpecifier } from "./dynamic-import.js";
+import { mount, unmount, update, wire } from "./core.js";
 
 type PreloadKind = "hover" | "viewport" | "idle" | "media";
-type ActivateKind = "click" | "hover" | "focus" | "viewport" | "idle" | "media" | "url-change";
 
-function defaultPreloadKind(triggerType: string | null): PreloadKind | null {
-  if (triggerType === "hover" || triggerType === "viewport" || triggerType === "idle") {
-    return triggerType;
-  }
-  return null;
-}
+const ACTIVATE_KINDS = new Set<string>([
+  "click",
+  "hover",
+  "focus",
+  "viewport",
+  "idle",
+  "media",
+  "url-change",
+]);
+const PRELOAD_KINDS = new Set<string>(["hover", "viewport", "idle", "media"]);
 
-function defaultActivateKind(triggerType: string | null): ActivateKind {
-  if (
-    triggerType === "focus" ||
-    triggerType === "hover" ||
-    triggerType === "viewport" ||
-    triggerType === "url-change" ||
-    triggerType === "idle" ||
-    triggerType === "media"
-  ) {
-    return triggerType;
-  }
-  return "click";
-}
-
-interface BuildTriggerSourceParams {
-  idleTimeout?: number;
-  viewportRootMargin?: string;
-  mediaQuery?: string;
-  hoverDelay?: number;
-  urlEvents?: UrlChangeEventType[];
-}
-
-function buildTriggerSource(
-  kind: ActivateKind,
-  el: HTMLElement,
-  params: BuildTriggerSourceParams,
-): TriggerSource {
+/**
+ * `<mountly-feature>` spells triggers out across several attributes for
+ * historical reasons; the core takes one `kind:arg` string. This is the only
+ * place the two vocabularies meet — the element owns no trigger code of its
+ * own any more.
+ */
+function toCoreTrigger(kind: string, el: HTMLElement, mediaAttr: string): string {
   switch (kind) {
-    case "click":
-      return onTrigger.click(el);
-    case "hover":
-      return onTrigger.hover(el, { delay: params.hoverDelay });
-    case "focus":
-      return onTrigger.focus(el);
-    case "viewport":
-      return onTrigger.viewport(el, { rootMargin: params.viewportRootMargin });
-    case "idle":
-      return onTrigger.idle({ timeout: params.idleTimeout });
     case "media": {
-      if (!params.mediaQuery) {
-        throw new Error(`[mountly] activate-on="media" requires activate-media-query attribute.`);
+      const query = el.getAttribute(mediaAttr);
+      if (!query) {
+        throw new Error(`[mountly] ${kind} trigger requires the ${mediaAttr} attribute.`);
       }
-      return onTrigger.media(params.mediaQuery);
+      return `media:${query}`;
+    }
+    case "viewport": {
+      const margin = el.getAttribute("viewport-root-margin");
+      return margin ? `viewport:${margin}` : "viewport";
+    }
+    case "idle": {
+      const timeout = el.getAttribute("idle-timeout");
+      return timeout ? `idle:${timeout}` : "idle";
     }
     case "url-change":
-      return onTrigger.urlChange({ events: params.urlEvents });
+      return "url";
+    default:
+      return kind;
   }
 }
 
-interface FeatureRegistry {
-  [moduleId: string]: () => OnDemandFeature | Promise<OnDemandFeature>;
-}
+/**
+ * What a module id resolves to. A URL is the common case and needs nothing
+ * beyond the core; a factory is the escape hatch for a ready-made
+ * `OnDemandFeature` — what a manifest vertical registers.
+ */
+type RegistryEntry =
+  | { url: string; exportName?: string }
+  | { factory: () => OnDemandFeature | Promise<OnDemandFeature> };
 
-const registry: FeatureRegistry = {};
+const registry: Record<string, RegistryEntry> = {};
 
 export function registerCustomElement(
   moduleId: string,
   factory: () => OnDemandFeature | Promise<OnDemandFeature>,
 ): void {
-  registry[moduleId] = factory;
+  registry[moduleId] = { factory };
 }
 
 export function unregisterCustomElement(moduleId: string): void {
   delete registry[moduleId];
+}
+
+/** An `OnDemandFeature` quacks differently from a widget module. */
+function isFeature(value: unknown): value is OnDemandFeature {
+  const candidate = value as OnDemandFeature | null;
+  return (
+    typeof candidate?.activate === "function" &&
+    typeof candidate?.getState === "function" &&
+    typeof candidate?.mount === "function"
+  );
+}
+
+/**
+ * Present a feature as a widget module so the core can drive it. The context is
+ * rebuilt from the host element on every call rather than captured, which keeps
+ * one wrapper valid for every instance of a tag.
+ */
+function widgetFromFeature(feature: OnDemandFeature, tagName: string): WidgetModule {
+  const contextFor = (container: Element) => {
+    const host = (container.closest(tagName) ?? container) as HTMLElement;
+    const dataUrl = host.getAttribute("data-url");
+    return {
+      element: host,
+      triggerType: (host.getAttribute("trigger") ?? "click") as TriggerType,
+      ...(dataUrl ? { dataUrl, dataMethod: host.getAttribute("data-method") ?? "GET" } : {}),
+    };
+  };
+  return {
+    mount: (container, props) =>
+      feature
+        .mount(container as HTMLElement, contextFor(container), props as Record<string, unknown>)
+        .then(() => {}),
+    update: (container, props) =>
+      feature.update(
+        container as HTMLElement,
+        props as Record<string, unknown>,
+        contextFor(container),
+      ),
+    unmount: (container) => {
+      (container as HTMLElement & { _unmount?: () => void })._unmount?.();
+    },
+  };
+}
+
+/** The core's `load` hook, resolving a module id through the registry. */
+async function loadRegistered(moduleId: string, tagName: string): Promise<unknown> {
+  const entry = registry[moduleId];
+  if (!entry) {
+    const known = Object.keys(registry);
+    throw new Error(
+      `[mountly] <${tagName} module-id="${moduleId}"> has no registered factory. ` +
+        `Call registerCustomElement("${moduleId}", () => yourFeature) before the element connects. ` +
+        `Currently registered: ${known.length > 0 ? known.map((k) => `"${k}"`).join(", ") : "(none)"}.`,
+    );
+  }
+  if ("factory" in entry) return widgetFromFeature(await entry.factory(), tagName);
+
+  const mod = (await importBySpecifier<Record<string, unknown>>(entry.url)) ?? {};
+  const value =
+    entry.exportName && entry.exportName in mod ? mod[entry.exportName] : (mod.default ?? mod);
+  return isFeature(value) ? widgetFromFeature(value, tagName) : value;
+}
+
+function registryUrl(moduleId: string): string | undefined {
+  const entry = registry[moduleId];
+  return entry && "url" in entry ? entry.url : undefined;
 }
 
 export interface RegisterFeatureModuleOptions extends Omit<
@@ -132,12 +188,18 @@ export function registerFeatureModule(
   moduleId: string,
   options: RegisterFeatureModuleOptions,
 ): void {
-  registerCustomElement(moduleId, () =>
-    createOnDemandFeature({
-      moduleId,
-      ...options,
-    }),
-  );
+  const { moduleUrl, moduleExport, ...rest } = options;
+  if (Object.keys(rest).length === 0) {
+    registry[moduleId] = { url: moduleUrl, exportName: moduleExport };
+    return;
+  }
+  // Data loading, cache keys and custom render belong to the feature layer.
+  // Import it only when someone actually asks for one, so the common path
+  // never pays for it.
+  registerCustomElement(moduleId, async () => {
+    const { createOnDemandFeature } = await import("./feature.js");
+    return createOnDemandFeature({ moduleId, ...options });
+  });
 }
 
 export function autoRegisterFeatures(modules: FeatureModuleManifest): void {
@@ -333,7 +395,6 @@ function defineAliasElement(tagName: string, aliasTag: string, moduleId: string)
         "activate-media-query",
         "idle-timeout",
         "viewport-root-margin",
-        "url-events",
         "data-url",
         "data-method",
         "mount-selector",
@@ -437,251 +498,142 @@ export function defineMountlyFeature(input: string | DefineMountlyFeatureOptions
 
   customElements.define(
     tagName,
+    /**
+     * A shim, not a second implementation. It translates its attributes into
+     * the core's `data-*` vocabulary and hands the element to `wire()`; every
+     * trigger, cache and lifecycle decision after that is the core's.
+     */
     class MountlyFeatureElement extends HTMLElement {
       static observedAttributes = [
         "module-id",
         "trigger",
-        "trigger-delay",
         "preload-on",
         "activate-on",
         "preload-media-query",
         "activate-media-query",
         "idle-timeout",
         "viewport-root-margin",
-        "url-events",
         "data-url",
         "data-method",
         "props",
         "mount-selector",
       ];
 
-      private feature: OnDemandFeature | null = null;
-      private detach: (() => void) | null = null;
-      private initializing = false;
-      private pendingInitClick = false;
-      private preInitClickListener: ((event: MouseEvent) => void) | null = null;
+      #stop: (() => void) | null = null;
 
       connectedCallback() {
-        void this.initialize();
+        this.#start();
       }
 
       disconnectedCallback() {
-        this.teardown();
+        this.#teardown();
       }
 
       attributeChangedCallback(name: string, oldValue: string | null, newValue: string | null) {
-        if (oldValue === newValue) return;
-        if (!this.isConnected) return;
-        if (name === "module-id" && newValue) {
-          this.teardown();
-          void this.initialize();
+        if (oldValue === newValue || !this.isConnected) return;
+        const props = name === "props" ? parseProps(newValue) : null;
+        if (props && this.dataset.mountlyState === "mounted") {
+          this.dataset.props = newValue ?? "";
+          update(this, props);
           return;
         }
-        if (name === "props" && this.feature) {
-          // Live update for an already-mounted widget. If not mounted, this
-          // is a no-op — the next mount reads the current attribute via the
-          // props getter we handed to attach().
-          const mountEl = this.getMountElement();
-          void this.feature.update(mountEl, this.parseProps());
-        }
+        // Invalid JSON falls through to a re-register, so bad props fail the
+        // same way at any point in the element's life: error state and event,
+        // never a silent mount with `{}`.
+        this.#teardown();
+        this.#start();
       }
 
-      private async initialize() {
-        if (this.initializing || this.feature || this.detach) return;
-        this.initializing = true;
-        this.pendingInitClick = false;
-
-        try {
-          const moduleId = this.getAttribute("module-id");
-          if (!moduleId) return;
-
-          const factory = registry[moduleId];
-          if (!factory) {
-            const known = Object.keys(registry);
-            const knownList = known.length > 0 ? known.map((k) => `"${k}"`).join(", ") : "(none)";
-            console.warn(
-              `[mountly] <mountly-feature module-id="${moduleId}"> has no registered factory. ` +
-                `Call registerCustomElement("${moduleId}", () => yourFeature) before the element connects. ` +
-                `Currently registered: ${knownList}.`,
-            );
-            return;
-          }
-
-          const triggerType = this.getAttribute("trigger") ?? "click";
-          if (triggerType === "click" && !this.preInitClickListener) {
-            this.preInitClickListener = () => {
-              this.pendingInitClick = true;
-            };
-            this.addEventListener("click", this.preInitClickListener);
-          }
-
-          this.feature = await factory();
-
-          const target = this.getTriggerElement();
-          const mountTarget = this.getMountElement();
-
-          const idleTimeout = this.parseNumberAttr("idle-timeout");
-          const viewportRootMargin = this.getAttribute("viewport-root-margin") ?? undefined;
-          const preloadOnMediaQuery = this.getAttribute("preload-media-query") ?? undefined;
-          const activateOnMediaQuery = this.getAttribute("activate-media-query") ?? undefined;
-          const activateOnUrlEvents = this.parseUrlEvents();
-
-          const preloadAttr = this.parsePreloadOnAttr();
-          const preloadKind: PreloadKind | null =
-            preloadAttr === undefined ? defaultPreloadKind(triggerType) : preloadAttr;
-          const activateKind = this.parseActivateOnAttr() ?? defaultActivateKind(triggerType);
-
-          const preloadOn = preloadKind
-            ? buildTriggerSource(preloadKind, target, {
-                idleTimeout,
-                viewportRootMargin,
-                mediaQuery: preloadOnMediaQuery,
-                hoverDelay: 100,
-              })
-            : undefined;
-          const activateOn = buildTriggerSource(activateKind, target, {
-            idleTimeout,
-            viewportRootMargin,
-            mediaQuery: activateOnMediaQuery,
-            urlEvents: activateOnUrlEvents,
-          });
-
-          this.detach = attach(this.feature, {
-            trigger: target,
-            mount: mountTarget,
-            preloadOn,
-            activateOn,
-            props: () => this.parseProps(),
-            context: () => this.buildContext(),
-            onError: (err) => console.error(`[mountly] feature "${moduleId}" failed:`, err),
-          });
-
-          if (this.preInitClickListener) {
-            this.removeEventListener("click", this.preInitClickListener);
-            this.preInitClickListener = null;
-          }
-
-          if (this.pendingInitClick) {
-            this.pendingInitClick = false;
-            queueMicrotask(() => {
-              target.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
-            });
-          }
-        } finally {
-          if (this.preInitClickListener) {
-            this.removeEventListener("click", this.preInitClickListener);
-            this.preInitClickListener = null;
-          }
-          this.initializing = false;
-        }
+      #teardown() {
+        this.#stop?.();
+        this.#stop = null;
       }
 
-      private getTriggerElement(): HTMLElement {
+      #start() {
+        const moduleId = this.getAttribute("module-id");
+        if (!moduleId) return;
+        if (!registry[moduleId]) {
+          const known = Object.keys(registry);
+          console.warn(
+            `[mountly] <${tagName} module-id="${moduleId}"> has no registered factory. ` +
+              `Call registerCustomElement("${moduleId}", () => yourFeature) before the element connects. ` +
+              `Currently registered: ${known.length > 0 ? known.map((k) => `"${k}"`).join(", ") : "(none)"}.`,
+          );
+          return;
+        }
+
+        const trigger = this.getAttribute("trigger") ?? "click";
+        const activateAttr = this.getAttribute("activate-on");
+        const activate =
+          activateAttr && ACTIVATE_KINDS.has(activateAttr)
+            ? activateAttr
+            : ACTIVATE_KINDS.has(trigger)
+              ? trigger
+              : "click";
+
+        // Preload is opt-in. It used to default to the activation trigger for
+        // hover/viewport/idle, which preloads on the very event that mounts —
+        // a no-op with a rule attached.
+        const preloadAttr = this.getAttribute("preload-on");
+        const preload = preloadAttr && PRELOAD_KINDS.has(preloadAttr) ? preloadAttr : null;
+
+        this.dataset.mountly = moduleId;
+        this.dataset.on = toCoreTrigger(activate, this, "activate-media-query");
+        if (preload) {
+          this.dataset.preload = toCoreTrigger(preload as PreloadKind, this, "preload-media-query");
+        } else {
+          delete this.dataset.preload;
+        }
+
+        const propsAttr = this.getAttribute("props");
+        if (propsAttr) this.dataset.props = propsAttr;
+        else delete this.dataset.props;
+
+        // The registry knows the bundle URL, so the sibling stylesheet can
+        // still be derived even though `data-mountly` holds a module id.
+        const url = registryUrl(moduleId);
+        if (url) this.dataset.moduleUrl = url;
+        else delete this.dataset.moduleUrl;
+        if (url && /\.js($|\?)/.test(url)) this.dataset.css = url.replace(/\.js($|\?)/, ".css$1");
+        // A factory-backed module has no URL — clear the sheet a previous
+        // URL-backed module id left behind.
+        else delete this.dataset.css;
+
+        this.dataset.target = this.#mountSelector();
+        this.#stop = wire(this, { load: (id) => loadRegistered(id, tagName) });
+      }
+
+      /** Mount into `mount-selector` if it resolves, else a slot we own. */
+      #mountSelector(): string {
         const selector = this.getAttribute("mount-selector");
-        if (selector) {
-          const el = this.querySelector(selector);
-          if (el) return el as HTMLElement;
+        if (selector && this.querySelector(selector)) return selector;
+        if (!this.querySelector(":scope > [data-mountly-mount]")) {
+          const slot = document.createElement("div");
+          slot.setAttribute("data-mountly-mount", "");
+          this.appendChild(slot);
         }
-        const firstChild = this.firstElementChild;
-        if (firstChild) return firstChild as HTMLElement;
-        return this;
-      }
-
-      private getMountElement(): HTMLElement {
-        const selector = this.getAttribute("mount-selector");
-        if (selector) {
-          const el = this.querySelector(selector);
-          if (el) return el as HTMLElement;
-        }
-
-        const existing = this.querySelector("[data-mountly-mount]");
-        if (existing) return existing as HTMLElement;
-
-        const mount = document.createElement("div");
-        mount.setAttribute("data-mountly-mount", "");
-        this.appendChild(mount);
-        return mount;
-      }
-
-      private buildContext(): Partial<FeatureContext> {
-        const dataUrl = this.getAttribute("data-url");
-        const dataMethod = this.getAttribute("data-method") ?? "GET";
-
-        return {
-          element: this,
-          triggerType: (this.getAttribute("trigger") ?? "click") as TriggerType,
-          ...(dataUrl ? { dataUrl, dataMethod } : {}),
-        };
-      }
-
-      private parseProps(): Record<string, unknown> {
-        const raw = this.getAttribute("props");
-        if (!raw) return {};
-        try {
-          return JSON.parse(raw);
-        } catch {
-          console.warn(`[mountly] invalid JSON in props attribute`);
-          return {};
-        }
-      }
-
-      private parseNumberAttr(name: string): number | undefined {
-        const raw = this.getAttribute(name);
-        if (!raw) return undefined;
-        const parsed = Number(raw);
-        return Number.isFinite(parsed) ? parsed : undefined;
-      }
-
-      private parsePreloadOnAttr(): PreloadKind | undefined | null {
-        const raw = this.getAttribute("preload-on");
-        if (!raw) return undefined;
-        if (raw === "false" || raw === "none") return null;
-        if (raw === "hover" || raw === "viewport" || raw === "idle" || raw === "media") {
-          return raw;
-        }
-        return undefined;
-      }
-
-      private parseActivateOnAttr(): ActivateKind | undefined {
-        const raw = this.getAttribute("activate-on");
-        if (!raw) return undefined;
-        if (
-          raw === "click" ||
-          raw === "hover" ||
-          raw === "focus" ||
-          raw === "viewport" ||
-          raw === "idle" ||
-          raw === "media" ||
-          raw === "url-change"
-        ) {
-          return raw;
-        }
-        return undefined;
-      }
-
-      private parseUrlEvents(): UrlChangeEventType[] | undefined {
-        const raw = this.getAttribute("url-events");
-        if (!raw) return undefined;
-        const values = raw
-          .split(",")
-          .map((v) => v.trim())
-          .filter(Boolean) as UrlChangeEventType[];
-        return values.length > 0 ? values : undefined;
-      }
-
-      private teardown() {
-        if (this.preInitClickListener) {
-          this.removeEventListener("click", this.preInitClickListener);
-          this.preInitClickListener = null;
-        }
-        this.pendingInitClick = false;
-        if (this.detach) {
-          this.detach();
-          this.detach = null;
-        }
-        this.initializing = false;
-        this.feature = null;
+        return "[data-mountly-mount]";
       }
     },
   );
+}
+
+/** Parsed props, or `null` when the attribute isn't valid JSON. */
+function parseProps(raw: string | null): Record<string, unknown> | null {
+  if (!raw) return {};
+  try {
+    return JSON.parse(raw) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
+/** Mount a `<mountly-feature>` now, ignoring its trigger. */
+export function mountFeatureElement(el: HTMLElement): Promise<void> {
+  return mount(el);
+}
+
+/** Tear a `<mountly-feature>` down without detaching its triggers. */
+export function unmountFeatureElement(el: HTMLElement): void {
+  unmount(el);
 }

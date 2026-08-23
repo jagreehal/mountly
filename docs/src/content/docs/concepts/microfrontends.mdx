@@ -30,7 +30,7 @@ A vertical authors its build with `mountlyRemote` (`vite build`, no `shared` blo
 
 ```typescript
 // host-app/src/main.ts
-import { createOnDemandFeature } from "mountly";
+import { createOnDemandFeature } from "mountly/feature";
 import { checkoutWidget } from "payments-team";
 
 const container = document.getElementById("checkout");
@@ -49,7 +49,7 @@ checkout.attach({
 });
 ```
 
-You install a library, nothing else. No custom elements, no special config. If your server already emits `data-mountly-island` payloads, use `mountIslandFeature()` instead; if your app owns the DOM node directly, `createOnDemandFeature().attach()` is the lower-level API.
+You install a library, nothing else. No custom elements, no special config. If your server already emits `data-mountly` islands they wire themselves up; if your app owns the DOM node directly, `createOnDemandFeature().attach()` from `mountly/feature` is the lower-level API.
 
 ### Option 2: As custom elements (third-party hosts, CMS, etc.)
 
@@ -68,7 +68,7 @@ The host registers it as a custom element:
 
 ```html
 <script type="module">
-  import { defineMountlyFeature } from "mountly";
+  import { defineMountlyFeature } from "mountly/elements";
   defineMountlyFeature("https://payments.example.com/checkout/dist/index.js");
 </script>
 
@@ -133,33 +133,25 @@ defineMountlyFeature({
 
 These attributes are available on `<mountly-feature>` and generated alias tags such as `<payment-checkout-card>`:
 
-| Attribute              | Default                          | What it controls                                                                                      |
-| ---------------------- | -------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `module-id`            | Required on `<mountly-feature>`  | Registered module ID. Alias tags infer this from the tag name.                                        |
-| `trigger`              | `click`                          | High-level preset: `click`, `hover`, `focus`, `viewport`, `idle`, `media`, or `url-change`.           |
-| `preload-on`           | Mapped from `trigger`            | Explicit preload trigger: `hover`, `viewport`, `idle`, `media`, `false`, or `none`.                   |
-| `activate-on`          | Mapped from `trigger`            | Explicit activation trigger: `click`, `hover`, `focus`, `viewport`, `idle`, `media`, or `url-change`. |
-| `preload-media-query`  | None                             | Media query for `preload-on="media"`.                                                                 |
-| `activate-media-query` | None                             | Media query for `activate-on="media"` or `trigger="media"`.                                           |
-| `idle-timeout`         | Browser/default trigger behavior | Timeout used for idle preload or activation.                                                          |
-| `viewport-root-margin` | `0px`                            | Root margin passed to viewport triggers.                                                              |
-| `url-events`           | All URL events                   | Comma-separated URL events: `popstate`, `hashchange`, `pushstate`, `replacestate`.                    |
-| `data-url`             | None                             | Adds `dataUrl` to feature context for factories that implement `loadData`.                            |
-| `data-method`          | `GET`                            | Adds `dataMethod` to feature context.                                                                 |
-| `props`                | `{}`                             | JSON props passed to the widget. Updating this attribute calls `feature.update()`.                    |
-| `mount-selector`       | Internal mount div               | Child selector used as trigger and mount target.                                                      |
+| Attribute              | Default                          | What it controls                                                                            |
+| ---------------------- | -------------------------------- | ------------------------------------------------------------------------------------------- |
+| `module-id`            | Required on `<mountly-feature>`  | Registered module ID. Alias tags infer this from the tag name.                              |
+| `trigger`              | `click`                          | High-level preset: `click`, `hover`, `focus`, `viewport`, `idle`, `media`, or `url-change`. |
+| `preload-on`           | None (opt-in)                    | Prefetch trigger: `hover`, `viewport`, `idle`, or `media`. Never implied by `trigger`.      |
+| `activate-on`          | `trigger`                        | Activation trigger when it differs from `trigger`.                                          |
+| `preload-media-query`  | None                             | Media query for `preload-on="media"`.                                                       |
+| `activate-media-query` | None                             | Media query for `activate-on="media"` or `trigger="media"`.                                 |
+| `idle-timeout`         | Browser/default trigger behavior | Timeout used for idle preload or activation.                                                |
+| `viewport-root-margin` | `0px`                            | Root margin passed to viewport triggers.                                                    |
+| `data-url`             | None                             | Adds `dataUrl` to feature context for factories that implement `loadData`.                  |
+| `data-method`          | `GET`                            | Adds `dataMethod` to feature context.                                                       |
+| `props`                | `{}`                             | JSON props passed to the widget. Updating this attribute calls `feature.update()`.          |
+| `mount-selector`       | Internal mount div               | Child selector used as the mount target. Must match a descendant of the element.            |
 
-The `trigger` preset maps to lower-level `attach()` options:
-
-| `trigger`    | `preloadOn` | `activateOn` |
-| ------------ | ----------- | ------------ |
-| `click`      | `false`     | `click`      |
-| `hover`      | `hover`     | `hover`      |
-| `focus`      | `false`     | `focus`      |
-| `viewport`   | `viewport`  | `viewport`   |
-| `idle`       | `idle`      | `idle`       |
-| `media`      | `false`     | `media`      |
-| `url-change` | `false`     | `url-change` |
+`trigger="url-change"` covers `popstate`, `hashchange`, `pushState` and
+`replaceState` — there is no attribute to narrow that set. See the
+[custom element reference](/mountly/api/custom-element/#trigger--core-mapping)
+for how each preset maps onto the core's `data-on`.
 
 ## Version coordination
 
@@ -206,7 +198,7 @@ Two React copies in the same component tree break Context, hooks, and refs. That
 
 ```typescript
 // host-app/src/main.ts
-import { createOnDemandFeature } from "mountly";
+import { createOnDemandFeature } from "mountly/feature";
 import { checkoutCard } from "@payments/widgets";
 import { heroCard } from "@marketing/widgets";
 
@@ -266,7 +258,7 @@ export const heroCard = createWidget(HeroSection);
 
 ```html
 <script type="module">
-  import { defineMountlyFeature } from "mountly";
+  import { defineMountlyFeature } from "mountly/elements";
 
   defineMountlyFeature({
     source: "https://payments.example.com/checkout/dist/index.js",
@@ -325,11 +317,11 @@ you cannot vouch for what a vertical does internally — a decade-old codebase,
 an acquired team, a third-party embed. At that point the guarantee you want is
 one the browser enforces, not one your conventions do.
 
-|                            | Bootstrap cost | Style isolation | JS isolation |
-| -------------------------- | -------------- | --------------- | ------------ |
-| `moduleUrl`                | Shared         | None            | None         |
-| `moduleUrl` + `shadow`     | Shared         | Strong          | None         |
-| [`iframeFeature`](/mountly/concepts/microfrontends/#framed-verticals) | Second bootstrap | Strong | Strong |
+|                                                                       | Bootstrap cost   | Style isolation | JS isolation |
+| --------------------------------------------------------------------- | ---------------- | --------------- | ------------ |
+| `moduleUrl`                                                           | Shared           | None            | None         |
+| `moduleUrl` + `shadow`                                                | Shared           | Strong          | None         |
+| [`iframeFeature`](/mountly/concepts/microfrontends/#framed-verticals) | Second bootstrap | Strong          | Strong       |
 
 This is a per-vertical choice, not an architecture-wide one. The three
 untrusted verticals can be framed while the other twenty stay on import maps —
@@ -347,7 +339,7 @@ mountly tries that path and falls back to a plain dynamic import when the CSP
 forbids it, so on-demand loading works either way. Nothing to configure.
 
 The fallback is a dynamic import a bundler cannot statically resolve, so Vite
-may print *"The above dynamic import cannot be analyzed"* once when it processes
+may print _"The above dynamic import cannot be analyzed"_ once when it processes
 mountly. That warning is the cost of the feature working under a strict CSP;
 it is expected and safe to ignore.
 
@@ -506,7 +498,7 @@ behind a frame via the manifest, see [When to frame](/mountly/concepts/when-to-f
 
 A framed vertical downloads and evaluates its own copy of everything. Browsers
 partition the HTTP cache, so one frame cannot borrow bytes another already
-fetched — the wins available are *early* bytes and *repeat-visit* bytes.
+fetched — the wins available are _early_ bytes and _repeat-visit_ bytes.
 
 - **Prefetch on intent.** `iframeFeature` warms the document on hover, viewport
   or idle, so mount pays only the frame's own bootstrap. The bytes can be

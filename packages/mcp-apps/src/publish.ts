@@ -14,7 +14,5 @@ export function publishMcpView(view: McpView): McpView {
 
 /** Read the published View module, if any. */
 export function getPublishedMcpView(): McpView | undefined {
-  return (globalThis as Record<string, unknown>)[MCP_VIEW_GLOBAL_KEY] as
-    | McpView
-    | undefined;
+  return (globalThis as Record<string, unknown>)[MCP_VIEW_GLOBAL_KEY] as McpView | undefined;
 }

@@ -34,8 +34,9 @@ interface ParentIframe {
   sendMessage(message: unknown, targetOrigin?: string): void;
 }
 
-export interface FrameChildChannelOptions<Events extends FrameEventMap>
-  extends FrameChannelOptions<Events> {
+export interface FrameChildChannelOptions<
+  Events extends FrameEventMap,
+> extends FrameChannelOptions<Events> {
   /**
    * Called with the channel to the host before the widget mounts, so a
    * listener is registered before the first event can arrive. Return a cleanup

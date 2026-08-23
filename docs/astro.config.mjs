@@ -135,7 +135,7 @@ export default defineConfig({
             { label: "createWidget", slug: "api/create-widget" },
             { label: "installRuntime", slug: "api/install-runtime" },
             { label: "Custom element", slug: "api/custom-element" },
-            { label: "Trigger plugins", slug: "api/trigger-plugins" },
+            { label: "Custom triggers", slug: "api/trigger-plugins" },
             { label: "Data source", slug: "api/data-source" },
             { label: "URL state", slug: "api/url-state" },
             { label: "Event bus", slug: "api/event-bus" },

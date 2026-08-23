@@ -128,8 +128,7 @@ export function bindFrameHistory(
 ): () => void {
   const replace = options.replace ?? options.navigate;
   const getSync = options.getSyncPayload ?? (() => readHistorySyncPayload());
-  const onHostUrlChange =
-    options.onHostUrlChange ?? ((listener) => eachUrlChange(listener));
+  const onHostUrlChange = options.onHostUrlChange ?? ((listener) => eachUrlChange(listener));
 
   const offNavigate = channel.on(HISTORY_NAVIGATE, (payload) => {
     if (!isHistoryNavigatePayload(payload)) return;

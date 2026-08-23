@@ -11,13 +11,13 @@ Mountly View build.
 
 ## Mapping
 
-| Official ext-apps | Mountly |
-| --- | --- |
-| `useApp` / `App` + `connect()` in the View | `createMcpView` + bridge (no manual handshake) |
-| `vite-plugin-singlefile` + `mcp-app.html` | `mountlyMcpViews({ apps: [...] })` + `mountly-mcp build` |
-| `registerAppTool` / `registerAppResource` | `registerMcpApps({ views, tools })` (or keep resources Mountly registers) |
-| Clone `examples/basic-server-*` | `npx mountly-mcp create` for new apps; migrate in place for existing |
-| `basic-host` for local preview | `npx mountly-mcp dev --server ./server.mjs` |
+| Official ext-apps                          | Mountly                                                                   |
+| ------------------------------------------ | ------------------------------------------------------------------------- |
+| `useApp` / `App` + `connect()` in the View | `createMcpView` + bridge (no manual handshake)                            |
+| `vite-plugin-singlefile` + `mcp-app.html`  | `mountlyMcpViews({ apps: [...] })` + `mountly-mcp build`                  |
+| `registerAppTool` / `registerAppResource`  | `registerMcpApps({ views, tools })` (or keep resources Mountly registers) |
+| Clone `examples/basic-server-*`            | `npx mountly-mcp create` for new apps; migrate in place for existing      |
+| `basic-host` for local preview             | `npx mountly-mcp dev --server ./server.mjs`                               |
 
 ## Steps
 

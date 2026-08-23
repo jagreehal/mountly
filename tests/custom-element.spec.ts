@@ -6,18 +6,13 @@ test.beforeEach(({ page }, testInfo) => {
   story.init(testInfo);
 });
 
-test("custom element warns on invalid props JSON and falls back to empty props", async ({
+test("custom element surfaces invalid props JSON as an error, not an empty widget", async ({
   page,
 }) => {
-  const warnings: string[] = [];
-  page.on("console", (msg) => {
-    if (msg.type() === "warning") warnings.push(msg.text());
-  });
-
   await page.goto("http://localhost:5175/tests/fixtures/empty.html");
 
   const result = await page.evaluate(async () => {
-    const { createOnDemandFeature } = await import("/packages/mountly/dist/index.js");
+    const { createOnDemandFeature } = await import("/packages/mountly/dist/feature.js");
     const { defineMountlyFeature, registerCustomElement, unregisterCustomElement } =
       await import("/packages/mountly/dist/elements.js");
 
@@ -37,6 +32,11 @@ test("custom element warns on invalid props JSON and falls back to empty props",
       }),
     );
 
+    const errors: string[] = [];
+    addEventListener("mountly:error", (event) =>
+      errors.push(String((event as CustomEvent).detail.error)),
+    );
+
     const root = document.createElement("mountly-feature");
     root.setAttribute("module-id", moduleId);
     root.setAttribute("props", "{bad json");
@@ -44,16 +44,75 @@ test("custom element warns on invalid props JSON and falls back to empty props",
     document.body.appendChild(root);
 
     await new Promise((resolve) => setTimeout(resolve, 0));
-    (root.querySelector("#trigger") as HTMLButtonElement).click();
-    await new Promise((resolve) => setTimeout(resolve, 0));
 
     return {
       slotText: root.querySelector("#slot")?.textContent ?? "",
+      state: root.dataset.mountlyState ?? "",
+      errors,
     };
   });
 
-  expect(result.slotText).toBe("{}");
-  expect(warnings.some((w) => w.includes("invalid JSON in props attribute"))).toBe(true);
+  // A malformed props attribute renders nothing and says so, rather than
+  // quietly mounting a widget with no data.
+  expect(result.slotText).toBe("");
+  expect(result.state).toBe("error");
+  expect(result.errors.join(" ")).toContain("data-props is not valid JSON");
+});
+
+test("invalid props on a mounted element errors instead of updating with {}", async ({ page }) => {
+  await page.goto("http://localhost:5175/tests/fixtures/empty.html");
+
+  const result = await page.evaluate(async () => {
+    const { createOnDemandFeature } = await import("/packages/mountly/dist/feature.js");
+    const { defineMountlyFeature, registerCustomElement, unregisterCustomElement } =
+      await import("/packages/mountly/dist/elements.js");
+
+    defineMountlyFeature();
+    const moduleId = "ce-invalid-props-later";
+    unregisterCustomElement(moduleId);
+
+    registerCustomElement(moduleId, () =>
+      createOnDemandFeature({
+        moduleId,
+        loadModule: async () => ({
+          mount(container: HTMLElement, props: Record<string, unknown>) {
+            container.textContent = JSON.stringify(props);
+          },
+        }),
+        render: ({ mod, container, props }) => mod.mount(container, props),
+      }),
+    );
+
+    const root = document.createElement("mountly-feature");
+    root.setAttribute("module-id", moduleId);
+    root.setAttribute("trigger", "click");
+    root.setAttribute("props", '{"id":"first"}');
+    root.innerHTML = `<div data-mountly-mount id="slot"></div>`;
+    document.body.appendChild(root);
+    root.click();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    const mounted = root.dataset.mountlyState ?? "";
+
+    const errors: string[] = [];
+    addEventListener("mountly:error", (event) =>
+      errors.push(String((event as CustomEvent).detail.error)),
+    );
+    root.setAttribute("props", "{bad json");
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    return {
+      mounted,
+      slotText: root.querySelector("#slot")?.textContent ?? "",
+      state: root.dataset.mountlyState ?? "",
+      errors,
+    };
+  });
+
+  expect(result.mounted).toBe("mounted");
+  // Same failure shape as bad props at registration — not a silent `{}`.
+  expect(result.state).toBe("error");
+  expect(result.errors.join(" ")).toContain("data-props is not valid JSON");
+  expect(result.slotText).not.toContain("bad json");
 });
 
 test("changing module-id tears down previous feature and mounts the new feature", async ({
@@ -62,7 +121,7 @@ test("changing module-id tears down previous feature and mounts the new feature"
   await page.goto("http://localhost:5175/tests/fixtures/empty.html");
 
   const result = await page.evaluate(async () => {
-    const { createOnDemandFeature } = await import("/packages/mountly/dist/index.js");
+    const { createOnDemandFeature } = await import("/packages/mountly/dist/feature.js");
     const { defineMountlyFeature, registerCustomElement, unregisterCustomElement } =
       await import("/packages/mountly/dist/elements.js");
 
@@ -130,7 +189,7 @@ test("disconnectedCallback detaches and unmounts active custom-element feature",
   await page.goto("http://localhost:5175/tests/fixtures/empty.html");
 
   const result = await page.evaluate(async () => {
-    const { createOnDemandFeature } = await import("/packages/mountly/dist/index.js");
+    const { createOnDemandFeature } = await import("/packages/mountly/dist/feature.js");
     const { defineMountlyFeature, registerCustomElement, unregisterCustomElement } =
       await import("/packages/mountly/dist/elements.js");
 
@@ -182,7 +241,7 @@ test("custom element warns with actionable hint when module-id is unregistered",
   await page.goto("http://localhost:5175/tests/fixtures/empty.html");
 
   await page.evaluate(async () => {
-    const { createOnDemandFeature } = await import("/packages/mountly/dist/index.js");
+    const { createOnDemandFeature } = await import("/packages/mountly/dist/feature.js");
     const { defineMountlyFeature, registerCustomElement, unregisterCustomElement } =
       await import("/packages/mountly/dist/elements.js");
 
@@ -215,7 +274,7 @@ test("custom element with trigger=viewport mounts automatically on visibility", 
   await page.goto("http://localhost:5175/tests/fixtures/empty.html");
 
   const result = await page.evaluate(async () => {
-    const { createOnDemandFeature } = await import("/packages/mountly/dist/index.js");
+    const { createOnDemandFeature } = await import("/packages/mountly/dist/feature.js");
     const { defineMountlyFeature, registerCustomElement, unregisterCustomElement } =
       await import("/packages/mountly/dist/elements.js");
 
@@ -256,7 +315,7 @@ test("custom element with trigger=url-change mounts on history updates", async (
   await page.goto("http://localhost:5175/tests/fixtures/empty.html");
 
   const result = await page.evaluate(async () => {
-    const { createOnDemandFeature } = await import("/packages/mountly/dist/index.js");
+    const { createOnDemandFeature } = await import("/packages/mountly/dist/feature.js");
     const { defineMountlyFeature, registerCustomElement, unregisterCustomElement } =
       await import("/packages/mountly/dist/elements.js");
 
@@ -299,7 +358,7 @@ test("custom element with trigger=idle mounts without interaction", async ({ pag
   await page.goto("http://localhost:5175/tests/fixtures/empty.html");
 
   const result = await page.evaluate(async () => {
-    const { createOnDemandFeature } = await import("/packages/mountly/dist/index.js");
+    const { createOnDemandFeature } = await import("/packages/mountly/dist/feature.js");
     const { defineMountlyFeature, registerCustomElement, unregisterCustomElement } =
       await import("/packages/mountly/dist/elements.js");
 
@@ -340,7 +399,7 @@ test("custom element with trigger=media mounts when media query matches", async 
   await page.goto("http://localhost:5175/tests/fixtures/empty.html");
 
   const result = await page.evaluate(async () => {
-    const { createOnDemandFeature } = await import("/packages/mountly/dist/index.js");
+    const { createOnDemandFeature } = await import("/packages/mountly/dist/feature.js");
     const { defineMountlyFeature, registerCustomElement, unregisterCustomElement } =
       await import("/packages/mountly/dist/elements.js");
 
@@ -649,8 +708,11 @@ test("explicit modules map supports per-component bundle URLs", async ({ page })
   const result = await page.evaluate(() => ({
     weather: document.querySelector("[data-testid='weather-card']")?.textContent ?? "",
     sports: document.querySelector("[data-testid='sports-card']")?.textContent ?? "",
+    weatherModuleUrl:
+      document.querySelector("[data-testid='weather-card']")?.getAttribute("data-module-url") ?? "",
   }));
 
   expect(result.weather).toBe("weather:Paris");
   expect(result.sports).toBe("sports:PSG");
+  expect(result.weatherModuleUrl).toBe("/tests/fixtures/dx-widgets/weather-card/dist/index.js");
 });

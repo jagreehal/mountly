@@ -10,7 +10,7 @@ test("attach cleanup unmounts active instance and detaches listeners", async ({ 
   await page.goto("http://localhost:5175/tests/fixtures/empty.html");
 
   const result = await page.evaluate(async () => {
-    const { createOnDemandFeature } = await import("/packages/mountly/dist/index.js");
+    const { createOnDemandFeature } = await import("/packages/mountly/dist/feature.js");
     const { attach, onTrigger } = await import("/packages/mountly/dist/attach.js");
     const trigger = document.createElement("button");
     const mount = document.createElement("div");
@@ -68,7 +68,7 @@ test("attach with toggle=false keeps widget mounted on second activation click",
   await page.goto("http://localhost:5175/tests/fixtures/empty.html");
 
   const result = await page.evaluate(async () => {
-    const { createOnDemandFeature } = await import("/packages/mountly/dist/index.js");
+    const { createOnDemandFeature } = await import("/packages/mountly/dist/feature.js");
     const { attach, onTrigger } = await import("/packages/mountly/dist/attach.js");
     const trigger = document.createElement("button");
     const mount = document.createElement("div");
@@ -123,7 +123,7 @@ test("update falls back to render remount when module has no update and getMount
   await page.goto("http://localhost:5175/tests/fixtures/empty.html");
 
   const result = await page.evaluate(async () => {
-    const { createOnDemandFeature } = await import("/packages/mountly/dist/index.js");
+    const { createOnDemandFeature } = await import("/packages/mountly/dist/feature.js");
     const c1 = document.createElement("div");
     const c2 = document.createElement("div");
     document.body.appendChild(c1);
@@ -179,7 +179,7 @@ test("attach onError reports loadModule failures from activation", async ({ page
   await page.goto("http://localhost:5175/tests/fixtures/empty.html");
 
   const result = await page.evaluate(async () => {
-    const { createOnDemandFeature } = await import("/packages/mountly/dist/index.js");
+    const { createOnDemandFeature } = await import("/packages/mountly/dist/feature.js");
     const { attach, onTrigger } = await import("/packages/mountly/dist/attach.js");
     const trigger = document.createElement("button");
     const mount = document.createElement("div");
@@ -223,7 +223,7 @@ test("attach throws an actionable error when trigger is null", async ({ page }) 
   await page.goto("http://localhost:5175/tests/fixtures/empty.html");
 
   const result = await page.evaluate(async () => {
-    const { createOnDemandFeature } = await import("/packages/mountly/dist/index.js");
+    const { createOnDemandFeature } = await import("/packages/mountly/dist/feature.js");
     const { attach } = await import("/packages/mountly/dist/attach.js");
     const feature = createOnDemandFeature({
       moduleId: "null-trigger-feature",
@@ -251,7 +251,7 @@ test("attach throws an actionable error when mount is null", async ({ page }) =>
   await page.goto("http://localhost:5175/tests/fixtures/empty.html");
 
   const result = await page.evaluate(async () => {
-    const { createOnDemandFeature } = await import("/packages/mountly/dist/index.js");
+    const { createOnDemandFeature } = await import("/packages/mountly/dist/feature.js");
     const { attach } = await import("/packages/mountly/dist/attach.js");
     const trigger = document.createElement("button");
     document.body.appendChild(trigger);
@@ -280,7 +280,7 @@ test("loadModule resolution failure is wrapped with import-map hint", async ({ p
   await page.goto("http://localhost:5175/tests/fixtures/empty.html");
 
   const result = await page.evaluate(async () => {
-    const { createOnDemandFeature } = await import("/packages/mountly/dist/index.js");
+    const { createOnDemandFeature } = await import("/packages/mountly/dist/feature.js");
     const { attach, onTrigger } = await import("/packages/mountly/dist/attach.js");
     const trigger = document.createElement("button");
     const mount = document.createElement("div");
@@ -322,7 +322,7 @@ test("attach with activateOn=urlChange mounts on history updates and toggles on 
   await page.goto("http://localhost:5175/tests/fixtures/empty.html");
 
   const result = await page.evaluate(async () => {
-    const { createOnDemandFeature } = await import("/packages/mountly/dist/index.js");
+    const { createOnDemandFeature } = await import("/packages/mountly/dist/feature.js");
     const { attach, onTrigger } = await import("/packages/mountly/dist/attach.js");
     const trigger = document.createElement("button");
     const mountEl = document.createElement("div");
@@ -376,7 +376,7 @@ test("urlChange attach cleanup detaches history listeners", async ({ page }) => 
   await page.goto("http://localhost:5175/tests/fixtures/empty.html");
 
   const result = await page.evaluate(async () => {
-    const { createOnDemandFeature } = await import("/packages/mountly/dist/index.js");
+    const { createOnDemandFeature } = await import("/packages/mountly/dist/feature.js");
     const { attach, onTrigger } = await import("/packages/mountly/dist/attach.js");
     const trigger = document.createElement("button");
     const mountEl = document.createElement("div");
@@ -427,7 +427,7 @@ test("attach with activateOn=idle mounts without user interaction", async ({ pag
   await page.goto("http://localhost:5175/tests/fixtures/empty.html");
 
   const result = await page.evaluate(async () => {
-    const { createOnDemandFeature } = await import("/packages/mountly/dist/index.js");
+    const { createOnDemandFeature } = await import("/packages/mountly/dist/feature.js");
     const { attach, onTrigger } = await import("/packages/mountly/dist/attach.js");
     const trigger = document.createElement("button");
     const mountEl = document.createElement("div");
@@ -469,7 +469,7 @@ test("attach with activateOn=media mounts when media query matches", async ({ pa
   await page.goto("http://localhost:5175/tests/fixtures/empty.html");
 
   const result = await page.evaluate(async () => {
-    const { createOnDemandFeature } = await import("/packages/mountly/dist/index.js");
+    const { createOnDemandFeature } = await import("/packages/mountly/dist/feature.js");
     const { attach, onTrigger } = await import("/packages/mountly/dist/attach.js");
     const trigger = document.createElement("button");
     const mountEl = document.createElement("div");
@@ -511,7 +511,7 @@ test("attach with preloadOn=media preloads module before click activation", asyn
   await page.goto("http://localhost:5175/tests/fixtures/empty.html");
 
   const result = await page.evaluate(async () => {
-    const { createOnDemandFeature } = await import("/packages/mountly/dist/index.js");
+    const { createOnDemandFeature } = await import("/packages/mountly/dist/feature.js");
     const { attach, onTrigger } = await import("/packages/mountly/dist/attach.js");
     const trigger = document.createElement("button");
     const mountEl = document.createElement("div");
@@ -573,7 +573,7 @@ test("viewportRootMargin is forwarded to IntersectionObserver for viewport trigg
   await page.goto("http://localhost:5175/tests/fixtures/empty.html");
 
   const result = await page.evaluate(async () => {
-    const { createOnDemandFeature } = await import("/packages/mountly/dist/index.js");
+    const { createOnDemandFeature } = await import("/packages/mountly/dist/feature.js");
     const { attach, onTrigger } = await import("/packages/mountly/dist/attach.js");
     const OriginalIO = window.IntersectionObserver;
     const captured: Array<{ threshold?: number | number[]; rootMargin?: string }> = [];

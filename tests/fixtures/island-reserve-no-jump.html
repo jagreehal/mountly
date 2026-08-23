@@ -1,32 +1,23 @@
 <!doctype html>
 <html>
   <body>
+    <!-- No mountly attribute reserves space: `style` already does it, and the
+         core never touches the island element's own attributes. -->
     <div
       id="island"
-      data-mountly-reserve="min-height: 40px;"
-      data-mountly-island='{"schemaVersion":1,"id":"r1","moduleId":"demo","trigger":"click","preloadOn":false}'
-    ></div>
-    <script type="importmap">
-      { "imports": { "mountly": "/packages/mountly/dist/island.js" } }
-    </script>
+      style="min-height: 40px"
+      data-mountly="/tests/fixtures/w-echo.js"
+      data-on="idle"
+    >
+      <span>Load</span>
+    </div>
     <script type="module">
-      import { mountIslandFeature } from "/packages/mountly/dist/island.js";
       const island = document.getElementById("island");
-      mountIslandFeature(island, {
-        demo: async () => ({
-          default: {
-            mount(c) {
-              c.innerHTML = '<div style="height:20px">ok</div>';
-            },
-          },
-        }),
-      });
       const before = island.offsetHeight;
-      island.dispatchEvent(new CustomEvent("click", { bubbles: true }));
-      setTimeout(() => {
-        const after = island.offsetHeight;
-        window.__result = { before, after };
-      }, 0);
+      addEventListener("mountly:mount", () => {
+        window.__result = { before, after: island.offsetHeight };
+      });
     </script>
+    <script type="module" src="/packages/mountly/dist/auto.js"></script>
   </body>
 </html>

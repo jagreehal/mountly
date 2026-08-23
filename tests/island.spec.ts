@@ -1,403 +1,192 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 
-test("mountIslandFeature mounts widget from data payload", async ({ page }) => {
-  await page.goto("http://localhost:5175/tests/fixtures/island-basic.html");
-  await page.waitForLoadState("networkidle");
-  await page.waitForFunction(() => (window as any).__ready && (window as any).__ready(), null, {
-    timeout: 8000,
-  });
-  const text = await page.evaluate(() => {
-    const island = document.getElementById("island");
-    return island?.shadowRoot?.textContent ?? island?.textContent ?? "";
-  });
-  expect(text).toContain("hello");
-});
+const HOST = "http://localhost:5175/tests/fixtures";
 
-test("readIslandPayload fails clearly for invalid payload", async ({ page }) => {
-  await page.goto("http://localhost:5175/tests/fixtures/island-invalid.html");
+const open = async (page: Page, fixture: string) => {
+  await page.goto(`${HOST}/${fixture}`);
   await page.waitForLoadState("networkidle");
-  await page.waitForFunction(() => (window as any).__result, null, { timeout: 8000 });
-  const result = await page.evaluate(() => (window as any).__result);
-  expect(result.caught).toContain("invalid island payload");
-  expect(result.caught).toContain("MNTI001");
-});
+};
 
-test("mountIslandFeature fails clearly for missing loader", async ({ page }) => {
-  await page.goto("http://localhost:5175/tests/fixtures/island-missing-loader.html");
-  await page.waitForLoadState("networkidle");
-  await page.waitForFunction(() => (window as any).__result, null, { timeout: 8000 });
-  const result = await page.evaluate(() => (window as any).__result);
-  expect(result.caught).toContain("no loader registered");
-  expect(result.caught).toContain("MNTI004");
-});
+const textOf = (page: Page, selector: string) =>
+  page.evaluate((sel) => {
+    const el = document.querySelector(sel);
+    return el?.shadowRoot?.textContent ?? el?.textContent ?? "";
+  }, selector);
 
-test("readIslandPayload validates targetSelector and emits mountly:error", async ({ page }) => {
-  await page.goto("http://localhost:5175/tests/fixtures/island-invalid-selector.html");
-  await page.waitForLoadState("networkidle");
-  await page.waitForFunction(() => (window as any).__result, null, { timeout: 8000 });
-  const result = await page.evaluate(() => (window as any).__result);
-  expect(result.caught).toContain("MNTI003");
-  expect(result.events[0].code).toBe("MNTI003");
-});
+test("an island is a URL, a trigger and some props — no page JS", async ({ page }) => {
+  await open(page, "island-basic.html");
+  await expect(page.locator("#island")).toHaveAttribute("data-mountly-state", "idle");
 
-test("mountIslandFeature emits mountly:error for missing loader", async ({ page }) => {
-  await page.goto("http://localhost:5175/tests/fixtures/island-missing-loader-event.html");
-  await page.waitForLoadState("networkidle");
-  await page.waitForFunction(() => (window as any).__result, null, { timeout: 8000 });
-  const result = await page.evaluate(() => (window as any).__result);
-  expect(result.caught).toContain("MNTI004");
-  expect(result.events[0].code).toBe("MNTI004");
-});
+  await page.click("#island");
+  await expect(page.locator("#island .island-msg")).toHaveText("hello");
+  await expect(page.locator("#island")).toHaveAttribute("data-mountly-state", "mounted");
 
-test("mountIslandFeature respects targetSelector in payload", async ({ page }) => {
-  await page.goto("http://localhost:5175/tests/fixtures/island-target-selector.html");
-  await page.waitForLoadState("networkidle");
-  await page.waitForFunction(() => (window as any).__ready && (window as any).__ready(), null, {
-    timeout: 8000,
-  });
-  const text = await page.evaluate(() => document.getElementById("island")?.textContent ?? "");
-  expect(text).toContain("hello-target");
-});
-
-test("mountIslandFeature emits lifecycle events", async ({ page }) => {
-  await page.goto("http://localhost:5175/tests/fixtures/island-events.html");
-  await page.waitForLoadState("networkidle");
-  await page.waitForFunction(() => (window as any).__ready && (window as any).__ready(), null, {
-    timeout: 8000,
-  });
-  const events = await page.evaluate(() => (window as any).__events);
-  const names = events.map((e: { name: string }) => e.name);
-  expect(names).toContain("load-start");
-  expect(names).toContain("load-end");
-  expect(names).toContain("mount");
-});
-
-test("mountAllIslands mounts all payload elements under root", async ({ page }) => {
-  await page.goto("http://localhost:5175/tests/fixtures/island-mount-all.html");
-  await page.waitForLoadState("networkidle");
-  await page.waitForFunction(() => (window as any).__result, null, { timeout: 8000 });
-  const result = await page.evaluate(() => (window as any).__result);
-  expect(result.count).toBe(2);
-  expect(result.text).toContain("A");
-  expect(result.text).toContain("B");
-});
-
-test("island path keeps styles working in shadow mode", async ({ page }) => {
-  await page.goto("http://localhost:5175/tests/fixtures/island-style-shadow.html");
-  await page.waitForLoadState("networkidle");
-  await page.waitForFunction(() => (window as any).__ready && (window as any).__ready(), null, {
-    timeout: 8000,
-  });
-  const result = await page.evaluate(() => {
-    const island = document.getElementById("island");
-    const node = island?.shadowRoot?.querySelector(".island-shadow-style");
-    return {
-      hasShadow: !!island?.shadowRoot,
-      color: node ? getComputedStyle(node).color : "",
-    };
-  });
-  expect(result.hasShadow).toBe(true);
-  expect(result.color).toBe("rgb(77, 88, 99)");
-});
-
-test("island path keeps styles working in no-shadow mode", async ({ page }) => {
-  await page.goto("http://localhost:5175/tests/fixtures/island-style-no-shadow.html");
-  await page.waitForLoadState("networkidle");
-  await page.waitForFunction(() => (window as any).__ready && (window as any).__ready(), null, {
-    timeout: 8000,
-  });
-  const result = await page.evaluate(() => {
-    const island = document.getElementById("island");
-    const node = island?.querySelector(".island-no-shadow-style");
-    return {
-      hasShadow: !!island?.shadowRoot,
-      color: node ? getComputedStyle(node).color : "",
-    };
-  });
-  expect(result.hasShadow).toBe(false);
-  expect(result.color).toBe("rgb(101, 111, 121)");
-});
-
-test("island can preserve SSR content when already hydrated", async ({ page }) => {
-  await page.goto("http://localhost:5175/tests/fixtures/island-hydrated-skip.html");
-  await page.waitForLoadState("networkidle");
-  await page.waitForFunction(() => (window as any).__result, null, { timeout: 8000 });
-  const result = await page.evaluate(() => (window as any).__result);
-  expect(result.text).toContain("ssr-content");
-  expect(result.hasClient).toBe(false);
-});
-
-test("island can force remount over SSR content when requested", async ({ page }) => {
-  await page.goto("http://localhost:5175/tests/fixtures/island-hydrated-force-remount.html");
-  await page.waitForLoadState("networkidle");
-  await page.waitForFunction(() => (window as any).__result, null, { timeout: 8000 });
-  const result = await page.evaluate(() => (window as any).__result);
-  expect(result.text).toContain("client");
-  expect(result.hasClient).toBe(true);
-  expect(result.hydratedAttr).toBe("true");
-});
-
-test("island honors payload skipIfHydrated without JS options", async ({ page }) => {
-  await page.goto("http://localhost:5175/tests/fixtures/island-hydrated-payload-skip.html");
-  await page.waitForLoadState("networkidle");
-  await page.waitForFunction(() => (window as any).__result, null, { timeout: 8000 });
-  const result = await page.evaluate(() => (window as any).__result);
-  expect(result.text).toContain("ssr-only");
-  expect(result.hasClient).toBe(false);
-});
-
-test("island honors payload forceRemount and hydratedAttr without JS options", async ({ page }) => {
-  await page.goto("http://localhost:5175/tests/fixtures/island-hydrated-payload-force.html");
-  await page.waitForLoadState("networkidle");
-  await page.waitForFunction(() => (window as any).__result, null, { timeout: 8000 });
-  const result = await page.evaluate(() => (window as any).__result);
-  expect(result.text).toContain("client");
-  expect(result.hasClient).toBe(true);
-  expect(result.hydratedAttr).toBe("true");
-});
-
-test("unmountAllIslands detaches and clears mounted island content", async ({ page }) => {
-  await page.goto("http://localhost:5175/tests/fixtures/island-unmount-all.html");
-  await page.waitForLoadState("networkidle");
-  await page.waitForFunction(() => (window as any).__result, null, { timeout: 8000 });
-  const result = await page.evaluate(() => (window as any).__result);
-  expect(result.count).toBe(2);
-  expect(result.before).toContain("A");
-  expect(result.before).toContain("B");
-  expect(result.after).not.toContain("A");
-  expect(result.after).not.toContain("B");
-});
-
-test("island once mode mounts once and ignores subsequent toggles", async ({ page }) => {
-  await page.goto("http://localhost:5175/tests/fixtures/island-once.html");
-  await page.waitForLoadState("networkidle");
-  await page.waitForFunction(() => (window as any).__result, null, { timeout: 8000 });
-  const result = await page.evaluate(() => (window as any).__result);
-  expect(result.first).toContain("hello-once");
-  expect(result.second).toContain("hello-once");
-});
-
-test("nested island waits for parent hydration before child mount", async ({ page }) => {
-  await page.goto("http://localhost:5175/tests/fixtures/island-nested-ordering.html");
-  await page.waitForLoadState("networkidle");
-  await page.waitForFunction(() => (window as any).__result, null, { timeout: 8000 });
-  const result = await page.evaluate(() => (window as any).__result);
-  expect(result.mountedCount).toBe(2);
-  expect(result.beforeParent).not.toContain("child-mount");
-  expect(result.beforeParent).not.toContain("parent-mount");
-  expect(result.order).toContain("parent-mount");
-  expect(result.order).toContain("child-mount");
-});
-
-test("island sets data-mountly-state to mounted on success", async ({ page }) => {
-  await page.goto("http://localhost:5175/tests/fixtures/island-basic.html");
-  await page.waitForLoadState("networkidle");
-  await page.waitForFunction(() => (window as any).__ready && (window as any).__ready(), null, {
-    timeout: 8000,
-  });
-  const state = await page.evaluate(() =>
-    document.getElementById("island")?.getAttribute("data-mountly-state"),
+  // the sibling w-echo.css is loaded from the module URL, with nothing declared
+  const color = await page.evaluate(
+    () => getComputedStyle(document.querySelector("#island .island-msg")!).color,
   );
-  expect(state).toBe("mounted");
+  expect(color).toBe("rgb(1, 2, 3)");
 });
 
-test("island sets data-mountly-state to error on loader failure", async ({ page }) => {
-  await page.goto("http://localhost:5175/tests/fixtures/island-state-error.html");
-  await page.waitForLoadState("networkidle");
-  await page.waitForFunction(() => (window as any).__result, null, { timeout: 8000 });
-  const result = await page.evaluate(() => (window as any).__result);
-  expect(result.state).toBe("error");
+test("data-mountly can be an alias resolved by the host script's url map", async ({ page }) => {
+  await open(page, "island-urls.html");
+  await page.click("#island");
+  await expect(page.locator("#island .island-msg")).toHaveText("aliased");
 });
 
-test("island retries transient loader failures and mounts", async ({ page }) => {
-  await page.goto("http://localhost:5175/tests/fixtures/island-retry-success.html");
-  await page.waitForLoadState("networkidle");
-  await page.waitForFunction(() => (window as any).__result, null, { timeout: 8000 });
-  const result = await page.evaluate(() => (window as any).__result);
-  expect(result.calls).toBe(2);
-  expect(result.state).toBe("mounted");
-  expect(result.text).toContain("ok");
+test("props can live in a JSON script child, so quotes need no escaping", async ({ page }) => {
+  await open(page, "island-props-script.html");
+  await page.click("#island");
+  await expect(page.locator("#island .island-msg")).toHaveText('He said "hi"');
 });
 
-test("island enters error state after retry budget is exhausted", async ({ page }) => {
-  await page.goto("http://localhost:5175/tests/fixtures/island-retry-fail.html");
-  await page.waitForLoadState("networkidle");
-  await page.waitForFunction(() => (window as any).__result, null, { timeout: 8000 });
-  const result = await page.evaluate(() => (window as any).__result);
-  expect(result.calls).toBe(2);
-  expect(result.state).toBe("error");
+test("data-target splits the trigger from the mount point", async ({ page }) => {
+  await open(page, "island-target.html");
+  await page.click("#trigger");
+  await expect(page.locator("#panel .island-msg")).toHaveText("in-panel");
+  await expect(page.locator("#trigger")).toHaveText("Open");
 });
 
-test("island auto-unmounts on mountly:unmount event", async ({ page }) => {
-  await page.goto("http://localhost:5175/tests/fixtures/island-auto-unmount-event.html");
-  await page.waitForLoadState("networkidle");
-  await page.waitForFunction(() => (window as any).__result, null, { timeout: 8000 });
-  const result = await page.evaluate(() => (window as any).__result);
-  expect(result.before).toContain("alive");
-  expect(result.after).not.toContain("alive");
+test("activation mounts once; data-toggle opts in to click-to-close", async ({ page }) => {
+  await open(page, "island-toggle.html");
+  await page.click("#sticky");
+  await page.click("#toggle");
+  await expect(page.locator("#sticky .island-msg")).toHaveText("sticky");
+  await expect(page.locator("#toggle .island-msg")).toHaveText("toggle");
+
+  await page.click("#sticky");
+  await page.click("#toggle");
+  await expect(page.locator("#sticky .island-msg")).toHaveText("sticky");
+  await expect(page.locator("#toggle")).toBeEmpty();
+  await expect(page.locator("#toggle")).toHaveAttribute("data-mountly-state", "idle");
+  // the sticky island mounted exactly once across two clicks
+  expect(await page.evaluate(() => (window as any).__mounts)).toBe(2);
 });
 
-test("island can require SSR marker and skip hydration when missing", async ({ page }) => {
-  await page.goto("http://localhost:5175/tests/fixtures/island-require-ssr-missing.html");
-  await page.waitForLoadState("networkidle");
-  await page.waitForFunction(() => (window as any).__result, null, { timeout: 8000 });
-  const result = await page.evaluate(() => (window as any).__result);
-  expect(result.calls).toBe(0);
-  expect(result.text).not.toContain("x");
+test("triggers read as kind or kind:arg, and several can share one island", async ({ page }) => {
+  await open(page, "island-triggers.html");
+
+  // media and idle fire on their own
+  await expect(page.locator("#media .island-msg")).toHaveText("media");
+  await expect(page.locator("#idle .island-msg")).toHaveText("idle");
+
+  await page.hover("#hover");
+  await expect(page.locator("#hover .island-msg")).toHaveText("hover");
+
+  await page.focus("#focus");
+  await expect(page.locator("#focus .island-msg")).toHaveText("focus");
+
+  await page.focus("#either");
+  await expect(page.locator("#either .island-msg")).toHaveText("either");
+
+  await page.locator("#viewport").scrollIntoViewIfNeeded();
+  await expect(page.locator("#viewport .island-msg")).toHaveText("viewport");
 });
 
-test("island can require SSR marker and hydrate when present", async ({ page }) => {
-  await page.goto("http://localhost:5175/tests/fixtures/island-require-ssr-present.html");
-  await page.waitForLoadState("networkidle");
-  await page.waitForFunction(() => (window as any).__result, null, { timeout: 8000 });
-  const result = await page.evaluate(() => (window as any).__result);
-  expect(result.calls).toBe(1);
-  expect(result.text).toContain("ok");
-});
-
-test("island handles mountly:refresh via module refresh()", async ({ page }) => {
-  await page.goto("http://localhost:5175/tests/fixtures/island-refresh-event.html");
-  await page.waitForLoadState("networkidle");
-  await page.locator("#island").dispatchEvent("click");
-  await expect(page.locator("#island .value")).toHaveText("hello:1");
-  await page.locator("#island").dispatchEvent("mountly:refresh");
-  await expect(page.locator("#island .value")).toHaveText("hello:2");
-});
-
-test("island warns on hydration mismatch when force-remounting SSR content", async ({ page }) => {
-  await page.goto("http://localhost:5175/tests/fixtures/island-hydration-mismatch-warn.html");
-  await page.waitForLoadState("networkidle");
-  await page.waitForFunction(() => (window as any).__result, null, { timeout: 8000 });
-  const result = await page.evaluate(() => (window as any).__result);
-  expect(result.warnedAttr).toBe("true");
-  expect(result.warns.some((w: string) => w.includes("force-remounting over SSR content"))).toBe(
-    true,
-  );
-});
-
-test("island emits perf marks when enabled", async ({ page }) => {
-  await page.goto("http://localhost:5175/tests/fixtures/island-perf-marks.html");
-  await page.waitForLoadState("networkidle");
-  await page.waitForFunction(() => (window as any).__result, null, { timeout: 8000 });
-  const result = await page.evaluate(() => (window as any).__result);
-  expect(result.marks.some((m: string) => m.includes("mountly:island:pm:load-start"))).toBe(true);
-  expect(result.marks.some((m: string) => m.includes("mountly:island:pm:mount-end"))).toBe(true);
-  expect(result.marks.some((m: string) => m.includes("mountly:island:pm:refresh"))).toBe(true);
-});
-
-test("island emits pause/resume lifecycle events on visibilitychange", async ({ page }) => {
-  await page.goto("http://localhost:5175/tests/fixtures/island-visibility-events.html");
-  await page.waitForLoadState("networkidle");
-  await page.waitForFunction(() => (window as any).__result, null, { timeout: 8000 });
-  const result = await page.evaluate(() => (window as any).__result);
-  expect(result.events).toContain("pause");
-  expect(result.events).toContain("resume");
-});
-
-test("readIslandPayload emits warnings for unknown keys and weak trigger combos", async ({
+test('data-mountly-state="mounted" from the server is the whole SSR handshake', async ({
   page,
 }) => {
-  await page.goto("http://localhost:5175/tests/fixtures/island-payload-warnings.html");
-  await page.waitForLoadState("networkidle");
-  await page.waitForFunction(() => (window as any).__result, null, { timeout: 8000 });
-  const result = await page.evaluate(() => (window as any).__result);
-  const codes = result.warnings.map((w: { code: string }) => w.code);
-  expect(codes).toContain("MNTW001");
-  expect(codes).toContain("MNTW002");
+  await open(page, "island-ssr.html");
+  await page.click("#island");
+  await page.waitForTimeout(200);
+  expect(await textOf(page, "#island")).toContain("server-rendered");
+  expect(await page.evaluate(() => (window as any).__mounts)).toBeUndefined();
 });
 
-test("islands architecture: SSR content preservation and optional hydration", async ({ page }) => {
-  await page.goto("http://localhost:5175/tests/fixtures/island-ssr-complete.html");
-  await page.waitForLoadState("networkidle");
-  await page.waitForFunction(() => (window as any).__result, null, { timeout: 8000 });
-  const result = await page.evaluate(() => (window as any).__result);
-
-  // Island 1: SSR-only (no hydration) - preserves exact SSR content
-  expect(result.ssrOnlyText).toContain("SSR-rendered counter: 5");
-  expect(result.ssrOnlyHasClient).toBe(false);
-
-  // Island 2: skipIfHydrated=true - SSR content is preserved, no client remount
-  expect(result.ssrSkipText).toContain("SSR counter (skip hydration): 10");
-  expect(result.ssrSkipHasClient).toBe(false);
-
-  // Island 3: forceRemount=true - SSR content replaced with client render
-  expect(result.ssrForceText).toContain("Client-rendered counter: 3");
-  expect(result.ssrForceHasClient).toBe(true);
-  expect(result.ssrForceSSRGone).toBe(true);
+test("a failed load lands in the error state and retries on the next intent", async ({ page }) => {
+  await open(page, "island-error.html");
+  await page.click("#island");
+  await expect(page.locator("#island")).toHaveAttribute("data-mountly-state", "error");
+  const events = await page.evaluate(() => (window as any).__events);
+  expect(events).toEqual(["/tests/fixtures/does-not-exist.js"]);
 });
 
-test("island trigger: hover activates widget on mouse enter", async ({ page }) => {
-  await page.goto("http://localhost:5175/tests/fixtures/island-trigger-hover.html");
-  await page.waitForLoadState("networkidle");
-  await page.waitForFunction(() => (window as any).__result, null, { timeout: 8000 });
-  const result = await page.evaluate(() => (window as any).__result);
-
-  expect(result.hasLoaded).toBe(true);
+test("islands added to the DOM later are picked up automatically", async ({ page }) => {
+  await open(page, "island-late.html");
+  await page.click("#parent");
+  await expect(page.locator("#child")).toHaveAttribute("data-mountly-state", "idle");
+  await page.click("#child");
+  await expect(page.locator("#child .island-msg")).toHaveText("child");
 });
 
-test("island trigger: focus activates widget on element focus", async ({ page }) => {
-  await page.goto("http://localhost:5175/tests/fixtures/island-trigger-focus.html");
-  await page.waitForLoadState("networkidle");
-  await page.waitForFunction(() => (window as any).__result, null, { timeout: 8000 });
-  const result = await page.evaluate(() => (window as any).__result);
+test("data-preload fetches the module without mounting it", async ({ page }) => {
+  await open(page, "island-preload.html");
+  await page.hover("#island");
+  await page.waitForFunction(() => (window as any).__loaded === 1);
+  expect(await page.evaluate(() => (window as any).__mounts)).toBeUndefined();
+  await expect(page.locator("#island")).toHaveAttribute("data-mountly-state", "idle");
 
-  expect(result.hasLoaded).toBe(true);
+  await page.click("#island");
+  await expect(page.locator("#island .island-msg")).toHaveText("preloaded");
+  // still one network fetch: the preload is what the mount consumes
+  expect(await page.evaluate(() => (window as any).__loaded)).toBe(1);
 });
 
-test("mountly as dependency: direct mounting without custom elements", async ({ page }) => {
-  await page.goto("http://localhost:5175/tests/fixtures/mountly-direct-mount.html");
-  await page.waitForLoadState("networkidle");
-  await page.waitForFunction(() => (window as any).__result, null, { timeout: 8000 });
-  const result = await page.evaluate(() => (window as any).__result);
-
-  expect(result.checkoutLoaded).toBe(true);
-  expect(result.heroLoaded).toBe(true);
-  expect(result.checkoutText).toContain("Checkout Widget (no custom element needed)");
-  expect(result.heroText).toContain("Hero Widget (no custom element needed)");
-  expect(result.hasNoCustomElements).toBe(true);
+test("every island under the root is wired", async ({ page }) => {
+  await open(page, "island-mount-all.html");
+  await page.click("#a");
+  await page.click("#b");
+  const text = await textOf(page, "#root");
+  expect(text).toContain("A");
+  expect(text).toContain("B");
 });
 
-test("island trigger: viewport activates widget when scrolled into view", async ({ page }) => {
-  await page.goto("http://localhost:5175/tests/fixtures/island-trigger-viewport.html");
-  await page.waitForLoadState("networkidle");
-  await page.waitForFunction(() => (window as any).__result, null, { timeout: 8000 });
-  const result = await page.evaluate(() => (window as any).__result);
-
-  expect(result.hasLoaded).toBe(true);
+test("light-DOM widgets stay reachable to the page and to form APIs", async ({ page }) => {
+  await open(page, "island-forms.html");
+  await page.click("#island");
+  await expect(page.locator("#island .widget-form")).toBeVisible();
+  expect(await page.evaluate(() => !!document.getElementById("island")?.shadowRoot)).toBe(false);
+  await page.locator("#island .widget-form button").click();
+  expect(await page.evaluate(() => (window as any).__formValue)).toBe("test-value");
 });
 
-test("island trigger: media query activates when query matches", async ({ page }) => {
-  // Set viewport to mobile size before loading the page
-  await page.setViewportSize({ width: 500, height: 800 });
-  await page.goto("http://localhost:5175/tests/fixtures/island-trigger-media.html");
-  await page.waitForLoadState("networkidle");
-  await page.waitForFunction(() => (window as any).__result, null, { timeout: 8000 });
-  const result = await page.evaluate(() => (window as any).__result);
-
-  expect(result.hasLoaded).toBe(true);
+test("shadow-mode widgets get their stylesheet without the host declaring it", async ({ page }) => {
+  await open(page, "island-style-shadow.html");
+  await page.click("#island");
+  await page.waitForFunction(
+    () => !!document.getElementById("island")?.shadowRoot?.querySelector(".styled-widget"),
+  );
+  const color = await page.evaluate(
+    () =>
+      getComputedStyle(
+        document.getElementById("island")!.shadowRoot!.querySelector(".styled-widget")!,
+      ).color,
+  );
+  expect(color).toBe("rgb(11, 22, 33)");
 });
 
-test("island light DOM: form integration works without shadow DOM", async ({ page }) => {
-  await page.goto("http://localhost:5175/tests/fixtures/island-light-dom-forms.html");
-  await page.waitForLoadState("networkidle");
-  await page.waitForFunction(() => (window as any).__result, null, { timeout: 8000 });
-  const result = await page.evaluate(() => (window as any).__result);
-
-  expect(result.formLoaded).toBe(true);
-  expect(result.inputAccessible).toBe(true);
-  expect(result.inputValue).toBe("test-value");
-  expect(result.hasShadowRoot).toBe(false);
+test("light-mode widgets get theirs too, in the document", async ({ page }) => {
+  await open(page, "island-style-no-shadow.html");
+  await page.click("#island");
+  await expect(page.locator("#island .styled-widget")).toBeVisible();
+  const result = await page.evaluate(() => {
+    const node = document.querySelector("#island .styled-widget")!;
+    return {
+      shadow: !!document.getElementById("island")?.shadowRoot,
+      color: getComputedStyle(node).color,
+    };
+  });
+  expect(result.shadow).toBe(false);
+  expect(result.color).toBe("rgb(11, 22, 33)");
 });
 
-test("islands: mixed frameworks on same page", async ({ page }) => {
-  await page.goto("http://localhost:5175/tests/fixtures/island-mixed-frameworks.html");
-  await page.waitForLoadState("networkidle");
-  await page.waitForFunction(() => (window as any).__result, null, { timeout: 8000 });
-  const result = await page.evaluate(() => (window as any).__result);
+test("frameworks mix on one page because they share one widget contract", async ({ page }) => {
+  await open(page, "island-mixed.html");
+  await page.click("#svelte-island");
+  await page.click("#plain-island");
+  await page.waitForFunction(
+    () => !!document.getElementById("svelte-island")?.shadowRoot?.querySelector(".styled-widget"),
+  );
+  await expect(page.locator("#plain-island .island-msg")).toHaveText("plain");
+});
 
-  expect(result.reactLoaded).toBe(true);
-  expect(result.svelteLoaded).toBe(true);
-  expect(result.reactText).toContain("React Widget");
-  expect(result.svelteText).toContain("Svelte Widget");
-  expect(result.bothInSamePage).toBe(true);
+test("mount / update / unmount are available imperatively", async ({ page }) => {
+  await open(page, "island-imperative.html");
+  await page.waitForFunction(() => (window as any).__result);
+  expect(await page.evaluate(() => (window as any).__result)).toEqual({
+    mounted: "first",
+    updated: "second",
+    unmounted: "",
+    state: "idle",
+  });
 });

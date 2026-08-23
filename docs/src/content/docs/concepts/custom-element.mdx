@@ -11,7 +11,7 @@ Some hosts drop in HTML rather than write JS: CMS pages, marketing sites, partne
 <signup-card trigger="viewport" props='{"plan":"pro"}'></signup-card>
 
 <script type="module">
-  import { defineMountlyFeature } from "mountly";
+  import { defineMountlyFeature } from "mountly/elements";
 
   defineMountlyFeature("/widgets/dist/index.js");
 </script>
@@ -68,22 +68,20 @@ The lower-level `registerCustomElement()` API is still available when a feature 
 
 ## Attributes
 
-| Attribute              | Type                                                                                     | Default                | Notes                                                           |
-| ---------------------- | ---------------------------------------------------------------------------------------- | ---------------------- | --------------------------------------------------------------- |
-| `module-id`            | string                                                                                   | inferred on alias tags | Must match a registered feature. Alias tags use their tag name. |
-| `trigger`              | `"hover"` · `"click"` · `"focus"` · `"viewport"` · `"idle"` · `"media"` · `"url-change"` | `"click"`              | High-level trigger preset.                                      |
-| `trigger-delay`        | number ms                                                                                | trigger default        | Hover delay override.                                           |
-| `preload-on`           | `"hover"` · `"viewport"` · `"idle"` · `"media"` · `"false"`                              | mapped from `trigger`  | Explicit `attach().preloadOn` override.                         |
-| `activate-on`          | `"click"` · `"hover"` · `"focus"` · `"viewport"` · `"idle"` · `"media"` · `"url-change"` | mapped from `trigger`  | Explicit `attach().activateOn` override.                        |
-| `preload-media-query`  | string                                                                                   | —                      | Required with `preload-on="media"`.                             |
-| `activate-media-query` | string                                                                                   | —                      | Required with `activate-on="media"` or `trigger="media"`.       |
-| `idle-timeout`         | number ms                                                                                | —                      | Used by idle triggers.                                          |
-| `viewport-root-margin` | string                                                                                   | `"0px"`                | Forwarded to `IntersectionObserver`.                            |
-| `url-events`           | comma list (`popstate,hashchange,pushstate,replacestate`)                                | all four               | Used with `activate-on="url-change"` / `trigger="url-change"`.  |
-| `data-url`             | string                                                                                   | —                      | If set, the element fetches JSON from this URL as `loadData`.   |
-| `data-method`          | `"GET"` · `"POST"` etc                                                                   | `"GET"`                | Used with `data-url`.                                           |
-| `props`                | JSON string                                                                              | `{}`                   | Passed to `render()`. Live-updates via `update()`.              |
-| `mount-selector`       | CSS selector                                                                             | self                   | Render target other than the element itself.                    |
+| Attribute              | Type                                                                                     | Default                         | Notes                                                           |
+| ---------------------- | ---------------------------------------------------------------------------------------- | ------------------------------- | --------------------------------------------------------------- |
+| `module-id`            | string                                                                                   | inferred on alias tags          | Must match a registered feature. Alias tags use their tag name. |
+| `trigger`              | `"hover"` · `"click"` · `"focus"` · `"viewport"` · `"idle"` · `"media"` · `"url-change"` | `"click"`                       | High-level trigger preset.                                      |
+| `preload-on`           | `"hover"` · `"viewport"` · `"idle"` · `"media"`                                          | none                            | Opt-in prefetch. Never implied by `trigger`.                    |
+| `activate-on`          | `"click"` · `"hover"` · `"focus"` · `"viewport"` · `"idle"` · `"media"` · `"url-change"` | `trigger`                       | Activation trigger when it differs from `trigger`.              |
+| `preload-media-query`  | string                                                                                   | —                               | Required with `preload-on="media"`.                             |
+| `activate-media-query` | string                                                                                   | —                               | Required with `activate-on="media"` or `trigger="media"`.       |
+| `idle-timeout`         | number ms                                                                                | —                               | Used by idle triggers.                                          |
+| `viewport-root-margin` | string                                                                                   | `"0px"`                         | Forwarded to `IntersectionObserver`.                            |
+| `data-url`             | string                                                                                   | —                               | If set, the element fetches JSON from this URL as `loadData`.   |
+| `data-method`          | `"GET"` · `"POST"` etc                                                                   | `"GET"`                         | Used with `data-url`.                                           |
+| `props`                | JSON string                                                                              | `{}`                            | Passed to `render()`. Live-updates via `update()`.              |
+| `mount-selector`       | CSS selector                                                                             | own `[data-mountly-mount]` slot | Render target. Must match a descendant of the element.          |
 
 Custom element alias tags must contain a hyphen because the browser requires it. If your internal module ID is `signup`, use `<mountly-feature module-id="signup">` or map a valid alias:
 
@@ -105,19 +103,20 @@ el.setAttribute("props", JSON.stringify({ plan: "enterprise" }));
 
 ## Mount target
 
-By default, the widget mounts inside the element itself. To mount into a sibling instead, pass `mount-selector`. This helps when the trigger element should stay tiny and the widget renders into a pre-positioned container:
+The element renders into a `<div data-mountly-mount>` it appends to itself. Pass
+`mount-selector` to render into a container you control instead — it has to be a
+descendant of the element, so the slot stays inside the element's own subtree:
 
 ```html
-<button id="cta">Buy</button>
-<div id="modal-root"></div>
-<mountly-feature
-  module-id="payment-breakdown"
-  trigger="click"
-  mount-selector="#modal-root"
-></mountly-feature>
+<mountly-feature module-id="payment-breakdown" trigger="click" mount-selector=".panel">
+  <button>Buy</button>
+  <div class="panel"></div>
+</mountly-feature>
 ```
 
-The element's own DOM stays empty; the widget renders into `#modal-root`.
+A selector matching nothing inside the element falls back to the default slot.
+To mount into a container elsewhere on the page, use the core's
+`data-target`, which does fall back to a document-wide lookup.
 
 ## Unknown `module-id`
 
@@ -138,5 +137,8 @@ You can replicate Astro timing directives in declarative HTML:
 - `client:idle` → `trigger="idle"` (optionally `idle-timeout`)
 - `client:visible={{ rootMargin }}` → `trigger="viewport"` + `viewport-root-margin="..."`
 - `client:media` → `trigger="media"` + `activate-media-query="(query)"`
+
+Hover has no delay attribute; it uses the core's 100 ms settle. For a different
+delay, use the core directly with `data-on="hover:300"`.
 
 Compiler/server directives remain Astro-only (`client:only`, `server:defer`, `set:html`, etc.).

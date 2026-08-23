@@ -30,12 +30,12 @@ way it drives the others.
 
 ## Build with Agent Skills
 
-| Skill | Try it |
-| --- | --- |
-| [`create-mcp-app`](../../plugins/mountly-mcp/skills/create-mcp-app/SKILL.md) | _"Create an MCP App"_ |
-| [`add-app-to-server`](../../plugins/mountly-mcp/skills/add-app-to-server/SKILL.md) | _"Add UI to my MCP server"_ |
-| [`convert-web-app`](../../plugins/mountly-mcp/skills/convert-web-app/SKILL.md) | _"Turn my component into an MCP App"_ |
-| [`migrate-ext-apps`](../../plugins/mountly-mcp/skills/migrate-ext-apps/SKILL.md) | _"Migrate from ext-apps"_ |
+| Skill                                                                              | Try it                                |
+| ---------------------------------------------------------------------------------- | ------------------------------------- |
+| [`create-mcp-app`](../../plugins/mountly-mcp/skills/create-mcp-app/SKILL.md)       | _"Create an MCP App"_                 |
+| [`add-app-to-server`](../../plugins/mountly-mcp/skills/add-app-to-server/SKILL.md) | _"Add UI to my MCP server"_           |
+| [`convert-web-app`](../../plugins/mountly-mcp/skills/convert-web-app/SKILL.md)     | _"Turn my component into an MCP App"_ |
+| [`migrate-ext-apps`](../../plugins/mountly-mcp/skills/migrate-ext-apps/SKILL.md)   | _"Migrate from ext-apps"_             |
 
 ```
 /plugin marketplace add jagreehal/mountly
@@ -271,18 +271,18 @@ renders what it can. Drop the loose branch once core relaxes those fields.
 
 ## Exports
 
-| Entry                  | What's in it                                             |
-| ---------------------- | -------------------------------------------------------- |
-| `mountly-mcp`          | `runBridge`, spec types re-exported from ext-apps        |
-| `mountly-mcp/react`    | `createMcpView` + hooks                                |
-| `mountly-mcp/vue`      | `createMcpView` + composables                          |
-| `mountly-mcp/svelte`   | `createMcpView` (props-based)                          |
+| Entry                  | What's in it                                            |
+| ---------------------- | ------------------------------------------------------- |
+| `mountly-mcp`          | `runBridge`, spec types re-exported from ext-apps       |
+| `mountly-mcp/react`    | `createMcpView` + hooks                                 |
+| `mountly-mcp/vue`      | `createMcpView` + composables                           |
+| `mountly-mcp/svelte`   | `createMcpView` (props-based)                           |
 | `mountly-mcp/vite`     | single- and multi-View `mountlyMcpViews()` build plugin |
-| `mountly-mcp/artifact` | versioned manifest and App artifact APIs                 |
-| `mountly-mcp/dev`      | `startDevHost()` and in-process server connectivity      |
-| `mountly-mcp/build`    | `buildMcpResource` for other bundlers                    |
-| `mountly-mcp/server`   | `registerMcpApps` plus convenience server adapters       |
-| `mountly-mcp/testing`  | static/browser conformance and report formatting         |
+| `mountly-mcp/artifact` | versioned manifest and App artifact APIs                |
+| `mountly-mcp/dev`      | `startDevHost()` and in-process server connectivity     |
+| `mountly-mcp/build`    | `buildMcpResource` for other bundlers                   |
+| `mountly-mcp/server`   | `registerMcpApps` plus convenience server adapters      |
+| `mountly-mcp/testing`  | static/browser conformance and report formatting        |
 
 Types use the spec's own names (`McpUiHostContext`, `McpUiDisplayMode`, …) —
 one vocabulary, no translation layer.

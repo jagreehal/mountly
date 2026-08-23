@@ -16,7 +16,7 @@ When you wire a feature with `moduleUrl`, the adapter:
 
 ```ts
 // host page
-import { createOnDemandFeature } from "mountly";
+import { createOnDemandFeature } from "mountly/feature";
 
 const card = createOnDemandFeature({
   moduleId: "card",
@@ -127,23 +127,10 @@ For an island to remain styled with JS off, you need a document-level stylesheet
   <link rel="stylesheet" href="/widgets/card/dist/index.css" />
 </head>
 <body>
-  <div
-    data-mountly-island='{
-    "schemaVersion": 1,
-    "id": "card",
-    "moduleId": "card",
-    "trigger": "click",
-    "moduleUrl": "/widgets/card/dist/index.js"
-  }'
-  >
+  <div data-mountly="/widgets/card/dist/index.js">
     <span class="styled-widget">server-rendered content</span>
   </div>
-  <script
-    type="module"
-    src="/packages/mountly/dist/host-entry.js"
-    data-mountly-host
-    data-mountly-loaders='{"card":"/widgets/card/dist/index.js"}'
-  ></script>
+  <script type="module" src="/packages/mountly/dist/auto.js"></script>
 </body>
 ```
 

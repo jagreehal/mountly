@@ -20,7 +20,7 @@
   ],
   "type": "module",
   "sideEffects": [
-    "./dist/host-entry.js"
+    "./dist/auto.js"
   ],
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -28,6 +28,14 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./auto": {
+      "types": "./dist/auto.d.ts",
+      "import": "./dist/auto.js"
+    },
+    "./feature": {
+      "types": "./dist/feature.d.ts",
+      "import": "./dist/feature.js"
     },
     "./triggers": {
       "types": "./dist/triggers.d.ts",
@@ -44,18 +52,6 @@
     "./elements": {
       "types": "./dist/elements.d.ts",
       "import": "./dist/elements.js"
-    },
-    "./island": {
-      "types": "./dist/island.d.ts",
-      "import": "./dist/island.js"
-    },
-    "./host": {
-      "types": "./dist/host.d.ts",
-      "import": "./dist/host.js"
-    },
-    "./host/auto": {
-      "types": "./dist/host-entry.d.ts",
-      "import": "./dist/host-entry.js"
     },
     "./bundle": {
       "types": "./dist/bundle.d.ts",
@@ -142,7 +138,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsup && tsc -p tsconfig.json --noEmit false --declaration --emitDeclarationOnly --declarationMap false --outDir dist",
+    "build": "tsup && node scripts/annotate-dynamic-imports.mjs && tsc -p tsconfig.json --noEmit false --declaration --emitDeclarationOnly --declarationMap false --outDir dist",
     "typecheck": "tsc --noEmit",
     "dev": "tsup --watch",
     "prepack": "rm -f README.md LICENSE && cp ../../README.md README.md && cp ../../LICENSE LICENSE",

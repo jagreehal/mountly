@@ -16,7 +16,7 @@ Stores resolved widget modules, keyed by `moduleId`.
 You rarely touch it directly. Use the exported `moduleCache` to seed entries or invalidate from outside the runtime:
 
 ```ts
-import { moduleCache } from "mountly";
+import { moduleCache } from "mountly/cache";
 
 // e.g. force a re-fetch on next preload
 moduleCache.delete("signup-card");
@@ -55,7 +55,7 @@ createOnDemandFeature({
 Same rule as the module cache: two concurrent activations with the same key share a single fetch. The runtime's `DedupCache` is exported as `dataCache` if you need to interact directly:
 
 ```ts
-import { dataCache } from "mountly";
+import { dataCache } from "mountly/cache";
 
 // Manually invalidate when the user updates their plan
 dataCache.delete(`signup-card:${currentLocale}`);
@@ -72,7 +72,7 @@ dataCache.delete(`signup-card:${currentLocale}`);
 Both caches are instances of the same class:
 
 ```ts
-import { DedupCache } from "mountly";
+import { DedupCache } from "mountly/cache";
 
 const cache = new DedupCache<MyValue>();
 

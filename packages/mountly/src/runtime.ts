@@ -146,9 +146,8 @@ const MOUNTLY_SUBPATHS = [
   "gestures",
   "attach",
   "elements",
-  "island",
-  "host",
-  "host/auto",
+  "auto",
+  "feature",
   "bundle",
   "cache",
   "mount",
@@ -169,7 +168,6 @@ const MOUNTLY_SUBPATHS = [
 
 const MOUNTLY_FILE_MAP: Record<string, string> = {
   "": "index.js",
-  "host/auto": "host-entry.js",
   overlays: "positioning.js",
   data: "data-source.js",
   url: "url-state.js",

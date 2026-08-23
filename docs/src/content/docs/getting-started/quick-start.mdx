@@ -55,18 +55,11 @@ The widget mounts inside the container in light DOM and the host's CSS reaches i
 On a static or CMS host, prefer declarative islands plus one script tag:
 
 ```html title="host.html"
-<div
-  data-mountly-island='{"schemaVersion":1,"id":"signup","moduleId":"signup-card","trigger":"idle","props":{"plan":"pro"}}'
->
+<div data-mountly="/widgets/signup-card.js" data-on="idle" data-props='{"plan":"pro"}'>
   <a href="/signup">Sign up (fallback)</a>
 </div>
 
-<script
-  type="module"
-  src="/packages/mountly/dist/host-entry.js"
-  data-mountly-host
-  data-mountly-loaders='{"signup-card":"/widgets/signup-card.js"}'
-></script>
+<script type="module" src="/packages/mountly/dist/auto.js"></script>
 ```
 
 This is the default DX path: no host app code, one script tag, and fallback HTML that still works when JS is unavailable.
@@ -76,7 +69,7 @@ This is the default DX path: no host app code, one script tag, and fallback HTML
 `mount()` is the bare minimum. For **on-intent loading**, wrap the widget in a feature:
 
 ```ts title="page.ts"
-import { createOnDemandFeature } from "mountly";
+import { createOnDemandFeature } from "mountly/feature";
 
 const signup = createOnDemandFeature({
   moduleId: "signup-card",

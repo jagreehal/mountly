@@ -1,39 +1,10 @@
 <!doctype html>
 <html>
   <body>
-    <div
-      id="island"
-      data-mountly-island='{"id":"hero-cta","moduleId":"demo","props":{"msg":"hello"},"trigger":"click","preloadOn":false}'
-    ></div>
-    <script type="importmap">
-      { "imports": { "mountly": "/packages/mountly/dist/island.js" } }
-    </script>
-    <script type="module">
-      import { mountIslandFeature } from "/packages/mountly/dist/island.js";
-
-      const widgetModule = {
-        mount(container, props) {
-          const span = document.createElement("span");
-          span.className = "island-msg";
-          span.textContent = String(props?.msg ?? "");
-          container.appendChild(span);
-        },
-        unmount(container) {
-          container.innerHTML = "";
-        },
-      };
-
-      const island = document.getElementById("island");
-      mountIslandFeature(island, {
-        demo: async () => ({ default: widgetModule }),
-      });
-
-      island.click();
-
-      window.__ready = () => {
-        const text = island.shadowRoot?.textContent ?? island.textContent ?? "";
-        return text.includes("hello");
-      };
-    </script>
+    <!-- The whole integration: a URL, a trigger, some props. No page JS. -->
+    <div id="island" data-mountly="/tests/fixtures/w-echo.js" data-props='{"msg":"hello"}'>
+      <span>Load</span>
+    </div>
+    <script type="module" src="/packages/mountly/dist/auto.js"></script>
   </body>
 </html>

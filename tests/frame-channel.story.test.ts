@@ -1,9 +1,6 @@
 import { story } from "executable-stories-vitest";
 import { describe, expect, it, vi } from "vite-plus/test";
-import {
-  createFrameChannel,
-  FRAME_CONTRACT_VERSION,
-} from "../packages/mountly/src/frame-channel";
+import { createFrameChannel, FRAME_CONTRACT_VERSION } from "../packages/mountly/src/frame-channel";
 
 // An `interface`, not a `type`: the natural way to declare a contract, and
 // the shape the generic constraint must keep accepting.
@@ -90,7 +87,11 @@ describe("frame channel", () => {
 
     story.when("a compromised or buggy frame sends the wrong shape");
     // Bypasses the frame's own emit-side guard, as a hostile frame would.
-    host.receive({ __mountlyFrame: FRAME_CONTRACT_VERSION, name: "productSelected", payload: { productId: 42 } });
+    host.receive({
+      __mountlyFrame: FRAME_CONTRACT_VERSION,
+      name: "productSelected",
+      payload: { productId: 42 },
+    });
 
     story.then("the host drops it — validation is enforced on receive, not just on send");
     expect(seenByHost).not.toHaveBeenCalled();
@@ -113,9 +114,9 @@ describe("frame channel", () => {
 
     story.when("it emits the wrong shape");
     story.then("the mistake surfaces at the call site, not silently on the far side");
-    expect(() =>
-      frame.channel.emit("userChanged", { id: 7 as unknown as string }),
-    ).toThrow(/invalid payload/);
+    expect(() => frame.channel.emit("userChanged", { id: 7 as unknown as string })).toThrow(
+      /invalid payload/,
+    );
   });
 
   it("ignores non-channel traffic so props still reach the widget", ({ task }) => {

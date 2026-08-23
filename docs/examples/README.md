@@ -82,14 +82,17 @@ Import maps in static HTML should map **`mountly`** and any used **`mountly/*` s
 
 ## Choosing a distribution
 
-Each widget scaffolded by `mountly init` ships two ESM entries: `dist/index.js` (self-contained, bundles React) and `dist/peer.js` (peer build, expects React from the host's import map). The choice lives in the host's import map. Widget source doesn't change.
+Each widget scaffolded by `mountly init` ships two ESM entries: `dist/index.js` (self-contained — bundles React **and** mountly's own runtime helpers) and `dist/peer.js` (peer build — expects both from the host's import map). The choice lives in the host's import map. Widget source doesn't change.
 
-| Use case                                | Pick                                 | Why                                                 |
-| --------------------------------------- | ------------------------------------ | --------------------------------------------------- |
-| One widget on a page, host has no React | **Self-contained** (`dist/index.js`) | Zero host wiring; ~148 KB gz                        |
-| Two or more widgets on the same page    | **Shared React** (`dist/peer.js`)    | One copy of React (~45 KB gz) + ~5 KB gz per widget |
-| Host is already a React/Next app        | **Shared React**                     | Avoids two React instances on one page              |
-| Quick prototype / single embed          | **Self-contained**                   | Faster to wire; bytes only matter in production     |
+The self-contained build needs **no import map at all**: drop the file in a page, point `data-mountly` at it, done. The trade-off is that it carries its own copy of mountly's module cache and analytics, so a host that also imports `mountly` sees separate state. If your host imports mountly — a Vite app, a React app, anything with a bundler — use the peer build, for the same reason you would for React.
+
+| Use case                                | Pick                                 | Why                                                    |
+| --------------------------------------- | ------------------------------------ | ------------------------------------------------------ |
+| One widget on a page, host has no React | **Self-contained** (`dist/index.js`) | Zero host wiring; ~148 KB gz                           |
+| Two or more widgets on the same page    | **Shared React** (`dist/peer.js`)    | One copy of React (~45 KB gz) + ~5 KB gz per widget    |
+| Host is already a React/Next app        | **Shared React**                     | Avoids two React instances on one page                 |
+| Host imports `mountly` itself           | **Shared React** (`dist/peer.js`)    | One mountly runtime, so cache and analytics are shared |
+| Quick prototype / single embed          | **Self-contained**                   | Faster to wire; bytes only matter in production        |
 
 Numbers are representative. Measure your own widgets in DevTools. For the runnable side-by-side: same widgets, two import maps, see [plain-html/README.md](plain-html/README.md).
 

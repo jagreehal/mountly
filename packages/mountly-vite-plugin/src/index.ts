@@ -27,13 +27,17 @@ export function getFrameworkPeerExternals(
   return [...PLATFORM_EXTERNALS, ...FRAMEWORK_EXTERNALS[framework]];
 }
 
+/**
+ * The self-contained build's whole promise is "drop this file in a page and it
+ * works", so mountly's own runtime helpers are bundled in rather than
+ * externalised: the host then needs no import map at all. The peer build still
+ * externalises them, because sharing through the host's import map is the point
+ * of that build.
+ */
 export function getSelfContainedExternals(
   framework: MountlyWidgetFramework,
 ): Array<string | RegExp> {
-  return [
-    ...PLATFORM_EXTERNALS,
-    ...FRAMEWORK_EXTERNALS[framework].filter((id) => !FRAMEWORK_BUNDLE[framework].includes(id)),
-  ];
+  return FRAMEWORK_EXTERNALS[framework].filter((id) => !FRAMEWORK_BUNDLE[framework].includes(id));
 }
 
 export interface MountlyCssAsTextOptions {

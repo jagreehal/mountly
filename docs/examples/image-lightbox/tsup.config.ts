@@ -19,7 +19,9 @@ export default defineConfig([
     ...base,
     entry: { index: "src/index.ts" },
     clean: true,
-    noExternal: ["react", "react-dom", "mountly-react"],
+    // Self-contained: mountly's own helpers come along too, so a host page
+    // drops the file in and needs no import map.
+    noExternal: ["react", "react-dom", "mountly-react", /^mountly\//],
   },
   {
     ...base,

@@ -15,9 +15,7 @@ Use a same-origin proxy only when a framed vertical needs **first-party cookies*
 import { createSameOriginProxy } from "mountly-manifest/server";
 
 const proxy = createSameOriginProxy({
-  routes: [
-    { prefix: "/__mountly/billing", upstream: "https://billing.acme.com" },
-  ],
+  routes: [{ prefix: "/__mountly/billing", upstream: "https://billing.acme.com" }],
 });
 
 export default {
@@ -43,12 +41,12 @@ Point the framed vertical at the host prefix:
 
 ## What it is not
 
-| Web Fragments Fragment Gateway | Mountly same-origin proxy |
-| --- | --- |
-| Required for fragments to work | Optional |
-| Routes all fragment traffic | Prefix allowlist only |
-| App + asset composition layer | GET/HEAD asset/document forwarder |
-| Part of the embed model | Escape hatch for cookies/relative paths |
+| Web Fragments Fragment Gateway | Mountly same-origin proxy               |
+| ------------------------------ | --------------------------------------- |
+| Required for fragments to work | Optional                                |
+| Routes all fragment traffic    | Prefix allowlist only                   |
+| App + asset composition layer  | GET/HEAD asset/document forwarder       |
+| Part of the embed model        | Escape hatch for cookies/relative paths |
 
 Non-GET methods receive `405`. This stays a thin proxy, not an application gateway.
 

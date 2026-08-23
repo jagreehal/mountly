@@ -39,7 +39,7 @@ mountly is an **on-demand component runtime**. It is not:
 - A deployment or versioning coordinator across teams.
 - A central runtime configuration plane.
 
-URL routing across independently deployed verticals is covered — [`createFeatureRouter`](/mountly/concepts/microfrontends/#routing-across-verticals) maps segments to features and each vertical routes below its own segment. What mountly still does not do is coordinate *deployments*: it validates manifests and loads verticals, but it will not resolve semver at runtime, gate a rollout, or hold a vertical back until another is ready. If you need that, use single-spa or a vendor MFE platform.
+URL routing across independently deployed verticals is covered — [`createFeatureRouter`](/mountly/concepts/microfrontends/#routing-across-verticals) maps segments to features and each vertical routes below its own segment. What mountly still does not do is coordinate _deployments_: it validates manifests and loads verticals, but it will not resolve semver at runtime, gate a rollout, or hold a vertical back until another is ready. If you need that, use single-spa or a vendor MFE platform.
 
 mountly _is_ useful **inside** an MFE: a single team's MFE bundle can use mountly to lazy-load its own widgets without ballooning its part of the page. Use it as the inner tool that loads one team's widgets, with single-spa or a vendor platform as the outer control plane.
 

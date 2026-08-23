@@ -4,7 +4,7 @@ description: The core primitive that wraps a widget with the on-demand lifecycle
 ---
 
 ```ts
-import { createOnDemandFeature } from "mountly";
+import { createOnDemandFeature } from "mountly/feature";
 ```
 
 Builds an [`OnDemandFeature`](#ondemandfeature): a widget plus its lifecycle, caching, and trigger setup. You wire this layer to the page.
@@ -136,7 +136,7 @@ Returns a read-only array of currently-mounted containers. Useful for debugging 
 For the common case (load a widget bundle and let its companion CSS apply on its own), pass `moduleUrl` and you're done:
 
 ```ts
-import { createOnDemandFeature } from "mountly";
+import { createOnDemandFeature } from "mountly/feature";
 
 const signup = createOnDemandFeature({
   moduleId: "signup-card",
@@ -153,7 +153,7 @@ mountly synthesises `loadModule` (via `createModuleLoader`) and a default `rende
 When you need bespoke loading or rendering, all the original hooks are still available:
 
 ```ts
-import { createOnDemandFeature } from "mountly";
+import { createOnDemandFeature } from "mountly/feature";
 
 const payment = createOnDemandFeature({
   moduleId: "payment-breakdown",
@@ -211,7 +211,7 @@ window.addEventListener("popstate", () => {
 Sibling primitive for the multi-widget case: one bundle, many features, shared loading.
 
 ```ts
-import { createWidgetBundle } from "mountly";
+import { createWidgetBundle } from "mountly/bundle";
 
 const dashboard = createWidgetBundle({
   moduleUrl: "/widgets/dashboard/dist/index.js",
