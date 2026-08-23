@@ -1,0 +1,67 @@
+---
+title: Same-origin proxy
+description: Optional middleware recipe for cookies and relative assets — never required for mountly to work.
+---
+
+Mountly's happy path is **CDN + CORS + import maps**. No Fragment Gateway. No edge middleware to embed a widget.
+
+Use a same-origin proxy only when a framed vertical needs **first-party cookies** or **relative asset URLs** under the host origin. It is a convenience, not the architecture.
+
+## Recipe
+
+`createSameOriginProxy` from `mountly-manifest/server` forwards matching **GET/HEAD** requests to an upstream origin and returns `null` for everything else so your existing handler stays in charge:
+
+```ts
+import { createSameOriginProxy } from "mountly-manifest/server";
+
+const proxy = createSameOriginProxy({
+  routes: [
+    { prefix: "/__mountly/billing", upstream: "https://billing.acme.com" },
+  ],
+});
+
+export default {
+  async fetch(request: Request): Promise<Response> {
+    const proxied = await proxy(request);
+    if (proxied) return proxied;
+    return app.handle(request);
+  },
+};
+```
+
+Point the framed vertical at the host prefix:
+
+```json
+{
+  "id": "billing",
+  "isolation": "iframe",
+  "url": "https://cdn.example/billing/peer.js",
+  "src": "/__mountly/billing/widget",
+  "iframeTitle": "Billing"
+}
+```
+
+## What it is not
+
+| Web Fragments Fragment Gateway | Mountly same-origin proxy |
+| --- | --- |
+| Required for fragments to work | Optional |
+| Routes all fragment traffic | Prefix allowlist only |
+| App + asset composition layer | GET/HEAD asset/document forwarder |
+| Part of the embed model | Escape hatch for cookies/relative paths |
+
+Non-GET methods receive `405`. This stays a thin proxy, not an application gateway.
+
+## Prefer these first
+
+- **CORS** on the vertical's CDN for ESM modules.
+- **`allow: "storage-access"`** on cross-site iframes that need their own cookies (see resize-iframe / Storage Access API).
+- **Absolute asset URLs** in the framed page so relative resolution never depends on the host.
+
+Only add the proxy when those are not enough.
+
+## Next steps
+
+- [When to frame](/mountly/concepts/when-to-frame/)
+- [Frame protocols](/mountly/concepts/frame-protocols/)
+- [Manifest & host shells](/mountly/concepts/manifest-hosts/)

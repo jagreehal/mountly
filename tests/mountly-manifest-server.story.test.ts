@@ -1,7 +1,8 @@
 import { story } from "executable-stories-vitest";
-import { describe, expect, it } from "vite-plus/test";
+import { describe, expect, it, vi } from "vite-plus/test";
 import {
   createManifestResponse,
+  createSameOriginProxy,
   mergeManifests,
   parseManifest,
   renderMountlyHead,
@@ -94,5 +95,74 @@ describe("mountly-manifest/server", () => {
     expect(body.issues.some((i: { message: string }) => /duplicate React/.test(i.message))).toBe(
       true,
     );
+  });
+
+  it("createSameOriginProxy forwards matching GET paths and ignores the rest", async ({ task }) => {
+    story.init(task);
+    story.given("a thin same-origin proxy for a billing upstream");
+    const fetchMock = vi.fn<(input: URL, init: RequestInit) => Promise<Response>>(
+      async () => new Response("ok", { status: 200 }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const proxy = createSameOriginProxy({
+      routes: [{ prefix: "/__mountly/billing", upstream: "https://billing.acme.com" }],
+    });
+
+    story.when("a request hits the prefix");
+    const hit = await proxy(new Request("https://app.example/__mountly/billing/widget"));
+    story.then("it is forwarded to the upstream path");
+    expect(hit?.status).toBe(200);
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.objectContaining({ href: "https://billing.acme.com/widget" }),
+      expect.objectContaining({ method: "GET" }),
+    );
+
+    story.when("a request misses the prefix");
+    const miss = await proxy(new Request("https://app.example/other"));
+    story.then("the proxy stays out of the way");
+    expect(miss).toBeNull();
+
+    story.when("a non-GET hits the prefix");
+    const rejected = await proxy(
+      new Request("https://app.example/__mountly/billing/x", { method: "POST" }),
+    );
+    story.then("it refuses rather than becoming an app gateway");
+    expect(rejected?.status).toBe(405);
+    vi.unstubAllGlobals();
+  });
+
+  it("createSameOriginProxy forwards first-party cookies and preserves an upstream base path", async ({
+    task,
+  }) => {
+    story.init(task);
+    story.given("a cookie-authenticated frame proxied to an upstream application directory");
+    const fetchMock = vi.fn<(input: URL, init: RequestInit) => Promise<Response>>(
+      async () => new Response("ok", { status: 200 }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const proxy = createSameOriginProxy({
+      routes: [
+        { prefix: "/__mountly/billing", upstream: "https://services.example.com/apps/billing" },
+      ],
+    });
+
+    story.when("the browser requests a nested asset with its first-party session cookie");
+    await proxy(
+      new Request("https://app.example/__mountly/billing/assets/app.js?v=2", {
+        headers: { cookie: "session=abc", accept: "text/javascript" },
+      }),
+    );
+
+    story.then("the base path, query, cookie, and normal default headers reach upstream");
+    const [target, init] = fetchMock.mock.calls[0] ?? [];
+    expect(target).toEqual(
+      expect.objectContaining({
+        href: "https://services.example.com/apps/billing/assets/app.js?v=2",
+      }),
+    );
+    const headers = (init as RequestInit).headers as Headers;
+    expect(headers.get("cookie")).toBe("session=abc");
+    expect(headers.get("accept")).toBe("text/javascript");
+    vi.unstubAllGlobals();
   });
 });

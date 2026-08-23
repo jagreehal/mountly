@@ -1,0 +1,43 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <!--
+      No 'unsafe-eval'. This is the posture regulated hosts ship, and the CSP the
+      MCP Apps spec requires. `new Function` throws here; loading a widget must
+      still work.
+    -->
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline'" />
+    <title>strict CSP</title>
+  </head>
+  <body>
+    <div id="mount"></div>
+    <script type="module">
+      const result = { eval: null, load: null, text: null, error: null };
+
+      // Confirm the environment really does block eval, so a pass here cannot be
+      // a false positive from a CSP that was never applied.
+      try {
+        new Function("return 1")();
+        result.eval = "allowed";
+      } catch {
+        result.eval = "blocked";
+      }
+
+      try {
+        const { createModuleLoader } = await import("/packages/mountly/dist/assets.js");
+        const load = createModuleLoader("/tests/fixtures/csp-widget.js", { css: "none" });
+        const mod = await load();
+        await mod.default.mount(document.getElementById("mount"), { label: "loaded under CSP" });
+        result.load = "ok";
+        result.text = document.getElementById("mount").textContent;
+      } catch (error) {
+        result.load = "failed";
+        result.error = String(error);
+      }
+
+      window.__csp = result;
+      document.body.dataset.done = "1";
+    </script>
+  </body>
+</html>

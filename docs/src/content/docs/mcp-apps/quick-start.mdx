@@ -10,6 +10,10 @@ npx mountly-mcp create my-app --framework vue
 cd my-app && pnpm install && pnpm dev
 ```
 
+`--framework` takes `react`, `vue`, `svelte`, or `vanilla`. Vanilla pulls in no
+framework and no adapter — a View is only `mount` / `update` / `unmount`, so
+`publishMcpView` takes the object directly.
+
 Or install [Agent Skills](/mcp-apps/agent-skills/) and ask your coding agent to
 create an MCP App. The walkthrough below is the same shape the scaffold emits.
 

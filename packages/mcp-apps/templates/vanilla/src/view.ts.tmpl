@@ -1,0 +1,177 @@
+import { publishMcpView, type McpViewProps } from "mountly-mcp";
+
+/**
+ * No framework, no adapter. A View is just `mount` / `update` / `unmount`, so
+ * `publishMcpView` takes this object directly — the bridge drives it exactly
+ * as it drives a React, Vue or Svelte View.
+ */
+
+interface DashboardCard {
+  label: string;
+  value: string | number;
+}
+
+interface DashboardData {
+  topic?: string;
+  refreshedAt?: string;
+  cards?: DashboardCard[];
+}
+
+interface DashboardResult {
+  structuredContent?: DashboardData;
+}
+
+const STYLES = `
+:host, :root { color-scheme: light dark; }
+.card {
+  font-family: system-ui, -apple-system, sans-serif;
+  border: 1px solid var(--color-border-primary, #e5e5e5);
+  border-radius: 12px;
+  padding: 20px;
+  background: var(--color-background-secondary, #fafafa);
+  color: var(--color-text-primary, #171717);
+}
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--color-text-secondary, #737373);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+}
+h1 { margin: 0 0 16px; font-size: 20px; font-weight: 600; }
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+.metric {
+  border: 1px solid var(--color-border-primary, #e5e5e5);
+  border-radius: 8px;
+  padding: 12px;
+  background: var(--color-background-primary, #fff);
+}
+.label {
+  color: var(--color-text-secondary, #737373);
+  font-size: 11px;
+  text-transform: uppercase;
+}
+.value { margin-top: 4px; font-size: 22px; font-weight: 600; }
+.row { display: flex; align-items: center; gap: 10px; }
+button {
+  border: 1px solid var(--color-border-primary, #e5e5e5);
+  border-radius: 8px;
+  padding: 8px 14px;
+  background: var(--color-background-primary, #fff);
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+}
+button:disabled { opacity: .6; cursor: wait; }
+.status { font-size: 12px; color: var(--color-text-secondary, #737373); }
+`;
+
+/** Per-container state, so several instances on one page stay independent. */
+const instances = new WeakMap<Element, { data?: DashboardData; status: string; busy: boolean }>();
+
+function el(tag: string, className?: string, text?: string): HTMLElement {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  // textContent, never innerHTML: tool results are data, not markup.
+  if (text !== undefined) node.textContent = text;
+  return node;
+}
+
+function render(container: Element, props: McpViewProps): void {
+  const state = instances.get(container);
+  if (!state) return;
+
+  const data = state.data;
+  const cards = data?.cards ?? [];
+
+  container.replaceChildren();
+
+  const style = document.createElement("style");
+  style.textContent = STYLES;
+
+  const card = el("div", "card");
+  card.append(el("p", "eyebrow", "MCP App · Mountly"));
+  card.append(el("h1", undefined, data?.topic ? `${data.topic} Dashboard` : "Dashboard"));
+
+  const grid = el("div", "grid");
+  const shown: DashboardCard[] = cards.length > 0 ? cards : [
+    { label: "—", value: "—" },
+    { label: "—", value: "—" },
+    { label: "—", value: "—" },
+  ];
+  for (const c of shown) {
+    const metric = el("div", "metric");
+    metric.append(el("div", "label", c.label));
+    metric.append(el("div", "value", String(c.value)));
+    grid.append(metric);
+  }
+  card.append(grid);
+
+  const row = el("div", "row");
+  const button = el("button") as HTMLButtonElement;
+  button.type = "button";
+  button.textContent = "Refresh data";
+  button.disabled = state.busy;
+  button.addEventListener("click", () => void refresh(container, props));
+  const status = el("span", "status", state.status);
+  row.append(button, status);
+  card.append(row);
+
+  container.append(style, card);
+}
+
+async function refresh(container: Element, props: McpViewProps): Promise<void> {
+  const state = instances.get(container);
+  if (!state || state.busy) return;
+  state.busy = true;
+  state.status = "Refreshing…";
+  render(container, props);
+
+  try {
+    const next = (await props.mcp.callServerTool({
+      name: "refreshDashboard",
+      arguments: { reason: "User clicked refresh" },
+    })) as DashboardResult;
+    const content = next.structuredContent;
+    if (content) {
+      state.data = { ...state.data, ...content, topic: content.topic ?? state.data?.topic };
+    }
+    state.status = content?.refreshedAt
+      ? `Refreshed ${new Date(content.refreshedAt).toLocaleTimeString()}`
+      : "Refreshed.";
+  } catch (error) {
+    state.status = error instanceof Error ? error.message : "Refresh failed.";
+  } finally {
+    state.busy = false;
+    render(container, props);
+  }
+}
+
+publishMcpView({
+  mount(container, props) {
+    const typed = props as McpViewProps;
+    instances.set(container, {
+      data: (typed.toolResult as DashboardResult | undefined)?.structuredContent,
+      status: "Connected.",
+      busy: false,
+    });
+    render(container, typed);
+  },
+
+  // The bridge calls this on every new tool-result or host-context change.
+  // Updating in place keeps focus and scroll, which a remount would lose.
+  update(container, props) {
+    const typed = props as McpViewProps;
+    const state = instances.get(container);
+    if (!state) return;
+    const incoming = (typed.toolResult as DashboardResult | undefined)?.structuredContent;
+    if (incoming) state.data = incoming;
+    render(container, typed);
+  },
+
+  unmount(container) {
+    instances.delete(container);
+    container.replaceChildren();
+  },
+});

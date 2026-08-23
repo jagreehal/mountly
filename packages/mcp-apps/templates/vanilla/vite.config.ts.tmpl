@@ -1,0 +1,20 @@
+import { defineConfig } from "vite";
+import { mountlyMcpViews } from "mountly-mcp/vite";
+
+export default defineConfig({
+  plugins: [
+    mountlyMcpViews({
+      apps: [
+        {
+          entry: "src/view.ts",
+          uri: "{{uri}}",
+          name: "dashboard",
+          description: "Interactive metrics dashboard",
+          displayModes: ["inline", "fullscreen"],
+          prefersBorder: true,
+          awaitToolResult: true,
+        },
+      ],
+    }),
+  ],
+});

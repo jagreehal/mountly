@@ -1,0 +1,126 @@
+---
+title: Frame protocols
+description: Host-side overlay breakout and host-owned history for framed verticals — without reframing the whole DOM.
+---
+
+Framed widgets run in a real document. That gives browser-enforced isolation and also clips portals, modals, and full-viewport effects to the iframe box. Web Fragments solves that with reframing. Mountly keeps the iframe and offers two **opt-in** protocols on the existing typed frame channel instead.
+
+## Overlay breakout
+
+The frame asks the host to open UI in the top document. Prefer named **slots** the host maps to its own components. Raw `html` is refused unless the host supplies `sanitizeHtml`.
+
+### Host
+
+```ts
+import {
+  iframeFeature,
+  bindFrameOverlay,
+  type FrameOverlayEvents,
+} from "mountly/iframe";
+
+interface Events extends FrameOverlayEvents {
+  invoicePaid: { invoiceId: string };
+}
+
+const billing = iframeFeature<Events>({
+  moduleId: "billing",
+  src: "https://billing.acme.com/widget",
+  title: "Billing",
+  channel: {
+    validators: {
+      /* app events + frameOverlayValidators if you want */
+    },
+    connect: (channel) =>
+      bindFrameOverlay(channel, {
+        renderSlot: ({ slot, props, container }) => {
+          if (slot === "checkout-modal") {
+            container.textContent = `Checkout ${props.plan}`;
+          }
+        },
+        // sanitizeHtml: (html) => DOMPurify.sanitize(html),
+      }),
+  },
+});
+```
+
+### Frame
+
+```ts
+import { mountAsFrame, openHostOverlay, closeHostOverlay } from "mountly/iframe/child";
+
+mountAsFrame(widget, {
+  channel: {
+    connect: (channel) => {
+      openHostOverlay(channel, {
+        id: "checkout",
+        slot: "checkout-modal",
+        props: { plan: "pro" },
+      });
+      // later:
+      // closeHostOverlay(channel, "checkout");
+    },
+  },
+});
+```
+
+Shared-context widgets keep light-DOM portals. Overlay breakout is only for the framed path.
+
+## Host-owned history
+
+A framed feature never writes `window.history`. It emits `history:navigate`; the host calls `router.navigate()` (or `replace`). The host fans URL changes back as `history:sync`.
+
+```ts
+import { createFeatureRouter } from "mountly/router";
+import { bindFrameHistoryToRouter, requestHostNavigation } from "mountly/iframe";
+
+const router = createFeatureRouter({
+  container: outlet,
+  routes: [{ path: "/billing/*", feature: billing }],
+});
+router.start();
+
+iframeFeature({
+  moduleId: "billing",
+  src: "https://billing.acme.com/widget",
+  title: "Billing",
+  channel: {
+    connect: (channel) => bindFrameHistoryToRouter(channel, router),
+  },
+});
+```
+
+From the frame:
+
+```ts
+import { requestHostNavigation } from "mountly/iframe/child";
+
+requestHostNavigation(channel, { url: "/billing/2" });
+requestHostNavigation(channel, { url: "/billing/2", history: "replace" });
+```
+
+Event names: `history:navigate`, `history:sync` (see `HISTORY_NAVIGATE` / `HISTORY_SYNC`).
+
+## Placeholders
+
+Show a static shell until the frame reports ready — not SSR hydration:
+
+```ts
+iframeFeature({
+  moduleId: "billing",
+  src: "https://billing.acme.com/widget",
+  title: "Billing",
+  placeholder: "Loading billing…",
+  // or: placeholderUrl: "https://cdn.example/billing/skeleton.html",
+});
+```
+
+Also available as `showPlaceholder` / `showPlaceholderFromUrl` from `mountly/placeholder`.
+
+## Philosophy checks
+
+- Shared context remains the default.
+- No gateway required.
+- One `createWidget` build still runs light, shadow, or framed.
+- Isolation upgrades are a host/manifest change.
+
+See also: [When to frame](/mountly/concepts/when-to-frame/).

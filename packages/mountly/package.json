@@ -81,6 +81,10 @@
       "types": "./dist/iframe-child.d.ts",
       "import": "./dist/iframe-child.js"
     },
+    "./placeholder": {
+      "types": "./dist/placeholder.d.ts",
+      "import": "./dist/placeholder.js"
+    },
     "./assets": {
       "types": "./dist/assets.d.ts",
       "import": "./dist/assets.js"
@@ -112,6 +116,10 @@
     "./url": {
       "types": "./dist/url-state.d.ts",
       "import": "./dist/url-state.js"
+    },
+    "./router": {
+      "types": "./dist/router.d.ts",
+      "import": "./dist/router.js"
     },
     "./bus": {
       "types": "./dist/bus.d.ts",

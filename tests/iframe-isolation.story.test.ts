@@ -62,10 +62,49 @@ describe("cross-origin widgets keep their props but not their globals", () => {
     story.when("the framed page completes the handshake");
     signalReady(el);
 
-    story.then("the props cross the boundary, addressed to the widget's own origin");
+    story.then("the props cross the boundary using the opaque sandbox origin");
     expect(posted).toHaveBeenCalledTimes(1);
     expect(payload(posted.mock.calls[0]?.[0])).toEqual({ tenantId: "acme" });
-    expect(posted.mock.calls[0]?.[1]).toBe("https://billing.example.com");
+    expect(posted.mock.calls[0]?.[1]).toBe("*");
+  });
+
+  it("queues host channel events until the framed page is listening", ({ task }) => {
+    story.init(task);
+    story.given("a host protocol binder that emits its initial state during connect");
+
+    interface Events {
+      sync: { pathname: string };
+    }
+
+    const { container, frame } = host();
+    const mod = iframeModule<Events>(SRC, {
+      title: "Billing breakdown",
+      channel: {
+        connect: (channel) => channel.emit("sync", { pathname: "/billing/1" }),
+      },
+    });
+    mod.mount(container, { tenantId: "acme" });
+
+    const el = frame();
+    const posted = vi.fn<(message: unknown, origin?: string) => void>();
+    Object.defineProperty(el, "contentWindow", {
+      value: { postMessage: posted },
+      configurable: true,
+    });
+
+    story.then("the initial event is held while the child is still loading");
+    expect(posted).not.toHaveBeenCalled();
+
+    story.when("the child reports ready");
+    signalReady(el);
+
+    story.then("props and the queued protocol state are both delivered");
+    expect(posted).toHaveBeenCalledTimes(2);
+    expect(payload(posted.mock.calls[0]?.[0])).toEqual({ tenantId: "acme" });
+    expect(payload(posted.mock.calls[1]?.[0])).toEqual(
+      expect.objectContaining({ name: "sync", payload: { pathname: "/billing/1" } }),
+    );
+    expect(posted.mock.calls[1]?.[1]).toBe("https://billing.example.com");
   });
 
   it("sends the latest props when an update lands before the handshake", ({ task }) => {
@@ -195,5 +234,61 @@ describe("the framed side mounts the same widget the host would have", () => {
     expect(() => mountAsFrame(widget())).toThrow(/resize-iframe 0\.2\.0/);
 
     delete (globalThis as { parentIframe?: unknown }).parentIframe;
+  });
+});
+
+describe("a frame that never comes up", () => {
+  it("reports a timeout instead of hanging silently", ({ task }) => {
+    story.init(task);
+    story.given("a framed vertical whose page 404s, is CSP-blocked, or throws before mountAsFrame");
+    vi.useFakeTimers();
+    const onError = vi.fn<(error: Error) => void>();
+    const { container } = host();
+    const mod = iframeModule(SRC, { title: "Billing", readyTimeout: 5000, onError });
+
+    story.when("it is mounted and the handshake never arrives");
+    mod.mount(container, { plan: "annual" });
+    vi.advanceTimersByTime(5000);
+
+    story.then("the host is told, rather than left with a blank space forever");
+    expect(onError).toHaveBeenCalledTimes(1);
+    expect(onError.mock.calls[0]?.[0].message).toContain("did not report ready");
+    vi.useRealTimers();
+  });
+
+  it("stays quiet when the frame does come up", ({ task }) => {
+    story.init(task);
+    story.given("a frame that completes its handshake");
+    vi.useFakeTimers();
+    const onError = vi.fn<(error: Error) => void>();
+    const { container, frame } = host();
+    const mod = iframeModule(SRC, { title: "Billing", readyTimeout: 5000, onError });
+    mod.mount(container, { plan: "annual" });
+
+    story.when("it reports ready before the deadline");
+    signalReady(frame());
+    vi.advanceTimersByTime(10_000);
+
+    story.then("no error is raised");
+    expect(onError).not.toHaveBeenCalled();
+    vi.useRealTimers();
+  });
+
+  it("does not fire after the frame is unmounted", ({ task }) => {
+    story.init(task);
+    story.given("a frame torn down before its deadline — a route change, say");
+    vi.useFakeTimers();
+    const onError = vi.fn<(error: Error) => void>();
+    const { container } = host();
+    const mod = iframeModule(SRC, { title: "Billing", readyTimeout: 5000, onError });
+    mod.mount(container, {});
+
+    story.when("it unmounts and the deadline passes");
+    mod.unmount?.(container);
+    vi.advanceTimersByTime(10_000);
+
+    story.then("a discarded frame does not report a failure");
+    expect(onError).not.toHaveBeenCalled();
+    vi.useRealTimers();
   });
 });

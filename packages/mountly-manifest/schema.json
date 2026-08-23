@@ -137,6 +137,31 @@
               }
             },
             "additionalProperties": false
+          },
+          "isolation": {
+            "type": "string",
+            "enum": [
+              "shared",
+              "iframe"
+            ]
+          },
+          "src": {
+            "type": "string",
+            "minLength": 1
+          },
+          "iframeTitle": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sandbox": {
+            "type": "string"
+          },
+          "allow": {
+            "type": "string"
+          },
+          "placeholderUrl": {
+            "type": "string",
+            "minLength": 1
           }
         },
         "required": [

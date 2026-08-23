@@ -298,4 +298,56 @@ describe("mountly-manifest", () => {
       expect.arrayContaining(["version", "platform", "verticals"]),
     );
   });
+
+  it("parseManifest accepts isolation iframe with iframeTitle", ({ task }) => {
+    story.init(task);
+    story.given("an untrusted vertical flipped to iframe isolation");
+    const manifest = parseManifest({
+      version: "2",
+      platform: {
+        imports: {
+          react: "https://esm.sh/react@19.2.7",
+          "react-dom": "https://esm.sh/react-dom@19.2.7",
+          "react-dom/client": "https://esm.sh/react-dom@19.2.7/client",
+        },
+      },
+      verticals: [
+        {
+          id: "legacy-billing",
+          url: "https://cdn.example/billing/peer.js",
+          isolation: "iframe",
+          src: "https://billing.acme.com/widget",
+          iframeTitle: "Billing breakdown",
+          placeholderUrl: "https://cdn.example/billing/skeleton.html",
+        },
+      ],
+    });
+    story.then("the host can flip isolation without a widget rewrite");
+    expect(manifest.verticals[0]?.isolation).toBe("iframe");
+    expect(manifest.verticals[0]?.src).toBe("https://billing.acme.com/widget");
+    expect(manifestToFeatureModules(manifest)).toEqual({});
+  });
+
+  it("parseManifest rejects iframe isolation without iframeTitle", ({ task }) => {
+    story.init(task);
+    expect(() =>
+      parseManifest({
+        version: "2",
+        platform: {
+          imports: {
+            react: "https://esm.sh/react@19.2.7",
+            "react-dom": "https://esm.sh/react-dom@19.2.7",
+            "react-dom/client": "https://esm.sh/react-dom@19.2.7/client",
+          },
+        },
+        verticals: [
+          {
+            id: "legacy-billing",
+            url: "https://billing.acme.com/widget",
+            isolation: "iframe",
+          },
+        ],
+      }),
+    ).toThrow(/iframeTitle/);
+  });
 });

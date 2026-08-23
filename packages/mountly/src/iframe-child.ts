@@ -14,6 +14,13 @@
  */
 import type { WidgetModule } from "./adapter.js";
 
+import {
+  createFrameChannel,
+  type FrameChannel,
+  type FrameEventMap,
+  type FrameChannelOptions,
+} from "./frame-channel.js";
+
 /**
  * Handshake the framed page sends once it is listening for props. Declared
  * here, not in `mountly/iframe`, so this entry stays a leaf: a framed page
@@ -27,7 +34,17 @@ interface ParentIframe {
   sendMessage(message: unknown, targetOrigin?: string): void;
 }
 
-export interface MountAsFrameOptions {
+export interface FrameChildChannelOptions<Events extends FrameEventMap>
+  extends FrameChannelOptions<Events> {
+  /**
+   * Called with the channel to the host before the widget mounts, so a
+   * listener is registered before the first event can arrive. Return a cleanup
+   * function to run if the host tears the frame down.
+   */
+  connect: (channel: FrameChannel<Events>) => void | (() => void);
+}
+
+export interface MountAsFrameOptions<Events extends FrameEventMap = FrameEventMap> {
   /**
    * Where to mount. Defaults to a `[data-iframe-size]` div appended to `<body>`,
    * which is also what resize-iframe measures — so the frame tracks the widget
@@ -36,6 +53,12 @@ export interface MountAsFrameOptions {
   container?: HTMLElement;
   /** Props used when the page is opened directly rather than embedded. */
   standaloneProps?: Record<string, unknown>;
+  /**
+   * Typed events to and from the host. The host sends props on its own; this
+   * is how the widget answers — a selection, a completed payment, a request to
+   * navigate — without reaching for raw `postMessage`.
+   */
+  channel?: FrameChildChannelOptions<Events>;
 }
 
 function createSizedContainer(): HTMLElement {
@@ -49,13 +72,22 @@ function createSizedContainer(): HTMLElement {
  * Mount `widget` with the props the embedding host sends, and re-render on
  * every later update. Returns the container it mounted into.
  */
-export function mountAsFrame(widget: WidgetModule, options: MountAsFrameOptions = {}): HTMLElement {
+export function mountAsFrame<Events extends FrameEventMap = FrameEventMap>(
+  widget: WidgetModule,
+  options: MountAsFrameOptions<Events> = {},
+): HTMLElement {
   const container = options.container ?? createSizedContainer();
   const parentIframe = (globalThis as { parentIframe?: ParentIframe }).parentIframe;
 
   // Opened directly rather than embedded, so there is no host to send props.
-  // Mount anyway: the widget page stays developable on its own.
+  // Mount anyway: the widget page stays developable on its own. Emitting into
+  // a channel with no host is a no-op rather than a crash, so the same widget
+  // code runs on the standalone page.
   if (!parentIframe) {
+    if (options.channel) {
+      const { connect, ...channelOptions } = options.channel;
+      connect(createFrameChannel<Events>(() => {}, channelOptions).channel);
+    }
     void widget.mount(container, options.standaloneProps ?? {});
     return container;
   }
@@ -67,8 +99,23 @@ export function mountAsFrame(widget: WidgetModule, options: MountAsFrameOptions 
     );
   }
 
+  // Wired before FRAME_READY goes out, so no host event can outrun a listener.
+  let receive: ((message: unknown) => boolean) | undefined;
+  if (options.channel) {
+    const { connect, ...channelOptions } = options.channel;
+    const binding = createFrameChannel<Events>(
+      (envelope) => parentIframe.sendMessage(envelope),
+      channelOptions,
+    );
+    receive = binding.receive;
+    connect(binding.channel);
+  }
+
   let mounted = false;
   parentIframe.onMessage = (message) => {
+    // Channel traffic and props share one transport; the envelope marker is
+    // what tells them apart.
+    if (receive?.(message)) return;
     const props = (message ?? {}) as Record<string, unknown>;
     if (!mounted) {
       mounted = true;
@@ -86,3 +133,34 @@ export function mountAsFrame(widget: WidgetModule, options: MountAsFrameOptions 
   parentIframe.sendMessage(FRAME_READY);
   return container;
 }
+
+export { FRAME_CONTRACT_VERSION } from "./frame-channel.js";
+export type { FrameChannel, FrameChannelOptions, FrameEventMap } from "./frame-channel.js";
+
+export {
+  OVERLAY_OPEN,
+  OVERLAY_CLOSE,
+  OVERLAY_CLOSED,
+  openHostOverlay,
+  closeHostOverlay,
+  frameOverlayValidators,
+  isOverlayOpenPayload,
+  isOverlayClosePayload,
+  type FrameOverlayEvents,
+  type OverlayOpenPayload,
+  type OverlayClosePayload,
+  type OverlayFrameChannel,
+} from "./frame-overlay.js";
+
+export {
+  HISTORY_NAVIGATE,
+  HISTORY_SYNC,
+  requestHostNavigation,
+  frameHistoryValidators,
+  isHistoryNavigatePayload,
+  isHistorySyncPayload,
+  type FrameHistoryEvents,
+  type HistoryNavigatePayload,
+  type HistorySyncPayload,
+  type HistoryFrameChannel,
+} from "./frame-history.js";
