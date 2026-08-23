@@ -1,5 +1,12 @@
 # mountly-vite-plugin
 
+## 1.2.3
+
+### Patch Changes
+
+- Updated dependencies [4c8bece]
+  - mountly-manifest@1.1.0
+
 ## 1.2.2
 
 ### Patch Changes
