@@ -9,11 +9,11 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 export const DEMO_URI = "ui://mountly-demo/payment-breakdown";
 export const DEMO_APP_ONLY_URI = "ui://mountly-demo/payment-breakdown-admin";
 export const DEMO_TOOL = "quote_payment";
-export const DEMO_APP_ONLY_TOOL = "refresh_payment_widget";
+export const DEMO_APP_ONLY_TOOL = "refresh_payment_view";
 
 /**
  * Sample tool responses. The MCP server returns one of these as
- * `structuredContent`; the bridge spreads it into the widget's props so the
+ * `structuredContent`; the bridge spreads it into the View's props so the
  * React component renders. Two `plan` values exercise both first-mount and
  * the bridge's update() path on a second call.
  */
@@ -47,15 +47,14 @@ async function loadCreateMcpAppServer() {
 }
 
 /**
- * Bundles src/widget.tsx into a self-contained IIFE that sets
- * `globalThis.__mountlyMcpWidget__` to a real createMcpWidget-wrapped React
- * component. We bundle via esbuild so the demo exercises the same code path
- * a host author would, rather than hand-rolling a global.
+ * Bundles src/view.tsx into a self-contained IIFE. `createMcpView` publishes
+ * the View for the bridge. We bundle via esbuild so the demo exercises the same
+ * code path a host author would.
  */
-async function bundleWidget(outFile) {
+async function bundleView(outFile) {
   const { build } = await import("esbuild");
   await build({
-    entryPoints: [join(__dirname, "src/widget.tsx")],
+    entryPoints: [join(__dirname, "src/view.tsx")],
     outfile: outFile,
     bundle: true,
     format: "iife",
@@ -76,16 +75,16 @@ export async function createDemoServer() {
   let built;
   let builtAppOnly;
   try {
-    const widgetEntry = join(dir, "widget.js");
+    const viewEntry = join(dir, "view.js");
     const htmlOut = join(dir, "payment-breakdown.html");
     const htmlOutAppOnly = join(dir, "payment-breakdown-admin.html");
 
-    await bundleWidget(widgetEntry);
+    await bundleView(viewEntry);
 
     built = await buildMcpResource({
-      entry: widgetEntry,
+      entry: viewEntry,
       uri: DEMO_URI,
-      name: "payment_breakdown_widget",
+      name: "payment_breakdown_view",
       output: htmlOut,
       bridgeRuntimePath: getBridgeRuntimePath(),
       awaitToolResult: true,
@@ -97,9 +96,9 @@ export async function createDemoServer() {
       csp: { connectDomains: ["https://api.example.com"] },
     });
     builtAppOnly = await buildMcpResource({
-      entry: widgetEntry,
+      entry: viewEntry,
       uri: DEMO_APP_ONLY_URI,
-      name: "payment_breakdown_widget_admin",
+      name: "payment_breakdown_view_admin",
       output: htmlOutAppOnly,
       bridgeRuntimePath: getBridgeRuntimePath(),
       awaitToolResult: true,
@@ -126,7 +125,7 @@ export async function createDemoServer() {
         name: DEMO_TOOL,
         resourceUri: DEMO_URI,
         config: {
-          description: "Quote a payment breakdown (annual or monthly) for the demo widget",
+          description: "Quote a payment breakdown (annual or monthly) for the demo View",
           // Zod raw shape — required by @modelcontextprotocol/sdk's McpServer.
           inputSchema: {
             plan: z.enum(["annual", "monthly"]),
@@ -140,7 +139,7 @@ export async function createDemoServer() {
         name: DEMO_APP_ONLY_TOOL,
         resourceUri: DEMO_APP_ONLY_URI,
         config: {
-          description: "App-only refresh signal for the payment widget",
+          description: "App-only refresh signal for the payment View",
           inputSchema: {
             plan: z.enum(["annual", "monthly"]).optional(),
           },
@@ -158,5 +157,5 @@ export async function createDemoServer() {
     await rm(dir, { recursive: true, force: true });
   }
 
-  return { server, cleanup, built, widgetDir: dir };
+  return { server, cleanup, built, viewDir: dir };
 }

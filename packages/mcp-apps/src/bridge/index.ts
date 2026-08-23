@@ -1,5 +1,5 @@
 /**
- * View-side bridge that turns an MCP Apps `App` into a mountly `WidgetModule`
+ * View-side bridge that turns an MCP Apps `App` into a mountly view module
  * lifecycle. The full spec handshake — `ui/initialize`,
  * `ui/notifications/initialized`, `ui/notifications/tool-input(-partial)`,
  * `ui/notifications/tool-result`, `ui/notifications/tool-cancelled`,
@@ -15,18 +15,18 @@ import {
   type McpUiToolInputPartialNotification,
   type McpUiToolResultNotification,
 } from "@modelcontextprotocol/ext-apps";
-import type { WidgetModule } from "mountly/adapter";
+
 import { MCP_ERROR_CODES } from "../schema.js";
-import type { McpWidgetProps } from "../types.js";
+import type { McpView, McpViewProps } from "../types.js";
 
 export interface RunBridgeOptions {
   /** Pre-constructed App (used by jsdom tests); otherwise one is created here. */
   app?: App;
-  widget: WidgetModule;
+  view: McpView;
   container: Element;
   /**
    * If true (default), mount is deferred until the first tool-result arrives;
-   * the widget renders against `{ toolInput, toolResult, hostContext, mcp }`
+   * the View renders against `{ toolInput, toolResult, hostContext, mcp }`
    * props on each notification.
    *
    * If false, mount fires immediately after `ui/initialize` with `{ mcp }`
@@ -38,7 +38,7 @@ export interface RunBridgeOptions {
    *
    * Off by default — the spec lets views ignore partials, and they carry
    * best-effort recovered JSON that MUST NOT drive critical operations. When
-   * on, partials arrive as `toolInputPartial` (mounting the widget early if
+   * on, partials arrive as `toolInputPartial` (mounting the View early if
    * needed) and are cleared once the complete `tool-input` lands.
    */
   streamToolInput?: boolean;
@@ -61,7 +61,7 @@ export interface RunningBridge {
 
 /**
  * `data-mountly-mcp-state` is the View's machine-readable outcome, read by
- * `verify --render`. It only ever moves forward — `mounted` once the widget
+ * `verify --render`. It only ever moves forward — `mounted` once the View
  * has mounted, `error` if the boundary replaced it — so a state written here
  * can never be clobbered by a later lifecycle step.
  */
@@ -78,7 +78,7 @@ function renderErrorBoundary(container: Element, code: string, message?: string)
 
 export function runBridge(options: RunBridgeOptions): RunningBridge {
   const {
-    widget,
+    view,
     container,
     awaitToolResult = true,
     streamToolInput = false,
@@ -99,7 +99,7 @@ export function runBridge(options: RunBridgeOptions): RunningBridge {
   let stopped = false;
   let pending: Promise<void> = Promise.resolve();
 
-  function currentProps(): McpWidgetProps {
+  function currentProps(): McpViewProps {
     return {
       mcp: app,
       toolInput,
@@ -119,37 +119,37 @@ export function runBridge(options: RunBridgeOptions): RunningBridge {
     renderErrorBoundary(container, code, message);
   }
 
-  function renderWith(props: McpWidgetProps): Promise<void> {
+  function renderWith(props: McpViewProps): Promise<void> {
     pending = pending.then(async () => {
       if (stopped) return;
       try {
         if (!mounted) {
-          const r = widget.mount(container, props);
+          const r = view.mount(container, props);
           if (r instanceof Promise) await r;
           mounted = true;
           container.setAttribute("data-mountly-mcp-state", "mounted");
-        } else if (widget.update) {
-          const r = widget.update(container, props);
+        } else if (view.update) {
+          const r = view.update(container, props);
           if (r instanceof Promise) await r;
         } else {
-          await widget.unmount(container);
+          await view.unmount(container);
           mounted = false;
-          const r = widget.mount(container, props);
+          const r = view.mount(container, props);
           if (r instanceof Promise) await r;
           mounted = true;
         }
       } catch (error) {
-        notifyError(MCP_ERROR_CODES.WIDGET_MOUNT_THREW, error);
+        notifyError(MCP_ERROR_CODES.VIEW_MOUNT_THREW, error);
       }
     });
     return pending;
   }
 
-  async function unmountWidget(): Promise<void> {
+  async function unmountView(): Promise<void> {
     await pending;
     if (!mounted) return;
     mounted = false;
-    await widget.unmount(container);
+    await view.unmount(container);
   }
 
   // Event handlers MUST be registered before connect() — ext-apps will refuse
@@ -193,7 +193,7 @@ export function runBridge(options: RunBridgeOptions): RunningBridge {
     stopped = true;
     detachTeardown();
     detachAppHandlers();
-    await unmountWidget();
+    await unmountView();
     return (await previousTeardown?.(params, extra)) ?? {};
   };
   app.onteardown = bridgeTeardown;
@@ -235,7 +235,7 @@ export function runBridge(options: RunBridgeOptions): RunningBridge {
     stopped = true;
     detachTeardown();
     detachAppHandlers();
-    void unmountWidget();
+    void unmountView();
     if (!options.app) void app.close().catch(() => undefined);
   }
 

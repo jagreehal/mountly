@@ -16,7 +16,7 @@ export interface VerifyMcpAppsOptions {
   /** Transitional single-View inputs when no manifest exists. */
   htmlPaths?: ReadonlyArray<string>;
   /**
-   * Load each View in a real browser and confirm the widget mounts with content.
+   * Load each View in a real browser and confirm the View mounts with content.
    *
    * Off by default: it needs Playwright and a Chromium download, which the
    * static checks do not. Turn it on in CI. Everything else here inspects

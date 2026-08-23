@@ -45,7 +45,7 @@ const check = (label, ok, detail = "") =>
 
   const { tools } = await client.listTools();
   const quote = tools.find((t) => t.name === "quote_payment");
-  const refresh = tools.find((t) => t.name === "refresh_payment_widget");
+  const refresh = tools.find((t) => t.name === "refresh_payment_view");
   check("tools/list exposes quote_payment", !!quote);
   check(
     "tool carries _meta.ui.resourceUri",
@@ -104,7 +104,7 @@ const check = (label, ok, detail = "") =>
   check("text-only host gets no ui metadata", quote?._meta?.ui === undefined);
   check(
     "app-only tool is hidden from a text-only host",
-    !tools.some((t) => t.name === "refresh_payment_widget"),
+    !tools.some((t) => t.name === "refresh_payment_view"),
   );
 
   const { resources } = await client.listResources();

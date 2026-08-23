@@ -6,13 +6,13 @@ import { createDemoServer } from "./demo-core.mjs";
 
 /**
  * Build a static, two-origin MCP Apps HOST harness around the REAL generative
- * `ui://` widget. This is the spec's reference host (SEP-1865 §8.4): host +
+ * `ui://` View. This is the spec's reference host (SEP-1865 §8.4): host +
  * sandbox-proxy on different origins, the genuine postMessage wire protocol
  * (ui/initialize → ui/notifications/tool-result), CSP-injected inner iframe.
  *
  * Unlike `preview-build.mjs` (which renders json-render directly, no MCP), this
- * loads the actual built widget HTML — bridge and all — receives a generated
- * spec as a real tool-result, and CAPTURES the widget's `sendMessage` (method
+ * loads the actual built View HTML — bridge and all — receives a generated
+ * spec as a real tool-result, and CAPTURES the View's `sendMessage` (method
  * `ui/message`) at the host when the generated button is clicked. That is the
  * full agent loop running through a real MCP Apps host.
  *
@@ -29,10 +29,10 @@ await rm(OUT, { recursive: true, force: true });
 await mkdir(HOST_DIR, { recursive: true });
 await mkdir(SANDBOX_DIR, { recursive: true });
 
-// Build the real generative ui:// widget (bundles src/widget.tsx + bridge).
+// Build the real generative ui:// View (bundles src/view.tsx + bridge).
 const { built, cleanup } = await createDemoServer();
-const widgetHtml = await readFile(built.htmlPath, "utf8");
-const widgetMeta = JSON.parse(await readFile(`${built.htmlPath}.meta.json`, "utf8"));
+const viewHtml = await readFile(built.htmlPath, "utf8");
+const viewMeta = JSON.parse(await readFile(`${built.htmlPath}.meta.json`, "utf8"));
 await cleanup();
 
 // A REAL model-generated spec (Gemini) becomes the tool-result.
@@ -40,8 +40,8 @@ const spec = JSON.parse(
   await readFile(join(__dirname, "fixtures/gemini-generated-spec.json"), "utf8"),
 );
 
-const cspMeta = widgetMeta._meta?.ui?.csp ?? {};
-const permsMeta = widgetMeta._meta?.ui?.permissions ?? {};
+const cspMeta = viewMeta._meta?.ui?.csp ?? {};
+const permsMeta = viewMeta._meta?.ui?.permissions ?? {};
 
 const safe = (v) => JSON.stringify(v).replace(/</g, "\\u003c");
 
@@ -62,20 +62,20 @@ const hostIndex = `<!doctype html>
 </style></head>
 <body>
 <header>
-  <h1>Real MCP Apps host — generative ui:// widget</h1>
-  <p>Sandbox proxy on :${SANDBOX_PORT} (separate origin per §8.4). A real model-generated spec is delivered as <code>ui/notifications/tool-result</code>; the widget's button sends <code>ui/message</code> back here.</p>
+  <h1>Real MCP Apps host — generative ui:// View</h1>
+  <p>Sandbox proxy on :${SANDBOX_PORT} (separate origin per §8.4). A real model-generated spec is delivered as <code>ui/notifications/tool-result</code>; the View's button sends <code>ui/message</code> back here.</p>
 </header>
 <main>
   <iframe id="sandbox" src="http://localhost:${SANDBOX_PORT}/sandbox-proxy.html" sandbox="allow-scripts allow-same-origin" title="sandbox proxy"></iframe>
   <div>
-    <div class="panel"><h2>Agent inbox (ui/message from the widget)</h2><div id="inbox" data-count="0">— nothing yet —</div></div>
+    <div class="panel"><h2>Agent inbox (ui/message from the View)</h2><div id="inbox" data-count="0">— nothing yet —</div></div>
     <div class="panel" style="margin-top:12px"><h2>Channel log</h2><div class="log" id="log"></div></div>
   </div>
 </main>
 <script>
-  const WIDGET_HTML = ${safe(widgetHtml)};
-  const WIDGET_CSP = ${safe(cspMeta)};
-  const WIDGET_PERMS = ${safe(permsMeta)};
+  const VIEW_HTML = ${safe(viewHtml)};
+  const VIEW_CSP = ${safe(cspMeta)};
+  const VIEW_PERMS = ${safe(permsMeta)};
   const SPEC = ${safe(spec)};
   const SANDBOX_ORIGIN = "http://localhost:${SANDBOX_PORT}";
   const sandbox = document.getElementById("sandbox");
@@ -98,7 +98,7 @@ const hostIndex = `<!doctype html>
 
     if (msg.method === "ui/notifications/sandbox-proxy-ready") {
       log("in","sandbox-proxy-ready");
-      notify("ui/notifications/sandbox-resource-ready", { html:WIDGET_HTML, csp:WIDGET_CSP, permissions:WIDGET_PERMS });
+      notify("ui/notifications/sandbox-resource-ready", { html:VIEW_HTML, csp:VIEW_CSP, permissions:VIEW_PERMS });
       return;
     }
     if (typeof msg.id === "number" && msg.method === "ui/initialize") {
@@ -109,7 +109,7 @@ const hostIndex = `<!doctype html>
     }
     if (msg.method === "ui/notifications/initialized") { log("in","initialized"); initialized=true; setTimeout(deliver,50); return; }
 
-    // THE agent loop: the widget's button → App.sendMessage → method "ui/message".
+    // THE agent loop: the View's button → App.sendMessage → method "ui/message".
     if (typeof msg.id === "number" && msg.method === "ui/message") {
       const text = (msg.params?.content||[]).map(c=>c.text).filter(Boolean).join(" ");
       inboxCount++;
@@ -128,7 +128,7 @@ const hostIndex = `<!doctype html>
 </body></html>`;
 
 // Sandbox proxy (§8.4) — identical pattern to mcp-app-demo: inject CSP, srcdoc
-// the widget into an inner iframe, forward messages both ways.
+// the View into an inner iframe, forward messages both ways.
 // The sandbox proxy is the security boundary. Served from the package so
 // this demo cannot drift from what `mountly-mcp dev` enforces.
 const sandboxProxy = await sandboxProxyHtml(`http://localhost:${HOST_PORT}`);

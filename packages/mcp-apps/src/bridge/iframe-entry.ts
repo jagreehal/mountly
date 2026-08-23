@@ -1,16 +1,15 @@
 /**
- * Inlined into the emitted HTML by `buildMcpResource`. Expects the user's
- * widget bundle to have placed a `WidgetModule` on
- * `globalThis.__mountlyMcpWidget__` (the bundler is responsible for that).
+ * Inlined into the emitted HTML by `buildMcpResource`. Expects the View entry
+ * to have published an `McpView` via `createMcpView` / `publishMcpView`.
  *
  * Spawns the ext-apps App, connects it via PostMessageTransport, and drives
- * the widget lifecycle through `runBridge`.
+ * the View lifecycle through `runBridge`.
  */
-import type { WidgetModule } from "mountly/adapter";
 import type { McpUiDisplayMode } from "@modelcontextprotocol/ext-apps";
 import { runBridge } from "./index.js";
+import { getPublishedMcpView, MCP_VIEW_GLOBAL_KEY } from "../publish.js";
 
-const widget = (globalThis as { __mountlyMcpWidget__?: WidgetModule }).__mountlyMcpWidget__;
+const view = getPublishedMcpView();
 const awaitToolResult =
   (globalThis as { __mountlyMcpAwaitToolResult__?: boolean }).__mountlyMcpAwaitToolResult__ ?? true;
 const streamToolInput =
@@ -22,8 +21,10 @@ const availableDisplayModes = (
 const appInfo = (globalThis as { __mountlyMcpAppInfo__?: { name: string; version: string } })
   .__mountlyMcpAppInfo__;
 
-if (!widget) {
-  throw new Error("[mountly-mcp] no widget on globalThis.__mountlyMcpWidget__");
+if (!view) {
+  throw new Error(
+    `[mountly-mcp] no View published — call createMcpView(...) (or publishMcpView) in your entry so ${MCP_VIEW_GLOBAL_KEY} is set`,
+  );
 }
 
 const container = document.getElementById("mountly-mcp-root");
@@ -32,7 +33,7 @@ if (!container) {
 }
 
 const bridge = runBridge({
-  widget,
+  view,
   container,
   awaitToolResult,
   streamToolInput,

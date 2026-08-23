@@ -8,24 +8,24 @@ import { story } from "executable-stories-playwright";
  *
  *   host (localhost:5179)
  *     └── outer iframe: sandbox-proxy.html (localhost:5180, different origin)
- *           └── inner iframe (srcdoc): the built `ui://` widget HTML
+ *           └── inner iframe (srcdoc): the built `ui://` View HTML
  *
  * The host implements: ui/notifications/sandbox-resource-ready,
  * ui/initialize response (with hostContext + hostCapabilities),
  * ui/notifications/tool-input, ui/notifications/tool-result.
  *
- * The widget runs inside the inner iframe and speaks the full 2026-01-26
+ * The View runs inside the inner iframe and speaks the full 2026-01-26
  * wire protocol via ext-apps's App.
  *
  * verify.mjs is a string-grep — this spec is the only thing that catches a
  * regression in the actual handshake.
  */
 test.describe("mcp-app-demo preview", () => {
-  function widgetFrameLocator(page: import("@playwright/test").Page) {
+  function viewFrameLocator(page: import("@playwright/test").Page) {
     return page.frameLocator("#sandbox").frameLocator("iframe#inner");
   }
 
-  test("full spec handshake: widget renders with annual breakdown", async ({ page }, testInfo) => {
+  test("full spec handshake: View renders with annual breakdown", async ({ page }, testInfo) => {
     story.init(testInfo, {
       tags: ["mcp", "preview", "sandbox-proxy"],
       ticket: "MOUNTLY-MCP-DEMO-1",
@@ -41,14 +41,14 @@ test.describe("mcp-app-demo preview", () => {
     story.when(
       "the sandbox proxy → view handshake completes and the host auto-delivers the annual payload",
     );
-    const widget = widgetFrameLocator(page);
-    await expect(widget.getByText("Total due")).toBeVisible({ timeout: 5000 });
+    const view = viewFrameLocator(page);
+    await expect(view.getByText("Total due")).toBeVisible({ timeout: 5000 });
 
-    story.then("the widget rendered the annual structuredContent");
-    await expect(widget.getByText("$99.00")).toBeVisible();
-    await expect(widget.getByText("Annual subscription")).toBeVisible();
-    await expect(widget.getByText("Setup fee")).toBeVisible();
-    await expect(widget.getByText(/pay_demo_annual/i)).toBeVisible();
+    story.then("the View rendered the annual structuredContent");
+    await expect(view.getByText("$99.00")).toBeVisible();
+    await expect(view.getByText("Annual subscription")).toBeVisible();
+    await expect(view.getByText("Setup fee")).toBeVisible();
+    await expect(view.getByText(/pay_demo_annual/i)).toBeVisible();
 
     story.then("the host's channel log reflects the full spec wire protocol");
     const log = await page.locator("#log").textContent();
@@ -63,7 +63,7 @@ test.describe("mcp-app-demo preview", () => {
     expect(pageErrors).toEqual([]);
   });
 
-  test("clicking Monthly delivers a fresh tool-result and the widget re-renders", async ({
+  test("clicking Monthly delivers a fresh tool-result and the View re-renders", async ({
     page,
   }, testInfo) => {
     story.init(testInfo, {
@@ -73,18 +73,18 @@ test.describe("mcp-app-demo preview", () => {
 
     story.given("the preview is open with the default annual breakdown shown");
     await page.goto("http://localhost:5179/");
-    const widget = widgetFrameLocator(page);
-    await expect(widget.getByText("$99.00")).toBeVisible({ timeout: 5000 });
+    const view = viewFrameLocator(page);
+    await expect(view.getByText("$99.00")).toBeVisible({ timeout: 5000 });
 
     story.when("the user clicks Monthly, dispatching ui/notifications/tool-input + tool-result");
     await page.getByRole("button", { name: "Monthly" }).click();
 
-    story.then("the widget re-renders against the monthly payload via the bridge's update() path");
-    await expect(widget.getByText("$12.00")).toBeVisible({ timeout: 3000 });
-    await expect(widget.getByText("Monthly subscription")).toBeVisible();
-    await expect(widget.getByText("Processing fee")).toBeVisible();
-    await expect(widget.getByText(/pay_demo_monthly/i)).toBeVisible();
-    await expect(widget.getByText("Annual subscription")).toHaveCount(0);
+    story.then("the View re-renders against the monthly payload via the bridge's update() path");
+    await expect(view.getByText("$12.00")).toBeVisible({ timeout: 3000 });
+    await expect(view.getByText("Monthly subscription")).toBeVisible();
+    await expect(view.getByText("Processing fee")).toBeVisible();
+    await expect(view.getByText(/pay_demo_monthly/i)).toBeVisible();
+    await expect(view.getByText("Annual subscription")).toHaveCount(0);
   });
 
   test("sandbox topology: host and sandbox proxy serve from different origins", async ({
@@ -105,7 +105,7 @@ test.describe("mcp-app-demo preview", () => {
       .map((f) => f.url())
       .sort();
 
-    story.then("there are 3 frames: host, sandbox proxy on a distinct origin, inner srcdoc widget");
+    story.then("there are 3 frames: host, sandbox proxy on a distinct origin, inner srcdoc View");
     expect(frameUrls).toContain("http://localhost:5179/");
     expect(frameUrls.some((u) => u.startsWith("http://localhost:5180/"))).toBe(true);
     expect(frameUrls.some((u) => u === "about:srcdoc")).toBe(true);
@@ -134,7 +134,7 @@ test.describe("mcp-app-demo preview", () => {
 
     const srcdoc = await inner.getAttribute("srcdoc");
     expect(srcdoc).toContain("Content-Security-Policy");
-    // No 'unsafe-eval': the widget must boot under the CSP the spec mandates.
+    // No 'unsafe-eval': the View must boot under the CSP the spec mandates.
     expect(srcdoc).toContain("script-src 'self' 'unsafe-inline'");
     expect(srcdoc).not.toContain("unsafe-eval");
 
@@ -154,11 +154,11 @@ test.describe("mcp-app-demo preview", () => {
       ticket: "MOUNTLY-MCP-DEMO-7",
     });
 
-    story.given("the preview is open and the widget has rendered");
+    story.given("the preview is open and the View has rendered");
     await page.emulateMedia({ colorScheme: "light" });
     await page.goto("http://localhost:5179/");
-    const widget = widgetFrameLocator(page);
-    await expect(widget.getByText("Total due")).toBeVisible({ timeout: 5000 });
+    const view = viewFrameLocator(page);
+    await expect(view.getByText("Total due")).toBeVisible({ timeout: 5000 });
 
     story.when("the user's system flips to dark mode");
     await page.emulateMedia({ colorScheme: "dark" });
@@ -169,7 +169,7 @@ test.describe("mcp-app-demo preview", () => {
     });
   });
 
-  test("resource teardown request is acknowledged by the widget bridge", async ({
+  test("resource teardown request is acknowledged by the View bridge", async ({
     page,
   }, testInfo) => {
     story.init(testInfo, {
@@ -178,8 +178,8 @@ test.describe("mcp-app-demo preview", () => {
     });
 
     await page.goto("http://localhost:5179/");
-    const widget = widgetFrameLocator(page);
-    await expect(widget.getByText("Total due")).toBeVisible({ timeout: 5000 });
+    const view = viewFrameLocator(page);
+    await expect(view.getByText("Total due")).toBeVisible({ timeout: 5000 });
 
     await page.getByRole("button", { name: "Teardown" }).click();
     const log = await page.locator("#log").textContent();

@@ -1,9 +1,10 @@
 import { createElement } from "react";
 import { type ComponentMap, createRenderer } from "@json-render/react";
 import type { Catalog, SchemaDefinition, Spec } from "@json-render/core";
-import { createMcpWidget, useMcpHost, useToolResult } from "../react/index.js";
+import { createMcpView, useMcpApp, useToolResult } from "../react/index.js";
 import type { App } from "@modelcontextprotocol/ext-apps";
-import type { AdapterOptions, WidgetModule } from "mountly/adapter";
+import type { AdapterOptions } from "mountly/adapter";
+import type { McpView } from "../types.js";
 
 /** The catalog-data constraint createRenderer infers against. */
 type CatalogData = { components: Record<string, { props: unknown }> };
@@ -34,7 +35,7 @@ export const defaultActionRouter: ActionRouter = (name, params, mcp) => {
 
 /**
  * Identity helper that types a components map against a catalog (so it can be
- * defined once and reused by both `createGenerativeWidget` and `createRenderer`)
+ * defined once and reused by both `createGenerativeView` and `createRenderer`)
  * without losing per-component prop inference.
  *
  * ```ts
@@ -50,7 +51,7 @@ export function defineComponents<TDef extends SchemaDefinition, TCatalog extends
   return components;
 }
 
-export interface GenerativeWidgetOptions<
+export interface GenerativeViewOptions<
   TDef extends SchemaDefinition,
   TCatalog extends CatalogData,
 > extends AdapterOptions {
@@ -70,26 +71,23 @@ interface ToolResultShape {
 }
 
 /**
- * Turn a json-render catalog + components into a mountly MCP Apps widget.
+ * Turn a json-render catalog + components into a mountly MCP Apps View.
  *
- * The returned widget reads the spec from the tool result, renders it natively
- * (resolving `$state` bindings from `spec.state`), and routes the rendered UI's
- * actions back to the MCP host. One call replaces the manual
- * catalog→registry→renderer→state→action-bridge wiring.
+ * Reads the spec from the tool result, renders it natively (resolving `$state`
+ * from `spec.state`), and routes actions back to the MCP host.
  *
  * ```ts
- * const widget = createGenerativeWidget({ catalog, components, styles, shadow: true });
- * (globalThis as { __mountlyMcpWidget__?: unknown }).__mountlyMcpWidget__ = widget;
+ * createGenerativeView({ catalog, components, styles, shadow: true });
  * ```
  */
-export function createGenerativeWidget<TDef extends SchemaDefinition, TCatalog extends CatalogData>(
-  options: GenerativeWidgetOptions<TDef, TCatalog>,
-): WidgetModule {
+export function createGenerativeView<TDef extends SchemaDefinition, TCatalog extends CatalogData>(
+  options: GenerativeViewOptions<TDef, TCatalog>,
+): McpView {
   const { catalog, components, onAction = defaultActionRouter, ...adapter } = options;
   const Rendered = createRenderer(catalog, components);
 
   function GenerativeView() {
-    const mcp = useMcpHost();
+    const mcp = useMcpApp();
     const result = useToolResult<ToolResultShape>();
     const spec = result?.structuredContent?.spec ?? null;
     if (!spec) return null;
@@ -100,5 +98,5 @@ export function createGenerativeWidget<TDef extends SchemaDefinition, TCatalog e
     });
   }
 
-  return createMcpWidget(GenerativeView, adapter);
+  return createMcpView(GenerativeView, adapter);
 }

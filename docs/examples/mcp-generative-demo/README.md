@@ -39,7 +39,7 @@ function App({ specs }) {
 | --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
 | `catalog.ts`, the vocabulary (zod)                              | `catalog.prompt()` → the system prompt for the model                                               |
 | `registry.tsx`, `defineComponents(catalog, {...})`              | types the map, builds the renderer                                                                 |
-| `widget.tsx`, `createGenerativeWidget({ catalog, components })` | read tool result · resolve `$state` · stream · bridge actions to the agent · MCP `ui://` packaging |
+| `view.tsx`, `createGenerativeView({ catalog, components })` | read tool result · resolve `$state` · stream · bridge actions to the agent · MCP `ui://` packaging |
 | `useSpecStream(spec)` in the preview                            | the compiler, replay, loading, cancellation                                                        |
 
 ## Deeply json-render

@@ -67,12 +67,12 @@ export async function runVerification() {
       "expected size-changed plumbing in bridge runtime",
     );
     assert.ok(
-      html?.includes("__mountlyMcpWidget__"),
-      "expected widget bundle to register __mountlyMcpWidget__",
+      html?.includes("__mountlyMcpView__"),
+      "expected View bundle to publish a View for the bridge",
     );
     assert.ok(
       html?.includes("PaymentBreakdown") || html?.includes("Breakdown"),
-      "expected PaymentBreakdown component code in widget bundle",
+      "expected PaymentBreakdown component code in View bundle",
     );
 
     // Tool returns the annual plan structured content.
@@ -101,9 +101,9 @@ export async function runVerification() {
     console.log("[mcp-app-demo] verification passed");
     console.log(`- tool: ${DEMO_TOOL}`);
     console.log(`- resource: ${DEMO_URI} (${resource.mimeType})`);
-    console.log(`- widget HTML: ${built.htmlPath}`);
+    console.log(`- View HTML: ${built.htmlPath}`);
     console.log("- full spec wire protocol present in bridge runtime");
-    console.log("- real React widget bundle: yes");
+    console.log("- real React View bundle: yes");
     console.log(
       `- structuredContent (annual): total=${SAMPLE_PAYMENTS.annual.total} ${SAMPLE_PAYMENTS.annual.currency}`,
     );

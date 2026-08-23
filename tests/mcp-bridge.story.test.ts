@@ -12,21 +12,21 @@ import { useToolResult as useVueToolResult } from "../packages/mcp-apps/src/vue/
 import type { McpUiDisplayMode, McpUiHostContext } from "../packages/mcp-apps/src/types";
 import { App, runBridge } from "../packages/mcp-apps/src/bridge/index";
 import type { RunBridgeOptions } from "../packages/mcp-apps/src/bridge/index";
-import type { McpWidgetProps } from "../packages/mcp-apps/src/types";
+import type { McpViewProps } from "../packages/mcp-apps/src/types";
 
-/** Records what the bridge hands the widget on each mount/update. */
-function recordingWidget() {
-  const renders: McpWidgetProps[] = [];
-  const widget: RunBridgeOptions["widget"] = {
+/** Records what the bridge hands the View on each mount/update. */
+function recordingView() {
+  const renders: McpViewProps[] = [];
+  const view: RunBridgeOptions["view"] = {
     mount: (_container, props) => {
-      renders.push(props as McpWidgetProps);
+      renders.push(props as McpViewProps);
     },
     update: (_container, props) => {
-      renders.push(props as McpWidgetProps);
+      renders.push(props as McpViewProps);
     },
     unmount: () => undefined,
   };
-  return { widget, renders };
+  return { view, renders };
 }
 
 /** Let the bridge's internal render queue drain. */
@@ -50,11 +50,11 @@ function emitNotification(app: App, method: string, params: unknown): void {
 describe("runBridge — ui/notifications/tool-input-partial", () => {
   it("ignores partial tool input by default (spec: views MAY ignore it)", async ({ task }) => {
     story.init(task);
-    const { widget, renders } = recordingWidget();
+    const { view, renders } = recordingView();
     const container = document.createElement("div");
 
     story.given("a bridge running with default options");
-    const bridge = runBridge({ app: new App({ name: "t", version: "0" }), widget, container });
+    const bridge = runBridge({ app: new App({ name: "t", version: "0" }), view, container });
     await bridge.ready;
 
     story.when("the host streams partial tool arguments");
@@ -63,7 +63,7 @@ describe("runBridge — ui/notifications/tool-input-partial", () => {
     });
     await flush();
 
-    story.then("nothing renders — partial JSON never drives the widget");
+    story.then("nothing renders — partial JSON never drives the View");
     expect(renders).toHaveLength(0);
   });
 
@@ -71,13 +71,13 @@ describe("runBridge — ui/notifications/tool-input-partial", () => {
     task,
   }) => {
     story.init(task);
-    const { widget, renders } = recordingWidget();
+    const { view, renders } = recordingView();
     const container = document.createElement("div");
 
     story.given("a bridge opted into streaming tool input");
     const bridge = runBridge({
       app: new App({ name: "t", version: "0" }),
-      widget,
+      view,
       container,
       streamToolInput: true,
     });
@@ -89,7 +89,7 @@ describe("runBridge — ui/notifications/tool-input-partial", () => {
     });
     await flush();
 
-    story.then("the widget mounts early with toolInputPartial and no complete input");
+    story.then("the View mounts early with toolInputPartial and no complete input");
     expect(renders).toHaveLength(1);
     expect(renders[0]?.toolInputPartial).toEqual({ arguments: { plan: "ann" } });
     expect(renders[0]?.toolInput).toBeUndefined();
@@ -110,12 +110,12 @@ describe("runBridge — ui/notifications/tool-input-partial", () => {
 describe("runBridge — lifecycle integration", () => {
   it("uses the host context from initialization for an immediate mount", async ({ task }) => {
     story.init(task);
-    const { widget, renders } = recordingWidget();
+    const { view, renders } = recordingView();
     const container = document.createElement("div");
     const app = new App({ name: "t", version: "0" });
     vi.spyOn(app, "getHostContext").mockReturnValue({ theme: "dark" });
 
-    const bridge = runBridge({ app, widget, container, awaitToolResult: false });
+    const bridge = runBridge({ app, view, container, awaitToolResult: false });
     await bridge.ready;
     await flush();
 
@@ -123,30 +123,30 @@ describe("runBridge — lifecycle integration", () => {
     expect(container.getAttribute("data-mountly-mcp-state")).toBe("mounted");
   });
 
-  it("does not replace notification handlers installed by the widget", async ({ task }) => {
+  it("does not replace notification handlers installed by the View", async ({ task }) => {
     story.init(task);
-    const { widget } = recordingWidget();
+    const { view } = recordingView();
     const app = new App({ name: "t", version: "0" });
-    const widgetHandler = vi.fn<NonNullable<typeof app.ontoolresult>>();
-    app.ontoolresult = widgetHandler;
+    const viewHandler = vi.fn<NonNullable<typeof app.ontoolresult>>();
+    app.ontoolresult = viewHandler;
 
-    const bridge = runBridge({ app, widget, container: document.createElement("div") });
+    const bridge = runBridge({ app, view, container: document.createElement("div") });
     await bridge.ready;
 
-    expect(app.ontoolresult).toBe(widgetHandler);
+    expect(app.ontoolresult).toBe(viewHandler);
     bridge.stop();
   });
 
   it("leaves automatic resize setup to App.connect", async ({ task }) => {
     story.init(task);
-    const { widget } = recordingWidget();
+    const { view } = recordingView();
     const connect = vi.spyOn(App.prototype, "connect").mockResolvedValue(undefined);
     const setup = vi
       .spyOn(App.prototype, "setupSizeChangedNotifications")
       .mockReturnValue(() => undefined);
 
     try {
-      const bridge = runBridge({ widget, container: document.createElement("div") });
+      const bridge = runBridge({ view, container: document.createElement("div") });
       await bridge.ready;
 
       expect(connect).toHaveBeenCalledOnce();
@@ -160,12 +160,12 @@ describe("runBridge — lifecycle integration", () => {
 
   it("renders initialization failures while keeping ready rejectable", async ({ task }) => {
     story.init(task);
-    const { widget } = recordingWidget();
+    const { view } = recordingView();
     const container = document.createElement("div");
     const connect = vi.spyOn(App.prototype, "connect").mockRejectedValue(new Error("no host"));
 
     try {
-      const bridge = runBridge({ widget, container });
+      const bridge = runBridge({ view, container });
       await expect(bridge.ready).rejects.toThrow("no host");
       expect(container.getAttribute("data-mountly-mcp-state")).toBe("error");
       expect(container.querySelector("[data-mountly-mcp-error]")?.textContent).toContain("no host");
@@ -218,7 +218,7 @@ describe("useRequestDisplayMode — ui/request-display-mode", () => {
 });
 
 describe("framework entry points — guardrails", () => {
-  it("tells you what you did wrong when composables run outside a widget", ({ task }) => {
+  it("tells you what you did wrong when composables run outside a View", ({ task }) => {
     story.init(task, { tags: ["mcp", "vue"] });
 
     story.then("the error names the wrapper you forgot, not the missing context");
@@ -227,7 +227,7 @@ describe("framework entry points — guardrails", () => {
     // stays here where it costs nothing.
     // Vue composables run outside a component; React hooks must be rendered,
     // or React's own "invalid hook call" fires before the guardrail does.
-    expect(() => useVueToolResult()).toThrow(/createMcpWidget/);
-    expect(() => renderHook(() => useReactToolResult())).toThrow(/createMcpWidget/);
+    expect(() => useVueToolResult()).toThrow(/createMcpView/);
+    expect(() => renderHook(() => useReactToolResult())).toThrow(/createMcpView/);
   });
 });

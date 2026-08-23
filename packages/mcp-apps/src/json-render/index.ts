@@ -1,10 +1,10 @@
 export {
   type ActionRouter,
-  type GenerativeWidgetOptions,
-  createGenerativeWidget,
+  type GenerativeViewOptions,
+  createGenerativeView,
   defaultActionRouter,
   defineComponents,
-} from "./widget.js";
+} from "./generative-view.js";
 export {
   type JsonRenderToolOptions,
   type RegisterJsonRenderResourceOptions,

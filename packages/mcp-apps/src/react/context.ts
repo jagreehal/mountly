@@ -8,7 +8,7 @@ import type {
 } from "@modelcontextprotocol/ext-apps";
 
 /**
- * Shared per-widget context. The bridge populates this on each mount/update,
+ * Shared per-View context. The bridge populates this on each mount/update,
  * so consumers can synchronously read the initial values (no event subscription
  * race) and the React tree re-renders when the bridge calls `update()`.
  */

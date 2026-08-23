@@ -13,7 +13,7 @@ export const DEMO_TOOL = "render_dashboard";
  * Pre-authored json-render specs — the "AI output" the agent would generate.
  * Each is a flat `{ root, elements }` tree using ONLY catalog types
  * (Column / Card / Metric) from `src/catalog.ts`. The MCP server returns one
- * as `structuredContent.spec`; the bridge forwards it to the widget, which
+ * as `structuredContent.spec`; the bridge forwards it to the View, which
  * renders it natively. Two views exercise both first-mount and the bridge's
  * `update()` path on a second call.
  */
@@ -111,15 +111,14 @@ async function loadCreateMcpAppServer() {
 }
 
 /**
- * Bundles src/widget.tsx into a self-contained IIFE that sets
- * `globalThis.__mountlyMcpWidget__` to a real createMcpWidget-wrapped React
- * component. esbuild bundles json-render + the catalog/registry, so the demo
- * exercises the same code path a host author would.
+ * Bundles src/view.tsx into a self-contained IIFE. `createGenerativeView`
+ * publishes the View for the bridge. esbuild bundles json-render + the
+ * catalog/registry, so the demo exercises the same code path a host author would.
  */
-async function bundleWidget(outFile) {
+async function bundleView(outFile) {
   const { build } = await import("esbuild");
   await build({
-    entryPoints: [join(__dirname, "src/widget.tsx")],
+    entryPoints: [join(__dirname, "src/view.tsx")],
     outfile: outFile,
     bundle: true,
     format: "iife",
@@ -139,15 +138,15 @@ export async function createDemoServer() {
   const dir = await mkdtemp(join(tmpdir(), "mountly-mcp-generative-demo-"));
   let built;
   try {
-    const widgetEntry = join(dir, "widget.js");
+    const viewEntry = join(dir, "view.js");
     const htmlOut = join(dir, "generative-dashboard.html");
 
-    await bundleWidget(widgetEntry);
+    await bundleView(viewEntry);
 
     built = await buildMcpResource({
-      entry: widgetEntry,
+      entry: viewEntry,
       uri: DEMO_URI,
-      name: "generative_dashboard_widget",
+      name: "generative_dashboard_view",
       output: htmlOut,
       bridgeRuntimePath: getBridgeRuntimePath(),
       awaitToolResult: true,
@@ -168,7 +167,7 @@ export async function createDemoServer() {
         config: {
           description:
             "Render a dashboard UI for a natural-language request. Returns a " +
-            "json-render spec the widget renders as native components; buttons " +
+            "json-render spec the View renders as native components; buttons " +
             "in it can send follow-up turns back to you via the MCP host.",
           // Zod raw shape — required by @modelcontextprotocol/sdk's McpServer.
           inputSchema: {
@@ -187,5 +186,5 @@ export async function createDemoServer() {
     await rm(dir, { recursive: true, force: true });
   }
 
-  return { server, cleanup, built, widgetDir: dir };
+  return { server, cleanup, built, viewDir: dir };
 }

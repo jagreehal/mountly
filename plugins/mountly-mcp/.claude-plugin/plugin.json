@@ -1,0 +1,18 @@
+{
+  "name": "mountly-mcp",
+  "version": "0.1.0",
+  "description": "Claude Code skills for building MCP Apps Views with Mountly (create, add UI, convert web apps, migrate from ext-apps)",
+  "author": {
+    "name": "Mountly"
+  },
+  "repository": "https://github.com/jagreehal/mountly",
+  "license": "Apache-2.0",
+  "keywords": [
+    "mcp",
+    "mcp-apps",
+    "mountly",
+    "model-context-protocol",
+    "ui",
+    "interactive"
+  ]
+}

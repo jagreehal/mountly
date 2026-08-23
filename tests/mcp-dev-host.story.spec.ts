@@ -19,14 +19,14 @@ const loadDev = () => import("../packages/mcp-apps/src/dev/index.js");
  * all produced a blank view while every HTTP assertion stayed green. Only a
  * browser that loads the page and reads the rendered text catches those.
  */
-async function buildWidget(): Promise<string> {
+async function buildView(): Promise<string> {
   const { buildMcpResource, getBridgeRuntimePath } = await loadBuild();
   const dir = mkdtempSync(join(tmpdir(), "mountly-mcp-devhost-"));
   // Renders the delivered tool data, so a handshake that never completes shows
   // up as missing text rather than as a silently blank iframe.
   writeFileSync(
-    join(dir, "widget.js"),
-    `globalThis.__mountlyMcpWidget__ = {
+    join(dir, "view.js"),
+    `globalThis.__mountlyMcpView__ = {
        mount(container, props) {
          const total = props?.toolResult?.structuredContent?.total;
          container.textContent = "total:" + (total ?? "none");
@@ -36,9 +36,9 @@ async function buildWidget(): Promise<string> {
      };`,
     "utf8",
   );
-  const output = join(dir, "widget.html");
+  const output = join(dir, "view.html");
   await buildMcpResource({
-    entry: join(dir, "widget.js"),
+    entry: join(dir, "view.js"),
     uri: "ui://dev-host/quote",
     name: "quote_payment",
     output,
@@ -54,7 +54,7 @@ test.describe("mountly-mcp dev host", () => {
     story.init(testInfo, { tags: ["mcp", "dev", "sandbox-proxy"] });
 
     story.given("a built View served by the dev host");
-    const htmlPath = await buildWidget();
+    const htmlPath = await buildView();
     const { startDevHost } = await loadDev();
     const host = await startDevHost({
       htmlPath,
@@ -93,8 +93,8 @@ test.describe("mountly-mcp verify --render", () => {
     const { buildMcpResource, getBridgeRuntimePath } = await loadBuild();
     const dir = mkdtempSync(join(tmpdir(), "mountly-mcp-verify-"));
     writeFileSync(
-      join(dir, "widget.js"),
-      `globalThis.__mountlyMcpWidget__ = {
+      join(dir, "view.js"),
+      `globalThis.__mountlyMcpView__ = {
          mount(c){ c.textContent = "mode:" + process.env.NODE_ENV; },
          unmount(c){ c.textContent = ""; },
        };`,
@@ -102,7 +102,7 @@ test.describe("mountly-mcp verify --render", () => {
     );
     const htmlPath = join(dir, "broken.html");
     await buildMcpResource({
-      entry: join(dir, "widget.js"),
+      entry: join(dir, "view.js"),
       uri: "ui://broken/view",
       name: "broken_view",
       description: "Throws on mount",
@@ -137,8 +137,8 @@ test.describe("mountly-mcp verify --render", () => {
     const { buildMcpResource, getBridgeRuntimePath } = await loadBuild();
     const dir = mkdtempSync(join(tmpdir(), "mountly-mcp-verify-blank-"));
     writeFileSync(
-      join(dir, "widget.js"),
-      `globalThis.__mountlyMcpWidget__ = {
+      join(dir, "view.js"),
+      `globalThis.__mountlyMcpView__ = {
          mount(){},
          unmount(){},
        };`,
@@ -146,7 +146,7 @@ test.describe("mountly-mcp verify --render", () => {
     );
     const htmlPath = join(dir, "blank.html");
     await buildMcpResource({
-      entry: join(dir, "widget.js"),
+      entry: join(dir, "view.js"),
       uri: "ui://blank/view",
       name: "blank_view",
       description: "Intentionally blank",
@@ -173,8 +173,8 @@ test.describe("mountly-mcp verify --render", () => {
     const { buildMcpResource, getBridgeRuntimePath } = await loadBuild();
     const dir = mkdtempSync(join(tmpdir(), "mountly-mcp-verify-shadow-"));
     writeFileSync(
-      join(dir, "widget.js"),
-      `globalThis.__mountlyMcpWidget__ = {
+      join(dir, "view.js"),
+      `globalThis.__mountlyMcpView__ = {
          mount(container) {
            setTimeout(() => {
              const root = container.attachShadow({ mode: "open" });
@@ -187,7 +187,7 @@ test.describe("mountly-mcp verify --render", () => {
     );
     const htmlPath = join(dir, "shadow.html");
     await buildMcpResource({
-      entry: join(dir, "widget.js"),
+      entry: join(dir, "view.js"),
       uri: "ui://shadow/view",
       name: "shadow_view",
       description: "Asynchronous shadow View",
@@ -213,8 +213,8 @@ test.describe("mountly-mcp verify --render", () => {
     const { buildMcpResource, getBridgeRuntimePath } = await loadBuild();
     const dir = mkdtempSync(join(tmpdir(), "mountly-mcp-verify-a11y-"));
     writeFileSync(
-      join(dir, "widget.js"),
-      `globalThis.__mountlyMcpWidget__ = {
+      join(dir, "view.js"),
+      `globalThis.__mountlyMcpView__ = {
          mount(container) {
            // An input with no accessible name — exactly the kind of defect that
            // only exists once components are assembled into a View.
@@ -226,7 +226,7 @@ test.describe("mountly-mcp verify --render", () => {
     );
     const htmlPath = join(dir, "a11y.html");
     await buildMcpResource({
-      entry: join(dir, "widget.js"),
+      entry: join(dir, "view.js"),
       uri: "ui://a11y/view",
       name: "a11y_view",
       description: "Composed View with an unlabelled control",

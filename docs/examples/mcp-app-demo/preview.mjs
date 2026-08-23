@@ -20,14 +20,14 @@ await mkdir(HOST_DIR, { recursive: true });
 await mkdir(SANDBOX_DIR, { recursive: true });
 
 const { built, cleanup } = await createDemoServer();
-await copyFile(built.htmlPath, join(HOST_DIR, "widget.html"));
-await copyFile(`${built.htmlPath}.meta.json`, join(HOST_DIR, "widget.html.meta.json"));
-const widgetHtml = await readFile(built.htmlPath, "utf8");
-const widgetMeta = JSON.parse(await readFile(`${built.htmlPath}.meta.json`, "utf8"));
+await copyFile(built.htmlPath, join(HOST_DIR, "view.html"));
+await copyFile(`${built.htmlPath}.meta.json`, join(HOST_DIR, "view.html.meta.json"));
+const viewHtml = await readFile(built.htmlPath, "utf8");
+const viewMeta = JSON.parse(await readFile(`${built.htmlPath}.meta.json`, "utf8"));
 await cleanup();
 
-const cspMeta = widgetMeta._meta?.ui?.csp ?? {};
-const permsMeta = widgetMeta._meta?.ui?.permissions ?? {};
+const cspMeta = viewMeta._meta?.ui?.csp ?? {};
+const permsMeta = viewMeta._meta?.ui?.permissions ?? {};
 
 /**
  * `JSON.stringify`'d strings injected inside an inline `<script>` will break
@@ -68,7 +68,7 @@ const hostIndex = `<!doctype html>
 <body>
 <header>
   <h1>mountly-mcp · payment breakdown</h1>
-  <p>Sandbox proxy on :${SANDBOX_PORT} → inner widget iframe. Click a plan to deliver <code>ui/notifications/tool-result</code>.</p>
+  <p>Sandbox proxy on :${SANDBOX_PORT} → inner View iframe. Click a plan to deliver <code>ui/notifications/tool-result</code>.</p>
   <span style="flex:1"></span>
   <button class="btn" data-plan="annual" data-active="true">Annual</button>
   <button class="btn" data-plan="monthly">Monthly</button>
@@ -94,11 +94,11 @@ const hostIndex = `<!doctype html>
 </main>
 <script>
   // The MCP host: responds to ui/initialize, sends tool-input/tool-result/host-context-changed,
-  // and bootstraps the sandbox proxy with the widget HTML once it's ready.
+  // and bootstraps the sandbox proxy with the View HTML once it's ready.
   const SAMPLES = ${safeJsonForScript(SAMPLE_PAYMENTS)};
-  const WIDGET_HTML = ${safeJsonForScript(widgetHtml)};
-  const WIDGET_CSP = ${safeJsonForScript(cspMeta)};
-  const WIDGET_PERMS = ${safeJsonForScript(permsMeta)};
+  const VIEW_HTML = ${safeJsonForScript(viewHtml)};
+  const VIEW_CSP = ${safeJsonForScript(cspMeta)};
+  const VIEW_PERMS = ${safeJsonForScript(permsMeta)};
   const TOOL_NAME = "quote_payment";
   const HOST_ORIGIN = "http://localhost:${HOST_PORT}";
   const SANDBOX_ORIGIN = "http://localhost:${SANDBOX_PORT}";
@@ -162,7 +162,7 @@ const hostIndex = `<!doctype html>
     payloadEl.textContent = JSON.stringify(payload, null, 2);
     if (!initialized) return; // wait until handshake completes
     // Send tool-input once for this simulated invocation; subsequent clicks
-    // only swap tool-result to demonstrate update() in the widget.
+    // only swap tool-result to demonstrate update() in the View.
     if (!sentToolInput) {
       notify("ui/notifications/tool-input", { arguments: { plan } });
       sentToolInput = true;
@@ -170,7 +170,7 @@ const hostIndex = `<!doctype html>
     notify("ui/notifications/tool-result", { structuredContent: payload });
   }
 
-  // Toggle host context on system theme changes so the widget sees a live host-context-changed.
+  // Toggle host context on system theme changes so the View sees a live host-context-changed.
   window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
     notify("ui/notifications/host-context-changed", { theme: buildHostContext().theme });
   });
@@ -185,9 +185,9 @@ const hostIndex = `<!doctype html>
     if (msg.method === "ui/notifications/sandbox-proxy-ready") {
       log("in", "ui/notifications/sandbox-proxy-ready");
       notify("ui/notifications/sandbox-resource-ready", {
-        html: WIDGET_HTML,
-        csp: WIDGET_CSP,
-        permissions: WIDGET_PERMS,
+        html: VIEW_HTML,
+        csp: VIEW_CSP,
+        permissions: VIEW_PERMS,
       });
       return;
     }
@@ -212,7 +212,7 @@ const hostIndex = `<!doctype html>
     if (msg.method === "ui/notifications/initialized") {
       log("in", "ui/notifications/initialized");
       initialized = true;
-      // Auto-deliver the first sample so the widget renders without user action.
+      // Auto-deliver the first sample so the View renders without user action.
       setTimeout(() => deliver(currentPlan), 50);
       return;
     }

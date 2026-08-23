@@ -1,18 +1,17 @@
 /**
- * Svelte entry point: turn a Svelte component into an MCP App view.
+ * Svelte entry point: turn a Svelte component into an MCP App View.
  *
  * ```ts
- * import { createMcpWidget } from "mountly-mcp/svelte";
+ * import { createMcpView } from "mountly-mcp/svelte";
  * import Dashboard from "./Dashboard.svelte";
  *
- * const widget = createMcpWidget(Dashboard);
- * (globalThis as { __mountlyMcpWidget__?: unknown }).__mountlyMcpWidget__ = widget;
+ * createMcpView(Dashboard);
  * ```
  *
  * ```svelte
  * <script lang="ts">
- *   import type { McpWidgetProps } from "mountly-mcp";
- *   let { mcp, toolResult, hostContext }: McpWidgetProps = $props();
+ *   import type { McpViewProps } from "mountly-mcp";
+ *   let { mcp, toolResult, hostContext }: McpViewProps = $props();
  * </script>
  * ```
  *
@@ -23,20 +22,16 @@
  * them.
  */
 import { createWidget } from "mountly-svelte";
-import type { AdapterOptions, WidgetModule } from "mountly/adapter";
-import type { McpWidgetProps } from "../types.js";
+import type { AdapterOptions } from "mountly/adapter";
+import type { McpView, McpViewProps } from "../types.js";
+import { publishMcpView } from "../publish.js";
 
-/**
- * Wraps a Svelte component as a mountly `WidgetModule` driven by the
- * mountly-mcp bridge. The component receives `mcp`, `toolInput`,
- * `toolInputPartial`, `toolResult` and `hostContext` as props, alongside any
- * pass-through props.
- */
-export function createMcpWidget<P extends object>(
-  Component: Parameters<typeof createWidget<P & McpWidgetProps>>[0],
+/** Wraps a Svelte component as an MCP Apps View and publishes it for the bridge. */
+export function createMcpView<P extends object>(
+  Component: Parameters<typeof createWidget<P & McpViewProps>>[0],
   options?: AdapterOptions,
-): WidgetModule {
-  return createWidget<P & McpWidgetProps>(Component, options);
+): McpView {
+  return publishMcpView(createWidget<P & McpViewProps>(Component, options));
 }
 
-export type { McpWidgetProps };
+export type { McpViewProps };

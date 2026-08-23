@@ -1,0 +1,15 @@
+{
+  "name": "mountly-mcp",
+  "description": "Plugins for building MCP Apps Views with Mountly",
+  "owner": {
+    "name": "Mountly",
+    "email": "hello@mountly.dev"
+  },
+  "plugins": [
+    {
+      "name": "mountly-mcp",
+      "source": "./plugins/mountly-mcp",
+      "description": "Skills for creating MCP Apps with mountly-mcp — the default View layer on top of @modelcontextprotocol/ext-apps"
+    }
+  ]
+}

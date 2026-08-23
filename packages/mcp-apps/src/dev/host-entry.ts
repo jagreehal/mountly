@@ -110,8 +110,8 @@ bridge.oninitialized = () => {
 bridge.onsandboxready = async () => {
   log("in", "ui/notifications/sandbox-proxy-ready");
   const [html, declaration] = await Promise.all([
-    fetch("/widget.html").then((response) => response.text()),
-    fetch("/widget.meta.json").then((response) => response.json()) as Promise<{
+    fetch("/view.html").then((response) => response.text()),
+    fetch("/view.meta.json").then((response) => response.json()) as Promise<{
       _meta?: { ui?: McpUiResourceMeta };
     }>,
   ]);
@@ -184,7 +184,7 @@ async function main(): Promise<void> {
 }
 
 // A failed handshake has to say so in the page: the view never renders, and a
-// console-only error looks identical to a widget that mounted blank.
+// console-only error looks identical to a View that mounted blank.
 void main().catch((error: unknown) => {
   log("in", `host failed to start: ${error instanceof Error ? error.message : String(error)}`);
   hostPayload.textContent = String(error);

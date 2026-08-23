@@ -86,7 +86,7 @@ export const catalog = defineCatalog(schema, {
   },
   actions: {
     // The agent loop. json-render resolves an element's `on.press`/`on.click`
-    // binding and fires the renderer's `onAction`; the widget routes `ask` to
+    // binding and fires the renderer's `onAction`; the View routes `ask` to
     // the MCP host via `App.sendMessage`, sending a follow-up turn to the
     // model — which generates the next view. This is the self-driving loop.
     ask: {

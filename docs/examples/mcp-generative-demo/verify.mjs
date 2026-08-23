@@ -24,7 +24,7 @@ export async function runVerification() {
       "resource should advertise the MCP Apps MIME type per spec",
     );
 
-    // --- Resource HTML carries the bridge + the generative widget bundle ---
+    // --- Resource HTML carries the bridge + the generative View bundle ---
     const read = await client.readResource({ uri: DEMO_URI });
     const content = read.contents[0];
     assert.equal(content?.mimeType, "text/html;profile=mcp-app");
@@ -39,20 +39,20 @@ export async function runVerification() {
       "expected tool-result handler in bridge runtime",
     );
     assert.ok(
-      html?.includes("__mountlyMcpWidget__"),
-      "expected widget bundle to register __mountlyMcpWidget__",
+      html?.includes("__mountlyMcpView__"),
+      "expected View bundle to publish a View for the bridge",
     );
     // json-render markers — proves the catalog components + renderer are bundled.
     assert.ok(
       html?.includes("gv-stat") && html?.includes("gv-card"),
-      "expected registry component class names in the widget bundle",
+      "expected registry component class names in the View bundle",
     );
     // Actions-bridge markers — the value-add json-render alone can't do:
     // a generated button calls back into the agent via the MCP host.
-    assert.ok(html?.includes("gv-button"), "expected Button component in the widget bundle");
+    assert.ok(html?.includes("gv-button"), "expected Button component in the View bundle");
     assert.ok(
       html?.includes("sendMessage"),
-      "expected the onAction→App.sendMessage bridge in the widget bundle",
+      "expected the onAction→App.sendMessage bridge in the View bundle",
     );
 
     // The sample spec itself wires a button action back to the agent.
@@ -87,8 +87,8 @@ export async function runVerification() {
     console.log("[mcp-generative-demo] verification passed");
     console.log(`- tool: ${DEMO_TOOL} (args drive which spec is returned)`);
     console.log(`- resource: ${DEMO_URI} (${resource.mimeType})`);
-    console.log(`- widget HTML: ${built.htmlPath}`);
-    console.log("- json-render catalog + renderer bundled in widget: yes");
+    console.log(`- View HTML: ${built.htmlPath}`);
+    console.log("- json-render catalog + renderer bundled in View: yes");
     console.log(
       `- revenue spec: ${Object.keys(SAMPLE_SPECS.revenue.elements).length} elements, root='${SAMPLE_SPECS.revenue.root}'`,
     );

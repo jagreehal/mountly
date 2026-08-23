@@ -42,9 +42,9 @@ If you only have ten minutes, run the first command. If you're shipping anything
 | --- | ------------------------------------------------------------------------------------ | ------------------------------------ | ----------------------------------------- |
 | 1   | Code compiles and the workspace builds.                                              | `pnpm -r typecheck && pnpm -r build` | seconds, free                             |
 | 2   | Protocol primitives behave per spec against synthetic event streams.                 | `pnpm test:unit`                     | seconds, free                             |
-| 3   | Built widget round-trips through `runBridge` from a real React/Vue/Svelte component. | E2E tests in `pnpm test:unit`        | already in 2                              |
+| 3   | Built View round-trips through `runBridge` from a real React/Vue/Svelte component. | E2E tests in `pnpm test:unit`        | already in 2                              |
 | 4   | Bridge works inside a real Chromium iframe.                                          | `pnpm test:mcp:e2e`                  | ~10 sec after one-time Playwright install |
-| 5   | A real MCP host (Claude Desktop, VS Code, Goose, ChatGPT) renders the widget.        | Manual smoke tests below             | manual                                    |
+| 5   | A real MCP host (Claude Desktop, VS Code, Goose, ChatGPT) renders the View.        | Manual smoke tests below             | manual                                    |
 
 Claims 1-4 are automated. Claim 5 is what makes "ships to users" real, and requires manual testing.
 
@@ -102,7 +102,7 @@ pnpm test:mcp:unit             # glob: tests/mcp-*.story.test.ts
 | `mcp-bridge.story.test.ts`                                  | `runBridge` lifecycle   | Initialize handshake, mount on first tool-result, update on subsequent, async queue serialization, teardown, error boundaries (initialize-timeout, mount-throw, missing structuredContent) |
 | `mcp-build.story.test.ts`                                   | Build step              | `emitMeta` defaults, `emitHtml` self-contained + CDN modes, CSP origin merging, HTML attribute + `</script>` / `</style>` escaping, sidecar `.meta.json` shape                             |
 | `mcp-server.story.test.ts`                                  | `createMcpAppServer`    | Resource + tool registration via real `@modelcontextprotocol/sdk` `Server` + in-memory transport pair, URI/sidecar mismatch fails at boot                                                  |
-| `mcp-react.story.test.ts` + `mcp-react-e2e.story.test.ts`   | React adapter           | `useMcpHost` context, `useMcpToolResult` subscribe + unsubscribe, `createMcpWidget` mounts React with `mcp` bridged into context, E2E React widget through `runBridge`                     |
+| `mcp-react.story.test.ts` + `mcp-react-e2e.story.test.ts`   | React adapter           | `useMcpApp` context, `useMcpToolResult` subscribe + unsubscribe, `createMcpView` mounts React with `mcp` bridged into context, E2E React View through `runBridge`                     |
 | `mcp-vue.story.test.ts` + `mcp-vue-e2e.story.test.ts`       | Vue 3 adapter           | Same surface via composables + `provide`/`inject`                                                                                                                                          |
 | `mcp-svelte.story.test.ts` + `mcp-svelte-e2e.story.test.ts` | Svelte 5 adapter        | Same surface via `mount({ context })` interop and Svelte stores                                                                                                                            |
 
@@ -163,7 +163,7 @@ pnpm test:headed               # headed Chromium so you can watch
 | Full iframe sandbox                | Simulated via two-window pattern | Real cross-origin iframe with CSP enforced by Chromium |
 | `postMessage` semantics            | JSDOM's simplified impl          | Real Chromium implementation                           |
 | `beforeunload` teardown            | Synchronous in JSDOM             | Real browser event loop                                |
-| Image / font / media in widget     | Limited                          | Full                                                   |
+| Image / font / media in View     | Limited                          | Full                                                   |
 
 If a bug only repros in Tier 3 but not Tier 2, that's a "browser behaves differently from JSDOM" finding worth filing.
 
@@ -192,39 +192,33 @@ The single highest-value smoke test. If it works here, the MCP Apps path is real
 3. Create a test MCP server script. Save as `~/mcp-test/server.mjs`:
 
    ```js
-   import { createMcpAppServer } from "mountly-mcp/server";
-   import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-   import { fileURLToPath } from "node:url";
-   import { dirname, resolve } from "node:path";
+   import { readMcpAppManifest } from "mountly-mcp/artifact";
+   import { serveStdio } from "mountly-mcp/server";
+   import { z } from "zod";
 
-   const __dirname = dirname(fileURLToPath(import.meta.url));
+   const { artifacts } = await readMcpAppManifest("dist/mountly-mcp.manifest.json");
 
-   const server = createMcpAppServer({
+   await serveStdio({
      name: "mountly-test",
      version: "0.0.1",
-     widgets: [
+     views: artifacts.map((artifact) => ({ artifact })),
+     tools: [
        {
-         uri: "ui://mountly-test/hello",
-         htmlPath: resolve(__dirname, "hello.html"),
-         tool: {
-           name: "say_hello",
-           description: "Render a hello widget",
-           inputSchema: {
-             type: "object",
-             properties: { name: { type: "string" } },
-           },
-           handler: async ({ name }) => ({
-             structuredContent: { greeting: `Hello, ${name}!` },
-           }),
+         name: "say_hello",
+         resourceUri: "ui://mountly-test/hello",
+         config: {
+           description: "Render a hello View",
+           inputSchema: { name: z.string() },
          },
+         handler: async ({ name }) => ({
+           structuredContent: { greeting: `Hello, ${name}!` },
+         }),
        },
      ],
    });
-
-   await server.listen(new StdioServerTransport());
    ```
 
-   Build a `hello.html` widget alongside it using one of the framework adapters and `buildMcpResource` (see "Setting up an example widget" below).
+   Build a `hello.html` View alongside it using one of the framework adapters and `buildMcpResource` (see "Setting up an example View" below).
 
 4. Open Claude Desktop's config:
 
@@ -251,15 +245,15 @@ The single highest-value smoke test. If it works here, the MCP Apps path is real
 **What to verify:**
 
 - Claude calls the tool (tool invocation appears in the conversation UI)
-- The widget renders inline in the chat (the load-bearing visual proof)
-- The widget receives `{ greeting: "Hello, world!" }` as props
+- The View renders inline in the chat (the load-bearing visual proof)
+- The View receives `{ greeting: "Hello, world!" }` as props
 - Clicking buttons fires `mcp.callTool` / `mcp.openLink` back to the server (check server logs)
 
-If the widget never appears:
+If the View never appears:
 
 - `_meta.ui.resourceUri` not attached to the tool registration → check `mountly-mcp/server` logs
 - Claude Desktop's MCP Apps support is version-gated → make sure you're on the latest build
-- CSP rejecting inlined content → check Chromium devtools (right-click widget → Inspect)
+- CSP rejecting inlined content → check Chromium devtools (right-click View → Inspect)
 
 ### Step 2: VS Code MCP support (no key)
 
@@ -273,7 +267,7 @@ goose configure                # add the mountly-test server
 goose session
 ```
 
-Same drill: invoke the tool, check the widget renders.
+Same drill: invoke the tool, check the View renders.
 
 ### Step 4: ChatGPT via OpenAI Apps SDK (OpenAI dev account required)
 
@@ -287,26 +281,26 @@ The Apps SDK adds some ChatGPT-specific extensions (e.g. display-mode constraint
 
 ---
 
-## Setting up an example widget
+## Setting up an example View
 
-You need a real built widget to register with hosts. Build pattern:
+You need a real built View to register with hosts. Build pattern:
 
 ```bash
-mkdir -p ~/mcp-test/widget-src
-cd ~/mcp-test/widget-src
+mkdir -p ~/mcp-test/view-src
+cd ~/mcp-test/view-src
 
 # React shown; Vue and Svelte work the same way with their respective adapters
 pnpm init -y
 pnpm add react react-dom mountly mountly-react mountly-mcp
 ```
 
-`~/mcp-test/widget-src/index.tsx`:
+`~/mcp-test/view-src/index.tsx`:
 
 ```tsx
-import { createMcpWidget, useMcpHost } from "mountly-mcp/react";
+import { createMcpView, useMcpApp } from "mountly-mcp/react";
 
 function Hello({ greeting }: { greeting: string }) {
-  const mcp = useMcpHost();
+  const mcp = useMcpApp();
   return (
     <div>
       <h1>{greeting}</h1>
@@ -316,7 +310,7 @@ function Hello({ greeting }: { greeting: string }) {
   );
 }
 
-globalThis.__mountlyMcpWidget__ = createMcpWidget(Hello);
+createMcpView(Hello);
 ```
 
 Build to a bundled JS file (`tsup`, `esbuild`, or `vite build --lib`), then:
@@ -325,7 +319,7 @@ Build to a bundled JS file (`tsup`, `esbuild`, or `vite build --lib`), then:
 node -e "
 import('mountly-mcp/build').then(async ({ buildMcpResource }) => {
   await buildMcpResource({
-    entry: './dist/widget.js',
+    entry: './dist/view.js',
     uri: 'ui://mountly-test/hello',
     name: 'hello',
     output: '../hello.html',
@@ -340,7 +334,7 @@ This emits `~/mcp-test/hello.html` + `~/mcp-test/hello.html.meta.json`. Point yo
 
 ## Troubleshooting
 
-### "Tests pass but the widget doesn't render in Claude Desktop"
+### "Tests pass but the View doesn't render in Claude Desktop"
 
 Most likely the bridge runtime isn't being inlined as IIFE. Verify:
 
@@ -352,7 +346,7 @@ Should NOT start with `import` statements. If it does, the tsup config regressed
 
 ### "CSP error in Chromium devtools"
 
-The host enforces CSP based on `_meta.ui.csp` from the sidecar. If your widget fetches from `https://api.example.com`, you must declare it:
+The host enforces CSP based on `_meta.ui.csp` from the sidecar. If your View fetches from `https://api.example.com`, you must declare it:
 
 ```ts
 await buildMcpResource({
@@ -361,7 +355,7 @@ await buildMcpResource({
 });
 ```
 
-### "Tool call from widget never reaches the server"
+### "Tool call from a View never reaches the server"
 
 Check the iframe in Chromium devtools:
 
@@ -412,8 +406,8 @@ For honesty:
 2. **Network failure** — `mountly-mcp/server` doesn't test stdio breakage mid-stream or HTTP transport frame drops.
 3. **High concurrency** — the async mount queue is tested for two-event-deep ordering, not for race conditions under load.
 4. **Long-running sessions** — short event sequences only.
-5. **Multi-widget bundle** — `buildMcpResource` doesn't yet support it.
-6. **Accessibility** — no a11y assertions on rendered widget output.
+5. **Multi-View bundle** — `buildMcpResource` doesn't yet support it.
+6. **Accessibility** — no a11y assertions on rendered View output.
 7. **Internationalization** — no Unicode / RTL / locale tests.
 
 If any of these matter for your use case, they need their own test layer.
@@ -427,7 +421,7 @@ If any of these matter for your use case, they need their own test layer.
 | The repo builds                              | `pnpm -r typecheck && pnpm -r build`                          |
 | Every protocol primitive works against fakes | `pnpm test:unit`                                              |
 | The bridge works inside a real browser       | `pnpm test:mcp:verify` (after `pnpm exec playwright install`) |
-| Claude renders the widget                    | Real-host smoke test step 1 (manual, no key)                  |
-| ChatGPT renders the widget                   | Real-host smoke test step 4 (manual, OpenAI dev account)      |
+| Claude renders the View                    | Real-host smoke test step 1 (manual, no key)                  |
+| ChatGPT renders the View                   | Real-host smoke test step 4 (manual, OpenAI dev account)      |
 
 The free, no-key path takes you through Claude Desktop + VS Code + Goose. That's the most useful single thing to do before declaring victory.

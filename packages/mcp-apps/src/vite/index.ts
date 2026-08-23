@@ -6,7 +6,7 @@ import type { McpAppArtifact } from "../artifact/index.js";
 import { buildMcpResourceFromSource } from "../build/index.js";
 import type { BuildSelfContainedOptions } from "../build/index.js";
 
-export interface MountlyMcpWidgetOptions extends Omit<
+export interface MountlyMcpViewOptions extends Omit<
   BuildSelfContainedOptions,
   "entry" | "output" | "cssEntry"
 > {
@@ -15,20 +15,20 @@ export interface MountlyMcpWidgetOptions extends Omit<
   cleanIntermediate?: boolean;
 }
 
-export interface MountlyMcpWidgetsOptions {
-  apps: ReadonlyArray<MountlyMcpWidgetOptions>;
+export interface MountlyMcpViewsOptions {
+  apps: ReadonlyArray<MountlyMcpViewOptions>;
   /** Defaults to `<outDir>/mountly-mcp.manifest.json`; false disables it. */
   manifest?: string | false;
 }
 
-export type MountlyMcpViteOptions = MountlyMcpWidgetOptions | MountlyMcpWidgetsOptions;
+export type MountlyMcpViteOptions = MountlyMcpViewOptions | MountlyMcpViewsOptions;
 
 export interface MountlyMcpViteApi {
-  apps: ReadonlyArray<MountlyMcpWidgetOptions>;
+  apps: ReadonlyArray<MountlyMcpViewOptions>;
   manifest?: string | false;
 }
 
-function isCollection(options: MountlyMcpViteOptions): options is MountlyMcpWidgetsOptions {
+function isCollection(options: MountlyMcpViteOptions): options is MountlyMcpViewsOptions {
   return "apps" in options;
 }
 
@@ -37,7 +37,7 @@ function safeBuildName(name: string, index: number): string {
   return `mountly_mcp_${index}_${safe || "app"}`;
 }
 
-function outputPath(root: string, outDir: string, app: MountlyMcpWidgetOptions): string {
+function outputPath(root: string, outDir: string, app: MountlyMcpViewOptions): string {
   if (!app.output) return join(outDir, `${basename(app.name)}.html`);
   return isAbsolute(app.output) ? app.output : resolve(root, app.output);
 }
@@ -47,7 +47,7 @@ function outputPath(root: string, outDir: string, app: MountlyMcpWidgetOptions):
  * environment, so frameworks and CSS remain isolated while callers configure
  * the collection once.
  */
-export function mountlyMcpWidget(options: MountlyMcpViteOptions): Plugin {
+export function mountlyMcpViews(options: MountlyMcpViteOptions): Plugin {
   const configuredApps = isCollection(options) ? [...options.apps] : [options];
   const selectedForDev = process.env.MOUNTLY_MCP_SELECTED_APP;
   const apps = selectedForDev
@@ -73,8 +73,8 @@ export function mountlyMcpWidget(options: MountlyMcpViteOptions): Plugin {
   const environments = apps.map((app, index) => ({
     app,
     name: safeBuildName(app.name, index),
-    jsFile: `widget-${index}-${basename(app.name)}.js`,
-    cssFile: `widget-${index}-${basename(app.name)}.css`,
+    jsFile: `view-${index}-${basename(app.name)}.js`,
+    cssFile: `view-${index}-${basename(app.name)}.css`,
   }));
   const byEnvironment = new Map(environments.map((environment) => [environment.name, environment]));
   const emitted = new Map<
@@ -95,7 +95,7 @@ export function mountlyMcpWidget(options: MountlyMcpViteOptions): Plugin {
   }
 
   const plugin: Plugin = {
-    name: "mountly-mcp-widget",
+    name: "mountly-mcp-views",
     api: {
       // The CLI consumes this documented plugin interface instead of scraping
       // Vite's resolved build settings.

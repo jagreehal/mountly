@@ -99,7 +99,7 @@ describe("emitHtml — cdn", () => {
     expect(html).toContain("self.__bootBridge();");
   });
 
-  it("loads the widget bundle before the bridge (module scripts run in order)", ({ task }) => {
+  it("loads the View bundle before the bridge (module scripts run in order)", ({ task }) => {
     story.init(task);
     const html = emitHtml({
       mode: "cdn",
@@ -109,7 +109,7 @@ describe("emitHtml — cdn", () => {
       bridgeRuntimeJs: "self.__bootBridge();",
     });
 
-    story.then("the widget's src script precedes the inlined bridge, or the bridge boots first");
+    story.then("the View's src script precedes the inlined bridge, or the bridge boots first");
     expect(html.indexOf("https://cdn.example.com/weather.js")).toBeLessThan(
       html.indexOf("self.__bootBridge();"),
     );
@@ -149,14 +149,14 @@ describe("buildMcpResource", () => {
   it("writes the HTML resource and sidecar metadata file", async ({ task }) => {
     story.init(task);
     const dir = makeTempDir();
-    const entry = join(dir, "widget.js");
+    const entry = join(dir, "view.js");
     const out = join(dir, "out.html");
     const bridgeRuntime = join(dir, "bridge-runtime.js");
 
-    writeFileSync(entry, "globalThis.__mountlyMcpWidget__ = { mount(){}, unmount(){} };", "utf8");
+    writeFileSync(entry, "globalThis.__mountlyMcpView__ = { mount(){}, unmount(){} };", "utf8");
     writeFileSync(bridgeRuntime, "/* bridge runtime */", "utf8");
 
-    story.when("buildMcpResource runs against a fake widget entry");
+    story.when("buildMcpResource runs against a fake View entry");
     const result = await buildMcpResource({
       entry,
       uri: "ui://weather-server/dashboard",
@@ -169,7 +169,7 @@ describe("buildMcpResource", () => {
     const html = readFileSync(out, "utf8");
     const meta = JSON.parse(readFileSync(`${out}.meta.json`, "utf8"));
     expect(html).toContain("ui://weather-server/dashboard");
-    expect(html).toContain("globalThis.__mountlyMcpWidget__");
+    expect(html).toContain("globalThis.__mountlyMcpView__");
     expect(html).toContain("/* bridge runtime */");
     expect(meta.uri).toBe("ui://weather-server/dashboard");
     expect(result.htmlPath).toBe(out);
@@ -183,13 +183,13 @@ describe("buildMcpResource", () => {
   }) => {
     story.init(task);
     const dir = makeTempDir();
-    const entry = join(dir, "widget.js");
+    const entry = join(dir, "view.js");
     const out = join(dir, "out.html");
     const bridgeRuntime = join(dir, "bridge-runtime.js");
-    writeFileSync(entry, "globalThis.__mountlyMcpWidget__ = { mount(){}, unmount(){} };", "utf8");
+    writeFileSync(entry, "globalThis.__mountlyMcpView__ = { mount(){}, unmount(){} };", "utf8");
     writeFileSync(bridgeRuntime, "/* bridge runtime */", "utf8");
 
-    story.given("a widget built with fullscreen support and immediate mount");
+    story.given("a View built with fullscreen support and immediate mount");
     const result = await buildMcpResource({
       entry,
       uri: "ui://weather-server/dashboard",

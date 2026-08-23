@@ -1,17 +1,22 @@
 # MCP App Demo
 
+> **Not the greenfield starter.** For new apps use
+> `npx mountly-mcp create my-app` or the [Agent Skills](https://mountly.dev/mcp-apps/agent-skills/).
+> This folder is an **advanced protocol harness** (esbuild + in-process verify)
+> that proves the SEP-1865 wire protocol end-to-end inside the monorepo.
+
 A spec-compliant MCP Apps demo (SEP-1865, 2026-01-26) showing how a real
-mountly React widget, the `payment-breakdown` component from
+mountly React View, the `payment-breakdown` component from
 `docs/examples/payment-breakdown/`, renders inline in an MCP Apps host.
 
 Built on:
 
 - [`@modelcontextprotocol/ext-apps`](https://www.npmjs.com/package/@modelcontextprotocol/ext-apps):
   the official MCP Apps SDK (View-side `App`, transport, schemas, React hooks).
-- `mountly-mcp`: thin wrapper that bundles a mountly widget into a
+- `mountly-mcp`: thin wrapper that bundles a mountly View into a
   `text/html;profile=mcp-app` resource and surfaces ext-apps's App via mountly's
-  `WidgetModule` lifecycle.
-- `mountly-mcp/react`: wraps `createMcpWidget` + spec-aware hooks
+  `McpView` lifecycle.
+- `mountly-mcp/react`: wraps `createMcpView` + spec-aware hooks
   (`useToolInput`, `useToolResult`, `useHostStyleVariables`, …).
 - `mountly-mcp/server`: registers the `ui://` resource and tool on top of
   ext-apps's `registerAppResource` / `registerAppTool`, advertising the
@@ -28,7 +33,7 @@ Built on:
   distinct origins (`:5179` vs `:5180`), the sandbox forwards messages and
   applies a CSP-enforced inner iframe.
 - A second tool call with different args exercises the bridge's `update()`
-  path, and the React widget re-renders without remounting.
+  path, and the React View re-renders without remounting.
 
 ## Prerequisites
 
@@ -53,7 +58,7 @@ Boots an in-process MCP server + client, asserts:
   (`ui/initialize`, `ui/notifications/initialized`,
   `ui/notifications/tool-input`, `ui/notifications/tool-result`,
   `ui/notifications/host-context-changed`, `size-changed`),
-- the widget bundle registers `__mountlyMcpWidget__` and contains the
+- the View bundle publishes a View via `createMcpView` and contains the
   `PaymentBreakdown` component,
 - the tool returns the right `structuredContent` for both `plan: "annual"`
   and `plan: "monthly"`,
@@ -82,10 +87,10 @@ postMessage frame on the wire.
 `tests/mcp-demo-preview.story.spec.ts` boots the preview (both ports) via
 Playwright's `webServer`, then in chromium asserts:
 
-1. The widget renders the annual payload after the full handshake.
+1. The View renders the annual payload after the full handshake.
 2. Clicking Monthly drives the bridge's `update()` path correctly.
 3. The host (5179) and sandbox proxy (5180) sit on distinct origins, with
-   the inner widget loading via `srcdoc`.
+   the inner View loading via `srcdoc`.
 
 ```bash
 pnpm run test:mcp:e2e
@@ -113,17 +118,17 @@ Register in your host config:
 ```
 
 Restart your MCP host; it lists the `quote_payment` tool. Call it with
-`{ "plan": "annual" }` and the host renders the `payment-breakdown` widget
+`{ "plan": "annual" }` and the host renders the `payment-breakdown` View
 inline using the `ui://mountly-demo/payment-breakdown` resource.
 
 ## Files
 
-- `src/widget.tsx`: `createMcpWidget(PaymentWidget)`. PaymentWidget reads
+- `src/view.tsx`: `createMcpView(PaymentView)`. PaymentView reads
   the result via the `useToolResult()` hook from `mountly-mcp/react`.
-- `demo-core.mjs`: esbuilds `src/widget.tsx`, calls `buildMcpResource` with
-  the public `getBridgeRuntimePath()` API, registers tool + widget on
+- `demo-core.mjs`: esbuilds `src/view.tsx`, calls `buildMcpResource` with
+  the public `getBridgeRuntimePath()` API, registers tool + View on
   `createMcpAppServer`. Exports `SAMPLE_PAYMENTS`.
 - `verify.mjs`: deterministic in-process verification with spec markers.
-- `preview.mjs`: dual-port host + sandbox proxy; embeds the widget HTML via
+- `preview.mjs`: dual-port host + sandbox proxy; embeds the View HTML via
   `ui/notifications/sandbox-resource-ready`.
 - `serve-stdio.mjs`: stdio entry for real MCP hosts.
