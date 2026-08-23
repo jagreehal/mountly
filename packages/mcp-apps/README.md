@@ -23,6 +23,11 @@ npx mountly-mcp create my-app --framework react
 cd my-app && pnpm install && pnpm dev
 ```
 
+`--framework` takes `react`, `vue`, `svelte`, or `vanilla`. Vanilla pulls in no
+framework and no adapter: a View is just `mount` / `update` / `unmount`, so
+`publishMcpView` takes the object directly and the bridge drives it the same
+way it drives the others.
+
 ## Build with Agent Skills
 
 | Skill | Try it |

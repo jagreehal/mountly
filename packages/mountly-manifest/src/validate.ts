@@ -128,6 +128,21 @@ export function validateManifest(manifest: MountlyManifest): ManifestIssue[] {
         message: `vertical "${vertical.id}" sets both featureExport and moduleExport — featureExport wins; drop one`,
       });
     }
+
+    if (vertical.isolation === "iframe") {
+      if (!vertical.iframeTitle) {
+        issues.push({
+          level: "error",
+          message: `vertical "${vertical.id}" isolation "iframe" requires iframeTitle`,
+        });
+      }
+      if (vertical.featureExport || vertical.moduleExport) {
+        issues.push({
+          level: "warning",
+          message: `vertical "${vertical.id}" isolation "iframe" ignores featureExport/moduleExport — the framed page at src mounts the widget`,
+        });
+      }
+    }
   }
 
   return issues.sort((a, b) => (a.level === b.level ? 0 : a.level === "error" ? -1 : 1));

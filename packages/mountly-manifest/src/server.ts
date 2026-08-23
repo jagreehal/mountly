@@ -134,3 +134,107 @@ export function createManifestResponse(
 
   return new Response(JSON.stringify(manifest), { status: 200, headers });
 }
+
+export interface SameOriginProxyRoute {
+  /**
+   * Path prefix on the host, e.g. `/__mountly/billing`. Incoming requests under
+   * this prefix are forwarded to {@link upstream}.
+   */
+  prefix: string;
+  /** Upstream origin or base URL, e.g. `https://billing.acme.com`. */
+  upstream: string;
+}
+
+export interface SameOriginProxyOptions {
+  routes: SameOriginProxyRoute[];
+  /**
+   * Extra request headers forwarded upstream. Defaults include forwarding
+   * `accept` and stripping hop-by-hop headers.
+   */
+  forwardHeaders?: string[];
+}
+
+/**
+ * Optional same-origin asset/cookie convenience — **not** a Fragment Gateway.
+ *
+ * Mountly's happy path is CDN + CORS/import maps with no middleware. Use this
+ * only when a framed vertical needs first-party cookies or relative asset paths
+ * under the host origin. Wire it into whatever middleware you already run
+ * (Workers, Hono, Express adapters, etc.).
+ *
+ * Designed for **GET/HEAD** asset and document fetches. Non-GET methods are
+ * rejected with 405 so this stays a thin proxy recipe, not an app gateway.
+ *
+ * ```ts
+ * const proxy = createSameOriginProxy({
+ *   routes: [{ prefix: "/__mountly/billing", upstream: "https://billing.acme.com" }],
+ * });
+ * // in your fetch handler:
+ * const proxied = await proxy(request);
+ * if (proxied) return proxied;
+ * ```
+ *
+ * Returns `null` when the request path does not match any route.
+ */
+export function createSameOriginProxy(
+  options: SameOriginProxyOptions,
+): (request: Request) => Promise<Response | null> {
+  const routes = options.routes.map((route) => ({
+    prefix: route.prefix.replace(/\/$/, "") || "/",
+    upstream: new URL(route.upstream),
+  }));
+  const defaultForwardHeaders = [
+    "accept",
+    "accept-language",
+    "cookie",
+    "if-none-match",
+    "if-modified-since",
+  ];
+  const forward = new Set(
+    [...defaultForwardHeaders, ...(options.forwardHeaders ?? [])].map((h) => h.toLowerCase()),
+  );
+
+  return async (request: Request): Promise<Response | null> => {
+    const url = new URL(request.url);
+    const match = routes.find(
+      (route) => url.pathname === route.prefix || url.pathname.startsWith(`${route.prefix}/`),
+    );
+    if (!match) return null;
+
+    if (request.method !== "GET" && request.method !== "HEAD") {
+      return new Response("Method Not Allowed", {
+        status: 405,
+        headers: { allow: "GET, HEAD" },
+      });
+    }
+
+    const suffix = url.pathname.slice(match.prefix.length) || "/";
+    const target = new URL(match.upstream);
+    const basePath = target.pathname.replace(/\/+$/, "");
+    target.pathname = `${basePath}${suffix}` || "/";
+    target.search = url.search;
+    target.hash = "";
+
+    const headers = new Headers();
+    for (const [key, value] of request.headers) {
+      if (forward.has(key.toLowerCase())) headers.set(key, value);
+    }
+    headers.set("host", target.host);
+
+    const upstream = await fetch(target, {
+      method: request.method,
+      headers,
+      redirect: "manual",
+    });
+    const responseHeaders = new Headers(upstream.headers);
+    responseHeaders.delete("content-encoding");
+    responseHeaders.delete("content-length");
+    responseHeaders.delete("transfer-encoding");
+
+    return new Response(upstream.body, {
+      status: upstream.status,
+      statusText: upstream.statusText,
+      headers: responseHeaders,
+    });
+  };
+}

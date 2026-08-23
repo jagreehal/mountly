@@ -16,7 +16,23 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const PACKAGE_ROOT = resolve(__dirname, "..");
 const TEMPLATES = resolve(PACKAGE_ROOT, "templates");
 
-const SUPPORTED = ["react", "vue", "svelte"] as const;
+/**
+ * The version of mountly-mcp doing the scaffolding, so the generated
+ * package.json pins the API this CLI actually ships.
+ *
+ * Hardcoding the pin in the templates meant a major release left them behind:
+ * `^3.1.0` cannot resolve to 4.0.0, so every scaffolded app installed a
+ * package without the exports its own vite.config imported.
+ */
+function ownVersion(): string {
+  const pkg = JSON.parse(readFileSync(join(PACKAGE_ROOT, "package.json"), "utf8")) as {
+    version?: string;
+  };
+  if (!pkg.version) throw new Error("mountly-mcp: cannot read own version from package.json");
+  return pkg.version;
+}
+
+const SUPPORTED = ["react", "vue", "svelte", "vanilla"] as const;
 type Framework = (typeof SUPPORTED)[number];
 
 export interface CreateArgs {
@@ -106,6 +122,7 @@ export async function createProject(args: CreateArgs): Promise<void> {
     slug,
     uri: `ui://${slug}/dashboard`,
     framework: args.framework,
+    mcpVersion: ownVersion(),
   });
 
   process.stdout.write(

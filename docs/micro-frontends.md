@@ -80,18 +80,26 @@ Vertical product code does **not** belong in the platform monorepo. Examples lik
 
 ### Vertical entry fields
 
-| Field           | Purpose                                                                                                                |
-| --------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `id`            | `module-id` for `<mountly-feature>` and registry                                                                       |
-| `url`           | CDN URL to `peer.js` (also registered as import map entry under `id` or `alias`)                                       |
-| `team`          | Documentation / governance only                                                                                        |
-| `version`       | Documentation / pinning policy                                                                                         |
-| `featureExport` | Named export that is already an `OnDemandFeature`                                                                      |
-| `moduleExport`  | Named export that satisfies `FeatureModule` (`mount` / `unmount`)                                                      |
-| `alias`         | Optional bare specifier for the import map (e.g. `@acme/chat`)                                                         |
-| `exports`       | Subpath map: `"./Checkout": "./Checkout.js"` resolves as `billing/Checkout`                                            |
-| `baseUrl`       | Prefix for relative export paths (defaults to the directory of `url`)                                                  |
-| `types`         | Optional type metadata. Usually omitted because Vite hosts infer the `./types/*` declaration convention automatically. |
+| Field             | Purpose                                                                                                                |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `id`              | `module-id` for `<mountly-feature>` and registry                                                                       |
+| `url`             | CDN URL to `peer.js` (also registered as import map entry under `id` or `alias`)                                       |
+| `isolation`       | `"shared"` (default) or `"iframe"` — flip to framed without rewriting the widget                                       |
+| `src`             | Framed page URL when `isolation` is `"iframe"` (defaults to `url`)                                                     |
+| `iframeTitle`     | Required when `isolation` is `"iframe"`                                                                                |
+| `sandbox`         | Optional iframe `sandbox` attribute                                                                                    |
+| `allow`           | Optional iframe `allow` attribute (e.g. `storage-access`)                                                              |
+| `placeholderUrl`  | Optional CDN HTML skeleton before the frame reports ready (not hydration)                                              |
+| `team`            | Documentation / governance only                                                                                        |
+| `version`         | Documentation / pinning policy                                                                                         |
+| `featureExport`   | Named export that is already an `OnDemandFeature`                                                                      |
+| `moduleExport`    | Named export that satisfies `FeatureModule` (`mount` / `unmount`)                                                      |
+| `alias`           | Optional bare specifier for the import map (e.g. `@acme/chat`)                                                         |
+| `exports`         | Subpath map: `"./Checkout": "./Checkout.js"` resolves as `billing/Checkout`                                            |
+| `baseUrl`         | Prefix for relative export paths (defaults to the directory of `url`)                                                  |
+| `types`           | Optional type metadata. Usually omitted because Vite hosts infer the `./types/*` declaration convention automatically. |
+
+See also: [When to frame](https://jagreehal.github.io/mountly/concepts/when-to-frame/), [Frame protocols](https://jagreehal.github.io/mountly/concepts/frame-protocols/), [Same-origin proxy](https://jagreehal.github.io/mountly/concepts/same-origin-proxy/).
 
 ## Authoring a remote (Vite)
 

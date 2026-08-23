@@ -43,13 +43,19 @@ export {
   type ComposedManifestResult,
 } from "./compose.js";
 
-export { mergeManifests, renderMountlyHead, createManifestResponse } from "./server.js";
-export type { RenderMountlyHeadOptions, ManifestResponseOptions } from "./server.js";
+export { mergeManifests, renderMountlyHead, createManifestResponse, createSameOriginProxy } from "./server.js";
+export type {
+  RenderMountlyHeadOptions,
+  ManifestResponseOptions,
+  SameOriginProxyOptions,
+  SameOriginProxyRoute,
+} from "./server.js";
 
 export function manifestToFeatureModules(manifest: MountlyManifest): FeatureModuleManifest {
   const modules: FeatureModuleManifest = {};
   for (const vertical of manifest.verticals) {
     if (vertical.featureExport) continue;
+    if (vertical.isolation === "iframe") continue;
     const specifier = vertical.alias ?? vertical.id;
     modules[vertical.id] = {
       moduleUrl: isBareSpecifier(specifier) ? specifier : vertical.url,
@@ -59,7 +65,35 @@ export function manifestToFeatureModules(manifest: MountlyManifest): FeatureModu
   return modules;
 }
 
+function registerIframeVertical(vertical: VerticalEntry): void {
+  const src = vertical.src ?? vertical.url;
+  const title = vertical.iframeTitle;
+  if (!title) {
+    throw new Error(
+      `[mountly-manifest] vertical "${vertical.id}" isolation "iframe" requires iframeTitle`,
+    );
+  }
+  registerCustomElement(vertical.id, async () => {
+    const { iframeFeature } = await import("mountly/iframe");
+    return iframeFeature({
+      moduleId: vertical.id,
+      src,
+      title,
+      ...(vertical.sandbox !== undefined ? { sandbox: vertical.sandbox } : {}),
+      ...(vertical.allow !== undefined ? { allow: vertical.allow } : {}),
+      ...(vertical.placeholderUrl !== undefined
+        ? { placeholderUrl: vertical.placeholderUrl }
+        : {}),
+    });
+  });
+}
+
 function registerManifestVertical(vertical: VerticalEntry): void {
+  if (vertical.isolation === "iframe") {
+    registerIframeVertical(vertical);
+    return;
+  }
+
   const specifier = vertical.alias ?? vertical.id;
   const moduleUrl = isBareSpecifier(specifier) ? specifier : vertical.url;
 
@@ -123,6 +157,10 @@ export function defineMountlyFeatureFromManifest(
   options: DefineMountlyFeatureFromManifestOptions = {},
 ): void {
   for (const vertical of manifest.verticals) {
+    if (vertical.isolation === "iframe") {
+      registerIframeVertical(vertical);
+      continue;
+    }
     if (vertical.featureExport) {
       registerManifestVertical(vertical);
     }
@@ -144,6 +182,11 @@ export function defineMountlyFeatureFromManifest(
  * `<mountly-feature>` element. Safe to call repeatedly; new keys only.
  */
 export function setVertical(vertical: VerticalEntry): void {
+  if (vertical.isolation === "iframe") {
+    registerIframeVertical(vertical);
+    return;
+  }
+
   const specifier = vertical.alias ?? vertical.id;
   const bare = isBareSpecifier(specifier);
   if (bare) appendImports({ [specifier]: vertical.url });

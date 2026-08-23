@@ -34,24 +34,69 @@ export const verticalTypesSchema = z.object({
     .optional(),
 });
 
-export const verticalEntrySchema = z.object({
-  id: z.string().min(1),
-  url: z.string().min(1),
-  team: z.string().min(1).optional(),
-  version: z.string().min(1).optional(),
-  trigger: triggerTypeSchema.optional(),
-  alias: z.string().min(1).optional(),
-  /** CDN or directory prefix for relative paths in `exports`. Defaults to the directory of `url`. */
-  baseUrl: z.string().min(1).optional(),
-  /** Subpath exports for import-map / Vite host imports: `"./Checkout": "./dist/checkout.js"`. */
-  exports: z.record(z.string(), z.string()).optional(),
-  /** Named export that is already an OnDemandFeature (common in vertical repos). */
-  featureExport: z.string().min(1).optional(),
-  /** Named export that satisfies FeatureModule when using moduleUrl loading. */
-  moduleExport: z.string().min(1).optional(),
-  /** Optional type hints used to generate ambient declarations for host-side composition. */
-  types: verticalTypesSchema.optional(),
-});
+export const verticalEntrySchema = z
+  .object({
+    id: z.string().min(1),
+    /**
+     * ESM module URL (shared isolation) or a canonical artifact URL. When
+     * `isolation` is `"iframe"`, prefer `src` for the framed page; `url` may
+     * still point at a peer build for types/docs.
+     */
+    url: z.string().min(1),
+    team: z.string().min(1).optional(),
+    version: z.string().min(1).optional(),
+    trigger: triggerTypeSchema.optional(),
+    alias: z.string().min(1).optional(),
+    /** CDN or directory prefix for relative paths in `exports`. Defaults to the directory of `url`. */
+    baseUrl: z.string().min(1).optional(),
+    /** Subpath exports for import-map / Vite host imports: `"./Checkout": "./dist/checkout.js"`. */
+    exports: z.record(z.string(), z.string()).optional(),
+    /** Named export that is already an OnDemandFeature (common in vertical repos). */
+    featureExport: z.string().min(1).optional(),
+    /** Named export that satisfies FeatureModule when using moduleUrl loading. */
+    moduleExport: z.string().min(1).optional(),
+    /** Optional type hints used to generate ambient declarations for host-side composition. */
+    types: verticalTypesSchema.optional(),
+    /**
+     * How the host loads this vertical. `"shared"` (default) uses the import map
+     * and one JS context. `"iframe"` runs the widget in its own document via
+     * `iframeFeature` — a host/manifest flip, not a widget rewrite.
+     */
+    isolation: z.enum(["shared", "iframe"]).optional(),
+    /**
+     * Framed page URL when `isolation` is `"iframe"`. Required in that mode.
+     * Defaults to `url` when omitted and `isolation` is `"iframe"`.
+     */
+    src: z.string().min(1).optional(),
+    /** Accessible iframe title. Required when `isolation` is `"iframe"`. */
+    iframeTitle: z.string().min(1).optional(),
+    /** `sandbox` attribute for framed verticals. */
+    sandbox: z.string().optional(),
+    /** `allow` attribute for framed verticals (e.g. `storage-access`). */
+    allow: z.string().optional(),
+    /**
+     * Optional CDN URL of a static HTML skeleton shown before activation.
+     * Not hydration — host/CDN markup for perceived performance only.
+     */
+    placeholderUrl: z.string().min(1).optional(),
+  })
+  .superRefine((vertical, ctx) => {
+    if (vertical.isolation !== "iframe") return;
+    if (!vertical.iframeTitle) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["iframeTitle"],
+        message: 'iframeTitle is required when isolation is "iframe"',
+      });
+    }
+    if (!vertical.src && !vertical.url) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["src"],
+        message: 'src (or url) is required when isolation is "iframe"',
+      });
+    }
+  });
 
 export const platformImportsSchema = z.object({
   imports: z

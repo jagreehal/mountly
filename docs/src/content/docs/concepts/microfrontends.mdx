@@ -312,6 +312,223 @@ A mountly widget can be built as:
 
 mountly adds custom element registration, trigger setup, module loading, optional data loading, and adapter mount. For most independent widgets, the framework or component bundle you load still dominates the cost.
 
+## Runtime isolation
+
+Import-map composition loads every vertical into one JavaScript context. That
+is what makes it fast — no second bootstrap, one copy of React — and it is also
+the whole of its isolation story. A vertical that mutates `window`, registers a
+global listener or patches a prototype affects every other vertical on the
+page. `shadow: true` scopes styles, but the JS context is still shared.
+
+For most products that is the right trade. It stops being the right trade when
+you cannot vouch for what a vertical does internally — a decade-old codebase,
+an acquired team, a third-party embed. At that point the guarantee you want is
+one the browser enforces, not one your conventions do.
+
+|                            | Bootstrap cost | Style isolation | JS isolation |
+| -------------------------- | -------------- | --------------- | ------------ |
+| `moduleUrl`                | Shared         | None            | None         |
+| `moduleUrl` + `shadow`     | Shared         | Strong          | None         |
+| [`iframeFeature`](/mountly/concepts/microfrontends/#framed-verticals) | Second bootstrap | Strong | Strong |
+
+This is a per-vertical choice, not an architecture-wide one. The three
+untrusted verticals can be framed while the other twenty stay on import maps —
+same triggers, same adapters, same lifecycle.
+
+### Strict Content-Security-Policy
+
+Loading a module whose URL is only known at runtime is normally done with
+`new Function("s", "return import(s)")`, which keeps bundlers quiet but is
+`eval` — and a page whose CSP omits `'unsafe-eval'` cannot run it. That is the
+default posture in regulated environments and the CSP the MCP Apps spec
+requires hosts to enforce.
+
+mountly tries that path and falls back to a plain dynamic import when the CSP
+forbids it, so on-demand loading works either way. Nothing to configure.
+
+The fallback is a dynamic import a bundler cannot statically resolve, so Vite
+may print *"The above dynamic import cannot be analyzed"* once when it processes
+mountly. That warning is the cost of the feature working under a strict CSP;
+it is expected and safe to ignore.
+
+### Framed verticals
+
+`iframeFeature` gives a vertical its own document, and therefore its own
+`window`, globals and styles:
+
+```ts
+import { iframeFeature } from "mountly/iframe";
+
+const billing = iframeFeature({
+  moduleId: "billing",
+  src: "https://billing.acme.com/widget",
+  title: "Billing breakdown",
+  sandbox: "allow-scripts",
+});
+```
+
+The framed page mounts the same widget build with `mountAsFrame`, so authors
+write one component regardless of how the host decides to isolate it.
+
+### Talking across the boundary
+
+Isolation cuts both ways: a framed vertical cannot reach the host either. Props
+flow host → frame automatically; anything flowing back goes over a typed,
+versioned channel rather than raw `postMessage`.
+
+```ts
+interface BillingEvents {
+  invoicePaid: { invoiceId: string };
+  currencyChanged: { code: string };
+}
+
+const billing = iframeFeature<BillingEvents>({
+  moduleId: "billing",
+  src: "https://billing.acme.com/widget",
+  title: "Billing breakdown",
+  channel: {
+    version: 1,
+    validators: {
+      invoicePaid: (p): p is BillingEvents["invoicePaid"] =>
+        typeof (p as { invoiceId?: unknown })?.invoiceId === "string",
+    },
+    connect: (channel) => {
+      channel.on("invoicePaid", ({ invoiceId }) => refreshLedger(invoiceId));
+      channel.emit("currencyChanged", { code: "GBP" });
+      return () => console.log("frame gone");
+    },
+  },
+});
+```
+
+Inside the frame:
+
+```ts
+import { mountAsFrame } from "mountly/iframe/child";
+
+mountAsFrame<BillingEvents>(widget, {
+  channel: {
+    version: 1,
+    connect: (channel) => {
+      channel.on("currencyChanged", ({ code }) => setCurrency(code));
+      onPaid((invoiceId) => channel.emit("invoicePaid", { invoiceId }));
+    },
+  },
+});
+```
+
+Three properties matter here, and each exists for a reason:
+
+- **Explicit.** Only what you name crosses. A same-context bus bridged into the
+  frame would carry everything sharing its namespace — including state you
+  framed the vertical to keep away from it.
+- **Validated on receive, not just on send.** A frame you do not trust is a
+  frame whose payloads you do not trust.
+- **Versioned.** An event stamped newer than the receiver understands is
+  dropped with a warning rather than delivered. Deploy a vertical that emits a
+  new event and the old shell keeps running.
+
+Authenticity is handled below this layer: the transport matches `event.source`
+against the exact `contentWindow`, which the browser sets and a page cannot
+forge, and outbound messages are pinned to the frame's origin.
+
+### When a frame never comes up
+
+A cross-origin frame cannot be inspected from the host, so a page that 404s,
+gets blocked by CSP, throws before `mountAsFrame`, or simply forgets to load
+`resize-iframe-child.js` all look identical from outside: silent. Without a
+deadline the outlet stays blank forever and nothing is reported.
+
+```ts
+const billing = iframeFeature({
+  moduleId: "billing",
+  src: "https://billing.acme.com/widget",
+  title: "Billing breakdown",
+  readyTimeout: 10_000, // default; 0 disables
+  onError: (error) => showFallback(error),
+});
+```
+
+Without `onError` the failure goes to `console.error` rather than nowhere. The
+timer is cleared on handshake and on unmount, so a frame that is torn down
+mid-load — a route change, say — does not report a failure afterwards.
+
+### Routing across verticals
+
+The URL should still describe the whole application even though segments of it
+are owned by different teams. The host maps segments to features; each feature
+routes internally below its own segment.
+
+```ts
+import { createFeatureRouter } from "mountly/router";
+
+const router = createFeatureRouter({
+  container: document.querySelector("#outlet")!,
+  routes: [
+    { path: "/billing/*", feature: billing },
+    { path: "/settings/*", feature: settings },
+  ],
+  fallback: home,
+});
+router.start();
+```
+
+Navigating from `/billing/1` to `/billing/2` **updates** the mounted feature
+rather than remounting it — for a framed vertical a remount is a second full
+bootstrap, which is the cost this architecture is already trying not to pay
+twice. Crossing into `/settings/*` unmounts one feature and mounts the other.
+
+A framed vertical never touches the host's history. Prefer the standard
+protocol helpers from `mountly/iframe`:
+
+```ts
+import { bindFrameHistoryToRouter } from "mountly/iframe";
+
+iframeFeature({
+  moduleId: "billing",
+  src: "https://billing.acme.com/widget",
+  title: "Billing",
+  channel: {
+    connect: (channel) => bindFrameHistoryToRouter(channel, router),
+  },
+});
+```
+
+From the frame, `requestHostNavigation(channel, { url: "/billing/2" })`. The
+host stays the only writer, so a vertical cannot navigate the shell somewhere
+the shell did not agree to.
+
+For modals and full-viewport UI that would clip inside the iframe, use
+[host overlay breakout](/mountly/concepts/frame-protocols/). To flip a vertical
+behind a frame via the manifest, see [When to frame](/mountly/concepts/when-to-frame/).
+
+### Paying for the second bootstrap
+
+A framed vertical downloads and evaluates its own copy of everything. Browsers
+partition the HTTP cache, so one frame cannot borrow bytes another already
+fetched — the wins available are *early* bytes and *repeat-visit* bytes.
+
+- **Prefetch on intent.** `iframeFeature` warms the document on hover, viewport
+  or idle, so mount pays only the frame's own bootstrap. The bytes can be
+  early; the JS context cannot be shared.
+- **Externalise the framework.** A `dist/peer.js` build leaves React to the
+  host's import map at a pinned immutable URL. This beats a vendor chunk: one
+  copy serves every vertical that maps the same specifier, instead of each
+  bundle caching its own.
+- **Serve hashed assets as immutable.** Content-hashed filenames only pay off
+  with headers to match, or the browser revalidates every one on every visit:
+
+  ```
+  Cache-Control: public, max-age=31536000, immutable
+  ```
+
+  Apply it to hashed files only. The manifest and any unhashed entry HTML need
+  `no-cache`, or a deploy never reaches anyone.
+
+Framework code changes rarely and product code changes daily; keeping them in
+separate, separately-cached files means a deploy invalidates only what actually
+changed.
+
 ## Where mountly fits
 
 **Good fit:**

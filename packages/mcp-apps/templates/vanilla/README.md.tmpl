@@ -1,0 +1,20 @@
+# {{name}}
+
+MCP App scaffolded with `mountly-mcp create`.
+
+```bash
+pnpm install
+pnpm dev      # sandboxed host on :5179
+pnpm verify   # conformance
+```
+
+- View: `src/view.ts` (`publishMcpView`)
+- Server: `server.mjs` (`registerMcpApps`)
+- Fixtures: `mcp.fixtures.json` (tool args when using `--server`)
+
+No framework, no adapter: a View is just `mount` / `update` / `unmount`, so
+`publishMcpView` takes the object directly. The bridge drives it exactly as it
+drives a React, Vue or Svelte View. Add a framework later by swapping
+`publishMcpView(...)` for that framework's `createMcpView(Component)`.
+
+Do not clone the Mountly monorepo for greenfield apps — this project is the canonical path.

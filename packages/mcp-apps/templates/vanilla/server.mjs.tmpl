@@ -1,0 +1,70 @@
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { readMcpAppManifest } from "mountly-mcp/artifact";
+import { registerMcpApps } from "mountly-mcp/server";
+import { z } from "zod";
+
+const URI = "{{uri}}";
+
+function sampleCards() {
+  return [
+    { label: "Requests", value: Math.floor(1200 + Math.random() * 200) },
+    { label: "Latency", value: `${Math.floor(30 + Math.random() * 20)} ms` },
+    { label: "Uptime", value: "99.9%" },
+  ];
+}
+
+/** Default export for `mountly-mcp dev --server ./server.mjs`. */
+export default async function createServer() {
+  const server = new McpServer(
+    { name: "{{slug}}", version: "0.0.1" },
+    { capabilities: { tools: {}, resources: {} } },
+  );
+
+  const { artifacts } = await readMcpAppManifest("dist/mountly-mcp.manifest.json");
+
+  await registerMcpApps(server, {
+    views: artifacts.map((artifact) => ({ artifact })),
+    tools: [
+      {
+        name: "showDashboard",
+        resourceUri: URI,
+        config: {
+          description: "Show an interactive metrics dashboard",
+          inputSchema: {
+            topic: z.string().describe("Dashboard topic"),
+          },
+        },
+        handler: async ({ topic }) => ({
+          structuredContent: {
+            topic,
+            cards: [
+              { label: "Requests", value: 1284 },
+              { label: "Latency", value: "42 ms" },
+              { label: "Uptime", value: "99.9%" },
+            ],
+          },
+        }),
+      },
+      {
+        name: "refreshDashboard",
+        resourceUri: URI,
+        visibility: ["app"],
+        config: {
+          description: "Refresh dashboard metrics (app-only)",
+          inputSchema: {
+            reason: z.string().optional(),
+          },
+        },
+        handler: async ({ reason }) => ({
+          structuredContent: {
+            refreshedAt: new Date().toISOString(),
+            cards: sampleCards(),
+            reason: reason ?? null,
+          },
+        }),
+      },
+    ],
+  });
+
+  return server;
+}

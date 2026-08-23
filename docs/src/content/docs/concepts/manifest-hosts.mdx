@@ -62,18 +62,26 @@ This page covers the host-side toolkit. For composition patterns and custom elem
 
 ### Vertical entry fields
 
-| Field           | Purpose                                                                             |
-| --------------- | ----------------------------------------------------------------------------------- |
-| `id`            | `module-id` for `<mountly-feature>` and the registry                                |
-| `url`           | CDN URL to `peer.js` (also registered as an import-map entry under `id` or `alias`) |
-| `team`          | Documentation / governance only                                                     |
-| `version`       | Documentation / pinning policy                                                      |
-| `exports`       | Subpath map: `"./Checkout": "./Checkout.js"` resolves as `billing/Checkout`         |
-| `baseUrl`       | Prefix for relative export paths (defaults to the directory of `url`)               |
-| `types`         | Export names for TypeScript codegen (`module`, `exports`)                           |
-| `featureExport` | Named export that is already an `OnDemandFeature`                                   |
-| `moduleExport`  | Named export that satisfies `FeatureModule` (`mount` / `unmount`)                   |
-| `alias`         | Optional bare specifier for the import map (e.g. `@acme/chat`)                      |
+| Field            | Purpose                                                                                                                |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `id`             | `module-id` for `<mountly-feature>` and the registry                                                                   |
+| `url`            | CDN URL to `peer.js` (also registered as an import-map entry under `id` or `alias`)                                    |
+| `isolation`      | `"shared"` (default) or `"iframe"` — flip to framed without rewriting the widget                                         |
+| `src`            | Framed page URL when `isolation` is `"iframe"` (defaults to `url`)                                                     |
+| `iframeTitle`    | Required when `isolation` is `"iframe"`                                                                                |
+| `sandbox`        | Optional iframe `sandbox` attribute                                                                                    |
+| `allow`          | Optional iframe `allow` attribute (e.g. `storage-access`)                                                              |
+| `placeholderUrl` | Optional CDN HTML skeleton before the frame reports ready (not hydration)                                                |
+| `team`           | Documentation / governance only                                                                                        |
+| `version`        | Documentation / pinning policy                                                                                         |
+| `exports`        | Subpath map: `"./Checkout": "./Checkout.js"` resolves as `billing/Checkout`                                            |
+| `baseUrl`        | Prefix for relative export paths (defaults to the directory of `url`)                                                  |
+| `types`          | Export names for TypeScript codegen (`module`, `exports`)                                                              |
+| `featureExport`  | Named export that is already an `OnDemandFeature`                                                                      |
+| `moduleExport`   | Named export that satisfies `FeatureModule` (`mount` / `unmount`)                                                      |
+| `alias`          | Optional bare specifier for the import map (e.g. `@acme/chat`)                                                         |
+
+When `isolation` is `"iframe"`, `defineMountlyFeatureFromManifest` registers the vertical with `iframeFeature`. See [When to frame](/mountly/concepts/when-to-frame/), [Frame protocols](/mountly/concepts/frame-protocols/), and [Same-origin proxy](/mountly/concepts/same-origin-proxy/).
 
 Manifest v1 is no longer accepted. Bump `"version"` to `"2"`. Add `exports` and `types` when the host imports subpaths or needs generated ambient declarations.
 
@@ -275,9 +283,14 @@ Pin **immutable CDN URLs** per release (`@version` in path or content-addressed 
 - Central routing or deploy orchestration across verticals
 - SSR **edge composition** of vertical markup (mountly mounts on-demand client islands; the SSR story above is islands, not edge composition)
 
+## Same-origin proxy (optional)
+
+When a framed vertical needs first-party cookies or relative asset URLs under the host origin, `createSameOriginProxy` from `mountly-manifest/server` forwards matching **GET/HEAD** requests to an upstream. It is never required for embed — CDN + CORS is the default path. See [Same-origin proxy](/mountly/concepts/same-origin-proxy/).
+
 ## Related
 
 - [Microfrontends](/mountly/concepts/microfrontends/): composition patterns and custom elements
+- [When to frame](/mountly/concepts/when-to-frame/): manifest flip to `isolation: "iframe"`
 - [installRuntime](/mountly/api/install-runtime/): the lower-level import-map helper `bootstrapMountly` builds on
 - [Vertical codebase](/mountly/concepts/vertical-codebase/): how a team structures a vertical repo
 - [Cross-framework event bus](/mountly/getting-started/cross-framework-event-bus/): typed platform events between verticals

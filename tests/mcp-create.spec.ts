@@ -101,3 +101,77 @@ test("mountly-mcp create scaffolds vue and svelte entries", () => {
     rmSync(root, { recursive: true, force: true });
   }
 });
+
+test("mountly-mcp create scaffolds a vanilla app that needs no framework at all", () => {
+  const root = mkdtempSync(join(tmpdir(), "mountly-mcp-create-vanilla-"));
+  const appDir = join(root, "vanilla-app");
+  try {
+    run(
+      `node ${JSON.stringify(CLI)} create vanilla-app --framework vanilla --dir ${JSON.stringify(appDir)}`,
+      root,
+    );
+    expect(existsSync(join(appDir, "src/view.ts"))).toBe(true);
+
+    const pkgPath = join(appDir, "package.json");
+    const pkg = JSON.parse(readFileSync(pkgPath, "utf8")) as {
+      dependencies: Record<string, string>;
+      devDependencies: Record<string, string>;
+    };
+
+    // The point of this template: no adapter, no framework runtime.
+    const deps = { ...pkg.dependencies, ...pkg.devDependencies };
+    for (const framework of ["react", "vue", "svelte", "preact", "solid-js"]) {
+      expect(deps[framework]).toBeUndefined();
+      expect(deps[`mountly-${framework}`]).toBeUndefined();
+    }
+
+    pkg.dependencies["mountly-mcp"] = `file:${join(REPO_ROOT, "packages/mcp-apps")}`;
+    pkg.dependencies.mountly = `file:${join(REPO_ROOT, "packages/mountly")}`;
+    writeFileSync(pkgPath, `${JSON.stringify(pkg, null, 2)}\n`);
+
+    run("pnpm install", appDir);
+    run("pnpm exec vite build", appDir);
+    expect(existsSync(join(appDir, "dist/dashboard.html"))).toBe(true);
+
+    const verifyOut = run("pnpm exec mountly-mcp verify", appDir);
+    expect(verifyOut.toLowerCase()).not.toMatch(/\berror\b/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("scaffolds pin the mountly-mcp that generated them, not a hardcoded version", () => {
+  // A hardcoded `^3.1.0` in the templates survived the 4.0.0 rename, so every
+  // scaffolded app installed a package whose exports its own vite.config did
+  // not have. The pin now comes from the CLI, and this keeps it that way
+  // without needing the registry.
+  const own = (
+    JSON.parse(
+      readFileSync(join(REPO_ROOT, "packages/mcp-apps/package.json"), "utf8"),
+    ) as { version: string }
+  ).version;
+  const ownMajor = own.split(".")[0];
+
+  const root = mkdtempSync(join(tmpdir(), "mountly-mcp-create-pin-"));
+  try {
+    for (const framework of ["react", "vue", "svelte", "vanilla"] as const) {
+      const appDir = join(root, framework);
+      run(
+        `node ${JSON.stringify(CLI)} create ${framework}-app --framework ${framework} --dir ${JSON.stringify(appDir)}`,
+        root,
+      );
+      const pkg = JSON.parse(readFileSync(join(appDir, "package.json"), "utf8")) as {
+        dependencies: Record<string, string>;
+      };
+      const pin = pkg.dependencies["mountly-mcp"];
+      expect(pin, `${framework} template must pin mountly-mcp`).toBeTruthy();
+      expect(pin).not.toContain("{{");
+      expect(
+        pin.replace(/^[\^~]/, "").split(".")[0],
+        `${framework} pins ${pin} but this CLI is ${own} — a caret range cannot cross a major`,
+      ).toBe(ownMajor);
+    }
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});

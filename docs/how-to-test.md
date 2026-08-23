@@ -185,7 +185,7 @@ The single highest-value smoke test. If it works here, the MCP Apps path is real
 2. Build the workspace:
 
    ```bash
-   cd /Users/jreehal/dev/js/r/mountly
+   cd /path/to/mountly
    pnpm -r build
    ```
 

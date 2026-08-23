@@ -1,0 +1,73 @@
+---
+title: When to frame
+description: Flip an untrusted vertical behind an iframe without rewriting the widget — and without a gateway.
+---
+
+Shared-context import maps are mountly's default: one React, fast mounts, no second bootstrap. That stops being the right trade when you cannot vouch for what a vertical does to `window`, prototypes, or global listeners.
+
+Framing is a **host/manifest choice**, not a widget rewrite. The same `createWidget` output runs in light DOM, shadow DOM, or an iframe.
+
+## The upgrade path
+
+1. Ship the widget page that already calls `mountAsFrame(widget)` from `mountly/iframe/child`.
+2. Flip the vertical in the host manifest:
+
+```json
+{
+  "id": "legacy-billing",
+  "url": "https://cdn.example/billing/peer.js",
+  "isolation": "iframe",
+  "src": "https://billing.acme.com/widget",
+  "iframeTitle": "Billing breakdown",
+  "sandbox": "allow-scripts",
+  "placeholderUrl": "https://cdn.example/billing/skeleton.html"
+}
+```
+
+3. Keep every other vertical on `"shared"` (or omit `isolation`).
+
+`defineMountlyFeatureFromManifest` registers framed verticals with `iframeFeature`. No Fragment Gateway. No always-on reframing.
+
+## Imperative equivalent
+
+```ts
+import { iframeFeature } from "mountly/iframe";
+import { registerCustomElement } from "mountly/elements";
+
+registerCustomElement("legacy-billing", () =>
+  iframeFeature({
+    moduleId: "legacy-billing",
+    src: "https://billing.acme.com/widget",
+    title: "Billing breakdown",
+    sandbox: "allow-scripts",
+    placeholder: "Loading billing…",
+  }),
+);
+```
+
+## What framing buys — and costs
+
+| | Shared (`moduleUrl`) | Iframe (`isolation: "iframe"`) |
+| --- | --- | --- |
+| Framework instances | One via import map | One per widget |
+| Style isolation | Opt-in `shadow: true` | Browser-enforced |
+| `window` / globals | Shared | Private |
+| Props | Any value | Structured-clonable only |
+| Overlays / modals | Light-DOM portals | Use [host overlay breakout](/mountly/concepts/frame-protocols/) |
+
+## Enterprise migration without a control plane
+
+Use framing when migrating a decade-old surface, an acquired team, or a third-party embed into a shell you own:
+
+- **Incremental.** Frame one vertical; leave the rest shared.
+- **No fate-sharing on globals.** The browser enforces the boundary.
+- **No middleware required.** CDN + CORS (or an [optional same-origin proxy](/mountly/concepts/same-origin-proxy/) when cookies demand it).
+- **Same triggers.** Hover, viewport, idle, and URL-change still apply; the document is prefetched on intent.
+
+mountly still declines deploy orchestration and semver negotiation at runtime. Framing is isolation, not a control plane.
+
+## Next steps
+
+- Overlay breakout and host-owned history: [Frame protocols](/mountly/concepts/frame-protocols/)
+- Optional cookie/asset proxy: [Same-origin proxy](/mountly/concepts/same-origin-proxy/)
+- Full MFE model: [Microfrontends](/mountly/concepts/microfrontends/)
