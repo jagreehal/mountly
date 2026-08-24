@@ -8,8 +8,8 @@ import {
   createScrollPrefetcher,
   recordInteraction,
 } from "mountly/prefetch";
-import { paymentBreakdown } from "payment-breakdown";
-import { imageLightbox } from "image-lightbox";
+import { paymentBreakdown } from "payment-breakdown/peer";
+import { imageLightbox } from "image-lightbox/peer";
 
 declare const __MOUNTLY_API_URL__: string;
 const paymentApiUrl = __MOUNTLY_API_URL__;

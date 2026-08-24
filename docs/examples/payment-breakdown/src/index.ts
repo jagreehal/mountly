@@ -1,4 +1,4 @@
-import { createOnDemandFeature, type FeatureContext } from "mountly";
+import { createOnDemandFeature, type FeatureContext } from "mountly/feature";
 import { safeUnmount } from "mountly/mount";
 import * as mod from "./mount.js";
 import type { PaymentBreakdownData } from "./Component.js";
@@ -61,6 +61,28 @@ export const paymentBreakdown = createOnDemandFeature({
     });
   },
 });
+
+/**
+ * Widget-module shape: what a `data-mountly` island loads. Props carry the
+ * data, so no loader or cache policy is baked into the widget — the page
+ * decides when it appears, `paymentBreakdown` above is for when the widget
+ * should fetch its own data.
+ */
+export default {
+  mount(container: HTMLElement, props: Record<string, unknown>) {
+    mod.mountPaymentBreakdown(container, {
+      data: props.data as PaymentBreakdownData,
+      onClose: () => safeUnmount(container),
+    });
+  },
+  update(container: HTMLElement, props: Record<string, unknown>) {
+    mod.updatePaymentBreakdown(container, {
+      data: props.data as PaymentBreakdownData,
+      onClose: () => safeUnmount(container),
+    });
+  },
+  unmount: mod.unmountPaymentBreakdown,
+};
 
 export { PaymentBreakdown, type PaymentBreakdownData } from "./Component.js";
 export { mountPaymentBreakdown, unmountPaymentBreakdown, updatePaymentBreakdown } from "./mount.js";

@@ -66,7 +66,9 @@ describe("frame overlay breakout", () => {
       html: "<img src=x onerror=alert(1)>",
     });
 
-    story.then("nothing is inserted — a frame you isolated is a frame whose markup you do not trust");
+    story.then(
+      "nothing is inserted — a frame you isolated is a frame whose markup you do not trust",
+    );
     expect(document.querySelector("[data-mountly-overlay-id]")).toBeNull();
     expect(onRefuse).toHaveBeenCalledWith(
       expect.stringContaining("sanitizeHtml"),

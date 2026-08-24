@@ -1,0 +1,22 @@
+<!doctype html>
+<html>
+  <body>
+    <div
+      id="island"
+      data-mountly="/tests/fixtures/w-echo.js"
+      data-on="never"
+      data-props='{"msg":"first"}'
+    ></div>
+    <script type="module">
+      import { mount, unmount, update } from "/packages/mountly/dist/index.js";
+      const island = document.getElementById("island");
+      const read = () => island.textContent;
+      await mount(island);
+      const mounted = read();
+      update(island, { msg: "second" });
+      const updated = read();
+      unmount(island);
+      window.__result = { mounted, updated, unmounted: read(), state: island.dataset.mountlyState };
+    </script>
+  </body>
+</html>

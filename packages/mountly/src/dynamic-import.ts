@@ -27,11 +27,14 @@ let dynamicImport: DynamicImporter | undefined;
 function resolveImporter(): DynamicImporter {
   if (dynamicImport) return dynamicImport;
   try {
+    // `arguments[0]` rather than a named parameter so the eval'd body carries
+    // no `import(<identifier>)` for the post-build annotator to mistake for a
+    // real dynamic import — see scripts/annotate-dynamic-imports.mjs.
     // eslint-disable-next-line @typescript-eslint/no-implied-eval -- intentional: keeps the specifier opaque to bundler static analysis
-    dynamicImport = new Function("specifier", "return import(specifier);") as DynamicImporter;
+    dynamicImport = new Function("return import(arguments[0]);") as DynamicImporter;
   } catch {
     // EvalError / CSP violation — 'unsafe-eval' is not permitted here.
-    dynamicImport = <T,>(specifier: string) =>
+    dynamicImport = <T>(specifier: string) =>
       import(/* @vite-ignore */ /* webpackIgnore: true */ specifier) as Promise<T>;
   }
   return dynamicImport;

@@ -35,12 +35,12 @@ function App({ specs }) {
 
 ## How little you write
 
-| You write                                                       | The library does                                                                                   |
-| --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `catalog.ts`, the vocabulary (zod)                              | `catalog.prompt()` → the system prompt for the model                                               |
-| `registry.tsx`, `defineComponents(catalog, {...})`              | types the map, builds the renderer                                                                 |
+| You write                                                   | The library does                                                                                   |
+| ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `catalog.ts`, the vocabulary (zod)                          | `catalog.prompt()` → the system prompt for the model                                               |
+| `registry.tsx`, `defineComponents(catalog, {...})`          | types the map, builds the renderer                                                                 |
 | `view.tsx`, `createGenerativeView({ catalog, components })` | read tool result · resolve `$state` · stream · bridge actions to the agent · MCP `ui://` packaging |
-| `useSpecStream(spec)` in the preview                            | the compiler, replay, loading, cancellation                                                        |
+| `useSpecStream(spec)` in the preview                        | the compiler, replay, loading, cancellation                                                        |
 
 ## Deeply json-render
 

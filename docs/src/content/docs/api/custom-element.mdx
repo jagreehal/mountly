@@ -4,7 +4,7 @@ description: Reference for <mountly-feature>, the declarative way to drop a feat
 ---
 
 ```ts
-import { defineMountlyFeature } from "mountly";
+import { defineMountlyFeature } from "mountly/elements";
 ```
 
 Custom elements are the declarative path for HTML-first hosts: CMS pages, marketing sites, partner integrations, and static pages that should not own widget lifecycle code.
@@ -18,7 +18,7 @@ For a shared widget bundle, put the tags in HTML and call `defineMountlyFeature(
 <payment-breakdown trigger="idle" props='{"invoiceId":"inv_123"}'></payment-breakdown>
 
 <script type="module">
-  import { defineMountlyFeature } from "mountly";
+  import { defineMountlyFeature } from "mountly/elements";
 
   defineMountlyFeature("/widgets/dist/index.js");
 </script>
@@ -134,40 +134,45 @@ unregisterCustomElement("signup-card");
 
 Set on `<mountly-feature>` or an alias tag such as `<signup-card>`:
 
-| Attribute              | Type                                                                                     | Default               | Notes                                                          |
-| ---------------------- | ---------------------------------------------------------------------------------------- | --------------------- | -------------------------------------------------------------- |
-| `module-id`            | string                                                                                   | required              | Must match a `registerCustomElement` factory.                  |
-| `trigger`              | `"hover"` · `"click"` · `"focus"` · `"viewport"` · `"idle"` · `"media"` · `"url-change"` | `"click"`             | High-level trigger preset.                                     |
-| `trigger-delay`        | number ms                                                                                | trigger default       | Hover delay override.                                          |
-| `preload-on`           | `"hover"` · `"viewport"` · `"idle"` · `"media"` · `"false"`                              | mapped from `trigger` | Explicit `attach().preloadOn` override.                        |
-| `activate-on`          | `"click"` · `"hover"` · `"focus"` · `"viewport"` · `"idle"` · `"media"` · `"url-change"` | mapped from `trigger` | Explicit `attach().activateOn` override.                       |
-| `preload-media-query`  | string                                                                                   | —                     | Required with `preload-on="media"`.                            |
-| `activate-media-query` | string                                                                                   | —                     | Required with `activate-on="media"` or `trigger="media"`.      |
-| `idle-timeout`         | number ms                                                                                | —                     | Used by idle triggers.                                         |
-| `viewport-root-margin` | string                                                                                   | `"0px"`               | Forwarded to `IntersectionObserver`.                           |
-| `url-events`           | comma list (`popstate,hashchange,pushstate,replacestate`)                                | all four              | Used with `activate-on="url-change"` / `trigger="url-change"`. |
-| `data-url`             | string                                                                                   | —                     | If set, the element fetches JSON from this URL as `loadData`.  |
-| `data-method`          | `"GET"` · `"POST"` etc.                                                                  | `"GET"`               | Used with `data-url`.                                          |
-| `props`                | JSON string                                                                              | `{}`                  | Passed to the feature's `render()`.                            |
-| `mount-selector`       | CSS selector                                                                             | self                  | Render target other than the element itself.                   |
+| Attribute              | Type                                                                                     | Default                         | Notes                                                         |
+| ---------------------- | ---------------------------------------------------------------------------------------- | ------------------------------- | ------------------------------------------------------------- |
+| `module-id`            | string                                                                                   | required                        | Must match a `registerCustomElement` factory.                 |
+| `trigger`              | `"hover"` · `"click"` · `"focus"` · `"viewport"` · `"idle"` · `"media"` · `"url-change"` | `"click"`                       | High-level trigger preset.                                    |
+| `preload-on`           | `"hover"` · `"viewport"` · `"idle"` · `"media"`                                          | none                            | Opt-in prefetch. Never implied by `trigger`.                  |
+| `activate-on`          | `"click"` · `"hover"` · `"focus"` · `"viewport"` · `"idle"` · `"media"` · `"url-change"` | `trigger`                       | Activation trigger when it differs from `trigger`.            |
+| `preload-media-query`  | string                                                                                   | —                               | Required with `preload-on="media"`.                           |
+| `activate-media-query` | string                                                                                   | —                               | Required with `activate-on="media"` or `trigger="media"`.     |
+| `idle-timeout`         | number ms                                                                                | —                               | Used by idle triggers.                                        |
+| `viewport-root-margin` | string                                                                                   | `"0px"`                         | Forwarded to `IntersectionObserver`.                          |
+| `data-url`             | string                                                                                   | —                               | If set, the element fetches JSON from this URL as `loadData`. |
+| `data-method`          | `"GET"` · `"POST"` etc.                                                                  | `"GET"`                         | Used with `data-url`.                                         |
+| `props`                | JSON string                                                                              | `{}`                            | Passed to the feature's `render()`.                           |
+| `mount-selector`       | CSS selector                                                                             | own `[data-mountly-mount]` slot | Render target. Must match a descendant of the element.        |
 
 Alias tags infer `module-id` from the tag name, so `<signup-card>` does not need the `module-id` attribute.
 
-## Trigger → attach mapping
+## Trigger → core mapping
 
-The element translates `trigger` into the appropriate `preloadOn` / `activateOn` pair:
+The element is a shim: it translates its attributes into the core's `data-on`
+string and hands the element to `wire()`.
 
-| `trigger`           | `preloadOn`  | `activateOn`   |
-| ------------------- | ------------ | -------------- |
-| `"hover"`           | `"hover"`    | `"hover"`      |
-| `"focus"`           | `false`      | `"focus"`      |
-| `"viewport"`        | `"viewport"` | `"viewport"`   |
-| `"idle"`            | `"idle"`     | `"click"`      |
-| `"media"`           | `false`      | `"media"`      |
-| `"url-change"`      | `false`      | `"url-change"` |
-| `"click"` (default) | `false`      | `"click"`      |
+| Attributes                                    | `data-on`           |
+| --------------------------------------------- | ------------------- |
+| `trigger="click"` (default)                   | `click`             |
+| `trigger="hover"`                             | `hover`             |
+| `trigger="focus"`                             | `focus`             |
+| `trigger="viewport"` + `viewport-root-margin` | `viewport:<margin>` |
+| `trigger="idle"` + `idle-timeout`             | `idle:<ms>`         |
+| `trigger="media"` + `activate-media-query`    | `media:<query>`     |
+| `trigger="url-change"`                        | `url`               |
 
-If you need different combinations, use [`feature.attach(...)`](/mountly/api/create-on-demand-feature/#attachoptions) directly.
+`preload-on` maps the same way into `data-preload` and is never derived from
+`trigger` — preloading on the event that also mounts is a no-op. An unrecognised
+`trigger` falls back to `click`. Hover has no delay attribute; use the core's
+`data-on="hover:300"` for that.
+
+If you need combinations the element can't express, use
+[`feature.attach(...)`](/mountly/api/create-on-demand-feature/#attachoptions) directly.
 
 ## Astro parity notes
 

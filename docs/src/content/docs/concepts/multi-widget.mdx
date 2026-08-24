@@ -25,7 +25,7 @@ Vite library mode emits `dist/index.js` containing all three (plus any shared he
 Wire it on the host:
 
 ```ts title="page.ts"
-import { createWidgetBundle } from "mountly";
+import { createWidgetBundle } from "mountly/bundle";
 
 const dashboard = createWidgetBundle({
   moduleUrl: "/widgets/dashboard/dist/index.js",

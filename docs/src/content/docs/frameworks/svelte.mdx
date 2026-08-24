@@ -53,7 +53,7 @@ Each `mount()` unmounts any existing instance in the same container first.
 ## On-demand lifecycle (zero-config)
 
 ```ts
-import { createOnDemandFeature } from "mountly";
+import { createOnDemandFeature } from "mountly/feature";
 
 const signup = createOnDemandFeature({
   moduleId: "signup-card",

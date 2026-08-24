@@ -139,7 +139,7 @@ Each call to `mount()` unmounts any existing root in the same container first, s
 ## On-demand lifecycle (zero-config)
 
 ```ts
-import { createOnDemandFeature } from "mountly";
+import { createOnDemandFeature } from "mountly/feature";
 
 const signup = createOnDemandFeature({
   moduleId: "signup-card",

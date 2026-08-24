@@ -1,6 +1,6 @@
 import type { PlatformRuntimeUrls } from "mountly/runtime";
 import type { FeatureModuleManifest } from "mountly/elements";
-import type { OnDemandFeature } from "mountly";
+import type { OnDemandFeature } from "mountly/feature";
 import { appendImports } from "mountly/runtime";
 import { defineMountlyFeature, registerCustomElement } from "mountly/elements";
 import type { MountlyManifest, VerticalEntry } from "./schema.js";
@@ -43,7 +43,12 @@ export {
   type ComposedManifestResult,
 } from "./compose.js";
 
-export { mergeManifests, renderMountlyHead, createManifestResponse, createSameOriginProxy } from "./server.js";
+export {
+  mergeManifests,
+  renderMountlyHead,
+  createManifestResponse,
+  createSameOriginProxy,
+} from "./server.js";
 export type {
   RenderMountlyHeadOptions,
   ManifestResponseOptions,
@@ -81,9 +86,7 @@ function registerIframeVertical(vertical: VerticalEntry): void {
       title,
       ...(vertical.sandbox !== undefined ? { sandbox: vertical.sandbox } : {}),
       ...(vertical.allow !== undefined ? { allow: vertical.allow } : {}),
-      ...(vertical.placeholderUrl !== undefined
-        ? { placeholderUrl: vertical.placeholderUrl }
-        : {}),
+      ...(vertical.placeholderUrl !== undefined ? { placeholderUrl: vertical.placeholderUrl } : {}),
     });
   });
 }

@@ -1,0 +1,19 @@
+<!doctype html>
+<html>
+  <body>
+    <!-- Default: a second activation is a no-op, so widget state survives.
+         data-toggle opts in to click-to-close. -->
+    <button id="sticky" data-mountly="/tests/fixtures/w-echo.js" data-props='{"msg":"sticky"}'>
+      <span>Load</span>
+    </button>
+    <button
+      id="toggle"
+      data-mountly="/tests/fixtures/w-echo.js"
+      data-props='{"msg":"toggle"}'
+      data-toggle
+    >
+      <span>Load</span>
+    </button>
+    <script type="module" src="/packages/mountly/dist/auto.js"></script>
+  </body>
+</html>

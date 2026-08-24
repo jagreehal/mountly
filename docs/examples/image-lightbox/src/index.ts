@@ -1,4 +1,4 @@
-import { createOnDemandFeature, type FeatureContext } from "mountly";
+import { createOnDemandFeature, type FeatureContext } from "mountly/feature";
 import { safeUnmount } from "mountly/mount";
 import * as mod from "./mount.js";
 import type { ImageLightboxData } from "./Component.js";

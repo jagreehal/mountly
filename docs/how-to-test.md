@@ -38,12 +38,12 @@ If you only have ten minutes, run the first command. If you're shipping anything
 
 ## What "it works" actually means
 
-| #   | Claim                                                                                | How verified                         | Cost                                      |
-| --- | ------------------------------------------------------------------------------------ | ------------------------------------ | ----------------------------------------- |
-| 1   | Code compiles and the workspace builds.                                              | `pnpm -r typecheck && pnpm -r build` | seconds, free                             |
-| 2   | Protocol primitives behave per spec against synthetic event streams.                 | `pnpm test:unit`                     | seconds, free                             |
+| #   | Claim                                                                              | How verified                         | Cost                                      |
+| --- | ---------------------------------------------------------------------------------- | ------------------------------------ | ----------------------------------------- |
+| 1   | Code compiles and the workspace builds.                                            | `pnpm -r typecheck && pnpm -r build` | seconds, free                             |
+| 2   | Protocol primitives behave per spec against synthetic event streams.               | `pnpm test:unit`                     | seconds, free                             |
 | 3   | Built View round-trips through `runBridge` from a real React/Vue/Svelte component. | E2E tests in `pnpm test:unit`        | already in 2                              |
-| 4   | Bridge works inside a real Chromium iframe.                                          | `pnpm test:mcp:e2e`                  | ~10 sec after one-time Playwright install |
+| 4   | Bridge works inside a real Chromium iframe.                                        | `pnpm test:mcp:e2e`                  | ~10 sec after one-time Playwright install |
 | 5   | A real MCP host (Claude Desktop, VS Code, Goose, ChatGPT) renders the View.        | Manual smoke tests below             | manual                                    |
 
 Claims 1-4 are automated. Claim 5 is what makes "ships to users" real, and requires manual testing.
@@ -102,7 +102,7 @@ pnpm test:mcp:unit             # glob: tests/mcp-*.story.test.ts
 | `mcp-bridge.story.test.ts`                                  | `runBridge` lifecycle   | Initialize handshake, mount on first tool-result, update on subsequent, async queue serialization, teardown, error boundaries (initialize-timeout, mount-throw, missing structuredContent) |
 | `mcp-build.story.test.ts`                                   | Build step              | `emitMeta` defaults, `emitHtml` self-contained + CDN modes, CSP origin merging, HTML attribute + `</script>` / `</style>` escaping, sidecar `.meta.json` shape                             |
 | `mcp-server.story.test.ts`                                  | `createMcpAppServer`    | Resource + tool registration via real `@modelcontextprotocol/sdk` `Server` + in-memory transport pair, URI/sidecar mismatch fails at boot                                                  |
-| `mcp-react.story.test.ts` + `mcp-react-e2e.story.test.ts`   | React adapter           | `useMcpApp` context, `useMcpToolResult` subscribe + unsubscribe, `createMcpView` mounts React with `mcp` bridged into context, E2E React View through `runBridge`                     |
+| `mcp-react.story.test.ts` + `mcp-react-e2e.story.test.ts`   | React adapter           | `useMcpApp` context, `useMcpToolResult` subscribe + unsubscribe, `createMcpView` mounts React with `mcp` bridged into context, E2E React View through `runBridge`                          |
 | `mcp-vue.story.test.ts` + `mcp-vue-e2e.story.test.ts`       | Vue 3 adapter           | Same surface via composables + `provide`/`inject`                                                                                                                                          |
 | `mcp-svelte.story.test.ts` + `mcp-svelte-e2e.story.test.ts` | Svelte 5 adapter        | Same surface via `mount({ context })` interop and Svelte stores                                                                                                                            |
 
@@ -163,7 +163,7 @@ pnpm test:headed               # headed Chromium so you can watch
 | Full iframe sandbox                | Simulated via two-window pattern | Real cross-origin iframe with CSP enforced by Chromium |
 | `postMessage` semantics            | JSDOM's simplified impl          | Real Chromium implementation                           |
 | `beforeunload` teardown            | Synchronous in JSDOM             | Real browser event loop                                |
-| Image / font / media in View     | Limited                          | Full                                                   |
+| Image / font / media in View       | Limited                          | Full                                                   |
 
 If a bug only repros in Tier 3 but not Tier 2, that's a "browser behaves differently from JSDOM" finding worth filing.
 
@@ -421,7 +421,7 @@ If any of these matter for your use case, they need their own test layer.
 | The repo builds                              | `pnpm -r typecheck && pnpm -r build`                          |
 | Every protocol primitive works against fakes | `pnpm test:unit`                                              |
 | The bridge works inside a real browser       | `pnpm test:mcp:verify` (after `pnpm exec playwright install`) |
-| Claude renders the View                    | Real-host smoke test step 1 (manual, no key)                  |
-| ChatGPT renders the View                   | Real-host smoke test step 4 (manual, OpenAI dev account)      |
+| Claude renders the View                      | Real-host smoke test step 1 (manual, no key)                  |
+| ChatGPT renders the View                     | Real-host smoke test step 4 (manual, OpenAI dev account)      |
 
 The free, no-key path takes you through Claude Desktop + VS Code + Goose. That's the most useful single thing to do before declaring victory.

@@ -8,13 +8,13 @@
     "mcp",
     "mcp-apps",
     "mcp-ui",
+    "mcp-view",
     "model-context-protocol",
     "react",
     "sep-1865",
     "svelte",
     "vite-plugin",
-    "vue",
-    "mcp-view"
+    "vue"
   ],
   "license": "Apache-2.0",
   "repository": {

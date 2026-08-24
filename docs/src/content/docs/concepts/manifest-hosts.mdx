@@ -62,24 +62,24 @@ This page covers the host-side toolkit. For composition patterns and custom elem
 
 ### Vertical entry fields
 
-| Field            | Purpose                                                                                                                |
-| ---------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `id`             | `module-id` for `<mountly-feature>` and the registry                                                                   |
-| `url`            | CDN URL to `peer.js` (also registered as an import-map entry under `id` or `alias`)                                    |
-| `isolation`      | `"shared"` (default) or `"iframe"` — flip to framed without rewriting the widget                                         |
-| `src`            | Framed page URL when `isolation` is `"iframe"` (defaults to `url`)                                                     |
-| `iframeTitle`    | Required when `isolation` is `"iframe"`                                                                                |
-| `sandbox`        | Optional iframe `sandbox` attribute                                                                                    |
-| `allow`          | Optional iframe `allow` attribute (e.g. `storage-access`)                                                              |
-| `placeholderUrl` | Optional CDN HTML skeleton before the frame reports ready (not hydration)                                                |
-| `team`           | Documentation / governance only                                                                                        |
-| `version`        | Documentation / pinning policy                                                                                         |
-| `exports`        | Subpath map: `"./Checkout": "./Checkout.js"` resolves as `billing/Checkout`                                            |
-| `baseUrl`        | Prefix for relative export paths (defaults to the directory of `url`)                                                  |
-| `types`          | Export names for TypeScript codegen (`module`, `exports`)                                                              |
-| `featureExport`  | Named export that is already an `OnDemandFeature`                                                                      |
-| `moduleExport`   | Named export that satisfies `FeatureModule` (`mount` / `unmount`)                                                      |
-| `alias`          | Optional bare specifier for the import map (e.g. `@acme/chat`)                                                         |
+| Field            | Purpose                                                                             |
+| ---------------- | ----------------------------------------------------------------------------------- |
+| `id`             | `module-id` for `<mountly-feature>` and the registry                                |
+| `url`            | CDN URL to `peer.js` (also registered as an import-map entry under `id` or `alias`) |
+| `isolation`      | `"shared"` (default) or `"iframe"` — flip to framed without rewriting the widget    |
+| `src`            | Framed page URL when `isolation` is `"iframe"` (defaults to `url`)                  |
+| `iframeTitle`    | Required when `isolation` is `"iframe"`                                             |
+| `sandbox`        | Optional iframe `sandbox` attribute                                                 |
+| `allow`          | Optional iframe `allow` attribute (e.g. `storage-access`)                           |
+| `placeholderUrl` | Optional CDN HTML skeleton before the frame reports ready (not hydration)           |
+| `team`           | Documentation / governance only                                                     |
+| `version`        | Documentation / pinning policy                                                      |
+| `exports`        | Subpath map: `"./Checkout": "./Checkout.js"` resolves as `billing/Checkout`         |
+| `baseUrl`        | Prefix for relative export paths (defaults to the directory of `url`)               |
+| `types`          | Export names for TypeScript codegen (`module`, `exports`)                           |
+| `featureExport`  | Named export that is already an `OnDemandFeature`                                   |
+| `moduleExport`   | Named export that satisfies `FeatureModule` (`mount` / `unmount`)                   |
+| `alias`          | Optional bare specifier for the import map (e.g. `@acme/chat`)                      |
 
 When `isolation` is `"iframe"`, `defineMountlyFeatureFromManifest` registers the vertical with `iframeFeature`. See [When to frame](/mountly/concepts/when-to-frame/), [Frame protocols](/mountly/concepts/frame-protocols/), and [Same-origin proxy](/mountly/concepts/same-origin-proxy/).
 

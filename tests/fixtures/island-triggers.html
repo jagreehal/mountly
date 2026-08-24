@@ -1,0 +1,57 @@
+<!doctype html>
+<html>
+  <body style="margin: 0">
+    <button
+      id="hover"
+      data-mountly="/tests/fixtures/w-echo.js"
+      data-on="hover:0"
+      data-props='{"msg":"hover"}'
+    >
+      hover
+    </button>
+    <button
+      id="focus"
+      data-mountly="/tests/fixtures/w-echo.js"
+      data-on="focus"
+      data-props='{"msg":"focus"}'
+    >
+      focus
+    </button>
+    <!-- one attribute carries the trigger and its argument -->
+    <div
+      id="media"
+      data-mountly="/tests/fixtures/w-echo.js"
+      data-on="media:(min-width: 1px)"
+      data-props='{"msg":"media"}'
+    >
+      media
+    </div>
+    <div
+      id="idle"
+      data-mountly="/tests/fixtures/w-echo.js"
+      data-on="idle"
+      data-props='{"msg":"idle"}'
+    >
+      idle
+    </div>
+    <!-- several triggers, whichever comes first -->
+    <button
+      id="either"
+      data-mountly="/tests/fixtures/w-echo.js"
+      data-on="click focus"
+      data-props='{"msg":"either"}'
+    >
+      either
+    </button>
+    <div style="height: 200vh"></div>
+    <div
+      id="viewport"
+      data-mountly="/tests/fixtures/w-echo.js"
+      data-on="viewport"
+      data-props='{"msg":"viewport"}'
+    >
+      viewport
+    </div>
+    <script type="module" src="/packages/mountly/dist/auto.js"></script>
+  </body>
+</html>

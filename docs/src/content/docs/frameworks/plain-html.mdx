@@ -13,20 +13,32 @@ That fits legacy modernization. Keep the existing host page and add richer featu
 
 ```html title="host.html"
 <div
-  data-mountly-island='{"schemaVersion":1,"id":"signup","moduleId":"signup-card","trigger":"idle","props":{"plan":"pro"}}'
+  data-mountly="https://cdn.jsdelivr.net/npm/signup-card@1/dist/index.js"
+  data-on="idle"
+  data-props='{"plan":"pro"}'
 >
   <a href="/signup">Sign up (fallback)</a>
 </div>
 
-<script
-  type="module"
-  src="/packages/mountly/dist/host-entry.js"
-  data-mountly-host
-  data-mountly-loaders='{"signup-card":"https://cdn.jsdelivr.net/npm/signup-card@1/dist/index.js"}'
-></script>
+<script type="module" src="https://cdn.jsdelivr.net/npm/mountly/dist/auto.js"></script>
 ```
 
-`host-entry.js` auto-mounts all `data-mountly-island` payloads on the page. Keep meaningful fallback HTML inside each island so content remains usable if JavaScript is disabled.
+`auto.js` is 2.3 KB gzipped and wires every `data-mountly` element on the page —
+including ones added later, by a CMS widget or an htmx swap. Keep meaningful
+fallback HTML inside each island so the content stays usable if JavaScript never
+arrives.
+
+Prefer short names over URLs? Put the map on the script tag:
+
+```html
+<div data-mountly="signup-card" data-on="idle"></div>
+
+<script
+  type="module"
+  src="https://cdn.jsdelivr.net/npm/mountly/dist/auto.js"
+  data-mountly-urls='{"signup-card":"https://cdn.jsdelivr.net/npm/signup-card@1/dist/index.js"}'
+></script>
+```
 
 ## Programmatic host (advanced)
 
@@ -53,7 +65,8 @@ That fits legacy modernization. Keep the existing host page and add richer featu
   <body>
     <button id="cta">Sign up</button>
     <script type="module">
-      import { createOnDemandFeature, registerCustomElement, defineMountlyFeature } from "mountly";
+      import { createOnDemandFeature } from "mountly/feature";
+      import { registerCustomElement, defineMountlyFeature } from "mountly/elements";
 
       const signup = createOnDemandFeature({
         moduleId: "signup-card",
@@ -93,7 +106,7 @@ If the host is a CMS or a static templating engine where you'd rather drop in HT
 <payment-breakdown trigger="idle" props='{"invoiceId":"inv_123"}'></payment-breakdown>
 
 <script type="module">
-  import { defineMountlyFeature } from "mountly";
+  import { defineMountlyFeature } from "mountly/elements";
 
   defineMountlyFeature("/widgets/dist/index.js");
 </script>
@@ -107,7 +120,7 @@ Use `prefix` when the host needs namespaced custom tags:
 <acme-signup-card trigger="hover" props='{"plan":"pro"}'></acme-signup-card>
 
 <script type="module">
-  import { defineMountlyFeature } from "mountly";
+  import { defineMountlyFeature } from "mountly/elements";
 
   defineMountlyFeature({
     source: "/widgets/dist/index.js",
@@ -124,7 +137,7 @@ When widgets are split into separate files, restrict the modules and derive URLs
 <signup-card trigger="hover" props='{"plan":"pro"}'></signup-card>
 
 <script type="module">
-  import { defineMountlyFeature } from "mountly";
+  import { defineMountlyFeature } from "mountly/elements";
 
   defineMountlyFeature({
     baseUrl: "/widgets",

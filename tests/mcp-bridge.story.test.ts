@@ -158,6 +158,41 @@ describe("runBridge — lifecycle integration", () => {
     }
   });
 
+  it("latches the error state even when a later notification renders successfully", async ({
+    task,
+  }) => {
+    story.init(task);
+    const container = document.createElement("div");
+    let attempt = 0;
+    const view: RunBridgeOptions["view"] = {
+      // Throws on first mount, succeeds once the tool result arrives.
+      mount: () => {
+        if (attempt++ === 0) throw new Error("no data yet");
+      },
+      unmount: () => undefined,
+    };
+
+    const app = new App({ name: "t", version: "0" }, { availableDisplayModes: ["inline"] });
+    const connect = vi.spyOn(App.prototype, "connect").mockResolvedValue(undefined);
+    try {
+      const bridge = runBridge({ app, view, container, awaitToolResult: false });
+      await bridge.ready;
+      await flush();
+      expect(container.getAttribute("data-mountly-mcp-state")).toBe("error");
+
+      emitNotification(app, "ui/notifications/tool-result", { content: [] });
+      await flush();
+
+      // the View recovered, so the user sees it...
+      expect(attempt).toBe(2);
+      // ...but a View that threw stays reported as a failure
+      expect(container.getAttribute("data-mountly-mcp-state")).toBe("error");
+      bridge.stop();
+    } finally {
+      connect.mockRestore();
+    }
+  });
+
   it("renders initialization failures while keeping ready rejectable", async ({ task }) => {
     story.init(task);
     const { view } = recordingView();

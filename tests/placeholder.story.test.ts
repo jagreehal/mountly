@@ -2,10 +2,7 @@
 import { story } from "executable-stories-vitest";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 import { FRAME_READY, iframeModule } from "../packages/mountly/src/iframe";
-import {
-  clearPlaceholders,
-  showPlaceholder,
-} from "../packages/mountly/src/placeholder";
+import { clearPlaceholders, showPlaceholder } from "../packages/mountly/src/placeholder";
 
 function signalReady(el: HTMLIFrameElement): void {
   window.dispatchEvent(

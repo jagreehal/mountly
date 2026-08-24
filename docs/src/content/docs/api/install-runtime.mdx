@@ -4,7 +4,7 @@ description: Inject an import map for shared React/ReactDOM in plain-HTML hosts.
 ---
 
 ```ts
-import { installRuntime } from "mountly";
+import { installRuntime } from "mountly/runtime";
 ```
 
 Writes an `<script type="importmap">` to `<head>` mapping `react`, `react/jsx-runtime`, `react-dom`, and `react-dom/client` to the URLs you pass. Pair with peer-built widgets so the host ships **one** copy of React for many widgets.

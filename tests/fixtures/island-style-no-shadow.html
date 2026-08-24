@@ -3,46 +3,11 @@
   <body>
     <div
       id="island"
-      data-mountly-island='{"id":"s2","moduleId":"demo","props":{"msg":"no-shadow"},"trigger":"click","preloadOn":false,"schemaVersion":1}'
-    ></div>
-    <script type="importmap">
-      {
-        "imports": {
-          "mountly": "/packages/mountly/dist/index.js",
-          "mountly/island": "/packages/mountly/dist/island.js",
-          "mountly/shadow": "/packages/mountly/dist/shadow.js",
-          "mountly/assets": "/packages/mountly/dist/assets.js",
-          "mountly/adapter": "/packages/mountly/dist/adapter.js"
-        }
-      }
-    </script>
-    <script type="module">
-      import { mountIslandFeature } from "/packages/mountly/dist/island.js";
-      import { createWidget } from "/packages/adapters/mountly-svelte/dist/index.js";
-
-      class HelloComponent {
-        constructor({ target, props }) {
-          this.el = document.createElement("span");
-          this.el.className = "island-no-shadow-style";
-          this.el.textContent = String(props?.msg ?? "");
-          target.appendChild(this.el);
-        }
-        $destroy() {
-          this.el?.remove();
-        }
-      }
-
-      const widget = createWidget(HelloComponent, {
-        shadow: false,
-        styles: ".island-no-shadow-style{color:rgb(101, 111, 121)}",
-      });
-
-      mountIslandFeature(document.getElementById("island"), {
-        demo: async () => ({ default: widget }),
-      });
-
-      document.getElementById("island").click();
-      window.__ready = () => !!document.querySelector("#island .island-no-shadow-style");
-    </script>
+      data-mountly="/tests/fixtures/zero-config-svelte-widget-light.js"
+      data-props='{"msg":"light"}'
+    >
+      <span>Load</span>
+    </div>
+    <script type="module" src="/packages/mountly/dist/auto.js"></script>
   </body>
 </html>

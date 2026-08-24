@@ -90,7 +90,10 @@ export function isOverlayOpenPayload(value: unknown): value is OverlayOpenPayloa
   if (html !== undefined && typeof html !== "string") return false;
   if (slot === undefined && html === undefined) return false;
   const props = (value as OverlayOpenPayload).props;
-  if (props !== undefined && (typeof props !== "object" || props === null || Array.isArray(props))) {
+  if (
+    props !== undefined &&
+    (typeof props !== "object" || props === null || Array.isArray(props))
+  ) {
     return false;
   }
   return true;
@@ -120,10 +123,7 @@ export function bindFrameOverlay(
     ((reason: string, payload: OverlayOpenPayload) =>
       console.warn(`[mountly] refused overlay "${payload.id}": ${reason}`));
 
-  const open = new Map<
-    string,
-    { el: HTMLElement; cleanup?: () => void }
-  >();
+  const open = new Map<string, { el: HTMLElement; cleanup?: () => void }>();
 
   function closeOne(id: string, notifyFrame: boolean): void {
     const entry = open.get(id);
@@ -155,12 +155,13 @@ export function bindFrameOverlay(
         return;
       }
       root.append(el);
-      cleanup = options.renderSlot({
-        id: payload.id,
-        slot: payload.slot,
-        props: payload.props ?? {},
-        container: el,
-      }) ?? undefined;
+      cleanup =
+        options.renderSlot({
+          id: payload.id,
+          slot: payload.slot,
+          props: payload.props ?? {},
+          container: el,
+        }) ?? undefined;
     } else if (payload.html !== undefined) {
       if (!options.sanitizeHtml) {
         refuse("html payload requires sanitizeHtml", payload);
@@ -186,12 +187,11 @@ export function bindFrameOverlay(
 }
 
 /** Frame-side: ask the host to open an overlay in the top document. */
-export function openHostOverlay(
-  channel: OverlayFrameChannel,
-  payload: OverlayOpenPayload,
-): void {
+export function openHostOverlay(channel: OverlayFrameChannel, payload: OverlayOpenPayload): void {
   if (!isOverlayOpenPayload(payload)) {
-    throw new Error('[mountly] openHostOverlay: payload needs a non-empty id and either slot or html.');
+    throw new Error(
+      "[mountly] openHostOverlay: payload needs a non-empty id and either slot or html.",
+    );
   }
   channel.emit(OVERLAY_OPEN, payload);
 }

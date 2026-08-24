@@ -1,0 +1,14 @@
+<!doctype html>
+<html>
+  <body>
+    <!-- Big or quote-heavy props go in a JSON script child, where HTML
+         attribute escaping cannot bite. -->
+    <div id="island" data-mountly="/tests/fixtures/w-echo.js">
+      <span>Load</span>
+      <script type="application/json">
+        { "msg": "He said \"hi\"" }
+      </script>
+    </div>
+    <script type="module" src="/packages/mountly/dist/auto.js"></script>
+  </body>
+</html>

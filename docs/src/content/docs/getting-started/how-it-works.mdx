@@ -45,7 +45,7 @@ Each adapter ([React](/mountly/frameworks/react/), [Vue](/mountly/frameworks/vue
 A **feature** wraps a widget with a trigger, a module loader, optional data fetching, dual caching, and a state machine. You use this layer in production.
 
 ```ts title="signup-feature.ts"
-import { createOnDemandFeature } from "mountly";
+import { createOnDemandFeature } from "mountly/feature";
 
 export const signupFeature = createOnDemandFeature({
   moduleId: "signup-card",
@@ -87,7 +87,7 @@ A trigger decides when a feature moves between states. Seven are built in:
 | `media`      | Mount when a CSS media query matches.                        | Responsive-only UI.                        |
 | `url-change` | Mount on `popstate`/`hashchange`/`pushState`/`replaceState`. | Route-driven content.                      |
 
-You can also register [trigger plugins](/mountly/api/trigger-plugins/), such as swipe, long-press, or keyboard chord, without touching the runtime.
+You can also add [custom triggers](/mountly/api/trigger-plugins/) — swipe, long-press, keyboard chord — with a single assignment, without touching the runtime.
 
 ## Dual caching
 

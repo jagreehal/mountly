@@ -60,7 +60,7 @@ test.describe("Island styling with JavaScript disabled", () => {
         shadowText: inShadow?.textContent ?? "",
         shadowComputedColor: inShadow ? getComputedStyle(inShadow).color : "",
         documentHasLink: !!document.querySelector(
-          'link[rel="stylesheet"][href*="css-loader-asset.css"]',
+          'link[rel="stylesheet"][href*="zero-config-svelte-widget.css"]',
         ),
       };
     });

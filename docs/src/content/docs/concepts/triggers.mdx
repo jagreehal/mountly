@@ -113,15 +113,21 @@ feature.abort();
 // state → "aborted", any in-flight load DOMException("AbortError")s
 ```
 
-## Custom triggers via plugins
+## Custom triggers
 
-Anything not covered by the built-ins can be added as a plugin. Three are provided out of the box:
+Anything the built-ins do not cover is one assignment to the `triggers` table:
 
-- `createSwipeTrigger` for touch swipe gestures.
-- `createLongPressTrigger` for touch / mouse long-press.
-- `createKeyboardTrigger` for single keys or chord shortcuts.
+```ts
+import { triggers } from "mountly";
+import { eachSwipe } from "mountly/gestures";
 
-See [Trigger plugins](/mountly/api/trigger-plugins/) for the full API and how to register your own.
+triggers.swipe = (el, direction, run) => eachSwipe(el, run, { direction });
+// <div data-mountly="/drawer.js" data-on="swipe:left"></div>
+```
+
+`mountly/gestures` also ships long-press and keyboard-chord primitives. See
+[Custom triggers](/mountly/api/trigger-plugins/) for the built-in table, the
+gesture options, and the full contract.
 
 ## When the trigger isn't a DOM event
 

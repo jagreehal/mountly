@@ -2,39 +2,13 @@
 <html>
   <body>
     <div id="root">
-      <button
-        data-mountly-island='{"id":"a","moduleId":"demo","props":{"msg":"A"},"trigger":"click","preloadOn":false,"schemaVersion":1}'
-      ></button>
-      <button
-        data-mountly-island='{"id":"b","moduleId":"demo","props":{"msg":"B"},"trigger":"click","preloadOn":false,"schemaVersion":1}'
-      ></button>
+      <button id="a" data-mountly="/tests/fixtures/w-echo.js" data-props='{"msg":"A"}'>
+        <span>Load</span>
+      </button>
+      <button id="b" data-mountly="/tests/fixtures/w-echo.js" data-props='{"msg":"B"}'>
+        <span>Load</span>
+      </button>
     </div>
-    <script type="importmap">
-      { "imports": { "mountly": "/packages/mountly/dist/island.js" } }
-    </script>
-    <script type="module">
-      import { mountAllIslands } from "/packages/mountly/dist/island.js";
-      const widgetModule = {
-        mount(container, props) {
-          const span = document.createElement("span");
-          span.textContent = String(props?.msg ?? "");
-          container.appendChild(span);
-        },
-        unmount() {},
-      };
-
-      const mounted = mountAllIslands(document.getElementById("root"), {
-        demo: async () => ({ default: widgetModule }),
-      });
-
-      for (const m of mounted) m.element.click();
-      await Promise.resolve();
-      await new Promise((resolve) => setTimeout(resolve, 0));
-
-      window.__result = {
-        count: mounted.length,
-        text: document.getElementById("root")?.textContent ?? "",
-      };
-    </script>
+    <script type="module" src="/packages/mountly/dist/auto.js"></script>
   </body>
 </html>

@@ -59,12 +59,12 @@ Before mountly:                    After mountly:
 - **Framework-agnostic core**: the runtime is framework-agnostic. React, Vue, and Svelte adapters today; Solid in the same shape later.
 - **Standardized lifecycle**: `idle → preload → activate → mount → unmount`
 - **Multiple instances**: mount the same feature multiple times on one page
-- **Small core**: ~9 KB gzipped; widgets load on demand, not on page load
+- **Small core**: 2.3 KB gzipped, one file, no dependencies; widgets load on demand, not on page load
 - **Custom element**: `<mountly-feature>` web component for declarative usage
 - **Isolation when you need it**: light DOM, shadow DOM, or a cross-origin iframe — the host chooses, the widget source does not change
 - **Analytics**: built-in interaction timing and performance tracking
 - **Predictive prefetch**: idle-time loading scored by interaction history
-- **Plugin triggers**: swipe, long-press, keyboard, URL-change, and custom trigger plugins
+- **Extensible triggers**: eight built in; add swipe, long-press or a keyboard chord with one assignment to the `triggers` table
 - **Devtools panel**: floating debug UI showing live feature states and events
 
 ## Packages
@@ -85,12 +85,12 @@ Before mountly:                    After mountly:
 The fastest way to build an MCP App View is to let your coding agent do it.
 Install the Mountly skills once, then ask:
 
-| Skill | What it does | Try it |
-| --- | --- | --- |
-| [`create-mcp-app`](plugins/mountly-mcp/skills/create-mcp-app/SKILL.md) | Scaffolds via `mountly-mcp create` | _"Create an MCP App"_ |
-| [`add-app-to-server`](plugins/mountly-mcp/skills/add-app-to-server/SKILL.md) | Adds Views to an existing server | _"Add UI to my MCP server"_ |
-| [`convert-web-app`](plugins/mountly-mcp/skills/convert-web-app/SKILL.md) | Wraps an existing component | _"Turn my component into an MCP App"_ |
-| [`migrate-ext-apps`](plugins/mountly-mcp/skills/migrate-ext-apps/SKILL.md) | Migrates official ext-apps Views | _"Migrate from ext-apps"_ |
+| Skill                                                                        | What it does                       | Try it                                |
+| ---------------------------------------------------------------------------- | ---------------------------------- | ------------------------------------- |
+| [`create-mcp-app`](plugins/mountly-mcp/skills/create-mcp-app/SKILL.md)       | Scaffolds via `mountly-mcp create` | _"Create an MCP App"_                 |
+| [`add-app-to-server`](plugins/mountly-mcp/skills/add-app-to-server/SKILL.md) | Adds Views to an existing server   | _"Add UI to my MCP server"_           |
+| [`convert-web-app`](plugins/mountly-mcp/skills/convert-web-app/SKILL.md)     | Wraps an existing component        | _"Turn my component into an MCP App"_ |
+| [`migrate-ext-apps`](plugins/mountly-mcp/skills/migrate-ext-apps/SKILL.md)   | Migrates official ext-apps Views   | _"Migrate from ext-apps"_             |
 
 ```
 /plugin marketplace add jagreehal/mountly
@@ -140,30 +140,85 @@ SDK, so it tracks the spec rather than reimplementing it.
 
 ## Quick Start (60 seconds)
 
-```bash
-npx mountly init my-widget
-cd my-widget
-pnpm install
-pnpm build
-```
-
-Drop the built widget into any HTML page:
+An island is a URL, a trigger, and some props. Write it in HTML; there is no
+JavaScript for you to write.
 
 ```html
-<div id="mount"></div>
-<script type="module">
-  import widget from "./my-widget/dist/index.js";
-  widget.mount(document.getElementById("mount"));
-</script>
+<button data-mountly="/widgets/cart.js" data-preload="hover" data-target="#panel">
+  Basket (3)
+</button>
+<div id="panel"></div>
+
+<script type="module" src="https://unpkg.com/mountly/dist/auto.js"></script>
 ```
 
-The widget mounts inside the container in light DOM by default, with bundled styles applied. Pass `shadow: true` to `createWidget` when you need a hard style boundary. That's the whole flow.
+Hovering the button downloads `cart.js` (and its sibling `cart.css`); clicking
+mounts it into `#panel`. Until then the page ships the button and nothing else.
 
-**See it running first:** clone the repo, run `pnpm install && pnpm -r build && cd docs/examples/plain-html && pnpm dev`, then open <http://localhost:5175/docs/examples/quickstart/host.html> ([source](docs/examples/quickstart/host.html)). **Or try the [hosted quickstart](https://jagreehal.github.io/mountly/examples/quickstart/host.html)** — no clone required.
+`/widgets/cart.js` is any module with a `mount`:
+
+```js
+export default {
+  mount(el, props) {
+    /* React, Vue, Svelte, or plain DOM */
+  },
+  unmount(el) {},
+};
+```
+
+The three adapters produce exactly this shape from a component you already have:
+
+```js
+import { createWidget } from "mountly-react";
+import Cart from "./Cart";
+
+export default createWidget(Cart);
+```
+
+**See it running:** clone the repo, run `pnpm install && pnpm -r build && cd
+docs/examples/plain-html && pnpm dev`, then open
+<http://localhost:5175/docs/examples/quickstart/host.html>
+([source](docs/examples/quickstart/host.html)). **Or try the [hosted
+quickstart](https://jagreehal.github.io/mountly/examples/quickstart/host.html)** —
+no clone required.
+
+### The attributes
+
+| Attribute            | Default        | What it does                                                                                                                       |
+| -------------------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `data-mountly`       | —              | Module URL, or a key in the host script's `data-mountly-urls` map                                                                  |
+| `data-on`            | `click`        | When to mount. `click focus` fires on whichever comes first                                                                        |
+| `data-preload`       | —              | When to fetch without mounting — usually `hover` or `viewport`                                                                     |
+| `data-props`         | `{}`           | JSON props. A `<script type="application/json">` child works too, when quotes get awkward                                          |
+| `data-target`        | the element    | Where to mount, if not the trigger itself                                                                                          |
+| `data-toggle`        | off            | A second activation unmounts instead of doing nothing                                                                              |
+| `data-css`           | sibling `.css` | `none`, or an explicit stylesheet URL                                                                                              |
+| `data-mountly-state` | —              | `idle` / `loading` / `mounted` / `error`, so CSS can style each. Server-render it as `mounted` and mountly leaves the island alone |
+
+Triggers read as `kind` or `kind:arg` — `hover:300`, `viewport:200px`,
+`media:(min-width: 60rem)`, `idle:2000`. `click`, `focus`, `url` and `never`
+take no argument.
+
+### When HTML is not enough
+
+```js
+import { mountly, mount, unmount, update } from "mountly";
+
+const stop = mountly({
+  urls: { cart: "/widgets/cart.js" },
+  // the one escape hatch: retries, auth headers, a bundler's own import(),
+  // a test double — instead of an attribute for each
+  load: (url) => fetch(url).then(/* ... */),
+});
+```
+
+`mountly()` also watches the DOM, so islands rendered later — by another
+widget, by htmx, by a Turbo frame swap — wire themselves up with no ordering
+knob to configure.
 
 ### Going further
 
-- **Lazy load on user intent (Features)**: `createOnDemandFeature(...)` adds hover/click/viewport/idle triggers around a widget. See [docs/examples/marketing-site](docs/examples/marketing-site/README.md).
+- **Imperative feature API (`mountly/feature`)**: `createOnDemandFeature(...)` for data loading, custom cache keys and multi-container lifecycles that the attributes do not cover. See [docs/examples/marketing-site](docs/examples/marketing-site/README.md).
 - **Plain-HTML host (no bundler)**: `installRuntime({...})` injects a shared-React import map. For direct browser import maps, also map used `mountly/*` subpaths (for example `mountly/attach`, `mountly/elements`, `mountly/shadow`, `mountly/assets`, `mountly/adapter`). See [docs/examples/plain-html](docs/examples/plain-html/README.md).
 - **Pick a distribution (self-contained vs shared React)**: when to ship one widget vs many, when to share React. See [docs/examples/README.md#choosing-a-distribution](docs/examples/README.md#choosing-a-distribution).
 - **Choosing an architecture**: monorepo first, widget drop-in, manifest verticals — when you do and do not need micro frontends. See [Choosing an architecture](https://jagreehal.github.io/mountly/getting-started/choosing-an-architecture/).
@@ -179,27 +234,35 @@ The widget mounts inside the container in light DOM by default, with bundled sty
 
 ## API Stability
 
-`mountly` is pre-1.0, but the public API used in the examples is now frozen for the `0.1.x` line:
+`mountly` is pre-1.0. The `0.6.0` core is a deliberate break: the declarative
+island API above replaces the JSON `data-mountly-island` payload, the loader
+registry, and the twenty-odd payload knobs around them. The imperative
+`createOnDemandFeature` API is unchanged but now lives at `mountly/feature`.
 
-- `createOnDemandFeature`
-- `registerCustomElement` / `defineMountlyFeature`
+Frozen for the `0.6.x` line:
+
+- the `data-*` island attributes and `data-mountly-state`
+- `mountly()` / `mount` / `unmount` / `update`
 - adapter contract types (`WidgetModule`, `AdapterOptions`)
 - `installRuntime` shape (including `react/jsx-runtime` mapping support)
 
-Breaking changes to this surface should wait for `0.2.0` and must be called out in release notes. Releases follow [docs/release-checklist.md](docs/release-checklist.md).
+Releases follow [docs/release-checklist.md](docs/release-checklist.md).
 
-## Islands + SSR Controls
+## SSR
 
-`mountly` now includes guarded island mounting primitives for SSR handoff safety:
+Render the island's markup on the server and set `data-mountly-state="mounted"`.
+mountly skips it — no double paint, no client mount, and the markup stays
+styled if JavaScript never arrives. That one attribute is the whole handshake.
 
-- `mountIslandFeature()` / `mountAllIslands()`
-- hydration guards: `skipIfHydrated`, `forceRemount`, `hydratedAttr`
-- nested ordering guard: `waitForParent`
-- single deterministic hydration: `once`
-- loader resilience: `retry`, `retryDelayMs`
-- SSR marker gating: `requireSsrMarker`, `ssrMarkerAttr`
-- teardown controls: `unmount()`, `unmountAllIslands()`, `mountly:unmount` event
-- runtime state marker: `data-mountly-state` (`idle|loading|mounted|error`)
+```html
+<div data-mountly="/widgets/cart.js" data-mountly-state="mounted">
+  <!-- server-rendered markup -->
+</div>
+```
+
+Anything inside an island before it mounts is its fallback: a link, a static
+summary, a skeleton. Reserve space with `style="min-height: 40px"` — no
+mountly attribute needed, CSS already does this.
 
 ## Examples
 

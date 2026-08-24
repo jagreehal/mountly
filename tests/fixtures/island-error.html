@@ -1,0 +1,11 @@
+<!doctype html>
+<html>
+  <body>
+    <div id="island" data-mountly="/tests/fixtures/does-not-exist.js"><span>Load</span></div>
+    <script>
+      window.__events = [];
+      addEventListener("mountly:error", (event) => window.__events.push(event.detail.url));
+    </script>
+    <script type="module" src="/packages/mountly/dist/auto.js"></script>
+  </body>
+</html>

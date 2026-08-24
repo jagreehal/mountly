@@ -1,4 +1,4 @@
-import { createOnDemandFeature } from "mountly";
+import { createOnDemandFeature } from "mountly/feature";
 import { defineMountlyFeature, registerCustomElement } from "mountly/elements";
 import { attach, onTrigger } from "mountly/attach";
 import { onAnalyticsEvent } from "mountly/analytics";

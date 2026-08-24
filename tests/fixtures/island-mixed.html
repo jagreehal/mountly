@@ -1,0 +1,17 @@
+<!doctype html>
+<html>
+  <body>
+    <!-- Two frameworks, one page, same contract. -->
+    <div
+      id="svelte-island"
+      data-mountly="/tests/fixtures/zero-config-svelte-widget.js"
+      data-props='{"msg":"svelte"}'
+    >
+      <span>Load</span>
+    </div>
+    <div id="plain-island" data-mountly="/tests/fixtures/w-echo.js" data-props='{"msg":"plain"}'>
+      <span>Load</span>
+    </div>
+    <script type="module" src="/packages/mountly/dist/auto.js"></script>
+  </body>
+</html>

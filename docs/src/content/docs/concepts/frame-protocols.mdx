@@ -12,11 +12,7 @@ The frame asks the host to open UI in the top document. Prefer named **slots** t
 ### Host
 
 ```ts
-import {
-  iframeFeature,
-  bindFrameOverlay,
-  type FrameOverlayEvents,
-} from "mountly/iframe";
+import { iframeFeature, bindFrameOverlay, type FrameOverlayEvents } from "mountly/iframe";
 
 interface Events extends FrameOverlayEvents {
   invoicePaid: { invoiceId: string };
@@ -27,9 +23,7 @@ const billing = iframeFeature<Events>({
   src: "https://billing.acme.com/widget",
   title: "Billing",
   channel: {
-    validators: {
-      /* app events + frameOverlayValidators if you want */
-    },
+    validators: {/* app events + frameOverlayValidators if you want */},
     connect: (channel) =>
       bindFrameOverlay(channel, {
         renderSlot: ({ slot, props, container }) => {

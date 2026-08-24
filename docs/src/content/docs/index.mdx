@@ -341,7 +341,7 @@ export default createWidget(SignupCard, { styles });
 ```
 
 ```ts title="page.ts"
-import { createOnDemandFeature } from "mountly";
+import { createOnDemandFeature } from "mountly/feature";
 
 // 2. Add the on-demand lifecycle around a widget
 const signup = createOnDemandFeature({
@@ -364,7 +364,7 @@ signup.attach({
 <signup-card trigger="viewport" props='{"plan":"pro"}'></signup-card>
 
 <script type="module">
-  import { defineMountlyFeature } from "mountly";
+  import { defineMountlyFeature } from "mountly/elements";
 
   defineMountlyFeature("/widgets/dist/index.js");
 </script>
