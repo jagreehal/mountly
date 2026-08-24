@@ -1,6 +1,6 @@
 {
   "name": "mountly-mcp",
-  "version": "4.0.2",
+  "version": "4.1.0",
   "description": "Build MCP Apps (SEP-1865) views from React, Vue or Svelte components — new or existing. One build emits the ui:// resource, its sidecar, and the MCP server wiring.",
   "keywords": [
     "chatgpt",
@@ -115,7 +115,7 @@
   "dependencies": {
     "@modelcontextprotocol/ext-apps": "^1.7.5",
     "@modelcontextprotocol/sdk": "^1.30.0",
-    "mountly": "^1.0.0",
+    "mountly": "^1.0.1",
     "mountly-react": "^2.1.0",
     "zod": "^4.4.3"
   },
