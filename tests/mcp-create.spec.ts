@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { story } from "executable-stories-playwright";
-import { execSync } from "node:child_process";
+import { execSync, spawn } from "node:child_process";
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -29,12 +29,52 @@ function run(command: string, cwd: string): string {
   }
 }
 
+/**
+ * Drive the scaffolded stdio entry from a working directory that is not the
+ * project. That is what Claude Desktop does: it spawns `node
+ * /abs/path/serve-stdio.mjs` and picks the cwd itself, so anything the server
+ * reads by a cwd-relative path is simply missing.
+ */
+async function initializeOverStdio(entry: string, cwd: string): Promise<string> {
+  const child = spawn("node", [entry], { cwd, stdio: ["pipe", "pipe", "pipe"] });
+  let stdout = "";
+  let stderr = "";
+  child.stdout.setEncoding("utf8");
+  child.stderr.setEncoding("utf8");
+  child.stdout.on("data", (chunk: string) => (stdout += chunk));
+  child.stderr.on("data", (chunk: string) => (stderr += chunk));
+  child.stdin.write(
+    `${JSON.stringify({
+      jsonrpc: "2.0",
+      id: 1,
+      method: "initialize",
+      params: {
+        protocolVersion: "2025-06-18",
+        capabilities: {},
+        clientInfo: { name: "cwd-probe", version: "0.0.0" },
+      },
+    })}\n`,
+  );
+  try {
+    const deadline = Date.now() + 30_000;
+    while (!stdout.includes("\n") && child.exitCode === null && Date.now() < deadline) {
+      await new Promise((done) => setTimeout(done, 50));
+    }
+  } finally {
+    child.kill();
+  }
+  if (!stdout.includes("\n")) {
+    throw new Error(`serve-stdio.mjs answered nothing from cwd ${cwd}\nstderr:\n${stderr}`);
+  }
+  return stdout;
+}
+
 test.beforeEach(({ page }, testInfo) => {
   void page;
   story.init(testInfo);
 });
 
-test("mountly-mcp create scaffolds react app that builds and verifies", () => {
+test("mountly-mcp create scaffolds react app that builds and verifies", async () => {
   story.given("mountly-mcp is built");
   expect(existsSync(CLI)).toBe(true);
 
@@ -49,9 +89,13 @@ test("mountly-mcp create scaffolds react app that builds and verifies", () => {
       root,
     );
     expect(out).toContain("Created MCP App demo-app");
+    expect(out).toMatch(/Next:\s*\n\s*cd /);
+    expect(out).toContain("pnpm install");
+    expect(out).toContain("pnpm dev");
     expect(existsSync(join(appDir, "package.json"))).toBe(true);
     expect(existsSync(join(appDir, "src/view.tsx"))).toBe(true);
     expect(existsSync(join(appDir, "server.mjs"))).toBe(true);
+    expect(existsSync(join(appDir, "serve-stdio.mjs"))).toBe(true);
     expect(existsSync(join(appDir, "vite.config.ts"))).toBe(true);
     expect(existsSync(join(appDir, "src/view.tsx.tmpl"))).toBe(false);
 
@@ -77,6 +121,13 @@ test("mountly-mcp create scaffolds react app that builds and verifies", () => {
     story.and("mountly-mcp verify passes");
     const verifyOut = run("pnpm exec mountly-mcp verify", appDir);
     expect(verifyOut.toLowerCase()).not.toMatch(/\berror\b/);
+
+    story.and("serve-stdio.mjs answers from a foreign working directory");
+    const response = await initializeOverStdio(join(appDir, "serve-stdio.mjs"), tmpdir());
+    const initialize = JSON.parse(response.split("\n")[0]) as {
+      result?: { serverInfo?: { name?: string } };
+    };
+    expect(initialize.result?.serverInfo?.name).toBe("demo-app");
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

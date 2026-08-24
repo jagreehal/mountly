@@ -2,6 +2,8 @@
 
 mountly runs multi-team frontends on **Vite, ESM, and import maps**.
 
+For features and page regions with stable contracts, mountly can provide the full browser composition layer. Teams can ship separate ESM artifacts without adopting Module Federation, Single-SPA, or a vendor control plane. Your CDN, manifest ownership, and release workflow determine whether teams can deploy without a host release.
+
 ## The five-step model
 
 1. **Vite builds ESM.** Each vertical repo uses `mountly-vite-plugin` to emit `dist/index.js` (self-contained) and `dist/peer.js` (shared peers).
@@ -367,7 +369,7 @@ const head = renderMountlyHead(manifest); // string: <script type="importmap">â€
 ```
 
 ```html
-<!doctype html>
+<!DOCTYPE html>
 <html>
   <head>
     <!-- server-injected: -->

@@ -1,0 +1,40 @@
+# Mountly MCP
+
+Prefer `npx mountly-mcp create` for MCP Apps Views. Do not clone this monorepo
+or `modelcontextprotocol/ext-apps` for greenfield Views.
+
+## Commands
+
+```bash
+npx mountly-mcp create my-app --framework react   # vue | svelte | vanilla
+cd my-app && pnpm install && pnpm dev
+pnpm verify
+pnpm exec mountly-mcp verify --strict --render
+npx mountly-mcp add settings --framework react
+npx mountly-mcp doctor
+```
+
+## APIs
+
+- `createMcpView` from `mountly-mcp/react` | `/vue` | `/svelte` (vanilla: `publishMcpView`)
+- `mountlyMcpViews({ apps })` from `mountly-mcp/vite`
+- `readMcpAppManifest("dist/mountly-mcp.manifest.json")` from `mountly-mcp/artifact`
+- `registerMcpApps(server, { views, tools })` from `mountly-mcp/server` (before `connect`)
+- Fixtures file: `mcp.fixtures.json`
+
+## Forbidden
+
+- Cloning `jagreehal/mountly` or `modelcontextprotocol/ext-apps` to scaffold Views
+- Hand-writing View HTML, postMessage, or `new App()` for Views
+- Islands vocabulary in MCP docs
+- Calling `server.connect` before `registerMcpApps`
+
+## When to use ext-apps
+
+Host or bridge protocol code only. Views and `ui://` registration stay on Mountly.
+
+## Docs
+
+- https://mountly.dev/mcp-apps/
+- packages/mcp-apps/GLOSSARY.md
+- plugins/mountly-mcp/skills/

@@ -3,9 +3,9 @@ title: Microfrontends
 description: Multiple teams, independent deployments, shared websites. How mountly supports MFE-style composition with import maps and custom elements.
 ---
 
-Microfrontends (MFE) let different teams ship independently owned UI into the same product surface. Each team can build and deploy its feature in isolation, then the host composes those features at runtime.
+Microfrontends (MFE) let teams ship team-owned UI into the same product surface. Each team can build and deploy its feature on its own release schedule, then the host composes those features at runtime.
 
-Microfrontends give teams **ownership** rather than full autonomy. Teams own their feature end-to-end, but still coordinate on shared concerns like versioning, styling, and communication patterns.
+Teams own their feature end-to-end and coordinate shared concerns such as versioning, styling, and communication contracts.
 
 This solves organizational problems:
 
@@ -14,7 +14,9 @@ This solves organizational problems:
 - Parallel development: fewer merge conflicts across unrelated features
 - Incremental migration: move one region at a time instead of rewriting the whole app
 
-MFE platforms also add complexity. mountly offers a smaller path for many cases: standard ES modules, custom elements, and framework adapters.
+Microfrontends describe an architecture and a delivery model. A team-owned widget or region counts as a microfrontend when the team can build, test, and deploy it without releasing the host. Teams can implement that model with a small runtime or a platform, depending on their release needs.
+
+mountly provides that runtime composition layer with standard ES modules, custom elements, framework adapters, and a small `mount` / `unmount` contract. For teams with clear feature boundaries, a CDN and a mountly manifest may provide enough infrastructure. Teams that need coordinated rollouts, runtime version negotiation, or route-to-app traffic management will need those controls elsewhere.
 
 ### Import maps and manifests
 
@@ -118,7 +120,10 @@ defineMountlyFeature({ baseUrl: "/widgets", modules: ["checkout-card"] });
 defineMountlyFeature({
   modules: {
     "checkout-card": "/widgets/checkout-card.js",
-    "invoice-list": { moduleUrl: "/widgets/invoice-list.js", moduleExport: "invoiceList" },
+    "invoice-list": {
+      moduleUrl: "/widgets/invoice-list.js",
+      moduleExport: "invoiceList",
+    },
   },
 });
 defineMountlyFeature({
@@ -169,25 +174,29 @@ Run `mountly manifest validate` before deploy. It catches version skew across Re
 
 Two React copies in the same component tree break Context, hooks, and refs. That usually means the host bundled React and a vertical shipped a self-contained `dist/index.js` that also bundles React. Use `dist/peer.js` on React hosts and let the import map provide one React.
 
+### Deployment ownership
+
+A remote bundle creates a separate build artifact. Your release process creates deployment independence. If the host team must edit and release its repository for each bundle URL change, both teams still share a release step.
+
+Give the widget team control of its manifest or registry entry, or provide a promotion workflow that updates the resolved URL without a host release. Keep review and rollback policy in that workflow.
+
 ## When to use mountly for MFE-style composition
 
 ### Good fit
 
-- **Small to medium orgs** with a few independently owned UI regions
+- **Team-owned UI regions** with separate release schedules
 - **Mixed frameworks** where the host should not care what built each widget
 - **Independent features** that can communicate through props, events, URL state, or a small shared store
 - **Existing hosts** such as CMS pages, server templates, Rails/Django apps, static pages, or legacy shells
 - **Strangler-fig migrations** where one framework replaces another region by region
 - **Marketing and community surfaces** where teams need to drop controlled interactive cards into otherwise static pages
 
-### Poor fit
-
-**mountly is not the right tool if:**
+### Limits and tradeoffs
 
 - **Every region shares live app state.** When your UI couples through one Router context, one Query client, or one Redux store, a single app shell fits better than coordinating independent regions.
-- **You need a central deploy control plane.** mountly validates manifests and loads verticals. It does not route traffic, coordinate releases, or resolve semver at runtime.
+- **Your releases require central orchestration.** mountly validates manifests and loads verticals. Your platform must handle traffic routing, coordinated rollouts, and runtime version policy.
 
-**mountly trades bytes for simplicity when:**
+**Self-contained bundles trade bytes for less version coordination:**
 
 - Regions stay independent and you pick bundle URLs explicitly.
 - You accept upfront version agreement via the host import map.

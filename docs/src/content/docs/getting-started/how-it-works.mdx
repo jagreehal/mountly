@@ -109,11 +109,11 @@ When you build a widget, the CLI emits two ESM entries:
 
 ### `dist/index.js` — self-contained
 
-Includes the component, the adapter, and the framework. Drop it into any page and it works without host setup. A representative React widget weighs about 148 KB gz.
+Includes the component, the adapter, and the framework. Drop it into any page and it works without host setup. A representative React widget weighs about 66 KB gz.
 
 ### `dist/peer.js` — peer build
 
-Excludes the framework. The host provides `react`, `react-dom`, `react-dom/client`, and `react/jsx-runtime` via an import map. Each widget weighs about 5 KB gz, plus one 45 KB gz copy of React shared across all of them.
+Excludes the framework. The host provides `react`, `react-dom`, `react-dom/client`, and `react/jsx-runtime` via an import map. Each widget weighs about 3 KB gz, plus one 59 KB gz copy of React shared across all of them.
 
 The host picks which one to load via the import map. The widget source is identical either way. See [Distribution](/mountly/concepts/distribution/) for when each makes sense and [`installRuntime`](/mountly/api/install-runtime/) for the helper that wires the React import map for you.
 

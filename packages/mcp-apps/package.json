@@ -7,12 +7,14 @@
     "claude",
     "mcp",
     "mcp-apps",
+    "mcp-apps-view",
     "mcp-ui",
     "mcp-view",
     "model-context-protocol",
     "react",
     "sep-1865",
     "svelte",
+    "ui-resource",
     "vite-plugin",
     "vue"
   ],
@@ -27,7 +29,8 @@
   },
   "files": [
     "dist",
-    "templates"
+    "templates",
+    "GLOSSARY.md"
   ],
   "type": "module",
   "main": "./dist/index.js",
@@ -143,7 +146,7 @@
     "playwright": ">=1.62.1",
     "react": "^19",
     "react-dom": "^19",
-    "vite": "^8.2.1"
+    "vite": "^8"
   },
   "peerDependenciesMeta": {
     "@json-render/core": {

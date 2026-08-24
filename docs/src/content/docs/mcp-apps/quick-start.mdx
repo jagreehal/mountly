@@ -1,37 +1,35 @@
 ---
 title: MCP Apps quick start
-description: Build a React, Vue, or Svelte component as an MCP Apps View and install it into an application-owned MCP server.
+description: Build a Vue, React, or Svelte View and register it on an application-owned MCP server.
 ---
 
-Prefer the scaffolder for a complete project:
+Scaffold when you can:
 
 ```bash
 npx mountly-mcp create my-app --framework vue
 cd my-app && pnpm install && pnpm dev
 ```
 
-`--framework` takes `react`, `vue`, `svelte`, or `vanilla`. Vanilla pulls in no
-framework and no adapter — a View is only `mount` / `update` / `unmount`, so
-`publishMcpView` takes the object directly.
+`--framework`: `react` | `vue` | `svelte` | `vanilla`. Vanilla has no framework
+runtime. Call `publishMcpView` with `mount` / `update` / `unmount`.
 
-Or install [Agent Skills](/mcp-apps/agent-skills/) and ask your coding agent to
-create an MCP App. The walkthrough below is the same shape the scaffold emits.
+Or install [Agent Skills](/mcp-apps/agent-skills/) and ask an agent to create
+the App. The steps below match what the scaffold emits.
 
-This example uses Vue. Replace `/vue` and the Vite framework plugin with the
-React or Svelte equivalents; the artifact and server APIs stay the same. The
-same steps apply to a greenfield one-screen dashboard.
+This walkthrough uses Vue. Swap `/vue` and the Vite plugin for React or Svelte.
+Artifact and server APIs stay the same.
 
 ```bash
 # React (default)
 npm install mountly-mcp react react-dom @modelcontextprotocol/sdk
 npm install -D vite @vitejs/plugin-react
 
-# Vue (this walkthrough)
+# Vue (this page)
 npm install mountly-mcp mountly-vue @modelcontextprotocol/sdk
 npm install -D vite @vitejs/plugin-vue
 ```
 
-## 1. Publish the component as a View
+## 1. Publish the View
 
 ```ts
 // src/quote-view.ts
@@ -41,8 +39,7 @@ import QuoteCard from "./QuoteCard.vue";
 createMcpView(QuoteCard);
 ```
 
-Tool data and host context are available without changing the component's
-public props:
+Read tool data without changing the component's public props:
 
 ```vue
 <script setup lang="ts">
@@ -73,11 +70,11 @@ section {
 </style>
 ```
 
-Vue composables return computed refs. React provides equivalent hooks. Svelte
-receives `mcp`, `toolInput`, `toolInputPartial`, `toolResult`, and `hostContext`
-as component props.
+Vue composables return computed refs. React has matching hooks. Svelte gets
+`mcp`, `toolInput`, `toolInputPartial`, `toolResult`, and `hostContext` as
+props.
 
-## 2. Configure the build
+## 2. Vite config
 
 ```ts
 // vite.config.ts
@@ -108,11 +105,10 @@ export default defineConfig({
 npx mountly-mcp build
 ```
 
-The build emits `dist/payment_quote.html`, its transitional metadata file, and
-the canonical `dist/mountly-mcp.manifest.json`. External origins not declared
-in `csp` are blocked by the host.
+You get `dist/payment_quote.html`, its metadata sidecar, and
+`dist/mountly-mcp.manifest.json`. Hosts block origins missing from `csp`.
 
-## 3. Install it into your server
+## 3. Register on your server
 
 ```ts
 // src/create-server.ts
@@ -152,12 +148,11 @@ export default async function createServer() {
 }
 ```
 
-Call `registerMcpApps()` before connecting the server. Mountly adds a text
-`content` fallback when a handler returns only `structuredContent`, so the model
-and text-only clients still receive a useful result.
+Call `registerMcpApps()` before `connect`. If the handler returns only
+`structuredContent`, Mountly adds a JSON text `content` block for models and
+text-only clients.
 
-Connect the returned server with the transport your application owns. For a
-stdio process:
+Stdio:
 
 ```ts
 // src/server.ts
@@ -168,11 +163,11 @@ const server = await createServer();
 await server.connect(new StdioServerTransport());
 ```
 
-Never write logs to stdout in a stdio server; stdout is the JSON-RPC channel.
+Log to stderr. stdout is JSON-RPC.
 
 ## 4. Develop and verify
 
-Create `mcp.fixtures.json`; without a real server, each value is delivered as
+`mcp.fixtures.json` without `--server` delivers each value as
 `structuredContent`:
 
 ```json
@@ -183,16 +178,14 @@ Create `mcp.fixtures.json`; without a real server, each value is delivered as
 ```
 
 ```bash
+npx mountly-mcp doctor
 npx mountly-mcp dev
 npx mountly-mcp dev --server ./dist/create-server.js
-npx mountly-mcp verify --render
+npx mountly-mcp verify --render --strict
 ```
 
-For a multi-View project, select one in development with
-`--app payment_quote`. For release CI, use `verify --render --strict`; strict
-mode treats every advisory warning as a failure, while rendering also rejects
-Views that time out, throw, or mount without content.
+Multi-View: pass `--app payment_quote`. CI: `verify --render --strict` fails
+warnings and blank mounts.
 
-Next, see [Build and artifacts](/mcp-apps/build-and-artifacts/) for multi-View
-configuration and [Production integration](/mcp-apps/production-integration/)
-for visibility, capability downgrade, and removal.
+Next: [Build and artifacts](/mcp-apps/build-and-artifacts/),
+[Production integration](/mcp-apps/production-integration/).

@@ -15,14 +15,14 @@ Bundles your component, the adapter, and the framework. Drop into any page; no h
 
 - ✅ Zero host wiring.
 - ✅ Works in CMS pages, partner sites, anywhere you don't control the runtime.
-- ❌ ~148 KB gz for a representative React widget.
+- ❌ ~66 KB gz for a representative React widget.
 - ❌ One copy of React per widget if you ship multiple on the same page.
 
 ### `dist/peer.js` — peer build
 
 Excludes the framework. Expects the host to provide it via an import map.
 
-- ✅ ~5 KB gz per widget on top of one ~45 KB gz copy of React shared across all widgets.
+- ✅ ~3 KB gz per widget on top of one ~59 KB gz copy of React shared across all widgets.
 - ✅ One React instance for two or more widgets on the same page.
 - ❌ Host must ship the import map. mountly provides [`installRuntime`](/mountly/api/install-runtime/) to do this in one line.
 
@@ -32,8 +32,8 @@ Numbers are representative. Measure your own widgets in DevTools.
 
 | Use case                                | Pick               | Why                                             |
 | --------------------------------------- | ------------------ | ----------------------------------------------- |
-| One widget on a page, host has no React | **Self-contained** | Zero wiring; ~148 KB gz                         |
-| Two or more widgets on the same page    | **Shared React**   | One copy of React; ~5 KB gz per widget          |
+| One widget on a page, host has no React | **Self-contained** | Zero wiring; ~66 KB gz                          |
+| Two or more widgets on the same page    | **Shared React**   | One copy of React; ~3 KB gz per widget          |
 | Host is already a React/Next app        | **Shared React**   | Avoids two React instances on one page          |
 | Quick prototype, single embed           | **Self-contained** | Faster to wire; bytes only matter in production |
 

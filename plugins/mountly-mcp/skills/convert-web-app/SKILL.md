@@ -1,24 +1,27 @@
 ---
 name: convert-web-app
-description: This skill should be used when the user asks to "add MCP App support to my web app", "turn my web app into a hybrid MCP App", "make my web page work as an MCP App too", "wrap my existing UI as an MCP App", "convert iframe embed to MCP App", "turn my SPA into an MCP App", or convert an existing React/Vue/Svelte component into an MCP Apps View with Mountly.
+description: >
+  Turn an existing React, Vue, or Svelte component or web app into an MCP Apps
+  View with Mountly. Use when the user asks to wrap existing UI as an MCP App,
+  convert a SPA or iframe embed to MCP Apps, or reuse a website component as a View.
 ---
 
 # Convert a web component / app into an MCP App View
 
-Mountly's differentiator: the same React, Vue, or Svelte component can run on
-a website and as an MCP Apps View. Keep the component's public props; Mountly
-supplies tool data through hooks/composables (or Svelte props).
+Keep the component's public props unchanged. Mountly supplies tool data through
+hooks/composables (or Svelte props). Do not rename props to match MCP.
 
 ## Do not
 
 - Clone monorepos for a template when the UI already exists
 - Rewrite the component to talk postMessage / `App` lifecycle by hand
 - Fork the UI into a separate "MCP-only" tree unless the user asks
+- Mention islands vocabulary in the View entry
 
 ## Pattern
 
-1. **Identify the component** that should render from tool `structuredContent`.
-2. **Thin View entry** that wraps it:
+1. Identify the component that should render from tool `structuredContent`.
+2. Thin View entry that wraps it (props of the existing component stay the same):
 
 ```ts
 import { createMcpView, useToolResult } from "mountly-mcp/react";
@@ -31,17 +34,13 @@ function PaymentView() {
   return <PaymentCard data={data} />;
 }
 
-createMcpView(PaymentView, { shadow: true, styles: existingCss });
+createMcpView(PaymentView);
 ```
 
-3. **Vite plugin** with `mountlyMcpViews({ apps: [...] })` — uri must be `ui://…`.
-4. **Server** — `registerMcpApps` linking a tool's `resourceUri` to that View.
-5. **Theming** — prefer host CSS variables with fallbacks (`var(--color-text-primary, #171717)`). React: `useHostStyles()`.
-6. **Standalone still works** — website entry keeps importing `PaymentCard` directly; only the MCP entry uses `createMcpView`.
-
-## Hybrid detection (optional)
-
-If one bundle must run both in a browser page and inside a host iframe, branch on whether MCP bridge props arrive; otherwise prefer **two entries** (website + MCP View) sharing the same component module.
+3. Vite plugin with `mountlyMcpViews({ apps: [...] })`. URI must be `ui://…`.
+4. Server: `registerMcpApps` linking a tool's `resourceUri` to that View (before `connect`).
+5. Theming: prefer host CSS variables with fallbacks. React: `useHostStyles()`.
+6. Website entry keeps importing `PaymentCard` directly. Only the MCP entry uses `createMcpView`.
 
 ## Verify
 

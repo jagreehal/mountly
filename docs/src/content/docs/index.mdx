@@ -1,6 +1,6 @@
 ---
 title: mountly
-description: Framework components. Any page. On demand. Ship React, Vue, Svelte, and TSRX components into HTML hosts without rewriting the page.
+description: Framework components. Any page. On demand. Ship React, Vue, and Svelte components into HTML hosts without rewriting the page.
 template: splash
 hero:
   title: mountly
@@ -14,12 +14,12 @@ pagefind: false
 
 <section class="hero">
   <div class="hero-copy">
-    <span class="eyebrow">v0.1 · ~9 KB gzipped core entry</span>
+    <span class="eyebrow">v1.0 · 2.3 KB gzipped core entry</span>
     <h1 class="hero-title">
       Framework components. Any page. <em>On demand.</em>
     </h1>
     <p class="hero-lead">
-      mountly turns React, Vue, Svelte, and TSRX components into lazy,
+      mountly turns React, Vue, and Svelte components into lazy,
       HTML-addressable features. Drop them into CMS pages, marketing sites, legacy apps,
       partner embeds, or framework migrations without a host-app rewrite. Light DOM is the default;
       use <code>shadow: true</code> when you need hard style isolation.
@@ -47,7 +47,7 @@ pagefind: false
     </div>
     <div class="hero-stats sl-markdown-no-margin">
       <div class="hero-stat">
-        <span class="value">~9KB</span>
+        <span class="value">2.3KB</span>
         <span>core entry (gzipped)</span>
       </div>
       <div class="hero-stat">
@@ -145,7 +145,7 @@ pagefind: false
     <div class="before">
       <h3>What you keep</h3>
       <ul>
-        <li>Normal React, Vue, Svelte, or TSRX components</li>
+        <li>Normal React, Vue, or Svelte components</li>
         <li>Existing CMS, static, legacy, or app host pages</li>
         <li>Current routing, query-string state, and deployment model</li>
         <li>Per-widget ownership by the component team</li>
@@ -191,8 +191,8 @@ pagefind: false
     <div class="trigger-cell">
       <span class="index">03</span>
       <span class="label">multi-team</span>
-      <span class="name">Independent widgets, not independent apps</span>
-      <span class="desc">Team A ships a payments widget, Team B ships chat, Team C owns the host. Independent widget deploys via CDN + manifest — no merge conflicts, no Federation <code>shared</code> block. Not a micro-frontend control plane.</span>
+      <span class="name">Independent widget releases</span>
+      <span class="desc">Team A ships a payments widget, Team B ships chat, and Team C owns the host. A CDN and manifest provide lightweight microfrontend composition without a Federation <code>shared</code> block.</span>
     </div>
     <div class="trigger-cell">
       <span class="index">04</span>
@@ -210,7 +210,7 @@ pagefind: false
       <span class="index">06</span>
       <span class="label">performance</span>
       <span class="name">Intent-paid JavaScript</span>
-      <span class="desc">Keep the page shell light. Load heavy UI when users scroll, click, hover, or match a route. ~9KB core, widgets on demand.</span>
+      <span class="desc">Keep the page shell light. Load heavy UI when users scroll, click, hover, or match a route. 2.3KB core, widgets on demand.</span>
     </div>
     <div class="trigger-cell">
       <span class="index">07</span>
@@ -426,7 +426,7 @@ signup.attach({
         <tr class="highlight">
           <td>mountly</td>
           <td>Component features in any HTML page</td>
-          <td>Not a router, SSR framework, or control plane</td>
+          <td>Release orchestration and SSR stay with your platform</td>
           <td>Low</td>
         </tr>
       </tbody>
@@ -448,7 +448,7 @@ signup.attach({
     <a class="package" href="/mountly/api/create-on-demand-feature/">
       <span class="pkg-name">mountly</span>
       <span class="pkg-desc">Core runtime, on-demand loader, lifecycle, custom element, CLI.</span>
-      <span class="pkg-meta">~9 KB gz</span>
+      <span class="pkg-meta">2.3 KB gz entry</span>
     </a>
     <a class="package" href="/mountly/mcp-apps/">
       <span class="pkg-name">mountly-mcp</span>
@@ -458,7 +458,7 @@ signup.attach({
     <a class="package" href="/mountly/frameworks/react/">
       <span class="pkg-name">mountly-react</span>
       <span class="pkg-desc">React adapter: <code>createWidget(Component, &#123; styles &#125;)</code>.</span>
-      <span class="pkg-meta">React 18+</span>
+      <span class="pkg-meta">React 19</span>
     </a>
     <a class="package" href="/mountly/frameworks/vue/">
       <span class="pkg-name">mountly-vue</span>
@@ -481,7 +481,7 @@ signup.attach({
 {/* ─── Footer ─── */}
 
 <div class="landing-foot">
-  <span>mountly · Apache-2.0 · pre-1.0</span>
+  <span>mountly · Apache-2.0 · v1.0</span>
   <span>
     <a href="https://github.com/jagreehal/mountly">github.com/jagreehal/mountly</a>
   </span>

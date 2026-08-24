@@ -65,6 +65,8 @@ export default defineConfig({
             { label: "Overview", slug: "mcp-apps" },
             { label: "Agent Skills", slug: "mcp-apps/agent-skills" },
             { label: "Quick start", slug: "mcp-apps/quick-start" },
+            { label: "Mountly vs ext-apps", slug: "mcp-apps/vs-ext-apps" },
+            { label: "Host matrix", slug: "mcp-apps/host-matrix" },
             {
               label: "Build and artifacts",
               slug: "mcp-apps/build-and-artifacts",
@@ -78,6 +80,7 @@ export default defineConfig({
               slug: "mcp-apps/development-and-verification",
             },
             { label: "How it works", slug: "mcp-apps/how-it-works" },
+            { label: "Canonical examples", slug: "mcp-apps/examples" },
           ],
         },
         {
@@ -94,7 +97,6 @@ export default defineConfig({
             { label: "Triggers", slug: "concepts/triggers" },
             { label: "Lifecycle", slug: "concepts/lifecycle" },
             { label: "Cookbook", slug: "concepts/cookbook" },
-            { label: "Generative UI", slug: "concepts/generative-ui" },
             { label: "Styling", slug: "concepts/styling" },
             { label: "Multi-widget bundles", slug: "concepts/multi-widget" },
             { label: "Caching", slug: "concepts/caching" },
@@ -112,6 +114,10 @@ export default defineConfig({
             {
               label: "When not to use mountly",
               slug: "concepts/when-not-to-use",
+            },
+            {
+              label: "Generative UI (advanced)",
+              slug: "concepts/generative-ui",
             },
           ],
         },

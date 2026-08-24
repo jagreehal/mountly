@@ -24,10 +24,12 @@ cd my-app && pnpm install && pnpm dev
 
 → [Agent Skills](https://mountly.dev/mcp-apps/agent-skills/) ·
 [MCP Apps quick start](https://mountly.dev/mcp-apps/quick-start/) ·
+[Mountly vs ext-apps](https://mountly.dev/mcp-apps/vs-ext-apps/) ·
 [`mountly-mcp`](packages/mcp-apps/README.md)
 
 Both sit on the same widget model, so a component written for one works in the
-other.
+other. For MCP Apps, prefer the `mountly-mcp` docs. You do not need the islands
+API to ship a View.
 
 ## The Problem
 
@@ -103,8 +105,7 @@ Or: `npx skills add jagreehal/mountly` · full install notes:
 ## Build an MCP App from a component you already have
 
 [MCP Apps](https://github.com/modelcontextprotocol/ext-apps) (SEP-1865) lets an
-MCP server render interactive UI inside Claude, ChatGPT and other hosts. Mountly
-is the default View layer — new dashboards and existing website components use
+MCP server render interactive UI inside Claude, ChatGPT and other hosts. Mountly MCP is the View kit. New dashboards and existing website components use
 the same path:
 
 ```ts
@@ -234,17 +235,16 @@ knob to configure.
 
 ## API Stability
 
-`mountly` is pre-1.0. The `0.6.0` core is a deliberate break: the declarative
-island API above replaces the JSON `data-mountly-island` payload, the loader
-registry, and the twenty-odd payload knobs around them. The imperative
-`createOnDemandFeature` API is unchanged but now lives at `mountly/feature`.
-
-Frozen for the `0.6.x` line:
+`mountly` is `1.0`. The surface below follows semver: additions ship in minor
+releases, breaking changes wait for `2.0`.
 
 - the `data-*` island attributes and `data-mountly-state`
-- `mountly()` / `mount` / `unmount` / `update`
+- `mountly()` / `mount` / `unmount` / `update` / `wire` / `triggers`
 - adapter contract types (`WidgetModule`, `AdapterOptions`)
 - `installRuntime` shape (including `react/jsx-runtime` mapping support)
+
+Migrating from an earlier release? See
+[the changelog](packages/mountly/CHANGELOG.md).
 
 Releases follow [docs/release-checklist.md](docs/release-checklist.md).
 

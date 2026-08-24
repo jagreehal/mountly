@@ -1,30 +1,31 @@
 ---
 title: MCP Apps
-description: Turn React, Vue, or Svelte components into versioned MCP Apps Views that install into the server you already own.
+description: Build React, Vue, or Svelte Views for MCP Apps and install them on the server you already run.
 ---
 
-[MCP Apps](https://github.com/modelcontextprotocol/ext-apps) lets an MCP server
-deliver an interactive View alongside a tool result. The host renders the View
-in a sandboxed iframe and connects it to the server over the MCP Apps protocol.
-
-Mountly is the default view layer for that protocol. Start from a new component
-or one you already ship on a website:
+You need interactive UI next to an MCP tool result. [MCP Apps](https://github.com/modelcontextprotocol/ext-apps)
+(SEP-1865) is the protocol. `mountly-mcp` is the View kit: component, `ui://`
+artifact, local host, then `registerMcpApps` on your server.
 
 ```bash
 npx mountly-mcp create my-app --framework react
 cd my-app && pnpm install && pnpm dev
 ```
 
-## Build with Agent Skills
+That opens a sandboxed AppBridge host against your `server.mjs`. Point Claude
+Desktop or VS Code at `serve-stdio.mjs` when you leave the laptop preview.
+[Host matrix](/mcp-apps/host-matrix/).
 
-| Skill                                                                                                                       | What it does                       | Try it                                |
-| --------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ------------------------------------- |
-| [`create-mcp-app`](https://github.com/jagreehal/mountly/blob/main/plugins/mountly-mcp/skills/create-mcp-app/SKILL.md)       | Scaffolds via `mountly-mcp create` | _"Create an MCP App"_                 |
-| [`add-app-to-server`](https://github.com/jagreehal/mountly/blob/main/plugins/mountly-mcp/skills/add-app-to-server/SKILL.md) | Adds Views to an existing server   | _"Add UI to my MCP server"_           |
-| [`convert-web-app`](https://github.com/jagreehal/mountly/blob/main/plugins/mountly-mcp/skills/convert-web-app/SKILL.md)     | Wraps an existing component        | _"Turn my component into an MCP App"_ |
-| [`migrate-ext-apps`](https://github.com/jagreehal/mountly/blob/main/plugins/mountly-mcp/skills/migrate-ext-apps/SKILL.md)   | Migrates official ext-apps Views   | _"Migrate from ext-apps"_             |
+## Agent Skills
 
-Install: [Agent Skills](/mcp-apps/agent-skills/).
+| Skill                                                                                                                       | Ask for                             |
+| --------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| [`create-mcp-app`](https://github.com/jagreehal/mountly/blob/main/plugins/mountly-mcp/skills/create-mcp-app/SKILL.md)       | "Create an MCP App"                 |
+| [`add-app-to-server`](https://github.com/jagreehal/mountly/blob/main/plugins/mountly-mcp/skills/add-app-to-server/SKILL.md) | "Add UI to my MCP server"           |
+| [`convert-web-app`](https://github.com/jagreehal/mountly/blob/main/plugins/mountly-mcp/skills/convert-web-app/SKILL.md)     | "Turn my component into an MCP App" |
+| [`migrate-ext-apps`](https://github.com/jagreehal/mountly/blob/main/plugins/mountly-mcp/skills/migrate-ext-apps/SKILL.md)   | "Migrate from ext-apps"             |
+
+Install steps: [Agent Skills](/mcp-apps/agent-skills/).
 
 ```ts
 import { createMcpView } from "mountly-mcp/react";
@@ -33,65 +34,60 @@ import Dashboard from "./Dashboard";
 createMcpView(Dashboard);
 ```
 
-One build turns one or many entries into self-contained `ui://` resources and a
-versioned App manifest. `registerMcpApps()` installs those Views and the tools
-that reference them into an MCP server your application owns.
+`mountly-mcp build` writes HTML plus `dist/mountly-mcp.manifest.json`.
+`registerMcpApps()` loads that manifest into an unconnected `McpServer`.
 
-## Is it a fit?
+## Pick a path
 
-| Starting point                            | Recommended path                            |
-| ----------------------------------------- | ------------------------------------------- |
-| Tiny React dashboard for one host         | Use Mountly — same path as production Views |
-| Existing React, Vue, or Svelte components | Framework adapter + Vite build              |
-| Several Views in one MCP server           | Multi-View build and App manifest           |
-| An existing production MCP server         | Install with `registerMcpApps()`            |
+| You have                         | You run                                                    |
+| -------------------------------- | ---------------------------------------------------------- |
+| Empty folder                     | `mountly-mcp create`                                       |
+| Existing React / Vue / Svelte UI | `createMcpView` + Vite                                     |
+| Second View in the same project  | `mountly-mcp add`                                          |
+| Production MCP server            | `registerMcpApps()` before `connect`                       |
+| Host or bridge protocol work     | [`@modelcontextprotocol/ext-apps`](/mcp-apps/vs-ext-apps/) |
 
-Mountly deliberately does not own authentication, transports, prompts,
-ordinary tools, process lifecycle, or deployment. That keeps it composable:
-your server owns the application; Mountly owns the MCP Apps-specific seams.
-[`@modelcontextprotocol/ext-apps`](https://www.npmjs.com/package/@modelcontextprotocol/ext-apps)
-remains the protocol SDK underneath — use it directly only when you are
-implementing host/bridge protocol code, not when you are building a View.
+You keep auth, transports, prompts, ordinary tools, and deploy. Mountly owns
+View build, bridge HTML, and registration. The wire protocol stays on
+[`@modelcontextprotocol/ext-apps`](https://www.npmjs.com/package/@modelcontextprotocol/ext-apps).
 
 ## Install
 
 ```bash
-# React (default) — mountly + mountly-react come with mountly-mcp
+# React (default). mountly + mountly-react come with mountly-mcp.
 npm install mountly-mcp react react-dom
-npm install @modelcontextprotocol/sdk  # when your source imports McpServer
+npm install @modelcontextprotocol/sdk   # if you import McpServer
 npm install -D vite @vitejs/plugin-react
 
-# Vue or Svelte — add the framework adapter
+# Vue or Svelte
 npm install mountly-mcp mountly-vue vue   # or mountly-svelte + svelte
 ```
 
-## The four modules
+Floor: Node 20+, React 19, Vite 8. Check with
+`npx mountly-mcp doctor`.
 
-- **View adapters** — `mountly-mcp/react`, `/vue`, and `/svelte` wrap a
-  component and expose tool data and host context.
-- **Build and artifact** — `mountly-mcp/vite` emits App artifacts;
-  `mountly-mcp/artifact` reads their canonical manifest.
-- **App registration** — `mountly-mcp/server` installs independently declared
-  Views and tools into an unconnected `McpServer`.
-- **Development and conformance** — the CLI runs the official AppBridge host
-  locally and verifies the same artifacts used in production.
+## Modules
 
-The bridge and server wiring delegate to the official
-`@modelcontextprotocol/ext-apps` and `@modelcontextprotocol/sdk` packages. There
-is no second Mountly protocol vocabulary or handwritten protocol host.
+| Module                                       | Job                                   |
+| -------------------------------------------- | ------------------------------------- |
+| `mountly-mcp/react` (also `/vue`, `/svelte`) | Wrap a component; expose tool data    |
+| `mountly-mcp/vite` + `/artifact`             | Emit and read App artifacts           |
+| `mountly-mcp/server`                         | `registerMcpApps` on your `McpServer` |
+| CLI `dev` / `verify`                         | Local AppBridge host and CI checks    |
 
-## Compatibility adapters
+## Docs map
 
-The single-View Vite options, `vite build`, `createMcpAppServer()`, and
-`serveStdio()` remain supported for small servers and existing projects. New
-production integrations should prefer an App manifest and
-`registerMcpApps(existingServer, ...)`.
+| Page                                                      | Use when                                      |
+| --------------------------------------------------------- | --------------------------------------------- |
+| [vs ext-apps](/mcp-apps/vs-ext-apps/)                     | You wonder if you need the official SDK alone |
+| [Quick start](/mcp-apps/quick-start/)                     | You wire Vite by hand                         |
+| [Host matrix](/mcp-apps/host-matrix/)                     | You connect Claude, VS Code, or ChatGPT       |
+| [Examples](/mcp-apps/examples/)                           | You want copy-paste shapes                    |
+| [Build](/mcp-apps/build-and-artifacts/)                   | Multi-View manifests                          |
+| [Production](/mcp-apps/production-integration/)           | Existing server install                       |
+| [Dev and verify](/mcp-apps/development-and-verification/) | `dev`, `doctor`, CI                           |
+| [How it works](/mcp-apps/how-it-works/)                   | Lifecycle and text-only hosts                 |
 
-## Next
-
-- [Agent Skills](/mcp-apps/agent-skills/) — install skills; `mountly-mcp create`
-- [Quick start](/mcp-apps/quick-start/) — component to composable server
-- [Build and artifacts](/mcp-apps/build-and-artifacts/) — one or many isolated Views
-- [Production integration](/mcp-apps/production-integration/) — install into an existing server
-- [Development and verification](/mcp-apps/development-and-verification/) — local host and CI
-- [How it works](/mcp-apps/how-it-works/) — lifecycle and capability downgrade
+Catalog-driven generative UI lives under
+[Generative UI](/concepts/generative-ui/). Skip it until `createMcpView` is
+boring.

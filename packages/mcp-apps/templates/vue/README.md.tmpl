@@ -1,14 +1,37 @@
 # {{name}}
 
-MCP App scaffolded with `mountly-mcp create --framework vue`.
+MCP App scaffolded with `mountly-mcp create` (Vue).
+
+## Runbook
 
 ```bash
 pnpm install
 pnpm dev
 pnpm verify
+pnpm verify:render
 ```
 
-- View: `src/view.ts` + `src/Dashboard.vue`
-- Server: `server.mjs` (`registerMcpApps`)
+| File | Role |
+| --- | --- |
+| `src/view.ts` | `createMcpView` entry |
+| `src/Dashboard.vue` | View UI: `useToolResult` |
+| `server.mjs` | `registerMcpApps` factory |
+| `mcp.fixtures.json` | Tool args for `dev --server` |
 
-Do not clone the Mountly monorepo for greenfield apps — this project is the canonical path.
+## Open in a real host
+
+`serve-stdio.mjs` is included. Point Claude Desktop / VS Code at `node` + absolute path to that file (see the React scaffold README for JSON shapes). ChatGPT: use your connector against the same process.
+
+## CI
+
+```bash
+pnpm exec mountly-mcp build
+pnpm exec playwright install chromium
+pnpm exec mountly-mcp verify --strict --render
+```
+
+## Add another View
+
+```bash
+pnpm exec mountly-mcp add settings --framework vue
+```

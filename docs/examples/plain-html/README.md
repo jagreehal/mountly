@@ -45,7 +45,7 @@ Each widget bundle inlines React. One widget on one page, zero host configuratio
 </script>
 ```
 
-**Cost:** ~148 KB gz per widget. **Use when:** one widget per page, or the host has no React.
+**Cost:** ~66 KB gz per widget. **Use when:** one widget per page, or the host has no React.
 
 ### Pattern B — shared React (`shared-react.html`)
 
@@ -72,7 +72,7 @@ Widgets use their `peer` entry (external React). Host supplies React once via th
 </script>
 ```
 
-**Cost:** ~45 KB gz once (React) + ~5 KB gz per widget. **Use when:** 2+ widgets on a page, or the host already has React.
+**Cost:** ~59 KB gz once (React) + ~3 KB gz per widget. **Use when:** 2+ widgets on a page, or the host already has React.
 
 No changes to widget source. Each widget ships both builds, and the import map chooses which one the browser loads.
 

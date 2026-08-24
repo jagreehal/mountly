@@ -1,18 +1,24 @@
 ---
-title: Generative UI
-description: Render @json-render specs as MCP Apps Views, with the agent-action bridge — an AI emits a UI spec, mountly renders it as real native components inside an agent host.
+title: Generative UI (advanced)
+description: Advanced — render @json-render specs as MCP Apps Views. Prefer createMcpView for most Apps; use this when the UI itself is model-generated.
 ---
 
 import { exampleUrl } from "../../../lib/example-urls.ts";
 
-`mountly-mcp/json-render` is the **generative UI** path for mountly. An AI emits a UI spec
-constrained to a typed catalog; mountly renders it as **real native components** inside an
+:::caution[Advanced path]
+Most MCP Apps should start with [`mountly-mcp create`](/mcp-apps/) and
+`createMcpView`. `mountly-mcp/json-render` is optional — use it when an agent
+**emits the UI structure**, not only the data.
+:::
+
+`mountly-mcp/json-render` is the **generative UI** path for Mountly MCP. An AI emits a UI spec
+constrained to a typed catalog; Mountly renders it as **real native components** inside an
 MCP host, and the rendered UI's actions call back into the **agent**.
 
 It is a thin wrapper over [`@json-render`](https://github.com/vercel-labs/json-render)
 (`@json-render/core` + `@json-render/react`), [`mountly-mcp/react`](/mcp-apps/),
 and the [`ai`](https://www.npmjs.com/package/ai) SDK. json-render decides _what_ to render;
-mountly decides _where_ it ends up (an agent host) and adds the one thing json-render has no
+Mountly decides _where_ it ends up (an agent host) and adds the one thing json-render has no
 concept of, **the agent loop**: a generated button → `App.sendMessage` → the model
 generates the next view.
 

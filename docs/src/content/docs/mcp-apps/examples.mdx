@@ -1,0 +1,29 @@
+---
+title: Canonical MCP examples
+description: Dashboard, tool-calling form, and wrap-an-existing-component shapes for Mountly MCP Apps.
+---
+
+Greenfield: `npx mountly-mcp create`. Use the in-repo examples when you need a
+fuller copy of the same APIs.
+
+| Shape                   | Where                                                                                                         | What you learn                                                                 |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Dashboard (tool → View) | [`mcp-release-readiness`](https://github.com/jagreehal/mountly/tree/main/docs/examples/mcp-release-readiness) | Vite, `createMcpView`, `registerMcpApps`, `verify`. Closest match to `create`. |
+| Protocol harness        | [`mcp-app-demo`](https://github.com/jagreehal/mountly/tree/main/docs/examples/mcp-app-demo)                   | Handshake, stdio, preview. Advanced. Skip for day-one apps.                    |
+| Wrap existing UI        | [`convert-web-app`](/mcp-apps/agent-skills/) skill                                                            | `createMcpView` + `useToolResult`. Keep the component's public props.          |
+
+The scaffold already covers "form that calls a tool": Refresh calls
+`useMcpApp().callServerTool` on an app-only tool (`visibility: ["app"]`).
+
+## Verify output for PRs
+
+```bash
+npx mountly-mcp verify --strict --render
+```
+
+Paste the report. Errors always fail. Warnings fail under `--strict`.
+
+## Maintainer metrics
+
+Track weekly: create → verify green, skill installs, `mountly-mcp` npm downloads.
+Stars lag. Strangers succeeding without this monorepo is the real bar.
