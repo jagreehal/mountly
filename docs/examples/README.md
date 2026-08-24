@@ -24,9 +24,9 @@ Build output must exist under `packages/mountly/dist/` and each example widget�
 5. **`quickstart/host.html`** — Shortest copy-paste host (import map + one `attach`). Open via a static server that serves the **repository root** (same as `plain-html`).
 
 6. **`pokemon-kitchen-sink/`** — Stress-test of triggers, prefetch, custom elements, analytics. For **deep dives**, not first-day onboarding. Vite dev server on **port 5178** (distinct from `plain-html` so they can run side-by-side).
-7. **`mcp-app-demo/`** — Advanced MCP Apps **protocol harness** (not the greenfield starter). Prefer `npx mountly-mcp create` for new apps. See [mcp-app-demo/README.md](mcp-app-demo/README.md).
-8. **`mcp-generative-demo/`** — Generative UI: an agent emits a JSON spec constrained to a [`@json-render`](https://github.com/vercel-labs/json-render) catalog, and mountly renders it as native components, through the MCP bridge and as a plain widget. See [mcp-generative-demo/README.md](mcp-generative-demo/README.md).
-9. **`json-render-mcp/`** — Minimal `createJsonRenderMcpApp` example: one catalog drives the MCP tool schema, the tool description, and the React components in the sandboxed iframe. Wire-compatible with [`@json-render/mcp`](https://www.npmjs.com/package/@json-render/mcp). See [json-render-mcp/README.md](json-render-mcp/README.md).
+7. **`mcp-app-demo/`** — Advanced MCP Apps **protocol harness** (not the greenfield starter). Prefer `npx mountly-mcp create` for new apps. See [mcp-app-demo/README.md](mcp-app-demo/README.md) and [Canonical MCP examples](https://mountly.dev/mcp-apps/examples/).
+8. **`mcp-generative-demo/`** — **Advanced** generative UI (`mountly-mcp/json-render`). Not the MCP Apps happy path. See [mcp-generative-demo/README.md](mcp-generative-demo/README.md).
+9. **`json-render-mcp/`** — **Advanced** minimal `createJsonRenderMcpApp` example. See [json-render-mcp/README.md](json-render-mcp/README.md).
 10. **`mcp-release-readiness/`** — Production-shaped Vue MCP App (canonical Vite + View path): a reusable component, Mountly's Vite resource build, and an app-only decision action. Closest in-repo match to `mountly-mcp create`. See [mcp-release-readiness/README.md](mcp-release-readiness/README.md).
 11. **`multi-vertical-host/`** — Manifest-driven multi-team host: `installPlatformRuntime`, `defineMountlyFeatureFromManifest`, `mountly/contracts` bus. See [multi-vertical-host/README.md](multi-vertical-host/README.md) and [docs/micro-frontends.md](../docs/micro-frontends.md). Read [Choosing an architecture](https://jagreehal.github.io/mountly/getting-started/choosing-an-architecture/) first — this is Stage 3, not the default starting point.
 
@@ -107,7 +107,7 @@ Numbers are representative. Measure your own widgets in DevTools. For the runnab
 
 - You already have a **single** React/Next/Svelte app and every surface is owned by that bundler. Framework-native lazy routes may be enough.
 - You need **SSR + hydration** of the same server-rendered tree (Astro/Next islands). mountly focuses on **on-demand mount** of widget modules, not hydrating server HTML.
-- You want a **micro-frontend orchestration control plane** (routing, deployment, versioning across teams). mountly is a **runtime + patterns** layer; pair it with your CDN and manifest workflow instead.
+- Your microfrontends need **release orchestration** such as staged rollouts, traffic routing, or runtime version coordination. mountly handles browser composition; pair it with a delivery platform that supplies those controls.
 
 ## Per-package notes
 

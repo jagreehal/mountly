@@ -23,7 +23,7 @@ yarn add mountly
 
 | Framework | Package          | Notes                                                       |
 | --------- | ---------------- | ----------------------------------------------------------- |
-| React     | `mountly-react`  | React 18 or 19.                                             |
+| React     | `mountly-react`  | React 19.                                                   |
 | Vue       | `mountly-vue`    | Vue 3.                                                      |
 | Svelte    | `mountly-svelte` | Auto-detects v4 (class) vs v5 (functional) component shape. |
 
@@ -123,7 +123,7 @@ Peer builds expect the host import map to pin matching `react`, `react/jsx-runti
 
 ## Tested npm path
 
-The repo has an external-consumer Playwright test that packs the publish artifacts, installs them into a clean Vite project with `npm install`, builds the consumer app, and renders React, Vue, Svelte, and TSRX widgets through `defineMountlyFeature`. That test is the release gate for package install DX.
+The repo has an external-consumer Playwright test that packs the publish artifacts, installs them into a clean Vite project with `npm install`, builds the consumer app, and renders React, Vue, and Svelte widgets through `defineMountlyFeature`. That test is the release gate for package install DX.
 
 ## Next
 

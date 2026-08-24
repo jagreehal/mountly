@@ -3,9 +3,9 @@ title: Production integration
 description: Install App artifacts and linked tools into the MCP server, transport, and authentication lifecycle your application owns.
 ---
 
-`registerMcpApps()` is the production seam. It adds only MCP Apps resources,
-linked tools, capability negotiation, and text fallback to an existing,
-unconnected `McpServer`.
+`registerMcpApps()` is the production seam. It adds MCP Apps resources, linked
+tools, capability negotiation, and text fallback to an existing, unconnected
+`McpServer`.
 
 ```ts
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -40,9 +40,24 @@ const apps = await registerMcpApps(server, {
 });
 ```
 
-Register before calling `server.connect()`. Your application remains
-responsible for authentication, authorization, transport, prompts, ordinary
-tools, shutdown, telemetry, scaling, and deployment.
+Call this before `server.connect()`. You keep auth, transport, prompts,
+ordinary tools, shutdown, telemetry, scaling, and deploy.
+
+## Existing server (beside-package)
+
+Keep the server package. Add a View app beside it (or under `views/`):
+
+1. `npx mountly-mcp create weather-views --framework react` (or wire Vite by hand).
+2. Point `mountlyMcpViews` URIs at your namespace (`ui://weather/…`).
+3. Build → `dist/mountly-mcp.manifest.json`.
+4. In the server module: `readMcpAppManifest` + `registerMcpApps` before `connect`.
+5. Leave ordinary `server.tool(...)` registrations alone.
+6. Develop with `npx mountly-mcp dev --server ./path-to-unconnected-factory.mjs`.
+
+Default-export an unconnected `McpServer` (or a factory that returns one).
+Connected exports fail with `mountly-mcp/bad-server-export`.
+
+Skill: [`add-app-to-server`](/mcp-apps/agent-skills/).
 
 ## Views and tools are independent
 
@@ -102,7 +117,7 @@ useful in tests and controlled reconfiguration.
 ## Convenience server adapters
 
 `createMcpAppServer()` and `serveStdio()` declare Views and tools with exactly
-the same `views` and `tools` vocabulary — they only own the `McpServer` and,
+the same `views` and `tools` vocabulary: they only own the `McpServer` and,
 for `serveStdio()`, the transport. Reach for them in examples and small
 standalone processes; production systems should keep server and transport
 ownership and install Mountly at the registration seam above.

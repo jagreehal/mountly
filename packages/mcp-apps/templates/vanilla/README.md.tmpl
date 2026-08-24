@@ -1,20 +1,36 @@
 # {{name}}
 
-MCP App scaffolded with `mountly-mcp create`.
+MCP App scaffolded with `mountly-mcp create` (vanilla: no framework).
+
+## Runbook
 
 ```bash
 pnpm install
-pnpm dev      # sandboxed host on :5179
-pnpm verify   # conformance
+pnpm dev
+pnpm verify
+pnpm verify:render
 ```
 
-- View: `src/view.ts` (`publishMcpView`)
-- Server: `server.mjs` (`registerMcpApps`)
-- Fixtures: `mcp.fixtures.json` (tool args when using `--server`)
+| File | Role |
+| --- | --- |
+| `src/view.ts` | `publishMcpView`: `mount` / `update` / `unmount` |
+| `server.mjs` | `registerMcpApps` factory |
+| `mcp.fixtures.json` | Tool args for `dev --server` |
 
-No framework, no adapter: a View is just `mount` / `update` / `unmount`, so
-`publishMcpView` takes the object directly. The bridge drives it exactly as it
-drives a React, Vue or Svelte View. Add a framework later by swapping
-`publishMcpView(...)` for that framework's `createMcpView(Component)`.
+## Open in a real host
 
-Do not clone the Mountly monorepo for greenfield apps — this project is the canonical path.
+`serve-stdio.mjs` is included. Register that command in Claude Desktop / VS Code / ChatGPT.
+
+## CI
+
+```bash
+pnpm exec mountly-mcp build
+pnpm exec playwright install chromium
+pnpm exec mountly-mcp verify --strict --render
+```
+
+## Add another View
+
+```bash
+pnpm exec mountly-mcp add settings --framework vanilla
+```

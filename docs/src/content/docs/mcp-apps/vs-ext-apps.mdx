@@ -1,0 +1,39 @@
+---
+title: Mountly vs ext-apps
+description: When to use mountly-mcp and when to use @modelcontextprotocol/ext-apps.
+---
+
+MCP Apps (SEP-1865) defines the wire format. Official packages speak that wire.
+`mountly-mcp` sits on top: you write a component, build a `ui://` artifact, run
+a local host, then call `registerMcpApps` on the server you already own.
+
+| Job                                         | Package                                                          |
+| ------------------------------------------- | ---------------------------------------------------------------- |
+| Host, AppBridge, postMessage handshake      | `@modelcontextprotocol/ext-apps`                                 |
+| React / Vue / Svelte View in minutes        | `mountly-mcp` (`create`, `createMcpView`)                        |
+| Sandboxed preview with CSP and fixtures     | `mountly-mcp dev`                                                |
+| CI that Views mount with content            | `mountly-mcp verify --render`                                    |
+| Register `ui://` on an existing `McpServer` | `registerMcpApps`                                                |
+| Learn the protocol itself                   | [MCP Apps docs](https://apps.extensions.modelcontextprotocol.io) |
+
+`registerMcpApps` still calls ext-apps server helpers. You do not reimplement
+the handshake.
+
+## Your server still owns
+
+Auth, OAuth, HTTP or stdio, prompts, tools without UI, process lifecycle, deploy.
+
+## Migrate
+
+On official templates today? Run the [`migrate-ext-apps`](/mcp-apps/agent-skills/)
+skill. Keep the SDK. Swap hand-built View HTML for `mountlyMcpViews` +
+`createMcpView`.
+
+## New project
+
+```bash
+npx mountly-mcp create my-app --framework react
+cd my-app && pnpm install && pnpm dev
+```
+
+Do not clone `modelcontextprotocol/ext-apps` or this monorepo to start a View.

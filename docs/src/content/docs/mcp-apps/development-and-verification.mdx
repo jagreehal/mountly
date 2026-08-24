@@ -6,21 +6,24 @@ description: Run Views in the official AppBridge host, connect real server tools
 ## Start a development session
 
 ```bash
+npx mountly-mcp doctor
 npx mountly-mcp dev
 ```
 
-The CLI reads the `mountlyMcpViews()` configuration, builds the selected View,
-rebuilds on change, and opens a two-origin local host. The official published
-`AppBridge` drives the handshake; Mountly supplies the host UI and sandbox proxy
-that enforce the artifact's CSP and permissions.
+`doctor` checks Node, the Vite plugin, Playwright for `--render`, and peer
+floors. Fix FAIL lines before you chase handshake bugs.
 
-For a build with several Views, select one by its manifest name:
+The CLI reads `mountlyMcpViews()`, builds the selected View, rebuilds on change,
+and opens a two-origin host. Official `AppBridge` drives the handshake. Mountly
+adds the host UI and sandbox proxy that enforce the artifact's CSP.
+
+Multi-View builds need a name:
 
 ```bash
 npx mountly-mcp dev --app weather_dashboard
 ```
 
-Useful options:
+Options:
 
 ```text
 -c, --config <path>    Vite config (default: auto-discover)
@@ -31,9 +34,8 @@ Useful options:
     --no-open          do not open a browser
 ```
 
-Without `--server`, a fixture value is delivered directly as
-`structuredContent`. Each button exercises the real
-`ui/notifications/tool-result` update path.
+Without `--server`, each fixture value lands as `structuredContent`. Each
+button hits the real `ui/notifications/tool-result` path.
 
 ## Connect a real server
 
@@ -64,8 +66,8 @@ const result = await server.callTool(toolName, { city: "Bristol" });
 await server.close();
 ```
 
-`toolFor()` returns the model-visible tool bound to that View — the one a host
-would call. A module that default-exports something other than a server, or a
+`toolFor()` returns the model-visible tool bound to that View (the one a host
+would call). A module that default-exports something other than a server, or a
 factory returning one, is rejected by name rather than failing later inside the
 handshake.
 
@@ -92,18 +94,18 @@ runs this tier. `--strict` fails on any advisory warning.
 ### Accessibility of the assembled View
 
 A View that mounts is also audited with [axe](https://github.com/dequelabs/axe-core),
-reported as `render/a11y` warnings — one per violation, with the rule, its
+reported as `render/a11y` warnings: one per violation, with the rule, its
 impact, and the first element that fails:
 
 ```text
 ! render/a11y: label (critical impact): Form elements must have labels
-  — 1 element, first at `input[type="text"]`
+  (1 element, first at input[type="text"])
 ```
 
 This is the check no component-level tool can make for you. Every component in
 a View can be individually accessible and the composition still fail, because a
 missing label, a heading order, or a contrast pairing only exists once the parts
-are together — and a View assembled by an agent is exactly where that happens.
+are together. A View assembled by an agent is where that shows up.
 
 They are warnings, so an ordinary run stays green and only `--strict` fails on
 them. Install `axe-core` alongside Playwright to enable the pass; without it,
@@ -114,7 +116,7 @@ npm i -D playwright axe-core
 ```
 
 axe runs through the debugger protocol rather than as page script, so it reaches
-the View without the CSP granting `unsafe-eval` — the audit sees the same
+the View without the CSP granting `unsafe-eval`. The audit sees the same
 document a host would render, under the same restrictions.
 
 Transitional builds without a manifest can pass one or more HTML files:
@@ -148,7 +150,7 @@ from the options it passed:
 
 ```ts
 if (report.mode === "static") {
-  console.warn("no runtime coverage — rerun with render: true");
+  console.warn("no runtime coverage: rerun with render: true");
 }
 ```
 

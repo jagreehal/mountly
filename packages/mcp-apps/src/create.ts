@@ -10,6 +10,7 @@ import {
 } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { CLI_ERROR_CODES, cliError } from "./errors.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 /** Package root: dist/cli.js → .. ; src/cli.ts during tests → .. when run via dist. */
@@ -44,8 +45,10 @@ export interface CreateArgs {
 export function parseCreateArgs(argv: ReadonlyArray<string>): CreateArgs {
   const name = argv[0];
   if (!name || name.startsWith("-")) {
-    throw new Error(
-      "mountly-mcp create requires a project name. e.g. mountly-mcp create my-app --framework react",
+    throw cliError(
+      CLI_ERROR_CODES.UNKNOWN_OPTION,
+      "create requires a project name",
+      "Example: mountly-mcp create my-app --framework react",
     );
   }
 
@@ -56,19 +59,37 @@ export function parseCreateArgs(argv: ReadonlyArray<string>): CreateArgs {
     const arg = argv[i];
     if (arg === "--framework" || arg === "-f") {
       const value = argv[++i];
-      if (value === undefined) throw new Error(`mountly-mcp: ${arg} needs a value`);
+      if (value === undefined) {
+        throw cliError(
+          CLI_ERROR_CODES.UNKNOWN_OPTION,
+          `${arg} needs a value`,
+          `Available: ${SUPPORTED.join(", ")}`,
+        );
+      }
       if (!SUPPORTED.includes(value as Framework)) {
-        throw new Error(
-          `mountly-mcp: framework "${value}" not supported. Available: ${SUPPORTED.join(", ")}`,
+        throw cliError(
+          CLI_ERROR_CODES.UNKNOWN_OPTION,
+          `framework "${value}" not supported`,
+          `Available: ${SUPPORTED.join(", ")}`,
         );
       }
       framework = value as Framework;
     } else if (arg === "--dir") {
       const value = argv[++i];
-      if (value === undefined) throw new Error("mountly-mcp: --dir needs a value");
+      if (value === undefined) {
+        throw cliError(
+          CLI_ERROR_CODES.UNKNOWN_OPTION,
+          "--dir needs a value",
+          "Example: --dir ./apps/my-app",
+        );
+      }
       dir = value;
     } else {
-      throw new Error(`mountly-mcp: unknown create option '${arg}'`);
+      throw cliError(
+        CLI_ERROR_CODES.UNKNOWN_OPTION,
+        `unknown create option '${arg}'`,
+        "Options: --framework | --dir",
+      );
     }
   }
 
@@ -103,13 +124,19 @@ function renderTemplates(dir: string, ctx: Record<string, string>): void {
 export async function createProject(args: CreateArgs): Promise<void> {
   const target = resolve(args.dir);
   if (existsSync(target)) {
-    throw new Error(`mountly-mcp: target directory already exists: ${target}`);
+    throw cliError(
+      CLI_ERROR_CODES.TARGET_EXISTS,
+      `target directory already exists: ${target}`,
+      "Choose another --dir, or remove the existing folder",
+    );
   }
 
   const tplDir = join(TEMPLATES, args.framework);
   if (!existsSync(tplDir)) {
-    throw new Error(
-      `mountly-mcp: template for framework "${args.framework}" is missing at ${tplDir}`,
+    throw cliError(
+      CLI_ERROR_CODES.MISSING_TEMPLATE,
+      `template for framework "${args.framework}" is missing at ${tplDir}`,
+      `Available: ${SUPPORTED.join(", ")}`,
     );
   }
 
@@ -130,13 +157,10 @@ export async function createProject(args: CreateArgs): Promise<void> {
       "",
       `✓ Created MCP App ${args.name} (${args.framework}) at ${target}`,
       "",
-      "Next steps:",
+      "Next:",
       `  cd ${args.dir}`,
       "  pnpm install",
-      "  pnpm dev          # sandboxed host + live reload",
-      "  pnpm verify       # conformance check",
-      "",
-      "Do not clone the Mountly monorepo for greenfield apps — this scaffold is the canonical path.",
+      "  pnpm dev",
       "",
     ].join("\n"),
   );

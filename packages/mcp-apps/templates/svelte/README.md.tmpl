@@ -1,14 +1,37 @@
 # {{name}}
 
-MCP App scaffolded with `mountly-mcp create --framework svelte`.
+MCP App scaffolded with `mountly-mcp create` (Svelte).
+
+## Runbook
 
 ```bash
 pnpm install
 pnpm dev
 pnpm verify
+pnpm verify:render
 ```
 
-- View: `src/view.ts` + `src/Dashboard.svelte`
-- Server: `server.mjs` (`registerMcpApps`)
+| File | Role |
+| --- | --- |
+| `src/view.ts` | `createMcpView` entry |
+| `src/Dashboard.svelte` | View UI: `toolResult` prop |
+| `server.mjs` | `registerMcpApps` factory |
+| `mcp.fixtures.json` | Tool args for `dev --server` |
 
-Do not clone the Mountly monorepo for greenfield apps — this project is the canonical path.
+## Open in a real host
+
+`serve-stdio.mjs` is included. Point Claude Desktop or VS Code at that entry (stdio). ChatGPT: use your connector against the same process.
+
+## CI
+
+```bash
+pnpm exec mountly-mcp build
+pnpm exec playwright install chromium
+pnpm exec mountly-mcp verify --strict --render
+```
+
+## Add another View
+
+```bash
+pnpm exec mountly-mcp add settings --framework svelte
+```

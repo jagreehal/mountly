@@ -16,10 +16,13 @@ export interface ConnectedMcpServer {
 export async function connectMcpServer(path: string): Promise<ConnectedMcpServer> {
   const { pathToFileURL } = await import("node:url");
   const { resolve } = await import("node:path");
+  const { CLI_ERROR_CODES, cliError } = await import("../errors.js");
   const mod = (await import(pathToFileURL(resolve(path)).href)) as { default?: unknown };
   if (mod.default === undefined) {
-    throw new Error(
-      `mountly-mcp: ${path} has no default export. Export your server (or a function returning it) as default.`,
+    throw cliError(
+      CLI_ERROR_CODES.BAD_SERVER_EXPORT,
+      `${path} has no default export`,
+      `Export an unconnected McpServer (or a factory returning one) as default. See: docs/mcp-apps/production-integration/`,
     );
   }
   const value = typeof mod.default === "function" ? await mod.default() : mod.default;
@@ -52,8 +55,10 @@ export async function connectMcpServer(path: string): Promise<ConnectedMcpServer
     } as never);
     await client.connect(clientTransport);
   } else {
-    throw new TypeError(
-      `mountly-mcp: ${path} must default-export an MCP server, RunningMcpAppServer, or a function returning one`,
+    throw cliError(
+      CLI_ERROR_CODES.BAD_SERVER_EXPORT,
+      `${path} must default-export an MCP server, RunningMcpAppServer, or a function returning one`,
+      "Use an unconnected McpServer factory. Do not connect() before exporting. Example: export default async function createServer() { ... return server; }",
     );
   }
 

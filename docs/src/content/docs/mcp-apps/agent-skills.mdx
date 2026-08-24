@@ -1,49 +1,46 @@
 ---
 title: Agent Skills
-description: Install Mountly Agent Skills so coding agents default to mountly-mcp create for MCP Apps Views.
+description: Install Mountly skills so coding agents scaffold MCP Apps Views with mountly-mcp create.
 ---
 
-[Agent Skills](https://agentskills.io/) guide AI coding agents through tasks.
-Mountly ships four skills so agents treat Mountly as the default View layer for
-MCP Apps — not a clone of the official SDK templates.
+[Agent Skills](https://agentskills.io/) steer coding agents. Mountly ships four
+so an agent scaffolds Views with `mountly-mcp`, not by cloning SDK examples.
 
-| Skill                                                                                                                       | What it does                                          | Try it                                |
-| --------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- | ------------------------------------- |
-| [`create-mcp-app`](https://github.com/jagreehal/mountly/blob/main/plugins/mountly-mcp/skills/create-mcp-app/SKILL.md)       | Scaffolds a new MCP App View via `mountly-mcp create` | _"Create an MCP App"_                 |
-| [`add-app-to-server`](https://github.com/jagreehal/mountly/blob/main/plugins/mountly-mcp/skills/add-app-to-server/SKILL.md) | Adds Views to an existing MCP server                  | _"Add UI to my MCP server"_           |
-| [`convert-web-app`](https://github.com/jagreehal/mountly/blob/main/plugins/mountly-mcp/skills/convert-web-app/SKILL.md)     | Wraps an existing React/Vue/Svelte component          | _"Turn my component into an MCP App"_ |
-| [`migrate-ext-apps`](https://github.com/jagreehal/mountly/blob/main/plugins/mountly-mcp/skills/migrate-ext-apps/SKILL.md)   | Migrates official ext-apps Views to Mountly           | _"Migrate from ext-apps"_             |
+| Skill                                                                                                                       | Job                                   | Ask for                             |
+| --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- | ----------------------------------- |
+| [`create-mcp-app`](https://github.com/jagreehal/mountly/blob/main/plugins/mountly-mcp/skills/create-mcp-app/SKILL.md)       | `mountly-mcp create`                  | "Create an MCP App"                 |
+| [`add-app-to-server`](https://github.com/jagreehal/mountly/blob/main/plugins/mountly-mcp/skills/add-app-to-server/SKILL.md) | Views on an existing server           | "Add UI to my MCP server"           |
+| [`convert-web-app`](https://github.com/jagreehal/mountly/blob/main/plugins/mountly-mcp/skills/convert-web-app/SKILL.md)     | Wrap a React / Vue / Svelte component | "Turn my component into an MCP App" |
+| [`migrate-ext-apps`](https://github.com/jagreehal/mountly/blob/main/plugins/mountly-mcp/skills/migrate-ext-apps/SKILL.md)   | Move off official templates           | "Migrate from ext-apps"             |
 
-Reach for `@modelcontextprotocol/ext-apps` directly only when implementing
-**host or bridge protocol** code. For Views, stay on Mountly.
+Use `@modelcontextprotocol/ext-apps` for host or bridge protocol code. Use
+Mountly for Views.
 
-## Install the Skills
+## Install
 
-### Option 1: Claude Code Plugin
+### Claude Code plugin
 
 ```
 /plugin marketplace add jagreehal/mountly
 /plugin install mountly-mcp@mountly
 ```
 
-### Option 2: Vercel Skills CLI
+### Skills CLI
 
-Skills are published at the repo root under `skills/` (symlinked from
-`plugins/mountly-mcp/skills/`) so the CLI discovers them:
+Root `skills/` symlinks `plugins/mountly-mcp/skills/`:
 
 ```bash
 npx skills add jagreehal/mountly
 ```
 
-### Option 3: Manual installation
+### Manual
 
-Copy `plugins/mountly-mcp/skills/*/SKILL.md` into your agent's skills directory
-(for example `.claude/skills/` or `.cursor/skills/`).
+Copy `plugins/mountly-mcp/skills/*/SKILL.md` into `.claude/skills/` or
+`.cursor/skills/`.
 
-Verify by asking _"What skills do you have?"_ — you should see `create-mcp-app`,
-`add-app-to-server`, `convert-web-app`, and `migrate-ext-apps`.
+Ask "What skills do you have?" You should see all four names above.
 
-## Happy path after install
+## After install
 
 Ask the agent to create an MCP App. It should run:
 
@@ -52,19 +49,18 @@ npx mountly-mcp create my-app --framework react
 cd my-app && pnpm install && pnpm dev
 ```
 
-Agents must **not** clone the Mountly monorepo or
-`modelcontextprotocol/ext-apps` for greenfield Views.
+Agents must not clone `jagreehal/mountly` or `modelcontextprotocol/ext-apps`
+for greenfield Views.
 
-## Publish checklist (maintainers)
+## Maintainer checklist
 
 After skills change on `main`:
 
-1. Confirm `.claude-plugin/marketplace.json` lists `mountly-mcp`.
-2. Confirm root `skills/*` symlinks resolve (for `npx skills add jagreehal/mountly`).
-3. Users install with `/plugin marketplace add jagreehal/mountly` then
-   `/plugin install mountly-mcp@mountly` — no separate npm publish for skills.
+1. `.claude-plugin/marketplace.json` lists `mountly-mcp`.
+2. Root `skills/*` symlinks resolve.
+3. Users install via the plugin commands above. Skills are not a separate npm package.
 
 ## Next
 
-- [Quick start](/mcp-apps/quick-start/) — manual Vite + `registerMcpApps` walkthrough
-- [Development and verification](/mcp-apps/development-and-verification/) — `dev` and `verify`
+- [Quick start](/mcp-apps/quick-start/) for hand-wired Vite
+- [Dev and verify](/mcp-apps/development-and-verification/) for `dev` and `verify`

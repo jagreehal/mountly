@@ -2,14 +2,91 @@
 
 MCP App scaffolded with `mountly-mcp create`.
 
+## Runbook
+
 ```bash
 pnpm install
-pnpm dev      # sandboxed host on :5179
-pnpm verify   # conformance
+pnpm dev                 # sandboxed AppBridge host on :5179 (uses --server ./server.mjs)
+pnpm verify              # static conformance
+pnpm verify:render       # + Chromium mount check (needs Playwright)
 ```
 
-- View: `src/view.tsx` (`createMcpView`)
-- Server: `server.mjs` (`registerMcpApps`)
-- Fixtures: `mcp.fixtures.json` (tool args when using `--server`)
+| File | Role |
+| --- | --- |
+| `src/view.tsx` | `createMcpView`: View entry; reads tool data via `useToolResult` |
+| `server.mjs` | `registerMcpApps`: factory for `mountly-mcp dev --server` |
+| `serve-stdio.mjs` | Stdio entry for Claude Desktop / VS Code / ChatGPT connectors |
+| `mcp.fixtures.json` | Tool **arguments** when using `--server` |
+| `vite.config.ts` | `mountlyMcpViews({ apps: [...] })` |
+| `dist/mountly-mcp.manifest.json` | Build artifact (after `pnpm build` / first `dev`) |
 
-Do not clone the Mountly monorepo for greenfield apps — this project is the canonical path.
+Do not clone the Mountly monorepo for greenfield apps: this project is the canonical path.
+
+## Open in a real host
+
+`serve-stdio.mjs` is included. Build first (`pnpm build` or run `pnpm dev` once), then point the host at that entry.
+
+Never write logs to **stdout** in a stdio server.
+
+### Claude Desktop
+
+`~/Library/Application Support/Claude/claude_desktop_config.json` (macOS):
+
+```json
+{
+  "mcpServers": {
+    "{{slug}}": {
+      "command": "node",
+      "args": ["/ABSOLUTE/PATH/TO/{{name}}/serve-stdio.mjs"]
+    }
+  }
+}
+```
+
+### VS Code
+
+`.vscode/mcp.json`:
+
+```json
+{
+  "servers": {
+    "{{slug}}": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["${workspaceFolder}/serve-stdio.mjs"]
+    }
+  }
+}
+```
+
+### ChatGPT
+
+Use a connector / custom MCP that runs the same `serve-stdio.mjs` (or an HTTP transport your deployment owns). Mountly does not own OAuth or hosting.
+
+## CI
+
+```yaml
+# .github/workflows/mcp-verify.yml
+name: mcp-verify
+on: [push, pull_request]
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install
+      - run: pnpm exec mountly-mcp build
+      - run: pnpm exec playwright install chromium
+      - run: pnpm exec mountly-mcp verify --strict --render
+```
+
+## Add another View
+
+```bash
+pnpm exec mountly-mcp add settings --framework react
+```
+
+Then register a tool with matching `resourceUri` in `server.mjs` via `registerMcpApps`.

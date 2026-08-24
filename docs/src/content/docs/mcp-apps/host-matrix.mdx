@@ -1,0 +1,93 @@
+---
+title: Host matrix
+description: Connect Mountly MCP Apps Views to Claude Desktop, VS Code, ChatGPT, and the local AppBridge preview.
+---
+
+Run `mountly-mcp dev` while you iterate. Ship the same `dist/` artifacts to a
+real host over the transport you choose.
+
+## Local preview
+
+```bash
+pnpm dev   # scaffold: mountly-mcp dev --server ./server.mjs
+```
+
+You exercise handshake, CSP, tool results, and View-initiated tool calls.
+Open the App once in Claude or VS Code before you call it done.
+
+## Host status
+
+| Host                 | Status            | Connect                                                   |
+| -------------------- | ----------------- | --------------------------------------------------------- |
+| `mountly-mcp dev`    | Supported         | Built-in AppBridge + sandbox proxy                        |
+| Claude Desktop       | Supported (stdio) | `claude_desktop_config.json` → `node` + `serve-stdio.mjs` |
+| VS Code MCP          | Supported (stdio) | `.vscode/mcp.json` → same stdio entry                     |
+| ChatGPT              | Partial           | Custom connector or hosted HTTP MCP; you own OAuth        |
+| Other SEP-1865 hosts | Untested here     | Same manifest if the host implements `ui://`              |
+
+"Untested" means this repo has no CI against that host. Do not assume coverage.
+
+## Stdio entry
+
+Scaffolds ship `serve-stdio.mjs`:
+
+```js
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import createServer from "./server.mjs";
+
+const server = await createServer();
+await server.connect(new StdioServerTransport());
+```
+
+Log to stderr. stdout is the JSON-RPC channel.
+
+### Claude Desktop
+
+`~/Library/Application Support/Claude/claude_desktop_config.json` (macOS):
+
+```json
+{
+  "mcpServers": {
+    "my-app": {
+      "command": "node",
+      "args": ["/absolute/path/to/serve-stdio.mjs"]
+    }
+  }
+}
+```
+
+### VS Code
+
+`.vscode/mcp.json`:
+
+```json
+{
+  "servers": {
+    "my-app": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["${workspaceFolder}/serve-stdio.mjs"]
+    }
+  }
+}
+```
+
+### ChatGPT
+
+Point your connector at the same stdio process or at an HTTP transport you
+deploy. Mountly does not ship OAuth or hosting.
+
+## Before host smoke
+
+```bash
+npx mountly-mcp build
+npx mountly-mcp verify --strict --render
+```
+
+`--render` fails blank Views in Chromium. Host screenshots stay manual until
+each vendor exposes stable automation.
+
+## Text-only hosts
+
+Hosts without MCP Apps still get tool text: Mountly adds a JSON text block when
+your handler returns only `structuredContent`. [How it works](/mcp-apps/how-it-works/).

@@ -1,9 +1,14 @@
+import { fileURLToPath } from "node:url";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { readMcpAppManifest } from "mountly-mcp/artifact";
 import { registerMcpApps } from "mountly-mcp/server";
 import { z } from "zod";
 
 const URI = "{{uri}}";
+
+// Resolved from this file, not the cwd: an MCP host spawns the process with a
+// working directory of its own choosing.
+const MANIFEST = fileURLToPath(new URL("./dist/mountly-mcp.manifest.json", import.meta.url));
 
 function sampleCards() {
   return [
@@ -20,7 +25,7 @@ export default async function createServer() {
     { capabilities: { tools: {}, resources: {} } },
   );
 
-  const { artifacts } = await readMcpAppManifest("dist/mountly-mcp.manifest.json");
+  const { artifacts } = await readMcpAppManifest(MANIFEST);
 
   await registerMcpApps(server, {
     views: artifacts.map((artifact) => ({ artifact })),
