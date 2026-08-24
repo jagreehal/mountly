@@ -1,5 +1,15 @@
 # mountly-mcp
 
+## 4.0.2
+
+### Patch Changes
+
+- Updated dependencies [24e4f97]
+  - mountly@1.0.0
+  - mountly-react@2.1.0
+  - mountly-vue@2.1.0
+  - mountly-svelte@2.1.0
+
 ## 4.0.1
 
 ### Patch Changes
