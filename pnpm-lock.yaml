@@ -686,7 +686,7 @@ importers:
         specifier: ^1.30.0
         version: 1.30.0(zod@4.4.3)
       mountly:
-        specifier: ^1.0.0
+        specifier: ^1.0.1
         version: link:../mountly
       mountly-react:
         specifier: ^2.1.0
