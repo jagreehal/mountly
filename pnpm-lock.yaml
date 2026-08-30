@@ -58,8 +58,8 @@ importers:
         specifier: ^8.8.2
         version: 8.8.2(@playwright/test@1.62.1)(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(mermaid@11.16.1)
       executable-stories-vitest:
-        specifier: ^8.6.5
-        version: 8.6.5(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(mermaid@11.16.1)(vitest@4.1.10)
+        specifier: ^8.7.0
+        version: 8.7.0(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(mermaid@11.16.1)(vitest@4.1.10)
       jsdom:
         specifier: ^30.0.1
         version: 30.0.1
@@ -992,8 +992,35 @@ packages:
       date-fns:
         optional: true
 
+  '@base-ui/react@1.7.0':
+    resolution: {integrity: sha512-j+8QjX44C32jrXD/qyEAGpFr70FRpGL2CY61mQd9nBPWN737CK0xxD1ceJ055rW4RtdvFDT1e7otzdlfxvsYug==}
+    engines: {node: '>=14.0.0'}
+    peerDependencies:
+      '@date-fns/tz': ^1.2.0
+      '@types/react': ^17 || ^18 || ^19
+      date-fns: ^4.0.0
+      react: ^19.2.8
+      react-dom: ^19.2.8
+    peerDependenciesMeta:
+      '@date-fns/tz':
+        optional: true
+      '@types/react':
+        optional: true
+      date-fns:
+        optional: true
+
   '@base-ui/utils@0.3.1':
     resolution: {integrity: sha512-gFFiltORVmW/N6IILTGxizP3PBpVpysqML1ALY5Vk0mH+7faVkCknOU31goYHN5Aoek2dkjxva1XOD2Ce9WuIg==}
+    peerDependencies:
+      '@types/react': ^17 || ^18 || ^19
+      react: ^19.2.8
+      react-dom: ^19.2.8
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+
+  '@base-ui/utils@0.3.2':
+    resolution: {integrity: sha512-oWy1aq/I2GmYjpl4PhEAhzflF8VPGKgZeq0xAWTbfD5KBWyxcN0ZP2+WHSUm/5Z6lVMBDLReLcoXwSYoRc/zNQ==}
     peerDependencies:
       '@types/react': ^17 || ^18 || ^19
       react: ^19.2.8
@@ -4324,8 +4351,16 @@ packages:
   executable-stories-core@0.19.0:
     resolution: {integrity: sha512-ZIHiigrcdplMdmkufCKkfLAbxcdtBWfhmrIq303reg9AjJ/6c3uIqSiHEcIgt3Xs6UuOCWqpG9uRlQrUpRRHwg==}
 
+  executable-stories-core@0.20.0:
+    resolution: {integrity: sha512-LF9wiD8jM0AMVcpADRIRFJuIUBcyN+LK1/0Qnw5DOq1GmMjm9gr7/qYS3wYbKi7HP8SVfqZ8qKyGxWqUDZatmA==}
+
   executable-stories-formatters@1.10.0:
     resolution: {integrity: sha512-TgFx2NQAw+7QFpeBSjHwgIKbzXJU/FJN4vMKLzhNgdk69eTcnkq/YIS9vJiofHZPlOj1/68uENRIaE2HJjXP6g==}
+    engines: {node: '>=22'}
+    hasBin: true
+
+  executable-stories-formatters@1.12.0:
+    resolution: {integrity: sha512-GLCTzloN/SIA/rAnBv5V2Xa73aKUF9mZkVTcRuvVQwPoHOdT8vaxnZzOq6xrmQe9EfiCYyMSHQSGS1mrqDBwrw==}
     engines: {node: '>=22'}
     hasBin: true
 
@@ -4348,8 +4383,18 @@ packages:
       mermaid:
         optional: true
 
-  executable-stories-vitest@8.6.5:
-    resolution: {integrity: sha512-GikVNQB5gvLFE+NVBLwGND2T7p7dcwa0NyUaVBZWgmOcs7KkB1qq90UM+a9LfeGqOYz/W8pPK0em23ZiYHavzw==}
+  executable-stories-react@0.11.0:
+    resolution: {integrity: sha512-7wowQ43T1HlqJwx44vlpKaB/wXvvugwpmEw0ANyLIshKDBC2QnW3Zyub4DXR34o5DCw4W7m/7FsTuxNeHwYTIA==}
+    peerDependencies:
+      mermaid: '>=10'
+      react: ^19.2.8
+      react-dom: ^19.2.8
+    peerDependenciesMeta:
+      mermaid:
+        optional: true
+
+  executable-stories-vitest@8.7.0:
+    resolution: {integrity: sha512-K0t/HQI9+qDsQ00dRXEsaY9hhRZPBRRkfz8H+svR2GRdTcoVuKOZ5lBTQ2lZRcbipzf3YfwO8lJio6rFF4Cy4w==}
     peerDependencies:
       vitest: '>=4.1.5'
 
@@ -4395,8 +4440,8 @@ packages:
   fast-wrap-ansi@0.2.2:
     resolution: {integrity: sha512-7F2Fl+TjRSenLqlU3UjSH0iyqopqoZIu7eZVpEirP2g1GtWa2G/ecEmBdgz31+Mxr+ELclgg6sokpSFIQiZ02Q==}
 
-  fastq@1.20.1:
-    resolution: {integrity: sha512-GGToxJ/w1x32s/D2EKND7kTil4n8OVk/9mycTc4VDza13lOvpUZTGX3mFSCtV9ksdGBVzvsyAVLM6mHFThxXxw==}
+  fastq@1.20.3:
+    resolution: {integrity: sha512-XKv5nnLs6nLF71NgiKJLIZFLkPyIEuOselLG7ujZnGrRfQK8HpvY+WqKhAJUAdLomwVHErVS4LfxFlPq0/FTAw==}
 
   fdir@6.5.0:
     resolution: {integrity: sha512-tIbYtZbucOs0BRGqPJkshJUYdL+SDH7dVM8gjy+ERp3WAUjLEFJE+02kanyHtwjWOnwrKYBiwAmM0p4kLJAnXg==}
@@ -4997,6 +5042,11 @@ packages:
     engines: {node: '>= 20'}
     hasBin: true
 
+  marked@18.0.11:
+    resolution: {integrity: sha512-HnslJfsZkRPBDJRHvVtAaWlZHEpSu7u8LgQuJCELjRKuWR+hpq4A7sLq3p8HaI9ypVoXDXxV34CsQJEe1+J5Aw==}
+    engines: {node: '>= 20'}
+    hasBin: true
+
   marked@18.0.7:
     resolution: {integrity: sha512-iDVQ5ldaiKXn6b2JroX5kgRfmwgqolW7NpaEzTl1k/2Zh1njIEN9yniyLV/mOvWwtsE8OGgkjsCYvijuPk1dtA==}
     engines: {node: '>= 20'}
@@ -5447,6 +5497,10 @@ packages:
     resolution: {integrity: sha512-RvwwcruNjI1ncT5xRakeyS9Lf8lcItv34KD+aif+VH9kduAyfYBipGh12274xtenIPZ119/R9BdTBa8gAwSh0A==}
     engines: {node: '>=12'}
 
+  picomatch@4.0.7:
+    resolution: {integrity: sha512-qcJu88Q2IWqJsDD529JKMdwGm/dvInW4HvQnRwiH9JtihJvzGOscDtHE3x1pBKeUOTysQ8kVmLnJ2kJu7yhcGA==}
+    engines: {node: '>=12'}
+
   pirates@4.0.7:
     resolution: {integrity: sha512-TfySrs/5nm8fQJDcBDuUng3VOUKsd7S+zqvbOTiGXHfxX4wK31ard+hoNuvkicM/2YFzlpDgABOevKSsB4G/FA==}
     engines: {node: '>= 6'}
@@ -5698,6 +5752,9 @@ packages:
 
   reselect@5.2.0:
     resolution: {integrity: sha512-AgZ3UOZm3YndfrJ4OYjgrT7bmCm/1iqkjvEfH/oYjzh6PD2qw4QuT3jjnXIrpdt4MTpMXclMT3lXbmRY+XRakw==}
+
+  reselect@5.3.0:
+    resolution: {integrity: sha512-XGoLeRAVzUTcJ1qkxPQhDJyIZ5d6zzZD9nT7AEZOaaU9UbWclhycElmhO+VD5bFeLuzhPBaOV2oXC8uG35ZSpg==}
 
   resize-iframe@0.1.1:
     resolution: {integrity: sha512-Sfo9DCZx98HjPWtUp3marntBzxJ3flR4Idydpr7W+B4JW3lUS2H9jJx177Qk0KPGeg6jOL3ouCfvJ79l+HYLCA==}
@@ -6808,6 +6865,18 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.2.18
 
+  '@base-ui/react@1.7.0(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
+    dependencies:
+      '@babel/runtime': 7.29.7
+      '@base-ui/utils': 0.3.2(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@floating-ui/react-dom': 2.1.9(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@floating-ui/utils': 0.2.12
+      react: 19.2.8
+      react-dom: 19.2.8(react@19.2.8)
+      use-sync-external-store: 1.6.0(react@19.2.8)
+    optionalDependencies:
+      '@types/react': 19.2.18
+
   '@base-ui/utils@0.3.1(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
     dependencies:
       '@babel/runtime': 7.29.7
@@ -6815,6 +6884,17 @@ snapshots:
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
       reselect: 5.2.0
+      use-sync-external-store: 1.6.0(react@19.2.8)
+    optionalDependencies:
+      '@types/react': 19.2.18
+
+  '@base-ui/utils@0.3.2(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
+    dependencies:
+      '@babel/runtime': 7.29.7
+      '@floating-ui/utils': 0.2.12
+      react: 19.2.8
+      react-dom: 19.2.8(react@19.2.8)
+      reselect: 5.3.0
       use-sync-external-store: 1.6.0(react@19.2.8)
     optionalDependencies:
       '@types/react': 19.2.18
@@ -6915,7 +6995,7 @@ snapshots:
       '@changesets/should-skip-package': 1.0.0
       '@changesets/types': 7.0.0
       '@manypkg/get-packages': 3.1.0
-      picomatch: 4.0.5
+      picomatch: 4.0.7
 
   '@changesets/errors@1.0.0': {}
 
@@ -6934,7 +7014,7 @@ snapshots:
       '@changesets/errors': 1.0.0
       '@changesets/types': 7.0.0
       '@manypkg/get-packages': 3.1.0
-      picomatch: 4.0.5
+      picomatch: 4.0.7
       tinyexec: 1.3.0
 
   '@changesets/parse@1.0.0':
@@ -7498,7 +7578,7 @@ snapshots:
   '@nodelib/fs.walk@1.2.8':
     dependencies:
       '@nodelib/fs.scandir': 2.1.5
-      fastq: 1.20.1
+      fastq: 1.20.3
 
   '@one-ini/wasm@0.1.1': {}
 
@@ -9689,6 +9769,8 @@ snapshots:
 
   executable-stories-core@0.19.0: {}
 
+  executable-stories-core@0.20.0: {}
+
   executable-stories-formatters@1.10.0(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(mermaid@11.16.1):
     dependencies:
       '@cucumber/html-formatter': 23.1.0(@cucumber/messages@32.3.1)
@@ -9696,6 +9778,24 @@ snapshots:
       ajv: 8.20.0
       executable-stories-core: 0.19.0
       executable-stories-react: 0.10.1(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(mermaid@11.16.1)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      github-slugger: 2.0.0
+      react: 19.2.8
+      react-dom: 19.2.8(react@19.2.8)
+      yaml: 2.9.0
+    transitivePeerDependencies:
+      - '@date-fns/tz'
+      - '@types/react'
+      - '@types/react-dom'
+      - date-fns
+      - mermaid
+
+  executable-stories-formatters@1.12.0(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(mermaid@11.16.1):
+    dependencies:
+      '@cucumber/html-formatter': 23.1.0(@cucumber/messages@32.3.1)
+      '@cucumber/messages': 32.3.1
+      ajv: 8.20.0
+      executable-stories-core: 0.20.0
+      executable-stories-react: 0.11.0(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(mermaid@11.16.1)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       github-slugger: 2.0.0
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
@@ -9740,12 +9840,33 @@ snapshots:
       - '@types/react-dom'
       - date-fns
 
-  executable-stories-vitest@8.6.5(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(mermaid@11.16.1)(vitest@4.1.10):
+  executable-stories-react@0.11.0(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(mermaid@11.16.1)(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
     dependencies:
-      executable-stories-core: 0.19.0
-      executable-stories-formatters: 1.10.0(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(mermaid@11.16.1)
+      '@base-ui/react': 1.7.0(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      class-variance-authority: 0.7.1
+      clsx: 2.1.1
+      cmdk: 1.1.1(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      executable-stories-core: 0.20.0
+      lucide-react: 0.469.0(react@19.2.8)
+      marked: 18.0.11
+      react: 19.2.8
+      react-dom: 19.2.8(react@19.2.8)
+      tailwind-merge: 3.6.0
+      zod: 4.4.3
+    optionalDependencies:
+      mermaid: 11.16.1
+    transitivePeerDependencies:
+      - '@date-fns/tz'
+      - '@types/react'
+      - '@types/react-dom'
+      - date-fns
+
+  executable-stories-vitest@8.7.0(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(mermaid@11.16.1)(vitest@4.1.10):
+    dependencies:
+      executable-stories-core: 0.20.0
+      executable-stories-formatters: 1.12.0(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(mermaid@11.16.1)
       fast-glob: 3.3.3
-      picomatch: 4.0.5
+      picomatch: 4.0.7
       vitest: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@26.2.0)(@vitest/browser-playwright@4.1.10(playwright@1.62.1)(vite@8.2.1(@types/node@26.2.0)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.0))(vitest@4.1.10))(@vitest/browser-preview@4.1.10)(jsdom@30.0.1)(vite@8.2.1(@types/node@26.2.0)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.0))
     transitivePeerDependencies:
       - '@date-fns/tz'
@@ -9830,7 +9951,7 @@ snapshots:
     dependencies:
       fast-string-width: 3.0.2
 
-  fastq@1.20.1:
+  fastq@1.20.3:
     dependencies:
       reusify: 1.1.0
 
@@ -10475,6 +10596,8 @@ snapshots:
   markdown-table@3.0.4: {}
 
   marked@16.4.2: {}
+
+  marked@18.0.11: {}
 
   marked@18.0.7: {}
 
@@ -11237,6 +11360,8 @@ snapshots:
 
   picomatch@4.0.5: {}
 
+  picomatch@4.0.7: {}
+
   pirates@4.0.7: {}
 
   pkce-challenge@5.0.1: {}
@@ -11534,6 +11659,8 @@ snapshots:
   require-from-string@2.0.2: {}
 
   reselect@5.2.0: {}
+
+  reselect@5.3.0: {}
 
   resize-iframe@0.1.1: {}
 
