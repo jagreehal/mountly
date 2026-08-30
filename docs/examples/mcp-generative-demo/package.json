@@ -22,7 +22,7 @@
     "@json-render/react": "0.20.0",
     "@modelcontextprotocol/ext-apps": "^1.7.5",
     "@modelcontextprotocol/sdk": "^1.30.0",
-    "ai": "7.0.65",
+    "ai": "7.0.83",
     "ai-sdk-ollama": "4.1.0",
     "mountly-mcp": "workspace:*",
     "mountly-react": "workspace:*",
