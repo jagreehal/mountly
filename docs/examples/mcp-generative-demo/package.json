@@ -16,7 +16,7 @@
     "test": "vp test run"
   },
   "dependencies": {
-    "@ai-sdk/google": "4.0.44",
+    "@ai-sdk/google": "4.0.63",
     "@ai-sdk/groq": "4.0.28",
     "@json-render/core": "0.20.0",
     "@json-render/react": "0.20.0",
