@@ -41,7 +41,7 @@
     "postpack": "rm -f LICENSE && ln -s ../../LICENSE LICENSE"
   },
   "dependencies": {
-    "zod": "^4.4.3"
+    "zod": "^4.5.4"
   },
   "devDependencies": {
     "mountly": "workspace:*",
