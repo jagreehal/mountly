@@ -50,7 +50,7 @@
     "@vitest/browser-playwright": "4.1.10",
     "@vue/test-utils": "^2.4.11",
     "executable-stories-formatters": "^1.10.0",
-    "executable-stories-playwright": "^8.8.2",
+    "executable-stories-playwright": "^8.10.2",
     "executable-stories-vitest": "^8.6.5",
     "jsdom": "^30.0.1",
     "mountly": "workspace:*",
