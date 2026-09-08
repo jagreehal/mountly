@@ -30,6 +30,7 @@ export default defineConfig([
       "src/gestures.ts",
       "src/attach.ts",
       "src/elements.ts",
+      "src/embed.ts",
       "src/bundle.ts",
       "src/cache.ts",
       "src/mount.ts",

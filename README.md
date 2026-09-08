@@ -200,6 +200,32 @@ Triggers read as `kind` or `kind:arg` — `hover:300`, `viewport:200px`,
 `media:(min-width: 60rem)`, `idle:2000`. `click`, `focus`, `url` and `never`
 take no argument.
 
+### Share components with another team
+
+Point the build at your components and give them a namespace. Mountly reads each
+component's props type and publishes it as a custom element:
+
+```ts
+// vite.config.ts
+export default defineElementsConfig({ prefix: "acme", elements: "src/elements/*.tsx" });
+```
+
+The consuming page needs one script tag and no package install, import map or
+init call:
+
+```html
+<script type="module" src="https://ui.acme.com/payments/1.2.0/embed.js"></script>
+<acme-payments-summary balance="1250" currency="GBP"></acme-payments-summary>
+```
+
+`balance` arrives as a number because the component says it is one. `onViewDetails`
+becomes a `view-details` DOM event. The build also emits `embed.d.ts` for typed
+tags and `custom-elements.json` for editor autocomplete. Component code and CSS
+load on demand. The same component still imports directly into your own app.
+
+See the [script embed guide](docs/src/content/docs/concepts/script-embeds.mdx)
+and [runnable example](docs/examples/react-embed).
+
 ### When HTML is not enough
 
 ```js

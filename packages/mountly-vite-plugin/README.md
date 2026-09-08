@@ -96,3 +96,12 @@ checker API.
 ## License
 
 Apache-2.0
+
+## Script-tag component libraries
+
+`defineElementsConfig({ prefix, elements })` turns typed React/Vue/Svelte
+components into lazily-loaded custom elements, and emits `embed.d.ts` and
+`custom-elements.json` alongside `embed.js`.
+
+See the [complete guide](../../docs/src/content/docs/concepts/script-embeds.mdx)
+and [example](../../docs/examples/react-embed).

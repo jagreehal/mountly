@@ -100,6 +100,7 @@ export default defineConfig({
             { label: "Styling", slug: "concepts/styling" },
             { label: "Multi-widget bundles", slug: "concepts/multi-widget" },
             { label: "Caching", slug: "concepts/caching" },
+            { label: "Script-tag libraries", slug: "concepts/script-embeds" },
             { label: "Distribution", slug: "concepts/distribution" },
             { label: "Islands architecture", slug: "concepts/islands" },
             { label: "Microfrontends", slug: "concepts/microfrontends" },

@@ -361,13 +361,9 @@ signup.attach({
 > **Styling:** mountly loads CSS with the module and applies it before render, so no FOUC. Light DOM lets the host's design system reach in; pass `shadow: true` for full isolation.
 
 ```html title="host.html"
-<signup-card trigger="viewport" props='{"plan":"pro"}'></signup-card>
-
-<script type="module">
-  import { defineMountlyFeature } from "mountly/elements";
-
-  defineMountlyFeature("/widgets/dist/index.js");
-</script>
+<!-- Or publish the component as a typed element another team drops in -->
+<script type="module" src="https://ui.acme.com/signup/1.2.0/embed.js"></script>
+<acme-signup-card plan="pro" data-mountly-trigger="viewport"></acme-signup-card>
 ```
 
 </section>

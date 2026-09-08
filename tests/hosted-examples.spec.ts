@@ -25,12 +25,10 @@ test.describe("hosted examples", () => {
     // Scope to main content — the sidebar also has docs pages whose slug
     // contains "examples" (e.g. /mountly/mcp-apps/examples/), which are not
     // hosted demo links and must not be held to the /mountly/examples/ prefix.
-    const links: string[] = await page.$$eval(
-      "main a[href*='/examples/']",
-      (anchors) =>
-        anchors
-          .map((a) => a.getAttribute("href") ?? "")
-          .filter((href) => href.startsWith("/") && href !== "/mountly/examples/"),
+    const links: string[] = await page.$$eval("main a[href*='/examples/']", (anchors) =>
+      anchors
+        .map((a) => a.getAttribute("href") ?? "")
+        .filter((href) => href.startsWith("/") && href !== "/mountly/examples/"),
     );
     expect(links.length, "expected the index to list examples").toBeGreaterThan(5);
 

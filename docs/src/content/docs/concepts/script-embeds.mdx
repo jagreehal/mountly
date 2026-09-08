@@ -1,0 +1,236 @@
+---
+title: Script-tag component libraries
+description: Publish your existing React, Vue or Svelte components as custom elements. One script tag, real attributes, real events, generated types.
+---
+
+Write an ordinary React, Vue or Svelte component. Mountly reads its props type
+at build time and publishes it as a custom element. The consuming page needs no package install,
+no import map, and no initialization call:
+
+```html
+<script type="module" src="https://ui.acme.com/payments/1.2.0/embed.js"></script>
+<acme-payments-summary balance="1250" currency="GBP">Loading payments…</acme-payments-summary>
+```
+
+## Author: write the component
+
+Nothing here is Mountly-specific. Type the props, as you would anyway:
+
+```tsx
+// src/elements/PaymentsSummary.tsx
+export interface PaymentsSummaryProps {
+  balance: number;
+  currency: string;
+  compact?: boolean;
+  lineItems?: Array<{ label: string; amount: number }>;
+  onViewDetails?: (detail: { balance: number }) => void;
+}
+
+export default function PaymentsSummary({
+  balance,
+  currency,
+  onViewDetails,
+}: PaymentsSummaryProps) {
+  // …
+}
+```
+
+Point the build at the directory and give it a namespace:
+
+```ts
+// vite.config.ts
+import { defineElementsConfig } from "mountly-vite-plugin";
+
+export default defineElementsConfig({
+  prefix: "acme",
+  elements: "src/elements/*.tsx",
+});
+```
+
+`PaymentsSummary.tsx` becomes `<acme-payments-summary>`. `prefix` is the only
+value you have to choose, and it is not ceremony: custom element names must
+contain a dash, and the page you are embedding into is not yours to collide on.
+
+Run `vite build` and publish `dist/`.
+
+## A library of components
+
+A directory glob is the common case, but a library that exports everything from
+one module works too — name the export per tag:
+
+```ts
+export default defineElementsConfig({
+  prefix: "acme",
+  elements: {
+    "payments-card": { component: "src/index.tsx", exportName: "PaymentsCard" },
+    "methods-panel": { component: "src/index.tsx", exportName: "MethodsPanel" },
+  },
+});
+```
+
+Each export gets its own tag, its own prop table and its own lazy chunk. `prefix`
+always applies, so both spellings above and below give `<acme-payments-card>`.
+Globs accept a list too: `["src/elements/*.tsx", "src/cards/*.vue"]`.
+
+## Overriding the build
+
+The return value is an ordinary Vite config with sensible defaults — relative
+`base` for cross-origin hosting, CSS code splitting, `embed.js` as the entry,
+sourcemaps on, `dist` as the output. Change any of it with Vite's own
+`mergeConfig`, which is also how Vue and Svelte add their compiler plugin:
+
+```ts
+import { mergeConfig } from "vite";
+import vue from "@vitejs/plugin-vue";
+
+export default mergeConfig(
+  defineElementsConfig({ prefix: "acme", elements: "src/elements/*.vue" }),
+  {
+    plugins: [vue()],
+    build: { outDir: "release" },
+  },
+);
+```
+
+## What the build reads from your types
+
+The props type is the contract. Nothing is restated in configuration:
+
+| Prop type          | Consumer writes                                           | Component receives                   |
+| ------------------ | --------------------------------------------------------- | ------------------------------------ |
+| `number`           | `balance="1250"`                                          | `1250`                               |
+| `string`           | `currency="GBP"`                                          | `"GBP"`                              |
+| `boolean`          | `compact` (or omit it)                                    | `true` / `false`                     |
+| object or array    | `line-items='[{"label":"Subs"}]'` or `el.lineItems = […]` | the parsed value                     |
+| `(detail) => void` | `addEventListener("view-details", …)`                     | a function that dispatches the event |
+
+Because the build knows `currency` is a string, `currency="007"` stays `"007"`.
+Because it knows `balance` is a number, `balance="1250"` is not the string
+`"1250"`. Camel-case props take kebab-case attributes: `lineItems` →
+`line-items`. Callback props become bubbling, composed DOM events with the `on`
+dropped and the rest kebab-cased: `onViewDetails` → `view-details`, with the
+callback's first argument as `event.detail`.
+
+## Consumer: one script tag
+
+```html
+<script type="module" src="https://ui.acme.com/payments/1.2.0/embed.js"></script>
+<acme-payments-summary balance="1250" currency="GBP"></acme-payments-summary>
+
+<script>
+  const summary = document.querySelector("acme-payments-summary");
+  summary.lineItems = [{ label: "Subscription", amount: 1200 }];
+  summary.balance = 1500; // re-renders; the component keeps its own state
+  summary.addEventListener("view-details", (event) => console.log(event.detail));
+</script>
+```
+
+Assigning a valid value clears that prop's error, whether it arrives as a
+corrected attribute or an assigned property; an error on a _different_ prop
+still holds the element back until it too is fixed.
+
+A prop named `mount` keeps working as an attribute, but not as a property —
+`element.mount()` is the element's own method and is never shadowed. The build
+warns when that happens.
+
+Attributes and properties are both live. Properties assigned before the deferred
+script registers the tag are preserved, and an explicit property beats the
+attribute it shares a name with. Children stay on screen as fallback content
+until the component mounts, then return if the element is removed.
+
+### Types
+
+The build emits `dist/embed.d.ts`. Reference it and every tag is typed, in
+plain DOM code and in global-JSX frameworks such as Preact, Solid and Vue:
+
+```ts
+/// <reference path="./node_modules/@acme/payments/dist/embed.d.ts" />
+
+const summary = document.querySelector("acme-payments-summary"); // typed
+summary.balance = 1500; // number
+summary.currency = 1500; // Type error
+```
+
+React 19 resolves `JSX` from the `react` module rather than the global
+namespace, so a React host references `embed.react.d.ts` instead — it pulls in
+`embed.d.ts` for you:
+
+```ts
+/// <reference path="./node_modules/@acme/payments/dist/embed.react.d.ts" />
+```
+
+Then the tag is written directly, with no wrapper:
+
+```tsx
+<acme-payments-summary balance={1250} currency="GBP" />
+```
+
+Object and array props are typed `unknown` — the manifest describes the wire
+format, not your domain model. Publish the component itself if a consumer wants
+its exact types.
+
+### Editor autocomplete without TypeScript
+
+`dist/custom-elements.json` is a [Custom Elements
+Manifest](https://github.com/webcomponents/custom-elements-manifest). VS Code and
+WebStorm read it for tag, attribute and event completion in plain HTML.
+
+## What loads when
+
+`embed.js` registers every tag and downloads nothing else — it is **4.4 KB
+gzipped** in the bundled example, whatever the component count, and a page with
+no elements on it pays only that. A component, its
+framework and its CSS arrive when one of its elements connects, so a page with
+one `<acme-payment-methods>` never fetches the payments summary. Components in one
+distribution share their framework chunk, so the framework is paid for once
+(~60 KB gzipped for React) and each extra component costs its own code only —
+under 1 KB gzipped for the two in the example.
+
+Defer further with the core's trigger syntax:
+
+```html
+<acme-payments-summary data-mountly-trigger="viewport:200px"></acme-payments-summary>
+```
+
+`data-mountly-trigger="never"` holds the download until you call
+`element.mount()`. Mountly's own controls live under `data-mountly-*` precisely
+so they can never collide with one of your props — a component is free to have
+its own `trigger` prop.
+
+## Importing the component directly
+
+There is nothing to configure. Your package already exports the component:
+
+```tsx
+import PaymentsSummary from "@acme/payments/PaymentsSummary";
+```
+
+Importing it registers no custom elements and pulls in none of the embed
+machinery. Use this inside your own app, and the script tag for everyone else.
+
+## Notes
+
+- Styles render in light DOM. Use CSS Modules for local class names and CSS
+  custom properties for theme values.
+- CSS imports, CSS Modules and asset URLs go through Vite's normal build
+  pipeline, so relative assets work from any origin.
+- The framework comes from the file extension, so there is nothing to declare:
+  `.vue` uses the Vue adapter, `.svelte` the Svelte one, `.tsx`/`.jsx` React. One
+  distribution may mix them. Vue and Svelte still need their usual Vite compiler
+  plugin, added with `mergeConfig`. Vue reads `defineProps<T>()` and
+  `defineEmits<T>()`; Svelte 5 reads `let { … }: Props = $props()`.
+- The props type is read from the component's own file. Local interfaces, type
+  aliases, `extends`, intersections, quoted names like `'aria-label'`, method
+  syntax like `onSave(v: string): void`, `memo`/`forwardRef` wrappers, Vue's
+  `withDefaults`, both `defineEmits` spellings and the Options API's
+  `props`/`emits` are all understood. Vue components that compose options with
+  `mixins`, `extends` or a spread carry a contract the build cannot see, so
+  those fail rather than publishing half of it. A props
+  type imported from another module, Vue's runtime `defineProps({ … })`, or an
+  opaque wrapper cannot be — the build fails rather than shipping an element
+  that ignores what the consumer sets. Pass `props` on the element entry to
+  declare those exactly.
+- Invalid JSON in an attribute puts the element in `data-mountly-state="error"`
+  and fires `mountly:error` rather than mounting with a wrong value.
+
+See the [runnable example](https://github.com/jagreehal/mountly/tree/main/docs/examples/react-embed).

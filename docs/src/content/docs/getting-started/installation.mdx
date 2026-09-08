@@ -48,17 +48,20 @@ import Component from "./Component";
 export default createWidget(Component);
 ```
 
-Host entry:
+Host entry — the island form, which needs no page JavaScript at all:
 
 ```html
-<signup-card trigger="idle" props='{"plan":"pro"}'></signup-card>
-
-<script type="module">
-  import { defineMountlyFeature } from "mountly/elements";
-
-  defineMountlyFeature("/widgets/signup-card/dist/index.js");
-</script>
+<div
+  data-mountly="/widgets/signup-card/dist/index.js"
+  data-on="idle"
+  data-props='{"plan":"pro"}'
+></div>
+<script type="module" src="/node_modules/mountly/dist/auto.js"></script>
 ```
+
+Publishing the component for a page you do not control instead? Build it as a
+[script-tag component library](/mountly/concepts/script-embeds/) — the consumer
+then writes one script tag and a typed element, with no import map.
 
 The host does not need `mountly-react`, `react`, `vue`, or `svelte` unless it also builds the widget. The built widget bundle owns its framework runtime unless you intentionally externalize shared dependencies.
 

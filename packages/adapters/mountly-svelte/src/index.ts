@@ -81,7 +81,12 @@ interface SvelteLegacyInstanceWithSet extends SvelteLegacyInstance {
 
 interface ActiveInstance {
   legacy?: SvelteLegacyInstanceWithSet;
-  v5?: { handle: Record<string, unknown>; unmount: SvelteV5Unmount };
+  v5?: {
+    handle: Record<string, unknown>;
+    /** Present only when we own the runtime, and so can hand Svelte a tracked object. */
+    props?: Record<string, unknown>;
+    unmount: SvelteV5Unmount;
+  };
 }
 
 // Svelte 5 components are plain functions; Svelte 4 components are classes.
@@ -119,6 +124,25 @@ export function createWidget<P>(
   }
 
   // Returns a promise iff async work was needed (Svelte 5 runtime import).
+
+  /**
+   * `mount()` reads its `props` once, so a plain object handed to it is inert
+   * and a later prop change would never reach the screen. `$state` gives Svelte
+   * an object it tracks — but it compiles to Svelte's client runtime, which a
+   * host using legacy classes has no reason to have loaded and no reason to map.
+   * Import it beside the runtime we are already fetching, and cache it.
+   */
+  let makeReactive: ((initial: Record<string, unknown>) => Record<string, unknown>) | null = null;
+  async function loadReactive(): Promise<
+    (initial: Record<string, unknown>) => Record<string, unknown>
+  > {
+    if (!makeReactive) {
+      const module = await import("./props.svelte.js");
+      makeReactive = module.reactiveProps;
+    }
+    return makeReactive;
+  }
+
   // Sync return path keeps tests/hosts that don't await mount() working.
   function mountWith(
     container: Element,
@@ -134,20 +158,24 @@ export function createWidget<P>(
       instances.set(container, { legacy: instance });
       return;
     }
+    // A host that brought its own `mount` brought its own runtime with it, and
+    // reads the DOM straight after this call. Stay synchronous and leave its
+    // props alone; reactive updates belong to the runtime we load ourselves.
     if (svelteMount && svelteUnmount) {
       const handle = svelteMount(Component as SvelteV5Component<P>, {
         target,
-        props: props as P,
+        props: (props ?? {}) as P,
       });
       instances.set(container, { v5: { handle, unmount: svelteUnmount } });
       return;
     }
-    return getSvelteRuntime().then((runtime) => {
+    return Promise.all([getSvelteRuntime(), loadReactive()]).then(([runtime, reactiveProps]) => {
+      const reactive = reactiveProps(props ?? {});
       const handle = runtime.mount(Component as SvelteV5Component<P>, {
         target,
-        props: props as P,
+        props: reactive as P,
       });
-      instances.set(container, { v5: { handle, unmount: runtime.unmount } });
+      instances.set(container, { v5: { handle, props: reactive, unmount: runtime.unmount } });
     });
   }
 
@@ -190,7 +218,16 @@ export function createWidget<P>(
         return;
       }
       if (existing.v5) {
-        Object.assign(existing.v5.handle, newProps);
+        // Without a tracked props object (host-supplied mount) there is nothing
+        // to patch, so fall back to the handle as before.
+        const target = existing.v5.props ?? existing.v5.handle;
+        // A prop the host dropped must clear, not linger from the last render.
+        if (existing.v5.props) {
+          for (const key of Object.keys(existing.v5.props)) {
+            if (!(key in newProps)) existing.v5.props[key] = undefined;
+          }
+        }
+        Object.assign(target, newProps);
         return;
       }
       return this.mount(container, props);

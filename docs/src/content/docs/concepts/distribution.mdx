@@ -1,9 +1,18 @@
 ---
 title: Distribution
-description: Self-contained vs shared-React widget builds, when to ship each, and how the host's import map decides.
+description: Import-map builds for hosts that compose several widgets sharing one framework instance.
 ---
 
 import { exampleUrl } from "../../../lib/example-urls.ts";
+
+:::tip[Sharing components with another team?]
+Use [script-tag component libraries](/mountly/concepts/script-embeds/) instead.
+One script tag, typed custom elements, no import map on the consumer's page.
+
+This page is about the **import-map builds**, which exist for one case: a host
+composing several independently-deployed widgets that must share a single
+framework instance. If that is not your situation, you do not need this page.
+:::
 
 Each widget scaffolded by `mountly init` ships **two** ESM entries. The host's import map picks between them, and the widget source stays the same.
 
@@ -30,12 +39,16 @@ Numbers are representative. Measure your own widgets in DevTools.
 
 ## Pick one
 
-| Use case                                | Pick               | Why                                             |
-| --------------------------------------- | ------------------ | ----------------------------------------------- |
-| One widget on a page, host has no React | **Self-contained** | Zero wiring; ~66 KB gz                          |
-| Two or more widgets on the same page    | **Shared React**   | One copy of React; ~3 KB gz per widget          |
-| Host is already a React/Next app        | **Shared React**   | Avoids two React instances on one page          |
-| Quick prototype, single embed           | **Self-contained** | Faster to wire; bytes only matter in production |
+| Situation                                          | Use                                               |
+| -------------------------------------------------- | ------------------------------------------------- |
+| Publishing to a page you don't control             | [Script embeds](/mountly/concepts/script-embeds/) |
+| One widget on your own page, host has no framework | **Self-contained** (`index.js`)                   |
+| Several widgets on one host page, sharing state    | **Peer build** (`peer.js`) + import map           |
+| Host is already a React/Next app                   | **Peer build**, to avoid two React instances      |
+
+The peer build is the only reason this page exists: two widgets that must share a
+framework instance — a query client, a store, a context — cannot each bring their
+own copy.
 
 ## How the host chooses
 
