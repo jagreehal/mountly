@@ -489,7 +489,7 @@ describe("Element discovery", () => {
 
   /** Run the plugin's build-time analysis without a full Vite build. */
   const resolve = (dir: string, options: Parameters<typeof defineElementsConfig>[0]) => {
-    const config = defineElementsConfig(options) as unknown as {
+    const config = defineElementsConfig({ ...options, root: dir }) as unknown as {
       plugins: Array<{
         configResolved: (config: { root: string }) => void;
         load: (id: string) => string | undefined;
@@ -506,7 +506,7 @@ describe("Element discovery", () => {
     options: Parameters<typeof defineElementsConfig>[0],
     tag: string,
   ) => {
-    const config = defineElementsConfig(options) as unknown as {
+    const config = defineElementsConfig({ ...options, root: dir }) as unknown as {
       plugins: Array<{
         configResolved: (config: { root: string }) => void;
         load: (id: string) => string | undefined;
@@ -572,6 +572,64 @@ describe("Element discovery", () => {
     expect(entry).toContain('"event":"pick"');
   });
 
+  /** The compilers the returned config brings with it. */
+  const compilers = async (dir: string, elements: string) => {
+    const config = defineElementsConfig({ prefix: "acme", elements, root: dir }) as unknown as {
+      plugins: Array<Promise<Array<{ name: string }>> | { name: string }>;
+    };
+    const resolved = await Promise.all(config.plugins);
+    return resolved.flat().map((p) => p.name);
+  };
+
+  it("brings the compiler its components need, without being told", async ({ task }) => {
+    story.init(task);
+    story.given("a Vue and a Svelte component, and a config that mentions neither compiler");
+
+    const dir = fixture({
+      "src/elements/Panel.vue": `<script setup lang="ts">defineProps<{ label: string }>();</script>`,
+      "src/elements/List.svelte": `<script lang="ts">let { rows }: { rows: number } = $props();</script>`,
+    });
+    const names = await compilers(dir, "src/elements/*.{vue,svelte}");
+
+    story.then("both compilers are in the config it returns");
+    expect(names).toContain("vite:vue");
+    expect(names.some((name) => name.startsWith("vite-plugin-svelte"))).toBe(true);
+  });
+
+  it("adds no compiler a React build does not need", async ({ task }) => {
+    story.init(task);
+
+    const dir = fixture({ "src/elements/Card.tsx": CARD });
+    const names = await compilers(dir, "src/elements/*.tsx");
+    expect(names).toEqual(["mountly:elements"]);
+  });
+
+  it("refuses a second copy of a compiler rather than transforming twice", async ({ task }) => {
+    story.init(task);
+    story.given("an author who also added the Vue plugin by hand");
+
+    const dir = fixture({
+      "src/elements/Panel.vue": `<script setup lang="ts">defineProps<{ label: string }>();</script>`,
+    });
+    const config = defineElementsConfig({
+      prefix: "acme",
+      elements: "src/elements/*.vue",
+      root: dir,
+    }) as unknown as {
+      plugins: Array<Promise<Array<{ name: string }>> | { configResolved?: (c: unknown) => void }>;
+    };
+    const mountlyPlugin = config.plugins[0] as {
+      configResolved: (config: { root: string; plugins: Array<{ name: string }> }) => void;
+    };
+
+    expect(() =>
+      mountlyPlugin.configResolved({
+        root: dir,
+        plugins: [{ name: "vite:vue" }, { name: "vite:vue" }],
+      }),
+    ).toThrow(/registered 2 times/);
+  });
+
   it("keeps its defaults while letting the config be overridden", ({ task }) => {
     story.init(task);
     story.given("a build that wants a different outDir and its own framework plugin");
@@ -590,10 +648,12 @@ describe("Element discovery", () => {
     expect(merged.build?.cssCodeSplit).toBe(true);
     expect(merged.build?.rollupOptions?.output).toMatchObject({ entryFileNames: "embed.js" });
     expect(merged.base).toBe("./");
-    expect((merged.plugins as Array<{ name: string }>).map((p) => p.name)).toEqual([
-      "mountly:elements",
-      "vite:vue",
-    ]);
+    return Promise.all(merged.plugins as unknown[]).then((resolved) => {
+      expect(resolved.flat().map((p) => (p as { name: string }).name)).toEqual([
+        "mountly:elements",
+        "vite:vue",
+      ]);
+    });
   });
 
   it("refuses to publish an element whose props it cannot read", ({ task }) => {

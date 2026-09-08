@@ -22,8 +22,7 @@ test("a script tag embeds React across origins with typed attributes, lazy chunk
 }) => {
   test.setTimeout(60000);
   await build({
-    ...defineElementsConfig({ prefix: "acme", elements: "src/elements/*.tsx" }),
-    root,
+    ...defineElementsConfig({ prefix: "acme", elements: "src/elements/*.tsx", root }),
     configFile: false,
     logLevel: "silent",
   } as unknown as Parameters<typeof build>[0]);
@@ -127,6 +126,71 @@ test("a script tag embeds React across origins with typed attributes, lazy chunk
     expect(
       requests.filter((path) => path.includes("payments-summary") && path.endsWith(".js")),
     ).toHaveLength(1);
+    expect(errors).toEqual([]);
+  } finally {
+    await Promise.all([close(provider), close(host)]);
+  }
+});
+
+test("one build serves React, Vue and Svelte with no compiler configured", async ({ page }) => {
+  test.setTimeout(60000);
+  const mixedRoot = join(process.cwd(), "docs/examples/mixed-embed");
+
+  // The config names no plugins at all; the build brings what these files need.
+  await build({
+    ...defineElementsConfig({
+      prefix: "acme",
+      elements: "src/elements/*.{tsx,vue,svelte}",
+      root: mixedRoot,
+    }),
+    configFile: false,
+    logLevel: "silent",
+  } as unknown as Parameters<typeof build>[0]);
+
+  const mixedDist = join(mixedRoot, "dist");
+  const provider = createServer(async (req, res) => {
+    const path = new URL(req.url!, "http://localhost").pathname;
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    try {
+      const data = await readFile(join(mixedDist, path));
+      res.setHeader("Content-Type", extname(path) === ".css" ? "text/css" : "text/javascript");
+      res.end(data);
+    } catch {
+      res.writeHead(404).end();
+    }
+  });
+  const providerUrl = await listen(provider);
+  const host = createServer((_req, res) => {
+    res.setHeader("Content-Type", "text/html");
+    res.end(
+      `<!doctype html><html><head><script type="module" src="${providerUrl}/embed.js"></script></head><body><main></main></body></html>`,
+    );
+  });
+  const hostUrl = await listen(host);
+
+  try {
+    const errors: string[] = [];
+    page.on("pageerror", (error) => errors.push(error.message));
+    await page.goto(hostUrl);
+    await page.evaluate(() => customElements.whenDefined("acme-vue-panel"));
+    await page.evaluate(() => {
+      document.querySelector("main")!.innerHTML =
+        `<acme-react-card balance="12" currency="GBP"></acme-react-card>` +
+        `<acme-vue-panel label="cards" count="3"></acme-vue-panel>` +
+        `<acme-svelte-list rows="7"></acme-svelte-list>`;
+    });
+
+    // Each framework's own component renders, with its attributes coerced.
+    await expect.poll(() => page.getByTestId("react").textContent()).toBe("react GBP 12");
+    await expect.poll(() => page.getByTestId("vue").textContent()).toBe("vue cards 3");
+    await expect.poll(() => page.getByTestId("svelte").textContent()).toBe("svelte 7");
+
+    // A Svelte property update reaches the component rather than being inert.
+    await page.evaluate(() => {
+      (document.querySelector("acme-svelte-list") as HTMLElement & { rows: number }).rows = 9;
+    });
+    await expect.poll(() => page.getByTestId("svelte").textContent()).toBe("svelte 9");
+
     expect(errors).toEqual([]);
   } finally {
     await Promise.all([close(provider), close(host)]);

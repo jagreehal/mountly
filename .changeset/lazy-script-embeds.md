@@ -15,6 +15,10 @@ read fully fails the build rather than shipping an element that ignores half its
 Mountly's own controls live under `data-mountly-*`, so a component is free to have props named
 `trigger` or `mount`.
 
+Vue and Svelte builds need no compiler plugin in the config: the build reads the extensions it
+globbed and brings `@vitejs/plugin-vue` or `@sveltejs/vite-plugin-svelte` itself, and refuses a
+second copy rather than transforming twice.
+
 The build emits `embed.d.ts` for typed tags and a `custom-elements.json` manifest for editor
 autocomplete alongside a lazily loaded `embed.js`, which registers every tag and downloads
 nothing until an element connects. One distribution may mix frameworks; components in it

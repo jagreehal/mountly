@@ -77,20 +77,22 @@ Globs accept a list too: `["src/elements/*.tsx", "src/cards/*.vue"]`.
 The return value is an ordinary Vite config with sensible defaults — relative
 `base` for cross-origin hosting, CSS code splitting, `embed.js` as the entry,
 sourcemaps on, `dist` as the output. Change any of it with Vite's own
-`mergeConfig`, which is also how Vue and Svelte add their compiler plugin:
+`mergeConfig`:
 
 ```ts
 import { mergeConfig } from "vite";
-import vue from "@vitejs/plugin-vue";
 
 export default mergeConfig(
   defineElementsConfig({ prefix: "acme", elements: "src/elements/*.vue" }),
-  {
-    plugins: [vue()],
-    build: { outDir: "release" },
-  },
+  { build: { outDir: "release" } },
 );
 ```
+
+You do not add a framework compiler. The build reads the extensions it just
+globbed and brings `@vitejs/plugin-vue` or `@sveltejs/vite-plugin-svelte`
+itself — install the one your components need and nothing else changes. Adding
+it by hand as well is an error rather than a silent double transform, because
+the second copy would receive the first one's output.
 
 ## What the build reads from your types
 
@@ -216,9 +218,11 @@ machinery. Use this inside your own app, and the script tag for everyone else.
   pipeline, so relative assets work from any origin.
 - The framework comes from the file extension, so there is nothing to declare:
   `.vue` uses the Vue adapter, `.svelte` the Svelte one, `.tsx`/`.jsx` React. One
-  distribution may mix them. Vue and Svelte still need their usual Vite compiler
-  plugin, added with `mergeConfig`. Vue reads `defineProps<T>()` and
-  `defineEmits<T>()`; Svelte 5 reads `let { … }: Props = $props()`.
+  distribution may mix them, and its compilers are added for you. Vue reads
+  `defineProps<T>()` and `defineEmits<T>()`; Svelte 5 reads
+  `let { … }: Props = $props()`.
+- `root` is only needed when the config is not loaded from the project root, as
+  in a monorepo running the build from elsewhere.
 - The props type is read from the component's own file. Local interfaces, type
   aliases, `extends`, intersections, quoted names like `'aria-label'`, method
   syntax like `onSave(v: string): void`, `memo`/`forwardRef` wrappers, Vue's

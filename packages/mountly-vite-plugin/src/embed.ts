@@ -28,6 +28,11 @@ export interface MountlyElementsConfigOptions {
   prefix: string;
   /** A glob of component files, or an explicit tag → component map. */
   elements: string | string[] | Record<string, string | MountlyElementEntry>;
+  /**
+   * Project root. Only needed when the config is not loaded from it — a
+   * monorepo running the build from elsewhere, say. Defaults to `process.cwd()`.
+   */
+  root?: string;
 }
 
 interface BuiltElement {
@@ -247,6 +252,62 @@ function manifest(elements: BuiltElement[]): string {
   );
 }
 
+/** The compiler plugin each framework needs, and how to spot one already there. */
+const FRAMEWORK_PLUGIN: Partial<
+  Record<MountlyWidgetFramework, { prefix: string; module: string; load: () => Promise<Plugin[]> }>
+> = {
+  vue: {
+    prefix: "vite:vue",
+    module: "@vitejs/plugin-vue",
+    load: async () => [(await import("@vitejs/plugin-vue")).default()].flat() as Plugin[],
+  },
+  svelte: {
+    prefix: "vite-plugin-svelte",
+    module: "@sveltejs/vite-plugin-svelte",
+    load: async () => [(await import("@sveltejs/vite-plugin-svelte")).svelte()].flat() as Plugin[],
+  },
+  // React needs none: `oxc.jsx` below already transforms JSX.
+};
+
+/**
+ * A `.vue` or `.svelte` file needs its compiler. We already know which
+ * frameworks are in play, so asking the author to name them again in a
+ * `plugins` array is a step that only exists to be forgotten.
+ */
+async function frameworkPlugins(frameworks: Set<MountlyWidgetFramework>): Promise<Plugin[]> {
+  const added: Plugin[] = [];
+  for (const framework of frameworks) {
+    const entry = FRAMEWORK_PLUGIN[framework];
+    if (!entry) continue;
+    try {
+      added.push(...(await entry.load()));
+    } catch {
+      throw new Error(
+        `[mountly] ${framework} components need ${entry.module}. ` +
+          `Install it, or add your own compiler plugin to the config.`,
+      );
+    }
+  }
+  return added;
+}
+
+/**
+ * Two copies of a framework compiler is not a warning-level problem: the second
+ * one receives the first one's output and fails somewhere unhelpful. Say so
+ * here, where the cause is still obvious.
+ */
+function assertSingleCompiler(plugins: readonly { name: string }[] = []): void {
+  for (const entry of Object.values(FRAMEWORK_PLUGIN)) {
+    const count = plugins.filter((plugin) => plugin?.name === entry.prefix).length;
+    if (count > 1) {
+      throw new Error(
+        `[mountly] ${entry.module} is registered ${count} times. ` +
+          `defineElementsConfig adds it for you — remove it from your own plugins array.`,
+      );
+    }
+  }
+}
+
 /**
  * An element whose props could not be read would ignore everything the consumer
  * sets, and say so nowhere. Fail the build instead, and name the way out.
@@ -278,12 +339,19 @@ export function defineElementsConfig(options: MountlyElementsConfigOptions): Use
   const entryId = "virtual:mountly-embed";
   const widgetPrefix = "virtual:mountly-widget/";
   let elements: BuiltElement[] = [];
-  let root = process.cwd();
+  // Vite resolves its plugin list before any hook runs, so the frameworks in
+  // play have to be known now. Globbing is cheap; the prop tables still wait
+  // until `configResolved`, when root is final.
+  let root = options.root ?? process.cwd();
+  const frameworks = new Set(
+    normalize(options, root).map(([, entry]) => entry.framework ?? frameworkFor(entry.component)),
+  );
 
   const plugin: Plugin = {
     name: "mountly:elements",
     configResolved(config) {
       root = config.root;
+      assertSingleCompiler(config.plugins);
       elements = normalize(options, root).map(([tag, entry]) => ({
         tag,
         entry,
@@ -342,13 +410,14 @@ export default createWidget(component[${JSON.stringify(element.entry.exportName 
   };
 
   return {
+    ...(options.root ? { root: options.root } : {}),
     // Vite's application pipeline already handles lazy CSS, asset rebasing,
     // and shared framework chunks. A library build would make us recreate it.
     base: "./",
-    // Only React components need the JSX transform, but one distribution may
-    // legitimately hold components from more than one framework.
-    oxc: { jsx: { runtime: "automatic" } },
-    plugins: [plugin],
+    // Only enable the JSX transform when React is in play: it would otherwise
+    // try to parse a `.vue` or `.svelte` file before its compiler sees it.
+    oxc: frameworks.has("react") ? { jsx: { runtime: "automatic" } } : undefined,
+    plugins: [plugin, frameworkPlugins(frameworks)],
     build: {
       sourcemap: true,
       cssCodeSplit: true,

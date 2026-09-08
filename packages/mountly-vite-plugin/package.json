@@ -31,17 +31,27 @@
     "postpack": "rm -f LICENSE && ln -s ../../LICENSE LICENSE"
   },
   "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^7.3.0",
+    "@vitejs/plugin-vue": "^6.0.8",
     "mountly-manifest": "workspace:*",
     "tsup": "^8.5.1",
     "typescript": "^7.0.2",
     "vite": "^8.1.5"
   },
   "peerDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^7.0.0",
+    "@vitejs/plugin-vue": "^6.0.0",
     "mountly-manifest": "workspace:*",
     "typescript": ">=7.0.0",
     "vite": "^8.2.1"
   },
   "peerDependenciesMeta": {
+    "@sveltejs/vite-plugin-svelte": {
+      "optional": true
+    },
+    "@vitejs/plugin-vue": {
+      "optional": true
+    },
     "typescript": {
       "optional": true
     }
