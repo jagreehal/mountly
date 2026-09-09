@@ -123,7 +123,7 @@ function listenOnFreePort(server: Server, port: number): Promise<number> {
       // the port that was already taken.
       const onError = (error: NodeJS.ErrnoException): void => {
         server.removeListener("listening", onListening);
-        // ponytail: linear probe, fine for a dev tool on a developer's laptop.
+        // A linear probe is enough for a dev tool on a developer's laptop.
         if (error.code === "EADDRINUSE" && candidate < port + 50) attempt(candidate + 1);
         else reject(error);
       };

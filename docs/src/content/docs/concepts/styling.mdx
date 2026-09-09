@@ -3,7 +3,7 @@ title: Styling
 description: How mountly loads, scopes, and isolates CSS across all three adapters, both in light DOM (default) and in shadow DOM, and the noscript story.
 ---
 
-mountly's styling model has one design goal: **make the right thing the easy thing.** The default path takes zero config and works the same way for React, Vue, and Svelte. Reach for overrides when you need them.
+The default path needs no styling configuration and behaves the same on React, Vue, and Svelte: the adapter fetches the widget's sibling stylesheet and applies it before render. Everything below is an override for when that is not what you want.
 
 ## The default: light DOM + auto-fetched companion CSS
 
@@ -32,7 +32,7 @@ import Card from "./Card.svelte";
 export default createWidget(Card);
 ```
 
-That's the entire pipeline. The host writes no `render` function. The widget loads no CSS by hand. Vite's library build emits the sibling `.css` for you. The widget renders inline, so the host's design system reaches in.
+The host writes no `render` function and the widget loads no CSS by hand, because Vite's library build emits the sibling `.css`. The widget renders inline, so the host's design system reaches in.
 
 ## CSS source resolution
 
@@ -114,7 +114,7 @@ Pass that to `replaceSync()` and you get an empty stylesheet. The fix, and the r
 fetch(url, { headers: { Accept: "text/css" } });
 ```
 
-Vite's content-negotiation returns raw CSS for that header, so the stylesheet parses correctly. You only ever need to think about this if you're putting a custom proxy or service worker between the page and Vite.
+Vite's content-negotiation returns raw CSS for that header, so the stylesheet parses. This matters only if you put a custom proxy or service worker between the page and Vite.
 
 ## Islands and noscript
 
@@ -136,8 +136,8 @@ For an island to remain styled with JS off, you need a document-level stylesheet
 
 What you get:
 
-- **JS off**: the `<link>` styles the server-rendered span. The script never runs. The user sees correctly styled content.
-- **JS on**: the host bootstraps. On click, the island hydrates. By default it mounts in light DOM and the document `<link>` continues to apply. If the island also passes `shadow: true`, the adapter adopts the same CSS into the shadow root, where it scopes correctly; the document-level `<link>` is then harmless duplication.
+- **JS off**: the `<link>` styles the server-rendered span. The script never runs. The user sees styled content.
+- **JS on**: the host bootstraps. On click, the island hydrates. By default it mounts in light DOM and the document `<link>` continues to apply. If the island also passes `shadow: true`, the adapter adopts the same CSS into the shadow root, which scopes it; the document-level `<link>` is then duplication that costs you nothing.
 
 The repo has a test (`tests/island-nojs-styling.spec.ts`) that runs the same fixture with `javaScriptEnabled: false` and `true` and verifies the same final color in both cases.
 

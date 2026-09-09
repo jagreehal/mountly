@@ -167,7 +167,7 @@ string and hands the element to `wire()`.
 | `trigger="url-change"`                        | `url`               |
 
 `preload-on` maps the same way into `data-preload` and is never derived from
-`trigger` — preloading on the event that also mounts is a no-op. An unrecognised
+`trigger`, because preloading on the event that also mounts is a no-op. An unrecognised
 `trigger` falls back to `click`. Hover has no delay attribute; use the core's
 `data-on="hover:300"` for that.
 

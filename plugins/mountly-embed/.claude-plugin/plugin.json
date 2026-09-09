@@ -1,0 +1,11 @@
+{
+  "name": "mountly-embed",
+  "version": "0.1.0",
+  "description": "Claude Code skill for publishing React, Vue and Svelte components as script-tag custom elements with mountly-vite-plugin",
+  "author": {
+    "name": "Mountly"
+  },
+  "repository": "https://github.com/jagreehal/mountly",
+  "license": "Apache-2.0",
+  "keywords": ["custom-elements", "web-components", "embed", "mountly", "react", "vue", "svelte"]
+}

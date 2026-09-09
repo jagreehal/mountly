@@ -29,7 +29,9 @@ jobs:
           registry-url: "https://registry.npmjs.org"
 
       - name: Update npm
-        run: npm install -g npm@11 # ponytail: npm 12 changed `npm info --json` to an array, breaking changesets publish; unpin once changesets handles it
+        # npm 12 changed `npm info --json` to an array, which changesets publish
+        # cannot read. Unpin once changesets handles it.
+        run: npm install -g npm@11
 
       - name: Enable Corepack
         run: corepack enable

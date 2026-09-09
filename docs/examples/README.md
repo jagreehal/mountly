@@ -44,6 +44,10 @@ Widget source packages live alongside hosts: **`payment-breakdown`**, **`image-l
 
 17. **`cross-framework-bus/`** — React 19 + Vue + Svelte widgets on one page, communicating through a typed `mountly/bus` event bus. No framework imports another. See [cross-framework-bus/README.md](cross-framework-bus/README.md).
 
+18. **`react-embed/`** — An ordinary React component published as a **script-tag custom element**: `defineElementsConfig` reads its props type and emits `embed.js`, `embed.d.ts` and `custom-elements.json`. The consuming page installs nothing. See [react-embed/README.md](react-embed/README.md) and [Script-tag component libraries](https://mountly.dev/concepts/script-embeds/).
+
+19. **`mixed-embed/`** — The same build with React, Vue and Svelte components side by side and **no compiler plugin configured**; each framework loads only when one of its elements connects. See [mixed-embed/README.md](mixed-embed/README.md).
+
 ## Run commands and ports
 
 Each example has its own dedicated port, so they all run side-by-side without collisions.
@@ -67,6 +71,8 @@ Each example has its own dedicated port, so they all run side-by-side without co
 | `multi-widget-bundle` (static)        | **5175** | (served by `plain-html`'s static server)                                  | <http://localhost:5175/docs/examples/multi-widget-bundle/>          |
 | `monorepo-component-library` (static) | **5175** | (served by `plain-html`'s static server)                                  | <http://localhost:5175/docs/examples/monorepo-component-library/>   |
 | `cross-framework-bus` (Vite)          | **5183** | `cd docs/examples/cross-framework-bus && pnpm dev`                        | <http://localhost:5183>                                             |
+| `react-embed` (static)                | **5197** | `pnpm --filter react-embed-example build && pnpm exec serve . -l 5197`    | <http://localhost:5197/docs/examples/react-embed/host.html>         |
+| `mixed-embed` (static)                | **5198** | `pnpm --filter mixed-embed-example build && pnpm exec serve . -l 5198`    | <http://localhost:5198/docs/examples/mixed-embed/host.html>         |
 
 All Vite servers use `strictPort: true`: they fail loudly if the port is already taken instead of picking another. Playwright reuses ports 5174 (demo) and 5175 (repo-root static server); `marketing-site` uses 5176 in its own webServer entry by design.
 
@@ -95,6 +101,8 @@ The self-contained build needs **no import map at all**: drop the file in a page
 | Quick prototype / single embed          | **Self-contained**                   | Faster to wire; bytes only matter in production        |
 
 Numbers are representative. Measure your own widgets in DevTools. For the runnable side-by-side: same widgets, two import maps, see [plain-html/README.md](plain-html/README.md).
+
+Both rows above assume the host runs mountly. When the consumer is another team's page and you want them to install nothing at all, ship a **script-tag embed** instead: `defineElementsConfig` publishes the component as a custom element behind one `embed.js`. See [react-embed/README.md](react-embed/README.md) and [Script-tag component libraries](https://mountly.dev/concepts/script-embeds/).
 
 ## When to use mountly
 

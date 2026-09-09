@@ -3,8 +3,9 @@ title: Agent Skills
 description: Install Mountly skills so coding agents scaffold MCP Apps Views with mountly-mcp create.
 ---
 
-[Agent Skills](https://agentskills.io/) steer coding agents. Mountly ships four
-so an agent scaffolds Views with `mountly-mcp`, not by cloning SDK examples.
+[Agent Skills](https://agentskills.io/) steer coding agents. The `mountly-mcp`
+plugin ships four, so an agent scaffolds Views with `mountly-mcp` rather than by
+cloning SDK examples.
 
 | Skill                                                                                                                       | Job                                   | Ask for                             |
 | --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- | ----------------------------------- |
@@ -27,7 +28,7 @@ Mountly for Views.
 
 ### Skills CLI
 
-Root `skills/` symlinks `plugins/mountly-mcp/skills/`:
+Root `skills/` symlinks every plugin's skills:
 
 ```bash
 npx skills add jagreehal/mountly
@@ -39,6 +40,13 @@ Copy `plugins/mountly-mcp/skills/*/SKILL.md` into `.claude/skills/` or
 `.cursor/skills/`.
 
 Ask "What skills do you have?" You should see all four names above.
+
+## Not building an MCP App?
+
+Publishing a component as a script-tag custom element is a separate plugin:
+[`publish-component-embed`](https://github.com/jagreehal/mountly/blob/main/plugins/mountly-embed/skills/publish-component-embed/SKILL.md),
+installed with `/plugin install mountly-embed@mountly`. See
+[Script-tag component libraries](/mountly/concepts/script-embeds/).
 
 ## After install
 
@@ -56,11 +64,11 @@ for greenfield Views.
 
 After skills change on `main`:
 
-1. `.claude-plugin/marketplace.json` lists `mountly-mcp`.
+1. `.claude-plugin/marketplace.json` lists `mountly-mcp` and `mountly-embed`.
 2. Root `skills/*` symlinks resolve.
 3. Users install via the plugin commands above. Skills are not a separate npm package.
 
 ## Next
 
-- [Quick start](/mcp-apps/quick-start/) for hand-wired Vite
-- [Dev and verify](/mcp-apps/development-and-verification/) for `dev` and `verify`
+- [Quick start](/mountly/mcp-apps/quick-start/) for hand-wired Vite
+- [Dev and verify](/mountly/mcp-apps/development-and-verification/) for `dev` and `verify`

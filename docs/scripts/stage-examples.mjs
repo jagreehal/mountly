@@ -68,6 +68,10 @@ const STATIC_EXAMPLE_DIRS = [
   "multi-vertical-host",
   "multi-widget-bundle",
   "monorepo-component-library",
+  // Script-tag embeds. Their `dist/` is built by the workspace build above, and
+  // `defineElementsConfig` sets a relative `base`, so the output stages as-is.
+  "react-embed",
+  "mixed-embed",
 ];
 
 const PAYMENT_FIXTURES = {
@@ -176,8 +180,8 @@ function stageStaticExamples() {
     const src = join(EXAMPLES_SRC, name);
     const dest = join(PUBLIC_ROOT, "examples", name);
     copyDir(src, dest);
-    // Drop package.json / README from staged output to keep public lean
-    for (const drop of ["package.json", "README.md", "node_modules"]) {
+    // Drop source and package files from staged output to keep public lean
+    for (const drop of ["package.json", "README.md", "node_modules", "tsconfig.json"]) {
       rmSync(join(dest, drop), { recursive: true, force: true });
     }
   }

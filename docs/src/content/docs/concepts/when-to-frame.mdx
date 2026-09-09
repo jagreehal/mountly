@@ -1,6 +1,6 @@
 ---
 title: When to frame
-description: Flip an untrusted vertical behind an iframe without rewriting the widget — and without a gateway.
+description: Flip an untrusted vertical behind an iframe without rewriting the widget, and without a gateway.
 ---
 
 Shared-context import maps are mountly's default: one React, fast mounts, no second bootstrap. That stops being the right trade when you cannot vouch for what a vertical does to `window`, prototypes, or global listeners.
@@ -45,7 +45,7 @@ registerCustomElement("legacy-billing", () =>
 );
 ```
 
-## What framing buys — and costs
+## What framing buys, and what it costs
 
 |                     | Shared (`moduleUrl`)  | Iframe (`isolation: "iframe"`)                                  |
 | ------------------- | --------------------- | --------------------------------------------------------------- |

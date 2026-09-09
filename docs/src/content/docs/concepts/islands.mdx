@@ -44,14 +44,14 @@ and mount the client module.
 <script type="module" src="/mountly/auto.js"></script>
 ```
 
-`auto.js` (2.3 KB gzipped) wires every island on the page. Islands added later —
-by another widget, an htmx swap, a Turbo frame — are picked up automatically, so
+`auto.js` (2.3 KB gzipped) wires every island on the page. It also picks up
+islands that another widget, an htmx swap or a Turbo frame adds later, so
 nested islands need no ordering configuration.
 
 Two ways in:
 
-- **The script tag** — `mountly/auto`, nothing for you to write
-- **As a dependency** — `import { mountly } from "mountly"` when you need an
+- **The script tag**: `mountly/auto`, nothing for you to write
+- **As a dependency**: `import { mountly } from "mountly"` when you need an
   alias map, a custom loader, or a scoped root
 
 Either way mountly stays composable with Astro, Next.js, Remix, Rails, Django,
@@ -84,13 +84,13 @@ client runtime.
 | -------------------- | ------------------ | ------------------------------------------------------------------------------ |
 | `data-mountly`       | Required           | Module URL, or a key in the host script's `data-mountly-urls` map              |
 | `data-on`            | `click`            | Activation trigger(s). `never` leaves the island inert until code mounts it    |
-| `data-preload`       | None               | Fetch the module without mounting — usually `hover` or `viewport`              |
+| `data-preload`       | None               | Fetch the module without mounting. Usually `hover` or `viewport`               |
 | `data-props`         | `{}`               | JSON props. A `<script type="application/json">` child works too               |
 | `data-target`        | The island element | Where to mount, when the trigger is not the container                          |
 | `data-toggle`        | Off                | A second activation unmounts instead of doing nothing                          |
 | `data-css`           | Sibling `.css`     | `none`, or an explicit stylesheet URL                                          |
 | `data-module-url`    | `data-mountly`     | Bundle URL reported to the widget as `moduleUrl`, when the island loads by key |
-| `data-mountly-state` | Set by mountly     | `idle` / `loading` / `mounted` / `error` — style each with CSS                 |
+| `data-mountly-state` | Set by mountly     | `idle` / `loading` / `mounted` / `error`, styled with CSS                      |
 
 A trigger reads as `kind` or `kind:arg`, so a trigger never needs a second
 attribute to hold its argument:
@@ -128,7 +128,7 @@ There is one rule: **`data-mountly-state="mounted"` in the server's HTML means
 </div>
 ```
 
-**Use when:** the server-rendered HTML is complete and functional — product
+**Use when:** the server-rendered HTML is complete and functional: product
 cards, links, summary panels, read-only content.
 
 Omit the attribute and the island activates on its trigger, replacing whatever
@@ -141,7 +141,7 @@ listeners, browser APIs, or a different DOM shape from the server fallback.
 </div>
 ```
 
-If you need to mount over server content anyway, call `mount(el)` — an explicit
+If you need to mount over server content anyway, call `mount(el)`, an explicit
 act, rather than a flag the markup carries.
 
 ## No-JS fallback

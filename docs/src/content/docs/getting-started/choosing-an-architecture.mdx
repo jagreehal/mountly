@@ -29,7 +29,7 @@ mountly fits these cases:
 ## Decision ladder
 
 <Mermaid
-  title="Decision ladder: start by asking whether you can merge into a monorepo or publish an npm package. If yes, use a monorepo with a shared library and lazy routes. If no, ask whether the host page is one you do not own. For a CMS, static, or legacy page, use a mountly widget as a custom element drop-in. If you own the shell, ask whether regions share one Router, Query, or Redux graph. Keep one app shell when they do. Otherwise, ask whether teams need independent CDN deploys. Use mountly as an npm dependency when they do not, or a mountly manifest with import-map verticals when they do. Add Single-SPA or a vendor MFE platform when you also need route-to-app orchestration, staged rollouts, or runtime release coordination."
+  title="Decision ladder: start by asking whether you can merge into a monorepo or publish an npm package. If yes, use a monorepo with a shared library and lazy routes. If no, ask whether the host page is one you do not own. For a CMS, static, or legacy page, publish a mountly script-tag embed. If you own the shell, ask whether regions share one Router, Query, or Redux graph. Keep one app shell when they do. Otherwise, ask whether teams need independent CDN deploys. Use mountly as an npm dependency when they do not, or a mountly manifest with import-map verticals when they do. Add Single-SPA or a vendor MFE platform when you also need route-to-app orchestration, staged rollouts, or runtime release coordination."
   chart={`flowchart TD
   start[Need Product A UI in another team's shell]
   q1{Can you merge into a monorepo or publish an npm package?}
@@ -39,7 +39,7 @@ mountly fits these cases:
   q5{Need route-to-app orchestration or rollout controls?}
   monorepo[Monorepo + shared lib + lazy routes]
   mountlyNpm[mountly as npm dep in host app]
-  mountlyWidget[mountly widget + custom element drop-in]
+  mountlyWidget[mountly script-tag embed]
   mountlyManifest[mountly manifest + import map verticals]
   singleSpa[Single-SPA / vendor MFE platform]
   oneApp[One app shell - do not split]
@@ -62,14 +62,14 @@ q5 -->|Yes| singleSpa`}
 | Approach                   | When                                              | Tradeoff                                   |
 | -------------------------- | ------------------------------------------------- | ------------------------------------------ |
 | Monorepo npm lib           | Same org, shared CI is OK                         | Merge coordination                         |
-| mountly widget drop-in     | Foreign host with embedded interactive regions    | Import map / version pinning               |
+| mountly script-tag embed   | Foreign host that should install nothing          | One framework copy per distribution        |
 | mountly manifest verticals | Independent CDN deploys into one page shell       | Shared React version agreement             |
 | mountly iframe widgets     | Untrusted or legacy verticals, one shared page    | A framework bootstrap per widget           |
 | Module Federation          | Deep horizontal integration, shared build graph   | `shared` blocks, tooling complexity        |
 | Single-SPA                 | Route-owned app shells with browser orchestration | Routing and platform ownership             |
 | Subdomain per product      | Fully separate products                           | No shared page shell; routing at DNS level |
 
-mountly does **not** replace subdomain separation. If Product A and the platform are truly separate products with no shared page, deploy them under different subdomains and skip composition entirely.
+mountly does **not** replace subdomain separation. If Product A and the platform are separate products with no shared page, deploy them under different subdomains and skip composition entirely.
 
 ---
 
@@ -82,10 +82,10 @@ Structure:
 ```
 my-org/
 ├── packages/
-│   ├── ui-lib/          # shared components — no mountly
+│   ├── ui-lib/          # shared components, no mountly
 │   └── widgets/         # mountly widgets consuming ui-lib
 └── apps/
-    └── platform/        # host app — lazy-imports widgets
+    └── platform/        # host app, lazy-imports widgets
 ```
 
 - Each team owns a vertical folder with strict import boundaries.
@@ -98,26 +98,45 @@ This is what Reddit commenters mean by "monorepo + lazy loaded feature modules u
 
 ---
 
-## Stage 2: Widget drop-in for foreign hosts
+## Stage 2: Script-tag embed for foreign hosts
 
 **Best when:** the host page is owned by another team (CMS, static HTML, legacy Rails/Django shell) and you need one or a few interactive regions that call **your** API.
 
-Product A ships a widget bundle. The platform team drops a custom element — they never touch React:
+Publish the component as a custom element. The build reads its props type and emits `embed.js`; the platform team adds one script tag and writes the tag:
+
+```html
+<script type="module" src="https://ui.acme.com/product-a/1.2.0/embed.js"></script>
+<product-a-settings tenant-id="acme" data-mountly-trigger="viewport"></product-a-settings>
+```
+
+- The host installs nothing: no package, no import map, no init call, no mountly.
+- No Module Federation `shared` block. No Single-SPA shell.
+- Attributes are typed by your props: `tenant-id` arrives as a string, a `count` prop as a number, an `onSave` prop as a `save` DOM event.
+- Product A deploys `dist/` to a versioned URL; the platform updates one URL when you release.
+- When Product A becomes standalone: keep the same components, swap the host page. No rewrite.
+
+The trade is one framework copy per distribution. Pay it for one team's components on a page you do not own. Stage 3 below is where you should stop paying it.
+
+**Examples:**
+
+- [react-embed](https://github.com/jagreehal/mountly/tree/main/docs/examples/react-embed) and [mixed-embed](https://github.com/jagreehal/mountly/tree/main/docs/examples/mixed-embed): the script-tag path, with three frameworks in one build.
+- [Script-tag component libraries](/mountly/concepts/script-embeds/): the full guide.
+
+### Variant: custom-element drop-in when the host already runs mountly
+
+If the host page already loads the mountly runtime, because it hosts widgets from several teams, ship the same component as a widget bundle placed with `<mountly-feature>` or a `data-mountly` island. It then shares the host's one React:
 
 ```html
 <product-a-settings trigger="viewport" props='{"tenantId":"acme"}'></product-a-settings>
 ```
 
-- No Module Federation `shared` block.
-- No Single-SPA shell.
-- Product A deploys `dist/peer.js` to a CDN; the platform updates one URL when you release.
-- When Product A becomes standalone: keep the same widget artifact, swap the host page. No rewrite.
+That is the Stage 3 shape arriving early. Reach for it only when the host is already paying for the runtime; otherwise the script-tag embed above asks less of everyone.
 
 **Examples:**
 
-- [Platform embed scenario](https://github.com/jagreehal/mountly/tree/main/docs/examples/platform-embed) — Product A inside another team's platform (mirrors the classic "should I use micro frontends?" question).
-- [marketing-site](https://github.com/jagreehal/mountly/tree/main/docs/examples/marketing-site) — dev ships widget, marketing drops HTML.
-- [plain-html](https://github.com/jagreehal/mountly/tree/main/docs/examples/plain-html) — zero bundler on the host.
+- [Platform embed scenario](https://github.com/jagreehal/mountly/tree/main/docs/examples/platform-embed): Product A inside another team's platform.
+- [marketing-site](https://github.com/jagreehal/mountly/tree/main/docs/examples/marketing-site): a developer ships the widget, marketing drops the HTML.
+- [plain-html](https://github.com/jagreehal/mountly/tree/main/docs/examples/plain-html): no bundler on the host.
 
 This is **Stage 2**, not Stage 4. Do not jump to manifest-driven multi-vertical architecture for a single customization.
 
@@ -136,7 +155,7 @@ This is **Stage 2**, not Stage 4. Do not jump to manifest-driven multi-vertical 
 
 - [multi-vertical-host](https://github.com/jagreehal/mountly/tree/main/docs/examples/multi-vertical-host)
 - [Manifest & host shells](/mountly/concepts/manifest-hosts/)
-- [Micro-frontends guide](https://github.com/jagreehal/mountly/blob/main/docs/micro-frontends.md) (advanced — read Stage 1 and 2 first)
+- [Micro-frontends guide](https://github.com/jagreehal/mountly/blob/main/docs/micro-frontends.md) (advanced; read Stage 1 and 2 first)
 
 Key difference from Module Federation: React is shared through the **import map**, not a runtime `shared` negotiation block. The remote's fragment auto-wires types and exposes.
 
@@ -147,13 +166,12 @@ Key difference from Module Federation: React is shared through the **import map*
 ## Stage 3b: Iframe widgets, when the shared context is the problem
 
 **Best when:** the reason you want a boundary is that you cannot trust what a
-vertical does to the page — legacy globals, `window` mutation, prototype
+vertical does to the page: legacy globals, `window` mutation, prototype
 patching, CSS written before anyone thought about isolation.
 
 Stages 1–3 all share one JavaScript context. Shadow DOM scopes styles, but a
 vertical can still reach `window`, register global listeners and break another
-team at runtime — which quietly costs you the independent deployability the
-split was for. If that describes your codebase, the browser will enforce the
+team at runtime, which costs you the independent deployability you split for. If that describes your codebase, the browser will enforce the
 boundary for you:
 
 ```ts
@@ -173,8 +191,8 @@ vertical.
 
 The trade is real: each widget bootstraps its own framework, so this is slower
 than Stage 3 and you should not reach for it by default. mountly prefetches the
-frame document at preload time — hover, viewport, idle — which buys back the
-network half but not the runtime half.
+frame document at preload time, on hover, viewport or idle. That buys back the
+network half and not the runtime half.
 
 See [Iframe widgets](https://github.com/jagreehal/mountly/blob/main/docs/micro-frontends.md#iframe-widgets-strong-isolation).
 
@@ -186,22 +204,22 @@ See [Iframe widgets](https://github.com/jagreehal/mountly/blob/main/docs/micro-f
 | ---------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
 | Route-to-app routing, staged rollouts, or runtime release coordination | Single-SPA, a vendor MFE platform, or a delivery platform with those controls |
 | Fully separate products, no shared page                                | Subdomain per product                                                         |
-| Temporary customization in a monorepo you control                      | Stage 1 monorepo — do not adopt MFE tooling                                   |
+| Temporary customization in a monorepo you control                      | Stage 1 monorepo; do not adopt MFE tooling                                    |
 | Shared global client state across every region                         | One app shell                                                                 |
 
 ---
 
 ## FAQ (from common objections)
 
-### "Module Federation + Vite is state of the art — should I use that?"
+### "Module Federation + Vite is state of the art. Should I use that?"
 
-For **full app remotes** with deep horizontal integration, maybe. For **component-sized features** dropped into an existing page, Federation adds `shared` block maintenance, duplicate-React risk, and build-time coupling — without giving you HTML-addressable widgets or on-demand triggers.
+For **full app remotes** with deep horizontal integration, maybe. For **component-sized features** dropped into an existing page, Federation adds `shared` block maintenance, duplicate-React risk, and build-time coupling, and gives you no HTML-addressable widgets or on-demand triggers in return.
 
 mountly's Vite story (`mountlyRemote` + `mountlyHostPlugin`) gives typed native ESM imports and import-map sharing instead. See [vite-host-remotes-url](https://github.com/jagreehal/mountly/tree/main/docs/examples/vite-host-remotes-url).
 
 ### "Won't I load duplicate React and break hooks?"
 
-Yes — if the host bundles React **and** a vertical ships a self-contained `dist/index.js` that also bundles React. Fix:
+Yes, if the host bundles React **and** a vertical ships a self-contained `dist/index.js` that also bundles React. Fix:
 
 - Use `dist/peer.js` on React hosts.
 - Pin one React version in the host import map.

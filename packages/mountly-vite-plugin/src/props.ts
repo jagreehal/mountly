@@ -415,8 +415,8 @@ export interface ExtractOptions {
  * the caller must fail loudly rather than publish an element that silently
  * ignores everything the consumer sets.
  *
- * ponytail: single-file analysis. A props type imported from another module
- * reads as `null`; declare `props` on the element entry for those.
+ * Analysis is single-file. A props type imported from another module reads as
+ * `null`; declare `props` on the element entry for those.
  */
 export function extractProps(code: string, options: ExtractOptions = {}): PropSpec[] | null {
   const file = options.file ?? "component.tsx";

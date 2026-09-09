@@ -1,52 +1,48 @@
 ---
 title: When not to use mountly
-description: Three situations where the framework's native primitives are a better fit than mountly.
+description: Cases where your framework's own tools are enough.
 ---
 
-A tool earns trust by naming its edges. mountly is a small, opinionated runtime for on-intent activation across hosts it does not own — three situations fall outside that.
+Skip Mountly when the host already owns the problem.
 
-## You have a single SPA where the bundler owns every surface
+## One app, one bundler
 
-If your project is one React, Next, or Svelte app and every component lives inside the same bundle, **framework-native lazy routes are simpler**:
+If every component lives in one React, Next, or Svelte app, use that framework's
+lazy routes:
 
 ```tsx
-// React example — already has on-demand loading via React.lazy + Suspense
 const PaymentBreakdown = lazy(() => import("./PaymentBreakdown"));
 ```
 
-You'd be adding a second runtime to solve a problem the framework already solves. mountly's value is **on-intent activation across heterogeneous hosts**: static HTML, CMS pages, plain modules. That value compounds when the host doesn't own a bundler.
+A second runtime does not help here. Mountly earns its keep when the page is
+static HTML, a CMS template, or another team's shell.
 
-If your situation is "I want a button that lazy-loads a modal in my Next app", use `next/dynamic` or `React.lazy`.
+## SSR and hydration
 
-## You need SSR plus hydration
+Mountly mounts after the page is interactive. It does not hydrate
+server-rendered HTML. For first-paint SSR plus hydration, use Astro, Next,
+Remix, or SvelteKit islands.
 
-mountly mounts widget modules **on demand**, in light DOM by default and in a shadow root when `shadow: true`. It is not a hydration runtime.
+Those frameworks can still own the shell while Mountly delivers one portable
+widget that needs a custom tag or its own release path.
 
-If you need:
+## Staged rollouts and traffic splits
 
-- Server-rendered HTML to be sent on first paint, then made interactive.
-- The same component tree to work on the server and client.
-- Astro / Next / Remix island patterns.
+Mountly loads modules, validates manifests, and mounts features. Your release
+system still owns semver policy, staged rollouts, and releases that must move
+together. If you need those controls inside the browser composition layer, use
+a platform built for that.
 
-…use those frameworks' islands. mountly mounts widgets _after_ the page is interactive; it doesn't take over server-rendered HTML.
+[`createFeatureRouter`](/mountly/concepts/microfrontends/#routing-across-verticals)
+maps URL segments to features when you want route-shaped composition without
+that orchestration layer.
 
-The two layers coexist well: Astro, Next, Remix, or SvelteKit render the shell, routes, and server content, while mountly handles a portable widget that needs custom-tag placement, on-demand activation, or a separate component release path. mountly composes with those frameworks, but it does not replace their hydration story.
+## When Mountly fits
 
-## You need deployment orchestration
+- Framework components on a page you do not fully own
+- HTML-addressable tags for CMS or partner teams
+- Intent-based loading (viewport, click, idle) with a shared cache story
+- Style isolation via `shadow: true` when the host's CSS would fight you
 
-mountly can compose microfrontends with separate deployments. It loads modules, validates manifests, mounts features, and handles their browser lifecycle.
-
-[`createFeatureRouter`](/mountly/concepts/microfrontends/#routing-across-verticals) maps URL segments to features, and each vertical can route below its segment. Your release system remains responsible for semver policy, staged rollouts, and releases that must move together. If you need those controls inside the browser composition layer itself, use single-spa or a vendor MFE platform.
-
-mountly can serve as the full browser composition layer, or sit inside a route-level MFE to load one team's widgets. The release controls and routing model you need decide which.
-
-## When mountly fits
-
-- You ship widgets that drop into hosts you don't fully control.
-- You need framework components to be addressable from HTML.
-- You want one runtime + one cache story across all of them.
-- You want intent-based loading without writing a new lazy-loader for every button.
-- You want style isolation between the host page and the component.
-- You want declarative HTML usage (`<signup-card>` or `<mountly-feature>`) for non-app teams to drop into pages.
-
-Cross-host delivery and separate component release paths provide the strongest reasons to add mountly.
+More on the job: [Positioning](/mountly/getting-started/positioning/). More on
+release shapes: [Choosing an architecture](/mountly/getting-started/choosing-an-architecture/).

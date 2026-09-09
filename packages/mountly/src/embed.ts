@@ -38,8 +38,8 @@ export type MountlyElement<Props = Record<string, unknown>> = HTMLElement &
   };
 
 /**
- * ponytail: an untyped prop guesses from the literal. The round-trip check keeps
- * "1.0" and "007" strings; type the component's props to remove the guess.
+ * An untyped prop guesses from the literal. The round-trip check keeps "1.0"
+ * and "007" as strings; type the component's props to remove the guess.
  */
 function auto(raw: string): unknown {
   try {

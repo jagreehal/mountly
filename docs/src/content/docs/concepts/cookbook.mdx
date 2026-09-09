@@ -1,6 +1,6 @@
 ---
 title: Cookbook
-description: Common patterns for using mountly in production — forms, auth, navigation, loading states, error handling, and more.
+description: "Common patterns for using mountly in production: forms, auth, navigation, loading states, and error handling."
 ---
 
 ## Form submission from a widget
@@ -33,7 +33,7 @@ attach(widget, {
   activateOn: onTrigger.click(document.getElementById("cta")),
   props: {
     onSuccess: (email) => {
-      // Host callback — update page UI, fire analytics, redirect
+      // Host callback: update page UI, fire analytics, redirect
       document.getElementById("thank-you").style.display = "block";
     },
   },
@@ -75,7 +75,7 @@ For many widgets on the same page, pass auth once via the event bus or a shared 
 
 ## Navigation from a widget
 
-A widget needs to navigate the host page. Use the event bus — the widget emits a navigation event, the host listens:
+A widget needs to navigate the host page. Use the event bus: the widget emits a navigation event and the host listens.
 
 ```ts
 // host.js
@@ -86,7 +86,7 @@ const bus = createEventBus<{
 }>();
 
 bus.on("navigate", ({ path }) => {
-  // Host controls navigation — SPA router, window.location, etc.
+  // Host controls navigation: SPA router, window.location, etc.
   window.location.href = path;
 });
 ```
@@ -141,7 +141,7 @@ createOnDemandFeature({
 });
 ```
 
-The data fetch runs in parallel with the module fetch, and the result is cached by `paymentId`. Hover a second payment — cache hit, instant render.
+The data fetch runs in parallel with the module fetch, and the result is cached by `paymentId`. Hover a second payment and you get a cache hit.
 
 ## Error handling
 
@@ -210,7 +210,7 @@ router.beforeEach(() => {
 
 ## Multiple mount targets for one feature
 
-A single feature can mount into multiple containers — useful for showing the same widget in a sidebar and a modal:
+A single feature can mount into multiple containers, which covers the same widget in a sidebar and a modal:
 
 ```ts
 const feature = createOnDemandFeature({/* ... */});
@@ -277,7 +277,7 @@ attach(widget, {
 ```
 
 ```tsx
-// Widget — renders host-provided content inside its own shell
+// Widget: renders host-provided content inside its own shell
 function Dialog({ slotHTML, onClose }: { slotHTML: string; onClose: () => void }) {
   return (
     <div class="dialog-overlay">

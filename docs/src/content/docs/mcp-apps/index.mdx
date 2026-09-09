@@ -14,7 +14,7 @@ cd my-app && pnpm install && pnpm dev
 
 That opens a sandboxed AppBridge host against your `server.mjs`. Point Claude
 Desktop or VS Code at `serve-stdio.mjs` when you leave the laptop preview.
-[Host matrix](/mcp-apps/host-matrix/).
+[Host matrix](/mountly/mcp-apps/host-matrix/).
 
 ## Agent Skills
 
@@ -25,7 +25,7 @@ Desktop or VS Code at `serve-stdio.mjs` when you leave the laptop preview.
 | [`convert-web-app`](https://github.com/jagreehal/mountly/blob/main/plugins/mountly-mcp/skills/convert-web-app/SKILL.md)     | "Turn my component into an MCP App" |
 | [`migrate-ext-apps`](https://github.com/jagreehal/mountly/blob/main/plugins/mountly-mcp/skills/migrate-ext-apps/SKILL.md)   | "Migrate from ext-apps"             |
 
-Install steps: [Agent Skills](/mcp-apps/agent-skills/).
+Install steps: [Agent Skills](/mountly/mcp-apps/agent-skills/).
 
 ```ts
 import { createMcpView } from "mountly-mcp/react";
@@ -39,13 +39,13 @@ createMcpView(Dashboard);
 
 ## Pick a path
 
-| You have                         | You run                                                    |
-| -------------------------------- | ---------------------------------------------------------- |
-| Empty folder                     | `mountly-mcp create`                                       |
-| Existing React / Vue / Svelte UI | `createMcpView` + Vite                                     |
-| Second View in the same project  | `mountly-mcp add`                                          |
-| Production MCP server            | `registerMcpApps()` before `connect`                       |
-| Host or bridge protocol work     | [`@modelcontextprotocol/ext-apps`](/mcp-apps/vs-ext-apps/) |
+| You have                         | You run                                                            |
+| -------------------------------- | ------------------------------------------------------------------ |
+| Empty folder                     | `mountly-mcp create`                                               |
+| Existing React / Vue / Svelte UI | `createMcpView` + Vite                                             |
+| Second View in the same project  | `mountly-mcp add`                                                  |
+| Production MCP server            | `registerMcpApps()` before `connect`                               |
+| Host or bridge protocol work     | [`@modelcontextprotocol/ext-apps`](/mountly/mcp-apps/vs-ext-apps/) |
 
 You keep auth, transports, prompts, ordinary tools, and deploy. Mountly owns
 View build, bridge HTML, and registration. The wire protocol stays on
@@ -77,17 +77,17 @@ Floor: Node 20+, React 19, Vite 8. Check with
 
 ## Docs map
 
-| Page                                                      | Use when                                      |
-| --------------------------------------------------------- | --------------------------------------------- |
-| [vs ext-apps](/mcp-apps/vs-ext-apps/)                     | You wonder if you need the official SDK alone |
-| [Quick start](/mcp-apps/quick-start/)                     | You wire Vite by hand                         |
-| [Host matrix](/mcp-apps/host-matrix/)                     | You connect Claude, VS Code, or ChatGPT       |
-| [Examples](/mcp-apps/examples/)                           | You want copy-paste shapes                    |
-| [Build](/mcp-apps/build-and-artifacts/)                   | Multi-View manifests                          |
-| [Production](/mcp-apps/production-integration/)           | Existing server install                       |
-| [Dev and verify](/mcp-apps/development-and-verification/) | `dev`, `doctor`, CI                           |
-| [How it works](/mcp-apps/how-it-works/)                   | Lifecycle and text-only hosts                 |
+| Page                                                              | Use when                                      |
+| ----------------------------------------------------------------- | --------------------------------------------- |
+| [vs ext-apps](/mountly/mcp-apps/vs-ext-apps/)                     | You wonder if you need the official SDK alone |
+| [Quick start](/mountly/mcp-apps/quick-start/)                     | You wire Vite by hand                         |
+| [Host matrix](/mountly/mcp-apps/host-matrix/)                     | You connect Claude, VS Code, or ChatGPT       |
+| [Examples](/mountly/mcp-apps/examples/)                           | You want copy-paste shapes                    |
+| [Build](/mountly/mcp-apps/build-and-artifacts/)                   | Multi-View manifests                          |
+| [Production](/mountly/mcp-apps/production-integration/)           | Existing server install                       |
+| [Dev and verify](/mountly/mcp-apps/development-and-verification/) | `dev`, `doctor`, CI                           |
+| [How it works](/mountly/mcp-apps/how-it-works/)                   | Lifecycle and text-only hosts                 |
 
 Catalog-driven generative UI lives under
-[Generative UI](/concepts/generative-ui/). Skip it until `createMcpView` is
+[Generative UI](/mountly/concepts/generative-ui/). Skip it until `createMcpView` is
 boring.

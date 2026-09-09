@@ -7,7 +7,7 @@ mountly has three layers and one state machine.
 
 ## Three layers
 
-### 1. Components — your code
+### 1. Components: your code
 
 Plain framework components. No special APIs, no decorators, no new model. You write the same code you write today.
 
@@ -26,7 +26,7 @@ export default function SignupCard({ headline }: { headline: string }) {
 }
 ```
 
-### 2. Widgets — framework-agnostic mounting units
+### 2. Widgets: framework-agnostic mounting units
 
 A framework adapter wraps the component into a **widget**: an object with `mount(container, props)` and `unmount(container)`. The widget knows nothing about _when_ it loads, only _how_ to render.
 
@@ -40,7 +40,7 @@ export default createWidget(SignupCard, { styles });
 
 Each adapter ([React](/mountly/frameworks/react/), [Vue](/mountly/frameworks/vue/), [Svelte](/mountly/frameworks/svelte/)) exposes the **same** `createWidget(Component, { styles })` signature. By default the widget mounts in light DOM so the host's design system applies. Pass `shadow: true` when you need a hard style boundary (CMS embeds, third-party hosts).
 
-### 3. Features — the on-demand lifecycle
+### 3. Features: the on-demand lifecycle
 
 A **feature** wraps a widget with a trigger, a module loader, optional data fetching, dual caching, and a state machine. You use this layer in production.
 
@@ -87,7 +87,7 @@ A trigger decides when a feature moves between states. Seven are built in:
 | `media`      | Mount when a CSS media query matches.                        | Responsive-only UI.                        |
 | `url-change` | Mount on `popstate`/`hashchange`/`pushState`/`replaceState`. | Route-driven content.                      |
 
-You can also add [custom triggers](/mountly/api/trigger-plugins/) — swipe, long-press, keyboard chord — with a single assignment, without touching the runtime.
+You can add [custom triggers](/mountly/api/trigger-plugins/) such as swipe, long-press or a keyboard chord with a single assignment, without touching the runtime.
 
 ## Dual caching
 
@@ -107,11 +107,11 @@ Both caches survive across re-mounts, so the second open of the same widget is i
 
 When you build a widget, the CLI emits two ESM entries:
 
-### `dist/index.js` — self-contained
+### `dist/index.js`, self-contained
 
 Includes the component, the adapter, and the framework. Drop it into any page and it works without host setup. A representative React widget weighs about 66 KB gz.
 
-### `dist/peer.js` — peer build
+### `dist/peer.js`, peer build
 
 Excludes the framework. The host provides `react`, `react-dom`, `react-dom/client`, and `react/jsx-runtime` via an import map. Each widget weighs about 3 KB gz, plus one 59 KB gz copy of React shared across all of them.
 

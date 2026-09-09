@@ -48,6 +48,19 @@ export default defineConfig({
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
     },
+    // Embed styling/isolation is the cross-browser risk surface (CSSOM,
+    // adoptedStyleSheets, custom elements). Keep the rest of the suite on
+    // Chromium so CI time stays bounded.
+    {
+      name: "embed-firefox",
+      use: { ...devices["Desktop Firefox"] },
+      testMatch: /embed-styling\.spec\.ts$/,
+    },
+    {
+      name: "embed-webkit",
+      use: { ...devices["Desktop Safari"] },
+      testMatch: /embed-styling\.spec\.ts$/,
+    },
   ],
   webServer: [
     {

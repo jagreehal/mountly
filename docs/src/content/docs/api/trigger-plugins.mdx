@@ -4,7 +4,7 @@ description: The built-in triggers, the gesture primitives, and how to add a tri
 ---
 
 A trigger decides **when** an island loads and mounts. Eight ship with the core,
-and adding a ninth takes one line — there is no plugin API to learn, because the
+and adding a ninth takes one line. There is no plugin API to learn, because the
 trigger table is already the registry.
 
 ## The built-in triggers
@@ -56,7 +56,7 @@ mountly();
 <div data-mountly="/w.js" data-on="double-tap:250"></div>
 ```
 
-`run` may fire many times — the core ignores repeats once the island is
+`run` may fire many times. The core ignores repeats once the island is
 mounted (unless `data-toggle` is set), so a trigger does not need to
 de-duplicate. Return a teardown that removes whatever you attached; the core
 calls it when the island is torn down.
@@ -99,7 +99,7 @@ detection ships to your users.
 | `eachLongPress` | `(el, handler, opts?)` | `duration` ms (`500`), `tolerance` px (`10`)                                    |
 | `eachKeyboard`  | `(handler, opts)`      | `key` (required), `meta`, `shift`, `alt`, `preventDefault`                      |
 
-Each also has a one-shot promise form — `onSwipe`, `onLongPress`, `onKeyboard` —
+Each also has a one-shot promise form (`onSwipe`, `onLongPress`, `onKeyboard`)
 for `await`-style code outside the island lifecycle.
 
 ## Related

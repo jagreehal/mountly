@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Mixed-framework embed</title>
+    <script type="module" src="./dist/embed.js"></script>
+  </head>
+  <body>
+    <acme-react-card balance="12" currency="GBP"></acme-react-card>
+    <acme-vue-panel label="cards" count="3"></acme-vue-panel>
+    <acme-svelte-list rows="7"></acme-svelte-list>
+    <button id="more-rows">Add a row</button>
+    <script>
+      // React, Vue and Svelte on one page, from one build and one script tag.
+      document.querySelector("#more-rows").addEventListener("click", () => {
+        const list = document.querySelector("acme-svelte-list");
+        list.rows = Number(list.rows) + 1;
+      });
+    </script>
+  </body>
+</html>

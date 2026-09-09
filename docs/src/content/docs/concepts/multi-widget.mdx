@@ -76,7 +76,7 @@ Larger or commonly-shared dependencies can be marked `external` in `tsup`/`vite`
 
 The `?deps=react@19.2.5` query is important on esm.sh; without it, every package brings its own React copy and you'll hit the classic "Invalid hook call" / "two Reacts" dispatcher error.
 
-A test in the repo (`tests/fixtures/tanstack-table-widget.js` + spec) loads a non-trivial third-party package this way and proves it works through the mountly pipeline.
+A test in the repo (`tests/fixtures/tanstack-table-widget.js` plus its spec) loads a third-party package this way and renders it through the mountly pipeline.
 
 ## Light DOM vs shadow DOM for a bundle
 
@@ -183,7 +183,7 @@ function HeroSurface({ headline, ctaLabel, ctaHref }) {
 }
 
 export const hero = createWidget(HeroSurface);
-// + pricing, newsletter, etc. — all default light DOM
+// + pricing, newsletter, etc. All default to light DOM
 ```
 
 That same `Button`, `Card`, `Stack` library renders unchanged inside the
@@ -203,7 +203,7 @@ imports its pure UI library once and renders it twice on the same page:
 
 `tests/bridge-pure-ui-libraries.spec.ts` asserts the same shape for all
 three: same library, two consumers, same global stylesheet reaches both,
-light-DOM mode preserved, bundle JS fetched exactly once.
+light-DOM mode preserved, bundle JS fetched once.
 
 ### Why a separate bridge package?
 

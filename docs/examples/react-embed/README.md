@@ -25,9 +25,16 @@ What the build derived from the component's props type:
 - `dist/embed.d.ts` types every tag; `dist/custom-elements.json` gives editors
   HTML autocomplete.
 
-Setting `summary.balance = 1500` re-renders without remounting, so the
-component keeps its expanded state. `<acme-payment-methods>` is never
-downloaded until one appears on the page.
+Open **View details**, then press **Add 250 to balance** repeatedly. Each press
+assigns `summary.balance`, which re-renders without remounting, so the open
+panel stays open. `<acme-payment-methods>` is never downloaded until one appears
+on the page.
+
+Styling comes from Tailwind, added to the same build with `mergeConfig` and
+`@tailwindcss/vite`. `src/styles.css` imports the theme and utilities but not
+Preflight: this distribution renders in light DOM, so a global reset would land
+in the consumer's document and restyle their page. The container keeps a CSS
+module so host tokens like `--payments-color` can still reach in.
 
 Publish the whole `dist/` directory to a versioned HTTPS location. Consumers
 need only its `embed.js` URL; Mountly and React are bundled. For cross-origin

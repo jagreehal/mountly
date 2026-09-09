@@ -9,7 +9,8 @@ export default defineConfig({
   integrations: [
     starlight({
       title: "mountly",
-      description: "Framework components. Any page. On demand.",
+      description:
+        "Your components, on someone else's page — behind one script tag, or on a runtime you host.",
       logo: {
         src: "./public/logo.svg",
         replacesTitle: false,
@@ -45,18 +46,31 @@ export default defineConfig({
           label: "Start here",
           items: [
             { label: "Introduction", slug: "getting-started/introduction" },
-            { label: "Positioning", slug: "getting-started/positioning" },
             {
-              label: "Choosing an architecture",
-              slug: "getting-started/choosing-an-architecture",
+              label: "Embeds or runtime?",
+              slug: "getting-started/embeds-or-runtime",
             },
+            { label: "Positioning", slug: "getting-started/positioning" },
             {
               label: "When not to use mountly",
               slug: "concepts/when-not-to-use",
             },
+          ],
+        },
+        {
+          label: "Embeds",
+          items: [{ label: "Script-tag embeds", slug: "concepts/script-embeds" }],
+        },
+        {
+          label: "Runtime",
+          items: [
             { label: "Quick start", slug: "getting-started/quick-start" },
             { label: "How it works", slug: "getting-started/how-it-works" },
             { label: "Installation", slug: "getting-started/installation" },
+            {
+              label: "Choosing an architecture",
+              slug: "getting-started/choosing-an-architecture",
+            },
           ],
         },
         {
@@ -100,7 +114,6 @@ export default defineConfig({
             { label: "Styling", slug: "concepts/styling" },
             { label: "Multi-widget bundles", slug: "concepts/multi-widget" },
             { label: "Caching", slug: "concepts/caching" },
-            { label: "Script-tag libraries", slug: "concepts/script-embeds" },
             { label: "Distribution", slug: "concepts/distribution" },
             { label: "Islands architecture", slug: "concepts/islands" },
             { label: "Microfrontends", slug: "concepts/microfrontends" },
@@ -149,10 +162,6 @@ export default defineConfig({
             { label: "Test helpers", slug: "api/test-helpers" },
             { label: "Analytics", slug: "api/analytics" },
           ],
-        },
-        {
-          label: "Evidence",
-          items: [{ label: "Screenshots", slug: "evidence/screenshots" }],
         },
         {
           label: "Examples",

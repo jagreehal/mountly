@@ -48,7 +48,7 @@ import Component from "./Component";
 export default createWidget(Component);
 ```
 
-Host entry — the island form, which needs no page JavaScript at all:
+Host entry, in the island form, which needs no page JavaScript:
 
 ```html
 <div
@@ -60,7 +60,7 @@ Host entry — the island form, which needs no page JavaScript at all:
 ```
 
 Publishing the component for a page you do not control instead? Build it as a
-[script-tag component library](/mountly/concepts/script-embeds/) — the consumer
+[script-tag component library](/mountly/concepts/script-embeds/). The consumer
 then writes one script tag and a typed element, with no import map.
 
 The host does not need `mountly-react`, `react`, `vue`, or `svelte` unless it also builds the widget. The built widget bundle owns its framework runtime unless you intentionally externalize shared dependencies.
@@ -92,7 +92,7 @@ If the browser host imports `mountly/*` subpaths directly, map those subpaths to
 
 ## Via the CLI
 
-The scaffolder is the fastest path. It lays down the runtime, the React adapter, the build pipeline, and a working host page:
+The scaffolder lays down the runtime, the React adapter, the build pipeline, and a working host page:
 
 ```bash
 npx mountly init my-widget

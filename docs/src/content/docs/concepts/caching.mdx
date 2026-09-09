@@ -45,7 +45,7 @@ createOnDemandFeature({
   moduleId: "signup-card",
   loadModule: …,
   loadData: …,
-  // Cache by locale only — ignore everything else.
+  // Cache by locale only. Ignore everything else.
   getCacheKey: (ctx) => `signup-card:${ctx.locale}`,
 });
 ```
@@ -86,7 +86,7 @@ Concurrent `resolve` calls with the same key share a single promise. Pass an `Ab
 ```
 T+0    user hovers #cta              → preload(ctx)
 T+0    moduleCache.resolve("signup-card", loadModule)
-T+0    dataCache.resolve("signup-card:{...}", loadData) — runs in parallel
+T+0    dataCache.resolve("signup-card:{...}", loadData) runs in parallel
 T+128  module resolves               → cached
 T+340  data resolves                 → cached
 T+1500 user clicks                   → activate(ctx)

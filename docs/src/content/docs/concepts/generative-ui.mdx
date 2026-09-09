@@ -1,13 +1,13 @@
 ---
 title: Generative UI (advanced)
-description: Advanced — render @json-render specs as MCP Apps Views. Prefer createMcpView for most Apps; use this when the UI itself is model-generated.
+description: Advanced. Render @json-render specs as MCP Apps Views. Prefer createMcpView for most Apps; use this when the UI itself is model-generated.
 ---
 
 import { exampleUrl } from "../../../lib/example-urls.ts";
 
 :::caution[Advanced path]
-Most MCP Apps should start with [`mountly-mcp create`](/mcp-apps/) and
-`createMcpView`. `mountly-mcp/json-render` is optional — use it when an agent
+Most MCP Apps should start with [`mountly-mcp create`](/mountly/mcp-apps/) and
+`createMcpView`. `mountly-mcp/json-render` is optional. Use it when an agent
 **emits the UI structure**, not only the data.
 :::
 
@@ -16,7 +16,7 @@ constrained to a typed catalog; Mountly renders it as **real native components**
 MCP host, and the rendered UI's actions call back into the **agent**.
 
 It is a thin wrapper over [`@json-render`](https://github.com/vercel-labs/json-render)
-(`@json-render/core` + `@json-render/react`), [`mountly-mcp/react`](/mcp-apps/),
+(`@json-render/core` + `@json-render/react`), [`mountly-mcp/react`](/mountly/mcp-apps/),
 and the [`ai`](https://www.npmjs.com/package/ai) SDK. json-render decides _what_ to render;
 Mountly decides _where_ it ends up (an agent host) and adds the one thing json-render has no
 concept of, **the agent loop**: a generated button → `App.sendMessage` → the model
@@ -34,7 +34,7 @@ npm i mountly-mcp @json-render/core @json-render/react mountly-react
 npm i ai
 ```
 
-## The View — one call
+## The View, in one call
 
 `createGenerativeView` collapses catalog → registry → renderer → `$state` →
 action-bridge into a single call. It reads the spec from the tool result, resolves `$state`
@@ -54,13 +54,13 @@ By default an `ask` action with a string `prompt` sends a follow-up turn via
 `onAction(name, params, mcp)`.
 
 The server tool returns the spec as the tool result, exactly like any other MCP Apps View
-(see [MCP Apps](/mcp-apps/)):
+(see [MCP Apps](/mountly/mcp-apps/)):
 
 ```ts
 handler: async ({ view }) => ({ structuredContent: { spec: SPECS[view] } });
 ```
 
-## Generate a spec with any model — `streamSpec`
+## Generate a spec with any model: `streamSpec`
 
 `streamSpec` (the `mountly-mcp/json-render/server` entry) is **model-agnostic**: pass any AI SDK
 `LanguageModel`. It uses json-render's own pipeline (`catalog.prompt()` + JSONL patches +
@@ -72,7 +72,7 @@ live build, the same shape as the AI SDK's own `streamText`:
 import { streamSpec } from "mountly-mcp/json-render/server";
 import { ollama } from "ai-sdk-ollama"; // or @ai-sdk/google, @ai-sdk/groq, …
 
-// Blocking — e.g. an MCP tool returning structuredContent:
+// Blocking, e.g. an MCP tool returning structuredContent:
 const { spec, issues } = await streamSpec({
   catalog,
   model: ollama("granite4.1:3b"),
@@ -80,7 +80,7 @@ const { spec, issues } = await streamSpec({
 }).result;
 // return as the tool result: { structuredContent: { spec } }
 
-// Live — watch the UI assemble itself, element by element:
+// Live: the UI assembles element by element:
 const ui = streamSpec({ catalog, model: ollama("granite4.1:3b"), prompt });
 for await (const partial of ui.partialSpecStream) render(partial);
 const { spec } = await ui.result;
@@ -94,7 +94,7 @@ UIs. Keep prompts concise, since a tiny model wanders on long, multi-clause prom
 The underlying driver, `compileTextStreamToSpecs(textStream)`, is AI-SDK-free. Point it at any
 `AsyncIterable<string>` (a model stream, a saved transcript, a custom transport).
 
-## Streaming on the client — replay vs live
+## Streaming on the client: replay vs live
 
 **Replay a known spec** (e.g. one an MCP tool already delivered as `structuredContent`):
 `useSpecStream` owns all the ceremony (json-render's compiler, the patch replay, the
@@ -154,7 +154,7 @@ const Dashboard = createRenderer(catalog, components);
 | `defineComponents(catalog, map)`                                              | `.`              | type a components map once, reuse it                                                              |
 | `defaultActionRouter` / `ActionRouter`                                        | `.`              | the `ask` → `sendMessage` bridge (overridable)                                                    |
 | `useSpecStream(spec, opts?)`                                                  | `.`              | **replay** a known spec progressively (compiler + cancellation, included)                         |
-| `useUIStream` / `useChatUI`                                                   | `.`              | **live** client hooks — stream a spec from an endpoint (json-render's, re-exported)               |
+| `useUIStream` / `useChatUI`                                                   | `.`              | **live** client hooks that stream a spec from an endpoint (json-render's, re-exported)            |
 | `compileTextStreamToSpecs(stream)`                                            | `.` · `./server` | drive json-render's compiler from any text stream → progressive specs                             |
 | `specToPatchLines` / `createSpecStreamCompiler` / `createJsonRenderTransform` | `.`              | streaming primitives (replay / compile / AI-SDK transform)                                        |
 | `createRenderer`                                                              | `.`              | native (non-MCP) renderer (re-export)                                                             |
@@ -162,7 +162,7 @@ const Dashboard = createRenderer(catalog, components);
 
 ## See it run
 
-**Live:** [generative UI stream demo](<{exampleUrl("mcp-generative-demo/preview/stream-dist/")}>)
+**Live:** <a href={exampleUrl("mcp-generative-demo/preview/stream-dist/")}>generative UI stream demo</a>
 
 The [`mcp-generative-demo`](https://github.com/jagreehal/mountly/blob/main/docs/examples/mcp-generative-demo/README.md)
 example is a full, runnable build with local and hosted models, a browser preview, and a real

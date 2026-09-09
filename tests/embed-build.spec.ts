@@ -97,7 +97,10 @@ test("a script tag embeds React across origins with typed attributes, lazy chunk
       el.lineItems = [{ label: "Subscription", amount: 1200 }];
     });
     await expect.poll(() => summary.textContent()).toContain("GBP 1500");
-    await expect.poll(() => summary.textContent()).toContain("Subscription: 1200");
+    // The object prop reached the component. Assert the two values, not the
+    // markup between them, so the demo can restyle its rows.
+    await expect.poll(() => summary.textContent()).toContain("Subscription");
+    await expect.poll(() => summary.textContent()).toContain("1200");
     expect(
       await page.getByRole("button", { name: "View details" }).getAttribute("aria-expanded"),
     ).toBe("true");
@@ -184,6 +187,19 @@ test("one build serves React, Vue and Svelte with no compiler configured", async
     await expect.poll(() => page.getByTestId("react").textContent()).toBe("react GBP 12");
     await expect.poll(() => page.getByTestId("vue").textContent()).toBe("vue cards 3");
     await expect.poll(() => page.getByTestId("svelte").textContent()).toBe("svelte 7");
+    await expect
+      .poll(async () =>
+        page.evaluate(() => ({
+          react: getComputedStyle(document.querySelector('[data-testid="react"]')!).color,
+          vue: getComputedStyle(document.querySelector('[data-testid="vue"]')!).color,
+          svelte: getComputedStyle(document.querySelector('[data-testid="svelte"]')!).color,
+        })),
+      )
+      .toEqual({
+        react: "rgb(11, 22, 33)",
+        vue: "rgb(44, 55, 66)",
+        svelte: "rgb(77, 88, 99)",
+      });
 
     // A Svelte property update reaches the component rather than being inert.
     await page.evaluate(() => {
@@ -351,4 +367,260 @@ test("consumer code type-checks against the generated declarations", async () =>
   expect(bad.out).toContain("not assignable");
 
   await rm(dir, { recursive: true, force: true });
+});
+
+test("shadow mode keeps the host's CSS out and the component's CSS off the document", async ({
+  page,
+}) => {
+  test.setTimeout(60000);
+  const shadowDist = join(root, "dist-shadow");
+  await rm(shadowDist, { recursive: true, force: true });
+  const config = defineElementsConfig({
+    prefix: "acme",
+    elements: "src/elements/*.tsx",
+    root,
+    shadow: true,
+  });
+  await build({
+    ...config,
+    configFile: false,
+    logLevel: "silent",
+    build: { ...config.build, outDir: shadowDist },
+  } as unknown as Parameters<typeof build>[0]);
+
+  const provider = createServer(async (req, res) => {
+    const path = new URL(req.url!, "http://localhost").pathname;
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    try {
+      const data = await readFile(join(shadowDist, path));
+      res.setHeader("Content-Type", extname(path) === ".css" ? "text/css" : "text/javascript");
+      res.end(data);
+    } catch {
+      res.writeHead(404).end();
+    }
+  });
+  const providerUrl = await listen(provider);
+  const host = createServer((_req, res) => {
+    res.setHeader("Content-Type", "text/html");
+    res.end(
+      `<!doctype html><html><head><script type="module" src="${providerUrl}/embed.js"></script>` +
+        // The hostile host: a global rule that would wreck the component if it landed.
+        `<style>section { padding: 99px !important; }</style></head>` +
+        `<body><acme-payments-summary balance="1250" currency="GBP"></acme-payments-summary></body></html>`,
+    );
+  });
+  const hostUrl = await listen(host);
+
+  try {
+    const errors: string[] = [];
+    page.on("pageerror", (error) => errors.push(error.message));
+    await page.goto(hostUrl);
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () =>
+            document.querySelector("acme-payments-summary [data-mountly-embed-root]")?.shadowRoot
+              ?.textContent ?? "",
+        ),
+      )
+      .toContain("GBP 1250");
+
+    const isolation = await page.evaluate(() => {
+      const root = document.querySelector<HTMLElement>(
+        "acme-payments-summary [data-mountly-embed-root]",
+      )!.shadowRoot!;
+      const section = root.querySelector("section")!;
+      return {
+        adopted: root.adoptedStyleSheets.length,
+        padding: getComputedStyle(section).padding,
+        // Nothing of the component's stylesheet may reach the host document.
+        leaked: [...document.querySelectorAll("style, link[rel=stylesheet]")].filter((node) =>
+          (node.textContent ?? node.getAttribute("href") ?? "").includes("summary"),
+        ).length,
+      };
+    });
+
+    // Styled by its own rule rather than the host's `!important` one, with
+    // nothing of its stylesheet reaching the host document.
+    expect(isolation.adopted).toBe(1);
+    expect(isolation.padding).toBe("16px");
+    expect(isolation.leaked).toBe(0);
+    expect(errors).toEqual([]);
+  } finally {
+    await Promise.all([close(provider), close(host)]);
+    await rm(shadowDist, { recursive: true, force: true });
+  }
+});
+
+test("a hand-written props table drives the element when the type is not in the file", async ({
+  page,
+}) => {
+  test.setTimeout(60000);
+  const declaredDist = join(root, "dist-declared");
+  await rm(declaredDist, { recursive: true, force: true });
+  // The documented escape hatch for a library whose `Props` lives in a shared
+  // types module: declare the table rather than reshape the library.
+  const config = defineElementsConfig({
+    prefix: "acme",
+    root,
+    elements: {
+      "payments-summary": {
+        component: "src/elements/PaymentsSummary.tsx",
+        props: [
+          { name: "balance", attribute: "balance", kind: "number" },
+          { name: "currency", attribute: "currency", kind: "string" },
+          { name: "onViewDetails", event: "view-details", kind: "event" },
+        ],
+      },
+    },
+  });
+  await build({
+    ...config,
+    configFile: false,
+    logLevel: "silent",
+    build: { ...config.build, outDir: declaredDist },
+  } as unknown as Parameters<typeof build>[0]);
+
+  const provider = createServer(async (req, res) => {
+    const path = new URL(req.url!, "http://localhost").pathname;
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    try {
+      const data = await readFile(join(declaredDist, path));
+      res.setHeader("Content-Type", extname(path) === ".css" ? "text/css" : "text/javascript");
+      res.end(data);
+    } catch {
+      res.writeHead(404).end();
+    }
+  });
+  const providerUrl = await listen(provider);
+  const host = createServer((_req, res) => {
+    res.setHeader("Content-Type", "text/html");
+    res.end(
+      `<!doctype html><html><head><script type="module" src="${providerUrl}/embed.js"></script></head>` +
+        `<body><acme-payments-summary balance="1250" currency="GBP"></acme-payments-summary>` +
+        `<p id="event"></p><script>document.addEventListener("view-details", (e) => {` +
+        `document.querySelector("#event").textContent = "detail " + e.detail.balance; });</script>` +
+        `</body></html>`,
+    );
+  });
+  const hostUrl = await listen(host);
+
+  try {
+    const errors: string[] = [];
+    page.on("pageerror", (error) => errors.push(error.message));
+    await page.goto(hostUrl);
+    const summary = page.locator("acme-payments-summary");
+    await expect.poll(() => summary.textContent()).toContain("GBP 1250");
+
+    // The declared kind is what coerces: a number prop, not the string "1250".
+    expect(
+      await page.evaluate(
+        () =>
+          typeof (
+            document.querySelector("acme-payments-summary") as HTMLElement & {
+              balance: unknown;
+            }
+          ).balance,
+      ),
+    ).toBe("number");
+
+    await summary.getByRole("button", { name: "View details" }).click();
+    await expect.poll(() => page.locator("#event").textContent()).toBe("detail 1250");
+
+    const types = await readFile(join(declaredDist, "embed.d.ts"), "utf8");
+    expect(types).toContain("balance?: number;");
+    expect(types).toContain('"view-details": CustomEvent;');
+    expect(errors).toEqual([]);
+  } finally {
+    await Promise.all([close(provider), close(host)]);
+    await rm(declaredDist, { recursive: true, force: true });
+  }
+});
+
+test("an embed and a host that already bundles React coexist on one page", async ({ page }) => {
+  test.setTimeout(60000);
+  // The consuming page is itself a React app with its own bundled copy. Two
+  // Reacts on one page is the documented cost of an embed; this is the check
+  // that it stays a byte cost and does not become a broken page.
+  const hostDir = join(root, "react-host-check");
+  await rm(hostDir, { recursive: true, force: true });
+  await mkdir(hostDir, { recursive: true });
+  await writeFile(
+    join(hostDir, "host-app.tsx"),
+    `import { useState, version } from "react";
+     import { createRoot } from "react-dom/client";
+     function HostApp() {
+       const [n, setN] = useState(0);
+       return (
+         <div>
+           <button id="host-btn" onClick={() => setN(n + 1)}>host count {n}</button>
+           <span id="host-react">{version}</span>
+         </div>
+       );
+     }
+     createRoot(document.getElementById("host-app")!).render(<HostApp />);`,
+  );
+  await build({
+    root: hostDir,
+    configFile: false,
+    logLevel: "silent",
+    oxc: { jsx: { runtime: "automatic" } },
+    build: {
+      outDir: join(hostDir, "out"),
+      rollupOptions: {
+        input: join(hostDir, "host-app.tsx"),
+        output: { entryFileNames: "host-app.js" },
+      },
+    },
+  } as unknown as Parameters<typeof build>[0]);
+
+  const provider = createServer(async (req, res) => {
+    const path = new URL(req.url!, "http://localhost").pathname;
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    const file = path.startsWith("/host/")
+      ? join(hostDir, "out", path.slice("/host/".length))
+      : join(dist, path);
+    try {
+      const data = await readFile(file);
+      res.setHeader("Content-Type", extname(path) === ".css" ? "text/css" : "text/javascript");
+      res.end(data);
+    } catch {
+      res.writeHead(404).end();
+    }
+  });
+  const providerUrl = await listen(provider);
+  const host = createServer((_req, res) => {
+    res.setHeader("Content-Type", "text/html");
+    res.end(
+      `<!doctype html><html><head>` +
+        `<script type="module" src="${providerUrl}/host/host-app.js"></script>` +
+        `<script type="module" src="${providerUrl}/embed.js"></script></head>` +
+        `<body><div id="host-app"></div>` +
+        `<acme-payments-summary balance="1250" currency="GBP"></acme-payments-summary>` +
+        `</body></html>`,
+    );
+  });
+  const hostUrl = await listen(host);
+
+  try {
+    const errors: string[] = [];
+    page.on("pageerror", (error) => errors.push(error.message));
+    page.on("console", (m) => m.type() === "error" && errors.push(m.text().slice(0, 160)));
+    await page.goto(hostUrl);
+
+    await page.click("#host-btn");
+    await page.click("#host-btn");
+    await expect.poll(() => page.locator("#host-btn").textContent()).toBe("host count 2");
+
+    const summary = page.locator("acme-payments-summary");
+    await expect.poll(() => summary.textContent()).toContain("GBP 1250");
+    await summary.getByRole("button", { name: "View details" }).click();
+    await expect.poll(() => summary.locator("ul").count()).toBe(1);
+
+    // No "Invalid hook call": neither tree resolved a hook against the other copy.
+    expect(errors).toEqual([]);
+  } finally {
+    await Promise.all([close(provider), close(host)]);
+    await rm(hostDir, { recursive: true, force: true });
+  }
 });

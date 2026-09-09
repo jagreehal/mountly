@@ -10,7 +10,7 @@ fuller copy of the same APIs.
 | ----------------------- | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
 | Dashboard (tool → View) | [`mcp-release-readiness`](https://github.com/jagreehal/mountly/tree/main/docs/examples/mcp-release-readiness) | Vite, `createMcpView`, `registerMcpApps`, `verify`. Closest match to `create`. |
 | Protocol harness        | [`mcp-app-demo`](https://github.com/jagreehal/mountly/tree/main/docs/examples/mcp-app-demo)                   | Handshake, stdio, preview. Advanced. Skip for day-one apps.                    |
-| Wrap existing UI        | [`convert-web-app`](/mcp-apps/agent-skills/) skill                                                            | `createMcpView` + `useToolResult`. Keep the component's public props.          |
+| Wrap existing UI        | [`convert-web-app`](/mountly/mcp-apps/agent-skills/) skill                                                    | `createMcpView` + `useToolResult`. Keep the component's public props.          |
 
 The scaffold already covers "form that calls a tool": Refresh calls
 `useMcpApp().callServerTool` on an app-only tool (`visibility: ["app"]`).

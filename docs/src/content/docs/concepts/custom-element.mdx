@@ -1,12 +1,12 @@
 ---
 title: Custom element
-description: The <mountly-feature> element — how a manifest host renders independently-deployed verticals as tags.
+description: The <mountly-feature> element, and how a manifest host renders independently-deployed verticals as tags.
 ---
 
 :::tip[Sharing your components with another team?]
 Use [script-tag component libraries](/mountly/concepts/script-embeds/). You write
 an ordinary React, Vue or Svelte component and the consumer writes one script tag
-and a typed element — no import map, no registration call, no JSON props.
+and a typed element. No import map, no registration call, no JSON props.
 
 This page covers `<mountly-feature>`, which is a different job: it is the element
 a **host page** uses to render verticals it composes from a manifest, sharing one
@@ -38,7 +38,7 @@ list; the element handles attach, mount, prop updates and unmount on disconnect.
 </script>
 ```
 
-Most hosts do not write that list by hand — they generate it from a manifest with
+Most hosts generate that list from a manifest rather than writing it by hand, with
 [`defineMountlyFeatureFromManifest`](/mountly/concepts/manifest-hosts/), which is
 the intended entry point. See [microfrontends](/mountly/concepts/microfrontends/)
 for the whole picture.
@@ -98,7 +98,7 @@ el.setAttribute("props", JSON.stringify({ plan: "enterprise" }));
 ## Mount target
 
 The element renders into a `<div data-mountly-mount>` it appends to itself. Pass
-`mount-selector` to render into a container you control instead — it has to be a
+`mount-selector` to render into a container you control instead. It has to be a
 descendant of the element, so the slot stays inside the element's own subtree:
 
 ```html

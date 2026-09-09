@@ -9,7 +9,6 @@ const CLAIMS = [
   "packages/mountly/README.md",
   "docs/src/content/docs/index.mdx",
   "docs/src/content/docs/concepts/islands.mdx",
-  "docs/src/content/docs/concepts/why-mountly.mdx",
   "docs/src/content/docs/frameworks/plain-html.mdx",
   "docs/src/content/docs/api/trigger-plugins.mdx",
 ];

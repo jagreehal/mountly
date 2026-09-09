@@ -1,17 +1,35 @@
 # mountly
 
-**On-Demand Interactive UI Platform**
+**Ship your components into pages you do not own.**
 
-Load rich UI only when the user needs it.
-Use your existing React, Vue, or Svelte components with no new component model.
-Modernize legacy pages incrementally without rewriting the host app.
+Publish a React, Vue or Svelte component as a custom element behind one script
+tag. Or run the mountly runtime and load widgets on user intent.
+You keep your component model. The host keeps its page.
 
 **Documentation:** <https://jagreehal.github.io/mountly>
 
-### Two ways in
+### Three ways in
 
-**Building a web app?** Load widgets on user intent — hover, click, viewport,
-idle — so the page ships a shell instead of everything.
+**Sharing a component with another team?** Publish it as a custom element behind
+one script tag. Mountly reads its props type at build time; the consuming page
+installs nothing.
+
+```ts
+// vite.config.ts
+export default defineElementsConfig({ prefix: "acme", elements: "src/elements/*.tsx" });
+```
+
+```html
+<script type="module" src="https://ui.acme.com/payments/1.2.0/embed.js"></script>
+<acme-payments-summary balance="1250" currency="GBP"></acme-payments-summary>
+```
+
+→ [Script-tag embeds](https://mountly.dev/concepts/script-embeds/) ·
+[runnable example](docs/examples/react-embed)
+
+**Building a page you own?** Run the mountly runtime and load widgets on hover,
+click, viewport entry, or idle time, so the page ships a shell first. Take this
+path when several widgets share one framework instance.
 → [Quick start](#quick-start-60-seconds)
 
 **Building an MCP server?** Turn a React, Vue or Svelte component into an
@@ -27,15 +45,19 @@ cd my-app && pnpm install && pnpm dev
 [Mountly vs ext-apps](https://mountly.dev/mcp-apps/vs-ext-apps/) ·
 [`mountly-mcp`](packages/mcp-apps/README.md)
 
-Both sit on the same widget model, so a component written for one works in the
-other. For MCP Apps, prefer the `mountly-mcp` docs. You do not need the islands
-API to ship a View.
+All three take the same components. Above that they share no API, and you can
+ignore the two you are not using.
+[Embeds or runtime?](https://mountly.dev/getting-started/embeds-or-runtime/)
+tells you which one you came for.
 
 ## The Problem
 
-Modern web apps ship too much JavaScript upfront. Component libraries load everything at once. Microfrontends are operationally heavy. Framework lazy-loading lacks standardized interaction patterns.
+You have a component in React, Vue, or Svelte. Someone needs it on a page that
+does not run your framework: a CMS template, a partner's site, a Rails app from 2014. Your options are to copy the markup and let it rot, stand up a
+microfrontend platform, or ask that team to adopt your bundler.
 
-No unified system covers: **"Load rich UI only when the user needs it."**
+mountly is a fourth option, and a small one. It is a delivery mechanism, not a
+platform. It does not do routing, SSR, rollouts, or state.
 
 ## What mountly Does
 
@@ -63,7 +85,7 @@ Before mountly:                    After mountly:
 - **Multiple instances**: mount the same feature multiple times on one page
 - **Small core**: 2.3 KB gzipped, one file, no dependencies; widgets load on demand, not on page load
 - **Custom element**: `<mountly-feature>` web component for declarative usage
-- **Isolation when you need it**: light DOM, shadow DOM, or a cross-origin iframe — the host chooses, the widget source does not change
+- **Isolation when you need it**: light DOM, shadow DOM, or a cross-origin iframe. You pick per host; the widget source does not change
 - **Analytics**: built-in interaction timing and performance tracking
 - **Predictive prefetch**: idle-time loading scored by interaction history
 - **Extensible triggers**: eight built in; add swipe, long-press or a keyboard chord with one assignment to the `triggers` table
@@ -71,21 +93,34 @@ Before mountly:                    After mountly:
 
 ## Packages
 
-| Package                                                          | Purpose                                                                                                                                                     |
-| ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`mountly`](https://npmjs.com/package/mountly)                   | Core runtime, on-demand loader, lifecycle, custom element, CLI                                                                                              |
-| [`mountly-react`](https://npmjs.com/package/mountly-react)       | React adapter, `createWidget(Component, { styles })`                                                                                                        |
-| [`mountly-vue`](https://npmjs.com/package/mountly-vue)           | Vue adapter, `createWidget(Component, { styles })`                                                                                                          |
-| [`mountly-svelte`](https://npmjs.com/package/mountly-svelte)     | Svelte adapter, `createWidget(Component, { styles })`                                                                                                       |
-| [`mountly-tailwind`](https://npmjs.com/package/mountly-tailwind) | Tailwind v4 design preset (opt-in)                                                                                                                          |
-| [`mountly-vite-plugin`](packages/mountly-vite-plugin)            | Vite lib build plugin, dual `index.js` / `peer.js` widget output                                                                                            |
-| [`mountly-manifest`](packages/mountly-manifest)                  | Vertical registry schema, import map + host helpers                                                                                                         |
-| [`mountly-mcp`](packages/mcp-apps/README.md)                     | **MCP Apps (SEP-1865)** — build views from React, Vue or Svelte components. Subpaths: `./react`, `./vue`, `./svelte`, `./vite`, `./server`, `./json-render` |
+| Package                                                          | Purpose                                                                                                                                                    |
+| ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`mountly`](https://npmjs.com/package/mountly)                   | Core runtime, on-demand loader, lifecycle, custom element, CLI                                                                                             |
+| [`mountly-react`](https://npmjs.com/package/mountly-react)       | React adapter, `createWidget(Component, { styles })`                                                                                                       |
+| [`mountly-vue`](https://npmjs.com/package/mountly-vue)           | Vue adapter, `createWidget(Component, { styles })`                                                                                                         |
+| [`mountly-svelte`](https://npmjs.com/package/mountly-svelte)     | Svelte adapter, `createWidget(Component, { styles })`                                                                                                      |
+| [`mountly-tailwind`](https://npmjs.com/package/mountly-tailwind) | Tailwind v4 design preset (opt-in)                                                                                                                         |
+| [`mountly-vite-plugin`](packages/mountly-vite-plugin)            | Vite lib build plugin, dual `index.js` / `peer.js` widget output                                                                                           |
+| [`mountly-manifest`](packages/mountly-manifest)                  | Vertical registry schema, import map + host helpers                                                                                                        |
+| [`mountly-mcp`](packages/mcp-apps/README.md)                     | **MCP Apps (SEP-1865)**: build views from React, Vue or Svelte components. Subpaths: `./react`, `./vue`, `./svelte`, `./vite`, `./server`, `./json-render` |
 
 ## Build with Agent Skills
 
-The fastest way to build an MCP App View is to let your coding agent do it.
-Install the Mountly skills once, then ask:
+Let your coding agent do it. Install the Mountly skills once:
+
+```
+/plugin marketplace add jagreehal/mountly
+/plugin install mountly-embed@mountly     # publish a component as a tag
+/plugin install mountly-mcp@mountly       # build MCP Apps Views
+```
+
+Or `npx skills add jagreehal/mountly`. Then ask:
+
+| Skill                                                                                      | What it does                                  | Try it                                    |
+| ------------------------------------------------------------------------------------------ | --------------------------------------------- | ----------------------------------------- |
+| [`publish-component-embed`](plugins/mountly-embed/skills/publish-component-embed/SKILL.md) | Publishes a component as a script-tag element | _"Let another team embed this component"_ |
+
+For MCP Apps:
 
 | Skill                                                                        | What it does                       | Try it                                |
 | ---------------------------------------------------------------------------- | ---------------------------------- | ------------------------------------- |
@@ -94,13 +129,7 @@ Install the Mountly skills once, then ask:
 | [`convert-web-app`](plugins/mountly-mcp/skills/convert-web-app/SKILL.md)     | Wraps an existing component        | _"Turn my component into an MCP App"_ |
 | [`migrate-ext-apps`](plugins/mountly-mcp/skills/migrate-ext-apps/SKILL.md)   | Migrates official ext-apps Views   | _"Migrate from ext-apps"_             |
 
-```
-/plugin marketplace add jagreehal/mountly
-/plugin install mountly-mcp@mountly
-```
-
-Or: `npx skills add jagreehal/mountly` · full install notes:
-[Agent Skills](https://mountly.dev/mcp-apps/agent-skills/).
+Full install notes: [Agent Skills](https://mountly.dev/mcp-apps/agent-skills/).
 
 ## Build an MCP App from a component you already have
 
@@ -122,8 +151,8 @@ npx mountly-mcp create my-app --framework react
 ```
 
 Add `mountlyMcpViews()` to your Vite config and `npx mountly-mcp build` emits
-the `ui://` resource plus its sidecar. Then develop it against a real host —
-sandbox proxy, CSP, the full handshake — without installing one:
+the `ui://` resource plus its sidecar. Then develop it against a real host,
+with the sandbox proxy, CSP and full handshake, without installing one:
 
 ```bash
 npx mountly-mcp dev --server ./server.js
@@ -180,7 +209,7 @@ export default createWidget(Cart);
 docs/examples/plain-html && pnpm dev`, then open
 <http://localhost:5175/docs/examples/quickstart/host.html>
 ([source](docs/examples/quickstart/host.html)). **Or try the [hosted
-quickstart](https://jagreehal.github.io/mountly/examples/quickstart/host.html)** —
+quickstart](https://jagreehal.github.io/mountly/examples/quickstart/host.html)**:
 no clone required.
 
 ### The attributes
@@ -189,14 +218,14 @@ no clone required.
 | -------------------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | `data-mountly`       | —              | Module URL, or a key in the host script's `data-mountly-urls` map                                                                  |
 | `data-on`            | `click`        | When to mount. `click focus` fires on whichever comes first                                                                        |
-| `data-preload`       | —              | When to fetch without mounting — usually `hover` or `viewport`                                                                     |
+| `data-preload`       | —              | When to fetch without mounting. Usually `hover` or `viewport`                                                                      |
 | `data-props`         | `{}`           | JSON props. A `<script type="application/json">` child works too, when quotes get awkward                                          |
 | `data-target`        | the element    | Where to mount, if not the trigger itself                                                                                          |
 | `data-toggle`        | off            | A second activation unmounts instead of doing nothing                                                                              |
 | `data-css`           | sibling `.css` | `none`, or an explicit stylesheet URL                                                                                              |
 | `data-mountly-state` | —              | `idle` / `loading` / `mounted` / `error`, so CSS can style each. Server-render it as `mounted` and mountly leaves the island alone |
 
-Triggers read as `kind` or `kind:arg` — `hover:300`, `viewport:200px`,
+Triggers read as `kind` or `kind:arg`: `hover:300`, `viewport:200px`,
 `media:(min-width: 60rem)`, `idle:2000`. `click`, `focus`, `url` and `never`
 take no argument.
 
@@ -223,8 +252,9 @@ becomes a `view-details` DOM event. The build also emits `embed.d.ts` for typed
 tags and `custom-elements.json` for editor autocomplete. Component code and CSS
 load on demand. The same component still imports directly into your own app.
 
-See the [script embed guide](docs/src/content/docs/concepts/script-embeds.mdx)
-and [runnable example](docs/examples/react-embed).
+See the [script embed guide](https://mountly.dev/concepts/script-embeds/) and the
+runnable [React](docs/examples/react-embed) and
+[mixed-framework](docs/examples/mixed-embed) examples.
 
 ### When HTML is not enough
 
@@ -234,22 +264,21 @@ import { mountly, mount, unmount, update } from "mountly";
 const stop = mountly({
   urls: { cart: "/widgets/cart.js" },
   // the one escape hatch: retries, auth headers, a bundler's own import(),
-  // a test double — instead of an attribute for each
+  // a test double. An attribute for each of those would be worse.
   load: (url) => fetch(url).then(/* ... */),
 });
 ```
 
-`mountly()` also watches the DOM, so islands rendered later — by another
-widget, by htmx, by a Turbo frame swap — wire themselves up with no ordering
-knob to configure.
+`mountly()` also watches the DOM. An island that another widget, htmx, or a
+Turbo frame swap adds later gets wired up, and you configure no ordering.
 
 ### Going further
 
 - **Imperative feature API (`mountly/feature`)**: `createOnDemandFeature(...)` for data loading, custom cache keys and multi-container lifecycles that the attributes do not cover. See [docs/examples/marketing-site](docs/examples/marketing-site/README.md).
 - **Plain-HTML host (no bundler)**: `installRuntime({...})` injects a shared-React import map. For direct browser import maps, also map used `mountly/*` subpaths (for example `mountly/attach`, `mountly/elements`, `mountly/shadow`, `mountly/assets`, `mountly/adapter`). See [docs/examples/plain-html](docs/examples/plain-html/README.md).
 - **Pick a distribution (self-contained vs shared React)**: when to ship one widget vs many, when to share React. See [docs/examples/README.md#choosing-a-distribution](docs/examples/README.md#choosing-a-distribution).
-- **Choosing an architecture**: monorepo first, widget drop-in, manifest verticals — when you do and do not need micro frontends. See [Choosing an architecture](https://jagreehal.github.io/mountly/getting-started/choosing-an-architecture/).
-- **Strong isolation (iframe widgets)**: `mountly/iframe` runs a vertical in its own document — its own `window`, its own styles — with the same triggers and lifecycle. The same `createWidget` output works in light DOM, shadow DOM or a frame, so the host picks the boundary. Overlay breakout and host-owned history: see [frame protocols](https://jagreehal.github.io/mountly/concepts/frame-protocols/). Manifest flip: `isolation: "iframe"`.
+- **Choosing an architecture**: monorepo first, script-tag embed, manifest verticals, and when you do not need micro frontends at all. See [Choosing an architecture](https://jagreehal.github.io/mountly/getting-started/choosing-an-architecture/).
+- **Strong isolation (iframe widgets)**: `mountly/iframe` runs a vertical in its own document, with its own `window` and styles, on the same triggers and lifecycle. The same `createWidget` output works in light DOM, shadow DOM or a frame, so the host picks the boundary. Overlay breakout and host-owned history: see [frame protocols](https://jagreehal.github.io/mountly/concepts/frame-protocols/). Manifest flip: `isolation: "iframe"`.
 - **Import-map verticals (advanced)**: independent **widget** repos via manifest + CDN, not Webpack federation. See [docs/micro-frontends.md](docs/micro-frontends.md) and [docs/examples/multi-vertical-host](docs/examples/multi-vertical-host/README.md). Read the architecture guide first.
 - **When _not_ to use mountly**: single SPA, full SSR-hydration ownership, MFE orchestration control plane. See [When not to use mountly](https://jagreehal.github.io/mountly/concepts/when-not-to-use/).
 - **All runnable examples**: [docs/examples/README.md](docs/examples/README.md).
@@ -277,8 +306,8 @@ Releases follow [docs/release-checklist.md](docs/release-checklist.md).
 ## SSR
 
 Render the island's markup on the server and set `data-mountly-state="mounted"`.
-mountly skips it — no double paint, no client mount, and the markup stays
-styled if JavaScript never arrives. That one attribute is the whole handshake.
+mountly skips it: no double paint, no client mount, and the markup stays styled
+if JavaScript never arrives. That attribute is the whole handshake.
 
 ```html
 <div data-mountly="/widgets/cart.js" data-mountly-state="mounted">
@@ -287,8 +316,8 @@ styled if JavaScript never arrives. That one attribute is the whole handshake.
 ```
 
 Anything inside an island before it mounts is its fallback: a link, a static
-summary, a skeleton. Reserve space with `style="min-height: 40px"` — no
-mountly attribute needed, CSS already does this.
+summary, a skeleton. Reserve space with `style="min-height: 40px"`. CSS already
+does this, so mountly adds no attribute for it.
 
 ## Examples
 

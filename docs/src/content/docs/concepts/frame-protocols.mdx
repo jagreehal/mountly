@@ -1,6 +1,6 @@
 ---
 title: Frame protocols
-description: Host-side overlay breakout and host-owned history for framed verticals — without reframing the whole DOM.
+description: Host-side overlay breakout and host-owned history for framed verticals, without reframing the whole DOM.
 ---
 
 Framed widgets run in a real document. That gives browser-enforced isolation and also clips portals, modals, and full-viewport effects to the iframe box. Web Fragments solves that with reframing. Mountly keeps the iframe and offers two **opt-in** protocols on the existing typed frame channel instead.
@@ -96,7 +96,7 @@ Event names: `history:navigate`, `history:sync` (see `HISTORY_NAVIGATE` / `HISTO
 
 ## Placeholders
 
-Show a static shell until the frame reports ready — not SSR hydration:
+Show a static shell until the frame reports ready. This is not SSR hydration:
 
 ```ts
 iframeFeature({

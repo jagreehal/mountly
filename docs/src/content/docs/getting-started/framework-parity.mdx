@@ -1,11 +1,13 @@
 ---
 title: Framework Parity Matrix
-description: Guaranteed adapter behaviors across React, Vue, and Svelte.
+description: What the React, Vue, and Svelte adapters do the same way, and where they differ.
 ---
 
-This matrix defines parity guarantees for `mountly-react`, `mountly-vue`, and `mountly-svelte`.
+`tests/adapter-parity.spec.ts` drives all three adapters through the same
+browser checks. What that suite covers is what this page promises. Anything
+below the line is behaviour we describe but do not pin.
 
-## Guaranteed
+## Covered by the parity suite
 
 - `mount(container, props)` mounts widget UI.
 - `unmount(container)` tears down widget UI.
@@ -15,11 +17,19 @@ This matrix defines parity guarantees for `mountly-react`, `mountly-vue`, and `m
 - `shadowMode: "open" | "closed"` support.
 - Automatic light-DOM fallback when a container can't host a shadow root.
 
-## Notes by framework
+## Where the three differ
 
-- React: `update()` uses React render on existing root.
-- Vue: `update()` remounts deterministically with next props.
-- Svelte: `update()` remounts deterministically with next props.
+`update()` keeps the component instance alive on all three, so local state
+survives a prop change. How each gets there differs:
+
+- React: re-renders on the existing root.
+- Vue: patches a reactive props object the adapter owns.
+- Svelte 4: calls `$set` on the instance. Svelte 5: patches a `$state` props
+  object, unless you passed your own `mount`/`unmount`, in which case the
+  adapter assigns onto the mount handle and reaches exported bindings only.
+
+A prop the host stops sending clears on Vue and Svelte 5. React sees the props
+object it is given.
 
 ## Scope
 

@@ -1,6 +1,6 @@
 ---
 title: Plain HTML
-description: Run mountly with no bundler — import maps, native modules, one inline script.
+description: "Run mountly with no bundler: import maps, native modules, one inline script."
 ---
 
 import { exampleUrl } from "../../../lib/example-urls.ts";
@@ -23,7 +23,7 @@ That fits legacy modernization. Keep the existing host page and add richer featu
 <script type="module" src="https://cdn.jsdelivr.net/npm/mountly/dist/auto.js"></script>
 ```
 
-`auto.js` is 2.3 KB gzipped and wires every `data-mountly` element on the page —
+`auto.js` is 2.3 KB gzipped and wires every `data-mountly` element on the page,
 including ones added later, by a CMS widget or an htmx swap. Keep meaningful
 fallback HTML inside each island so the content stays usable if JavaScript never
 arrives.
@@ -101,7 +101,7 @@ See [`installRuntime`](/mountly/api/install-runtime/) for the full reference.
 
 If you are publishing components for a page you do not control, build them as a
 [script-tag component library](/mountly/concepts/script-embeds/). The consuming
-page needs one script tag and a typed element — no import map, no registration
+page needs one script tag and a typed element. No import map, no registration
 call:
 
 ```html
@@ -155,7 +155,7 @@ If a widget fails to load with **"Failed to fetch dynamically imported module"**
 ```
 [mountly] loadModule for "signup-card" failed to resolve.
 If you're in plain HTML, check that your <script type="importmap"> maps the bare specifier
-— e.g. { "imports": { "signup-card": "/path/to/signup-card/dist/index.js" } } —
+(e.g. { "imports": { "signup-card": "/path/to/signup-card/dist/index.js" } })
 and that installRuntime() runs before any module imports.
 ```
 
@@ -163,7 +163,7 @@ When you see that, check the import map and the order of `<script>` tags.
 
 ## Runnable example
 
-**Live:** [self-contained host](<{exampleUrl("plain-html/")}>) · [shared React host](<{exampleUrl("plain-html/shared-react.html")}>)
+**Live:** <a href={exampleUrl("plain-html/")}>self-contained host</a> · <a href={exampleUrl("plain-html/shared-react.html")}>shared React host</a>
 
 Source lives in [`docs/examples/plain-html`](https://github.com/jagreehal/mountly/tree/main/docs/examples/plain-html). To run locally:
 

@@ -1,6 +1,6 @@
 import { globSync, readFileSync } from "node:fs";
-import { basename, extname, relative, resolve } from "node:path";
-import type { Plugin, UserConfig } from "vite";
+import { basename, dirname, extname, relative, resolve } from "node:path";
+import type { Plugin, Rollup, UserConfig } from "vite";
 import type { MountlyWidgetFramework } from "./index.js";
 import { extractProps, kebab, type PropSpec } from "./props.js";
 
@@ -33,6 +33,19 @@ export interface MountlyElementsConfigOptions {
    * monorepo running the build from elsewhere, say. Defaults to `process.cwd()`.
    */
   root?: string;
+  /**
+   * Render every element into a shadow root instead of the host's light DOM.
+   *
+   * Light DOM is the default because the usual consumer is a page that wants
+   * its own design system to reach in — a CMS template, a partner site running
+   * your tokens. Turn this on when the host is one you do not trust to leave
+   * your component alone, or that you must not affect: the host's CSS cannot
+   * reach in, and your CSS stops being emitted into its document.
+   *
+   * The whole distribution shares the setting, because it describes the kind
+   * of host you ship to, not the component.
+   */
+  shadow?: boolean;
 }
 
 interface BuiltElement {
@@ -309,6 +322,42 @@ function assertSingleCompiler(plugins: readonly { name: string }[] = []): void {
 }
 
 /**
+ * Stands in for the stylesheet's URL until the bundle is assembled and its
+ * hashed name is known. A string literal, so a minifier carries it through
+ * untouched.
+ */
+const CSS_TOKEN = "__MOUNTLY_EMBED_CSS__";
+
+/**
+ * Point each shadow widget at the stylesheet the build just emitted.
+ *
+ * Shadow mode turns off CSS code splitting, so Vite writes one stylesheet and
+ * injects it into no document, which is the point. Each widget takes its URL
+ * and the adapter adopts it into that element's shadow root instead.
+ *
+ * This edits the finished chunk, so its sourcemap shifts by the length of one
+ * URL. Only shadow builds carry the token. Emit the URL from `renderChunk`
+ * with a proper mapping if that offset ever matters.
+ */
+function resolveCssToken(bundle: Rollup.OutputBundle): void {
+  const stylesheet = Object.keys(bundle).find((file) => file.endsWith(".css"));
+  const token = new RegExp(`(["'\`])${CSS_TOKEN}\\1`, "g");
+  for (const output of Object.values(bundle)) {
+    if (output.type !== "chunk" || !output.code.includes(CSS_TOKEN)) continue;
+    // No stylesheet in the whole distribution means no component imported CSS.
+    if (!stylesheet) {
+      output.code = output.code.replace(token, "void 0");
+      continue;
+    }
+    const href = relative(dirname(output.fileName), stylesheet).replace(/\\/g, "/");
+    output.code = output.code.replace(
+      token,
+      `new URL(${JSON.stringify(`./${href}`)}, import.meta.url).href`,
+    );
+  }
+}
+
+/**
  * An element whose props could not be read would ignore everything the consumer
  * sets, and say so nowhere. Fail the build instead, and name the way out.
  */
@@ -338,6 +387,7 @@ function readPropTable(entry: MountlyElementEntry, tag: string, root: string): P
 export function defineElementsConfig(options: MountlyElementsConfigOptions): UserConfig {
   const entryId = "virtual:mountly-embed";
   const widgetPrefix = "virtual:mountly-widget/";
+  const shadow = options.shadow === true;
   let elements: BuiltElement[] = [];
   // Vite resolves its plugin list before any hook runs, so the frameworks in
   // play have to be known now. Globbing is cheap; the prop tables still wait
@@ -381,31 +431,42 @@ defineElements({
         const element = elements.find((candidate) => candidate.tag === tag);
         if (!element) return;
         const path = resolve(root, element.entry.component).replace(/\\/g, "/");
+        // The stylesheet's hashed name is not known until the bundle is
+        // assembled, so leave a token here and fill it in from `generateBundle`.
+        const widgetOptions = shadow
+          ? `, { shadow: true, cssUrl: ${JSON.stringify(CSS_TOKEN)} }`
+          : "";
         return `import * as component from ${JSON.stringify(path)};
 import { createWidget } from ${JSON.stringify(`mountly-${element.framework}`)};
-export default createWidget(component[${JSON.stringify(element.entry.exportName ?? "default")}]);`;
+export default createWidget(component[${JSON.stringify(element.entry.exportName ?? "default")}]${widgetOptions});`;
       }
     },
-    generateBundle() {
-      this.emitFile({ type: "asset", fileName: "embed.d.ts", source: declarations(elements) });
-      this.emitFile({
-        type: "asset",
-        fileName: "embed.react.d.ts",
-        source: reactDeclarations(elements),
-      });
-      this.emitFile({
-        type: "asset",
-        fileName: "custom-elements.json",
-        source: manifest(
-          elements.map((element) => ({
-            ...element,
-            entry: {
-              ...element.entry,
-              component: relative(root, resolve(root, element.entry.component)),
-            },
-          })),
-        ),
-      });
+    // Vite writes the stylesheet from its own `generateBundle`, so the name to
+    // point at only exists once every other plugin has had its turn.
+    generateBundle: {
+      order: "post",
+      handler(_options, bundle) {
+        if (shadow) resolveCssToken(bundle);
+        this.emitFile({ type: "asset", fileName: "embed.d.ts", source: declarations(elements) });
+        this.emitFile({
+          type: "asset",
+          fileName: "embed.react.d.ts",
+          source: reactDeclarations(elements),
+        });
+        this.emitFile({
+          type: "asset",
+          fileName: "custom-elements.json",
+          source: manifest(
+            elements.map((element) => ({
+              ...element,
+              entry: {
+                ...element.entry,
+                component: relative(root, resolve(root, element.entry.component)),
+              },
+            })),
+          ),
+        });
+      },
     },
   };
 
@@ -420,7 +481,10 @@ export default createWidget(component[${JSON.stringify(element.entry.exportName 
     plugins: [plugin, frameworkPlugins(frameworks)],
     build: {
       sourcemap: true,
-      cssCodeSplit: true,
+      // Light DOM wants Vite's per-chunk stylesheets, which arrive with the
+      // component that needs them. Shadow roots need the opposite: one
+      // stylesheet nothing injects, which each element adopts for itself.
+      cssCodeSplit: !shadow,
       rollupOptions: {
         input: entryId,
         output: { entryFileNames: "embed.js", chunkFileNames: "assets/[name]-[hash].js" },
