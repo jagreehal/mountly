@@ -117,7 +117,7 @@
     "@modelcontextprotocol/sdk": "^1.30.0",
     "mountly": "^1.0.1",
     "mountly-react": "^2.1.0",
-    "zod": "^4.4.3"
+    "zod": "^4.5.4"
   },
   "devDependencies": {
     "@json-render/core": "0.20.0",
