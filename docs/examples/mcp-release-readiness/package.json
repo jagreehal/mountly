@@ -16,7 +16,7 @@
     "@modelcontextprotocol/sdk": "^1.30.0",
     "mountly-mcp": "workspace:*",
     "mountly-vue": "workspace:*",
-    "vue": "^3.5.41",
+    "vue": "^3.5.42",
     "zod": "^4.4.3"
   },
   "devDependencies": {
