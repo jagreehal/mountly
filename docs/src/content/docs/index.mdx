@@ -1,6 +1,6 @@
 ---
 title: mountly
-description: Framework components. Any page. On demand. Ship React, Vue, and Svelte components into HTML hosts without rewriting the page.
+description: Publish React, Vue, and Svelte components as custom elements behind one script tag, or run the mountly runtime and load widgets on user intent.
 template: splash
 hero:
   title: mountly
@@ -14,29 +14,38 @@ pagefind: false
 
 <section class="hero">
   <div class="hero-copy">
-    <span class="eyebrow">v1.0 · 2.3 KB gzipped core entry</span>
+    <span class="eyebrow">v1.0 · nothing for the consumer to install</span>
     <h1 class="hero-title">
-      Framework components. Any page. <em>On demand.</em>
+      Your components. Someone else's page. <em>One script tag.</em>
     </h1>
     <p class="hero-lead">
-      mountly turns React, Vue, and Svelte components into lazy,
-      HTML-addressable features. Drop them into CMS pages, marketing sites, legacy apps,
-      partner embeds, or framework migrations without a host-app rewrite. Light DOM is the default;
-      use <code>shadow: true</code> when you need hard style isolation.
+      Publish a React, Vue, or Svelte component as a custom element behind one script tag.
+      The consuming page installs nothing, writes no import map, and calls no init. Its
+      props type is the whole contract.
     </p>
     <p class="hero-lead">
-      The same components ship as <strong>MCP Apps</strong> views that render inside
-      Claude and ChatGPT. One build emits the <code>ui://</code> resource,
-      <code>npx mountly-mcp dev</code> runs it in a real sandboxed host, and
-      <code>registerMcpApps()</code> installs it into a server you own — no second
-      component model for the AI surface.
+      <strong>On demand</strong> still means what it always did, one layer in: that script
+      registers every tag and downloads nothing else. A component, its framework and its CSS
+      arrive when one of its elements connects, and not before.
+    </p>
+    <p class="hero-lead">
+      Two other hosts take the same components and a different API: a page you run
+      yourself, where the <strong>runtime</strong> mounts them on user intent and shares one
+      framework across many; and <strong>MCP Apps</strong>, where Claude and ChatGPT render
+      them when a tool is called.
     </p>
     <div class="hero-actions">
-      <a class="action primary" href="/mountly/getting-started/quick-start/">
-        Quick start <span class="arrow">→</span>
+      <a class="action primary" href="/mountly/concepts/script-embeds/">
+        Publish a tag <span class="arrow">→</span>
       </a>
-      <a class="action primary" href="/mountly/mcp-apps/quick-start/">
-        MCP Apps <span class="arrow">→</span>
+      <a class="action ghost" href="/mountly/getting-started/embeds-or-runtime/">
+        Embeds or runtime?
+      </a>
+      <a class="action ghost" href="/mountly/getting-started/quick-start/">
+        Runtime quick start
+      </a>
+      <a class="action ghost" href="/mountly/mcp-apps/quick-start/">
+        MCP Apps
       </a>
       <a class="action ghost" href="/mountly/getting-started/choosing-an-architecture/">
         Choosing an architecture
@@ -136,9 +145,9 @@ pagefind: false
     </h2>
   </div>
   <p class="section-lead" style="max-width: 70ch;">
-    You wrap a component as a mountable widget. mountly loads and activates it
-    from plain HTML when the page signals intent. Marketing reuse, strangler-fig
-    migration, island-style UI, and embeds run on this one runtime.
+    You write a component. mountly either builds it into a tag another team drops in,
+    or, on a page you run, loads and mounts it from plain HTML when the page signals
+    intent. Marketing reuse, strangler-fig migration and island UI sit on the second one.
   </p>
 
   <div class="before-after sl-markdown-no-margin">
@@ -157,10 +166,12 @@ pagefind: false
       <ul>
         <li>HTML tags like <code>&lt;signup-card&gt;</code></li>
         <li>Activation on idle, viewport, click, hover, media, or URL change</li>
-        <li>Shadow-DOM style isolation and automatic CSS loading</li>
+        <li>Optional shadow-DOM style isolation, and CSS loaded with the component</li>
         <li>Module/data caching, teardown, and prop updates</li>
       </ul>
-      <p class="result">A small runtime for component delivery, not an app platform.</p>
+      <p class="result">
+        Delivery only. Routing, SSR, rollouts and shared state stay where they are.
+      </p>
     </div>
   </div>
 </section>
@@ -178,33 +189,33 @@ pagefind: false
   <div class="trigger-grid sl-markdown-no-margin">
     <div class="trigger-cell">
       <span class="index">01</span>
+      <span class="label">embeds</span>
+      <span class="name">Hand a component to another team</span>
+      <span class="desc">Publish it as a custom element behind one script tag. A partner site, a CMS template, or another team's app writes the tag and installs nothing. The props type is the contract.</span>
+    </div>
+    <div class="trigger-cell">
+      <span class="index">02</span>
       <span class="label">marketing</span>
       <span class="name">Real product components on campaign pages</span>
       <span class="desc">Reuse checkout, pricing, signup, and calculator components on fast campaign pages without rewriting the CMS host.</span>
     </div>
     <div class="trigger-cell">
-      <span class="index">02</span>
+      <span class="index">03</span>
       <span class="label">migration</span>
       <span class="name">Strangler fig, one widget at a time</span>
       <span class="desc">Replace legacy surfaces incrementally. Each widget replaces one section. The host never rewrites. When all widgets are done, the legacy is gone.</span>
     </div>
     <div class="trigger-cell">
-      <span class="index">03</span>
+      <span class="index">04</span>
       <span class="label">multi-team</span>
       <span class="name">Independent widget releases</span>
       <span class="desc">Team A ships a payments widget, Team B ships chat, and Team C owns the host. A CDN and manifest provide lightweight microfrontend composition without a Federation <code>shared</code> block.</span>
     </div>
     <div class="trigger-cell">
-      <span class="index">04</span>
+      <span class="index">05</span>
       <span class="label">cross-framework</span>
       <span class="name">React + Vue + Svelte on one page</span>
       <span class="desc">Three teams, three frameworks, one page. Each widget is a bare specifier in the import map. Teams converge on the next architecture at their own pace.</span>
-    </div>
-    <div class="trigger-cell">
-      <span class="index">05</span>
-      <span class="label">embeds</span>
-      <span class="name">Partner and CMS drops</span>
-      <span class="desc">Expose a stable custom tag and let non-app teams place interactive UI without owning framework code or managing a build step.</span>
     </div>
     <div class="trigger-cell">
       <span class="index">06</span>
@@ -323,13 +334,30 @@ pagefind: false
   <div class="section-head">
     <span class="eyebrow">05 · The whole API</span>
     <h2 class="section-title">
-      A widget. A feature. A trigger. Three lines you'll write.
+      A namespace and a glob. Or a widget, a feature and a trigger.
     </h2>
   </div>
   <p class="section-lead">
-    Components stay components. The adapter wraps them as widgets. You wire a
-    feature in code, or declare it as an HTML tag.
+    Components stay components. Name a namespace, point the build at the files, and
+    you are done with the author side.
   </p>
+
+```ts title="vite.config.ts"
+import { defineElementsConfig } from "mountly-vite-plugin";
+
+// Every component in the directory becomes a tag: <acme-signup-card>
+export default defineElementsConfig({ prefix: "acme", elements: "src/elements/*.tsx" });
+```
+
+```html title="someone else's page"
+<script type="module" src="https://ui.acme.com/signup/1.2.0/embed.js"></script>
+<acme-signup-card plan="pro" data-mountly-trigger="viewport"></acme-signup-card>
+```
+
+<p class="section-lead">
+  On a page you run yourself, the runtime takes over: the adapter wraps a component as a widget, and
+  you wire a feature in code or declare it as an HTML tag.
+</p>
 
 ```ts title="signup-card.ts"
 import { createWidget } from "mountly-react";
@@ -350,7 +378,7 @@ const signup = createOnDemandFeature({
   render: ({ mod, container, props }) => mod.mount(container, props),
 });
 
-// 3. Attach it to a DOM trigger — preload on hover, mount on click
+// 3. Attach it to a DOM trigger: preload on hover, mount on click
 signup.attach({
   trigger: document.querySelector("#cta")!,
   preloadOn: "hover",
@@ -359,16 +387,6 @@ signup.attach({
 ```
 
 > **Styling:** mountly loads CSS with the module and applies it before render, so no FOUC. Light DOM lets the host's design system reach in; pass `shadow: true` for full isolation.
-
-```html title="host.html"
-<signup-card trigger="viewport" props='{"plan":"pro"}'></signup-card>
-
-<script type="module">
-  import { defineMountlyFeature } from "mountly/elements";
-
-  defineMountlyFeature("/widgets/dist/index.js");
-</script>
-```
 
 </section>
 
@@ -425,8 +443,11 @@ signup.attach({
         </tr>
         <tr class="highlight">
           <td>mountly</td>
-          <td>Component features in any HTML page</td>
-          <td>Release orchestration and SSR stay with your platform</td>
+          <td>Components in an HTML page that does not run your framework</td>
+          <td>
+            An embed bundles its own framework copy. On the runtime you own the CDN,
+            the import map and version pinning. No SSR, no rollout control.
+          </td>
           <td>Low</td>
         </tr>
       </tbody>

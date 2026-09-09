@@ -25,12 +25,10 @@ test.describe("hosted examples", () => {
     // Scope to main content — the sidebar also has docs pages whose slug
     // contains "examples" (e.g. /mountly/mcp-apps/examples/), which are not
     // hosted demo links and must not be held to the /mountly/examples/ prefix.
-    const links: string[] = await page.$$eval(
-      "main a[href*='/examples/']",
-      (anchors) =>
-        anchors
-          .map((a) => a.getAttribute("href") ?? "")
-          .filter((href) => href.startsWith("/") && href !== "/mountly/examples/"),
+    const links: string[] = await page.$$eval("main a[href*='/examples/']", (anchors) =>
+      anchors
+        .map((a) => a.getAttribute("href") ?? "")
+        .filter((href) => href.startsWith("/") && href !== "/mountly/examples/"),
     );
     expect(links.length, "expected the index to list examples").toBeGreaterThan(5);
 
@@ -38,6 +36,17 @@ test.describe("hosted examples", () => {
     // `BASE_URL + "examples/"` produced /mountlyexamples/ — every link 404'd.
     const unprefixed = links.filter((href) => !href.startsWith("/mountly/examples/"));
     expect(unprefixed, "links must keep the /mountly base").toEqual([]);
+
+    story.then("no href is an MDX expression the build never evaluated");
+    // `[text](<{exampleUrl("x")}>)` renders href="%7BexampleUrl(%22x%22)%7D",
+    // a 404 that reads fine in source. The filter above drops it, because it
+    // does not start with "/", so it has to be checked on its own.
+    const unevaluated: string[] = await page.$$eval("main a[href]", (anchors) =>
+      anchors
+        .map((a) => a.getAttribute("href") ?? "")
+        .filter((href) => href.includes("%7B") || href.includes("exampleUrl")),
+    );
+    expect(unevaluated, "hrefs must be evaluated, not literal JSX").toEqual([]);
 
     story.then("each one loads with no console errors or failed requests");
     const broken: string[] = [];

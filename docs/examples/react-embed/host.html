@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Payments embed</title>
+    <script type="module" src="./dist/embed.js"></script>
+  </head>
+  <body>
+    <acme-payments-summary balance="1250" currency="GBP"></acme-payments-summary>
+    <p id="event" aria-live="polite"></p>
+    <button id="refresh">Add 250 to balance</button>
+    <script>
+      const summary = document.querySelector("acme-payments-summary");
+      summary.lineItems = [
+        { label: "Subscription", amount: 1200 },
+        { label: "Storage", amount: 50 },
+      ];
+      summary.addEventListener("view-details", (event) => {
+        document.querySelector("#event").textContent = `Selected balance: ${event.detail.balance}`;
+      });
+      // Assigning the property re-renders without remounting, so the panel
+      // stays open across clicks. Incrementing keeps the button useful after
+      // the first press.
+      document.querySelector("#refresh").addEventListener("click", () => {
+        summary.balance = summary.balance + 250;
+      });
+    </script>
+  </body>
+</html>

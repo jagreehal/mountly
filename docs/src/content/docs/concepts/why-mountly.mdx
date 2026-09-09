@@ -1,60 +1,48 @@
 ---
 title: Why mountly
-description: The concrete problems mountly solves and why existing approaches fall short.
+description: "Concrete jobs Mountly is for: foreign pages, intent loading, and MCP hosts."
 ---
 
-The short pitch: mountly lets you ship React, Vue, and Svelte components into pages you don't own, on your teams deploy cadence, without rewriting the host or shipping a full SPA.
+You have a React, Vue, or Svelte component. You need it on a page (or in an MCP
+host) that should not own that framework's lifecycle. Mountly is the delivery
+layer for that.
 
-Here is what that means in practice.
+## Interactive UI on a static or CMS page
 
-## You have interactive UI on a static page
+Marketing needs a pricing calculator or signup form. You already have the
+component in the product app. Publish it as a tag; they add one script and drop
+the element in. The component and its CSS load when the element connects.
 
-Your marketing site is built with Astro, Eleventy, or plain HTML. You need a pricing calculator, a signup form, or a checkout widget. Without mountly:
+See [Script-tag embeds](/mountly/concepts/script-embeds/).
 
-- You embed a full React SPA into the page — 150KB+ of JS that loads on every visit whether the user interacts or not.
-- You write everything in the host's language (HTML templates, jQuery) and maintain two versions of the same widget.
-- You hand the component to the marketing team and they need to wire up framework lifecycle, routing, and state.
+## Replace a legacy section without a rewrite
 
-With mountly: you write a normal React component, wrap it with `createWidget`, and the marketing team drops `<signup-card trigger="viewport">` into their CMS. The component loads only when the user scrolls to it. 2.3KB core on the page, widget JS on demand.
+A Rails or Django page still owns the shell. You replace one region at a time
+with a widget that mounts and unmounts cleanly. The host architecture stays put
+until the last section is gone.
 
-## You are migrating a legacy app
+## Several teams on one page you run
 
-Your Rails/Django/jQuery app has 50,000 lines of frontend code. You want to move to React incrementally. Without mountly:
+Payments, support, and content each ship a widget on their own cadence. The host
+pins URLs in a manifest and shares one framework through an import map. That is
+the [runtime](/mountly/getting-started/embeds-or-runtime/) track, not a script
+tag per team with its own React copy.
 
-- You either fork the entire app into a SPA rewrite (risky, slow, two codebases in flight) or
-- You sprinkle `ReactDOM.render()` calls manually, managing lifecycle, teardown, and memory leaks yourself.
+## Different frameworks during a migration
 
-With mountly: you replace one section at a time. Each widget is an independent module with `mount`/`unmount`. The host page never changes its architecture. When every section is replaced, the legacy template is empty — and you delete it. No fork, no rewrite, no period where two apps diverge.
+One team still ships Vue while another ships React. Each wraps with its adapter.
+Widgets mount in their own containers. You do not force a rewrite to share a
+page.
 
-## Three teams own different parts of one page
+## MCP-hosted UI
 
-Team Payments owns the checkout widget. Team Content owns the article body. Team Support owns the chat bubble. You share one page shell. Without mountly:
+The same component can render inside Claude or ChatGPT when a tool is called.
+`mountly-mcp` builds the View artifact and registers it on a server you already
+own. See [MCP Apps](/mountly/mcp-apps/).
 
-- Module Federation: you configure `shared` blocks, negotiate React versions at load time, and maintain build-time coupling between every remote and the host.
-- Monorepo package: every team merges into one repo with one deploy. Independent releases are impossible.
-- Iframes: style isolation but broken routing, broken accessibility, and a URL bar that does not reflect page state.
+## Where to go next
 
-With mountly: Team Payments publishes `payment-breakdown@1.2.0/dist/peer.js` to a CDN. Team Support publishes `chat@3.0.0/dist/peer.js`. The host shell has a single `manifest.json` that pins both URLs. The import map shares one React instance between them — no duplicate framework, no `shared` block, no negotiation. Teams deploy independently. Changes to payments never require redeploying the host or support.
-
-## Three frameworks on one page
-
-Team A ships React. Team B ships Vue. Team C ships Svelte. You need all three on one page during a framework convergence. Without mountly:
-
-- You pick one framework and force every team to rewrite.
-- You run multiple SPA frameworks on one page manually, managing lifecycle conflicts and memory leaks.
-- You wait for the rewrite to finish before shipping anything new.
-
-With mountly: each team wraps their component with their adapter (`mountly-react`, `mountly-vue`, `mountly-svelte`). The host registers all three. Each widget lives in its own mount container with its own lifecycle. The frameworks never conflict — they never import each other. Teams converge at their own pace.
-
-## You want MCP-hosted UI without building MCP infrastructure
-
-Your AI agent calls a tool and the result should render as interactive UI in the MCP host (Claude Desktop, VS Code, custom). Without mountly:
-
-- You hand-roll the `ui://` resource registration, iframe sandbox, bridge protocol, and lifecycle management.
-- Every MCP app reimplements the same mount/unmount/update dance.
-
-With Mountly, `mountly-mcp build` produces one or many self-contained App artifacts and a versioned manifest. `registerMcpApps()` installs their Views and linked tools into the MCP server your application already owns. The same component that runs on your website can also run inside an MCP Apps host: one component, two activation contexts.
-
-## The pattern
-
-All these scenarios share the same shape: you have a component, and you need to place it into a context that should not own the component's framework lifecycle. mountly is the runtime contract that makes that work — on any page, at any trigger, with any framework, at any team's deploy cadence.
+- [Positioning](/mountly/getting-started/positioning/): what Mountly leaves alone
+- [Embeds or runtime?](/mountly/getting-started/embeds-or-runtime/): which half you need
+- [When not to use mountly](/mountly/concepts/when-not-to-use/): when the framework is enough
+- [Choosing an architecture](/mountly/getting-started/choosing-an-architecture/): monorepo, embed, manifest, orchestration

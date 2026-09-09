@@ -78,6 +78,21 @@ to compose them into a config you already own:
 | `mountlyCssAsText`              | import CSS as a string, for adopting into a shadow root  |
 | `getFrameworkPeerExternals`     | the externals list for a peer build                      |
 
+## Script-tag component libraries
+
+`defineElementsConfig({ prefix, elements })` turns typed React/Vue/Svelte
+components into lazily-loaded custom elements, and emits `embed.d.ts` and
+`custom-elements.json` alongside `embed.js`.
+
+Elements render in light DOM, so the consuming page's design system reaches in.
+Pass `shadow: true` when the host is not one you trust: every element in the
+distribution then renders into its own shadow root, and the build emits one
+stylesheet that it injects into no document.
+
+See the [complete guide](https://mountly.dev/concepts/script-embeds/) and the
+[React](../../docs/examples/react-embed) and
+[mixed-framework](../../docs/examples/mixed-embed) examples.
+
 ## TypeScript
 
 `mountlyManifestFragmentPlugin` reads exports from the TypeScript checker and

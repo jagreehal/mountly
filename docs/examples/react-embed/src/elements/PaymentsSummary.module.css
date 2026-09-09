@@ -1,0 +1,13 @@
+.summary {
+  font-family: system-ui, sans-serif;
+  color: var(--payments-color, #172554);
+  border: 1px solid currentColor;
+  padding: 1rem;
+  max-width: 22rem;
+  border-radius: 0.5rem;
+}
+
+.compact {
+  composes: summary;
+  padding: 0.25rem;
+}

@@ -69,7 +69,11 @@ Need to override? `loadModule` / `render` still work and trump the auto-derived 
 
 ## Live updates
 
-The Svelte adapter falls back to remount on `feature.update()`. That preserves the container but creates a new component instance, so local state inside the component **resets**. If you need state to survive a prop change, lift it to a store or pass it back in via props.
+`feature.update()` patches props in place, so the component instance survives and its local state with it.
+
+- **Svelte 4**: the adapter calls `$set` on the instance.
+- **Svelte 5, adapter-loaded runtime**: the adapter hands Svelte a `$state`-tracked props object and assigns onto it. A prop the host drops clears to `undefined` rather than lingering from the last render.
+- **Svelte 5, your own `mount`/`unmount`**: there is no tracked object to patch, so the adapter assigns onto the mount handle. That reaches the component's exported bindings only. Omit `mount`/`unmount` if you want prop updates to flow.
 
 ## Common pitfalls
 
@@ -80,6 +84,18 @@ Same risk as React/Vue. Use the peer build pattern for multi-widget pages: exter
 ### Style isolation
 
 Svelte's component-scoped styles already isolate via Svelte's hash. With `shadow: true` they get an additional hard boundary. Global styles (`:global(...)`) inside a Svelte component land inside the shadow tree when `shadow: true` (so they don't leak to the document); in default light DOM they reach the document, which is usually what you want.
+
+## Publish as a script tag
+
+To hand a Svelte component to a team that does not use Svelte, point a build at it and give it a namespace. Mountly reads `let { … }: Props = $props()` and publishes the component as a custom element:
+
+```ts title="vite.config.ts"
+import { defineElementsConfig } from "mountly-vite-plugin";
+
+export default defineElementsConfig({ prefix: "acme", elements: "src/elements/*.svelte" });
+```
+
+The consuming page needs one script tag and no package install. See [Script-tag component libraries](/mountly/concepts/script-embeds/).
 
 ## Reference
 

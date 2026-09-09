@@ -268,7 +268,16 @@ export function mount(el: HTMLElement, options: MountlyOptions = {}): Promise<vo
     if (!live()) return;
     // The contract allows an async mount; wait for it so the state attribute
     // and the event describe what is actually on screen.
+    let renderedProps = state.props;
     await mod.mount(state.target, propsFor(state));
+    // Data may change while an async widget mounts. Deliver the latest value
+    // before declaring it mounted, without tearing down its component state.
+    while (live() && renderedProps !== state.props) {
+      renderedProps = state.props;
+      await (mod.update
+        ? mod.update(state.target, propsFor(state))
+        : mod.mount(state.target, propsFor(state)));
+    }
     if (!live()) {
       // Unmounted while the widget was mounting. It never got recorded, so
       // tear down what it just put on the page by hand.
@@ -373,8 +382,9 @@ function queue(target: HTMLElement, run: () => unknown): void {
 /** Push new props into a mounted island. */
 export function update(el: HTMLElement, props: Record<string, unknown>): void {
   const state = states.get(el);
-  if (!state?.mod) return;
+  if (!state) return;
   state.props = props;
+  if (!state.mod) return;
   const next = propsFor(state);
   const mod = state.mod;
   const run = state.run;
@@ -407,9 +417,12 @@ export function update(el: HTMLElement, props: Record<string, unknown>): void {
  * one and not the other.
  */
 function propsFor(state: State): Record<string, unknown> {
+  const moduleUrl = state.moduleUrl ?? state.url;
   return {
     ...state.props,
-    moduleUrl: state.moduleUrl ?? state.url,
+    // Asset hints are for URL-loaded islands. A bundled element owns its own
+    // assets, so don't leak empty hints into its props.
+    ...(moduleUrl ? { moduleUrl } : {}),
     ...(state.css ? { cssUrl: state.css } : {}),
   };
 }

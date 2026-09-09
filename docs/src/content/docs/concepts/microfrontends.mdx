@@ -154,7 +154,7 @@ These attributes are available on `<mountly-feature>` and generated alias tags s
 | `mount-selector`       | Internal mount div               | Child selector used as the mount target. Must match a descendant of the element.            |
 
 `trigger="url-change"` covers `popstate`, `hashchange`, `pushState` and
-`replaceState` — there is no attribute to narrow that set. See the
+`replaceState`, and no attribute narrows that set. See the
 [custom element reference](/mountly/api/custom-element/#trigger--core-mapping)
 for how each preset maps onto the core's `data-on`.
 
@@ -316,13 +316,13 @@ mountly adds custom element registration, trigger setup, module loading, optiona
 ## Runtime isolation
 
 Import-map composition loads every vertical into one JavaScript context. That
-is what makes it fast — no second bootstrap, one copy of React — and it is also
+is what makes it fast, with no second bootstrap and one copy of React. It is also
 the whole of its isolation story. A vertical that mutates `window`, registers a
 global listener or patches a prototype affects every other vertical on the
 page. `shadow: true` scopes styles, but the JS context is still shared.
 
 For most products that is the right trade. It stops being the right trade when
-you cannot vouch for what a vertical does internally — a decade-old codebase,
+you cannot vouch for what a vertical does internally: a decade-old codebase,
 an acquired team, a third-party embed. At that point the guarantee you want is
 one the browser enforces, not one your conventions do.
 
@@ -333,14 +333,14 @@ one the browser enforces, not one your conventions do.
 | [`iframeFeature`](/mountly/concepts/microfrontends/#framed-verticals) | Second bootstrap | Strong          | Strong       |
 
 This is a per-vertical choice, not an architecture-wide one. The three
-untrusted verticals can be framed while the other twenty stay on import maps —
+you can frame the untrusted verticals and leave the other twenty on import maps,
 same triggers, same adapters, same lifecycle.
 
 ### Strict Content-Security-Policy
 
 Loading a module whose URL is only known at runtime is normally done with
 `new Function("s", "return import(s)")`, which keeps bundlers quiet but is
-`eval` — and a page whose CSP omits `'unsafe-eval'` cannot run it. That is the
+`eval`, and a page whose CSP omits `'unsafe-eval'` cannot run it. That is the
 default posture in regulated environments and the CSP the MCP Apps spec
 requires hosts to enforce.
 
@@ -421,7 +421,7 @@ mountAsFrame<BillingEvents>(widget, {
 Three properties matter here, and each exists for a reason:
 
 - **Explicit.** Only what you name crosses. A same-context bus bridged into the
-  frame would carry everything sharing its namespace — including state you
+  frame would carry everything sharing its namespace, including state you
   framed the vertical to keep away from it.
 - **Validated on receive, not just on send.** A frame you do not trust is a
   frame whose payloads you do not trust.
@@ -436,7 +436,7 @@ forge, and outbound messages are pinned to the frame's origin.
 ### When a frame never comes up
 
 A cross-origin frame cannot be inspected from the host, so a page that 404s,
-gets blocked by CSP, throws before `mountAsFrame`, or simply forgets to load
+gets blocked by CSP, throws before `mountAsFrame`, or forgets to load
 `resize-iframe-child.js` all look identical from outside: silent. Without a
 deadline the outlet stays blank forever and nothing is reported.
 
@@ -452,7 +452,7 @@ const billing = iframeFeature({
 
 Without `onError` the failure goes to `console.error` rather than nowhere. The
 timer is cleared on handshake and on unmount, so a frame that is torn down
-mid-load — a route change, say — does not report a failure afterwards.
+mid-load, on a route change say, does not report a failure afterwards.
 
 ### Routing across verticals
 
@@ -475,7 +475,7 @@ router.start();
 ```
 
 Navigating from `/billing/1` to `/billing/2` **updates** the mounted feature
-rather than remounting it — for a framed vertical a remount is a second full
+rather than remounting it. For a framed vertical a remount is a second full
 bootstrap, which is the cost this architecture is already trying not to pay
 twice. Crossing into `/settings/*` unmounts one feature and mounts the other.
 
@@ -507,7 +507,7 @@ behind a frame via the manifest, see [When to frame](/mountly/concepts/when-to-f
 
 A framed vertical downloads and evaluates its own copy of everything. Browsers
 partition the HTTP cache, so one frame cannot borrow bytes another already
-fetched — the wins available are _early_ bytes and _repeat-visit_ bytes.
+fetched, so you can win _early_ bytes and _repeat-visit_ bytes only.
 
 - **Prefetch on intent.** `iframeFeature` warms the document on hover, viewport
   or idle, so mount pays only the frame's own bootstrap. The bytes can be
@@ -527,7 +527,7 @@ fetched — the wins available are _early_ bytes and _repeat-visit_ bytes.
   `no-cache`, or a deploy never reaches anyone.
 
 Framework code changes rarely and product code changes daily; keeping them in
-separate, separately-cached files means a deploy invalidates only what actually
+separate, separately-cached files means a deploy invalidates only what
 changed.
 
 ## Where mountly fits

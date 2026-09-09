@@ -89,7 +89,7 @@ you support.
 The accessibility pass runs against the View as assembled, not against its
 components. That is deliberate: components can each be accessible while the
 View that composes them is not, and the composition is the artifact a host
-actually renders.
+renders.
 
 That mounted state is a DOM contract, not an internal detail: the bridge sets
 `data-mountly-mcp-state="mounted"` on the View root once your View's `mount`
@@ -97,5 +97,5 @@ resolves, and `"error"` if the error boundary replaced it. The attribute only
 moves forward, so your own end-to-end tests can wait on it exactly as
 `--render` does.
 
-See [Development and verification](/mcp-apps/development-and-verification/) for
+See [Development and verification](/mountly/mcp-apps/development-and-verification/) for
 commands and CI guidance.

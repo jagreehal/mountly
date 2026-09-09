@@ -1,4 +1,5 @@
 import { createRequire } from "node:module";
+import { svelte } from "@sveltejs/vite-plugin-svelte";
 import type { Reporter } from "vite-plus/test/node";
 import { defineConfig } from "vite-plus";
 
@@ -55,6 +56,9 @@ export default defineConfig({
       ".playwright-mcp/**",
     ],
   },
+  // The Svelte adapter has a `.svelte.js` rune module; without the compiler it
+  // reaches the unit tier as an undefined `$state` call.
+  plugins: [svelte()],
   resolve: {
     conditions: ["browser"],
   },

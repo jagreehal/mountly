@@ -46,9 +46,9 @@ export interface FeatureRoute {
    * and everything below it, and the remainder is passed to the feature as the
    * `route.rest` prop.
    *
-   * ponytail: exact + trailing wildcard only. Reach for `URLPattern` if named
-   * params are ever actually needed — it is native, and this matcher is 20
-   * lines that would otherwise grow into a routing library.
+   * Exact match and trailing wildcard only. Reach for the native `URLPattern`
+   * if named params are ever needed, rather than growing these 20 lines into a
+   * routing library.
    */
   path: string;
   feature: OnDemandFeature;

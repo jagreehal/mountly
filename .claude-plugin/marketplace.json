@@ -1,6 +1,6 @@
 {
-  "name": "mountly-mcp",
-  "description": "Plugins for building MCP Apps Views with Mountly",
+  "name": "mountly",
+  "description": "Agent Skills for building with Mountly",
   "owner": {
     "name": "Mountly",
     "email": "hello@mountly.dev"
@@ -10,6 +10,11 @@
       "name": "mountly-mcp",
       "source": "./plugins/mountly-mcp",
       "description": "Skills for creating MCP Apps with mountly-mcp — the default View layer on top of @modelcontextprotocol/ext-apps"
+    },
+    {
+      "name": "mountly-embed",
+      "source": "./plugins/mountly-embed",
+      "description": "Skill for publishing React, Vue and Svelte components as script-tag custom elements with mountly-vite-plugin"
     }
   ]
 }

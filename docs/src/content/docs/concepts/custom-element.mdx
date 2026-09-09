@@ -1,70 +1,64 @@
 ---
 title: Custom element
-description: The <mountly-feature> custom element — declarative usage for hosts that drop in HTML rather than write JS.
+description: The <mountly-feature> element, and how a manifest host renders independently-deployed verticals as tags.
 ---
 
-Some hosts drop in HTML rather than write JS: CMS pages, marketing sites, partner integrations. For them, declarative markup is easier to maintain than imperative code. mountly ships a custom element for that.
+:::tip[Sharing your components with another team?]
+Use [script-tag component libraries](/mountly/concepts/script-embeds/). You write
+an ordinary React, Vue or Svelte component and the consumer writes one script tag
+and a typed element. No import map, no registration call, no JSON props.
+
+This page covers `<mountly-feature>`, which is a different job: it is the element
+a **host page** uses to render verticals it composes from a manifest, sharing one
+framework instance across all of them.
+:::
+
+`<mountly-feature>` is declarative markup for a host that composes several
+independently-deployed verticals. The host owns the import map and the vertical
+list; the element handles attach, mount, prop updates and unmount on disconnect.
 
 ## In one example
 
 ```html
-<signup-card trigger="viewport" props='{"plan":"pro"}'></signup-card>
+<mountly-feature
+  module-id="signup-card"
+  trigger="viewport"
+  props='{"plan":"pro"}'
+></mountly-feature>
 
 <script type="module">
   import { defineMountlyFeature } from "mountly/elements";
 
-  defineMountlyFeature("/widgets/dist/index.js");
+  defineMountlyFeature({
+    modules: {
+      "signup-card": "/widgets/signup-card.js",
+      "payment-breakdown": "/widgets/payment-breakdown.js",
+    },
+  });
 </script>
 ```
 
-That's the common path. Mountly scans the page, defines `<signup-card>`, registers it as a feature, and loads it from the shared source. The element handles attach, mount, prop updates, and unmount on disconnect for you.
+Most hosts generate that list from a manifest rather than writing it by hand, with
+[`defineMountlyFeatureFromManifest`](/mountly/concepts/manifest-hosts/), which is
+the intended entry point. See [microfrontends](/mountly/concepts/microfrontends/)
+for the whole picture.
 
-## Wire it once
+## Alias tags
 
-If all widgets live in one bundle, pass that bundle once:
-
-```ts
-defineMountlyFeature("/widgets/dist/index.js");
-```
-
-If the host page needs namespaced tags, add a prefix:
-
-```html
-<acme-signup-card trigger="viewport" props='{"plan":"pro"}'></acme-signup-card>
-```
+`aliases` maps a browser tag to a module ID, and `prefix` namespaces the
+generated ones. Custom element names must contain a hyphen, so a module ID like
+`signup` needs an alias:
 
 ```ts
 defineMountlyFeature({
-  source: "/widgets/dist/index.js",
-  prefix: "acme",
+  modules: { signup: "/widgets/signup.js" },
+  aliases: { "signup-card": "signup" },
+  prefix: "acme", // <acme-signup-card>
 });
 ```
 
-The prefix only affects the browser tag. Mountly still uses `signup-card` as the module ID and `signupCard` as the named export in a shared bundle.
-
-For per-widget bundles, give Mountly a base URL and limit the allowed modules:
-
-```ts
-defineMountlyFeature({
-  baseUrl: "/widgets",
-  modules: ["signup-card", "payment-breakdown"],
-});
-```
-
-That registers only those modules and resolves `/widgets/signup-card/dist/index.js`, `/widgets/payment-breakdown/dist/index.js`, and so on. You save bytes when components split into separate bundles.
-
-You can also stay explicit:
-
-```ts
-defineMountlyFeature({
-  modules: {
-    "signup-card": "/widgets/signup-card.js",
-    "payment-breakdown": "/widgets/payment-breakdown.js",
-  },
-});
-```
-
-The lower-level `registerCustomElement()` API is still available when a feature needs custom loading, data, or analytics wiring.
+The lower-level `registerCustomElement()` is there when a vertical needs custom
+loading, data or analytics wiring.
 
 ## Attributes
 
@@ -104,7 +98,7 @@ el.setAttribute("props", JSON.stringify({ plan: "enterprise" }));
 ## Mount target
 
 The element renders into a `<div data-mountly-mount>` it appends to itself. Pass
-`mount-selector` to render into a container you control instead — it has to be a
+`mount-selector` to render into a container you control instead. It has to be a
 descendant of the element, so the slot stays inside the element's own subtree:
 
 ```html

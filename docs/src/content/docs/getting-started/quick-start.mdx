@@ -6,7 +6,17 @@ description: Scaffold a mountly widget and mount it on a page in 60 seconds.
 import LiveExample from "../../../components/LiveExample.astro";
 import { exampleUrl } from "../../../lib/example-urls.ts";
 
-The CLI is the fastest path. It scaffolds a React widget pre-wired with the build pipeline, both bundle outputs, and a working host page.
+This is the **runtime** track: a page you run adopts mountly and loads widgets on intent.
+
+:::tip[Handing a component to another team instead?]
+You want the **embeds** track, not this one. [Script-tag
+embeds](/mountly/concepts/script-embeds/) publish a component as a custom element
+the consuming page drops in with one `<script>`. No scaffold, no bundle choice,
+and nothing for them to install. [Embeds or
+runtime?](/mountly/getting-started/embeds-or-runtime/) settles which you need.
+:::
+
+The CLI scaffolds a React widget wired to the build pipeline, both bundle outputs, and a working host page.
 
 [Choosing an architecture](/mountly/getting-started/choosing-an-architecture/) compares a monorepo npm library, mountly runtime composition, and broader MFE platforms.
 
@@ -89,10 +99,11 @@ For bespoke loading or rendering, `loadModule` and `render` are still available 
 
 ## 5. See the full demo
 
-Try the hosted demos — no clone required:
+Try the hosted demos without cloning anything:
 
-- [**Quickstart host**](<{exampleUrl("quickstart/host.html")}>) — hover to preload, click to mount.
-- [**Marketing site**](<{exampleUrl("marketing-site/")}>) — hero button + viewport embed.
+- <a href={exampleUrl("quickstart/host.html")}>**Quickstart host**</a>: hover to preload, click to
+  mount.
+- <a href={exampleUrl("marketing-site/")}>**Marketing site**</a>: hero button plus a viewport embed.
 
 <LiveExample path="quickstart/host.html" title="Quickstart" height="300px" />
 

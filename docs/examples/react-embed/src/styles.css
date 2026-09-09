@@ -1,0 +1,12 @@
+/*
+ * Tailwind for a light-DOM embed: theme and utilities, no Preflight.
+ *
+ * Preflight is a global reset. In light DOM it lands in the consumer's
+ * document and resets their headings, lists and form controls, which is not
+ * ours to do. Utilities are scoped to the classes this component asks for.
+ * A `shadow: true` distribution can import all of "tailwindcss" instead.
+ */
+@layer theme, components, utilities;
+
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);

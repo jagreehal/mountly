@@ -66,7 +66,7 @@ This page covers the host-side toolkit. For composition patterns and custom elem
 | ---------------- | ----------------------------------------------------------------------------------- |
 | `id`             | `module-id` for `<mountly-feature>` and the registry                                |
 | `url`            | CDN URL to `peer.js` (also registered as an import-map entry under `id` or `alias`) |
-| `isolation`      | `"shared"` (default) or `"iframe"` — flip to framed without rewriting the widget    |
+| `isolation`      | `"shared"` (default) or `"iframe"`. Flip to framed without rewriting the widget     |
 | `src`            | Framed page URL when `isolation` is `"iframe"` (defaults to `url`)                  |
 | `iframeTitle`    | Required when `isolation` is `"iframe"`                                             |
 | `sandbox`        | Optional iframe `sandbox` attribute                                                 |
@@ -87,7 +87,7 @@ Manifest v1 is no longer accepted. Bump `"version"` to `"2"`. Add `exports` and 
 
 `mountlyManifestFragmentPlugin` fills `types` for you by asking the TypeScript
 checker what each entry exports, so re-exports and `export * from` are included
-and type-only exports are not — `types.module` lists what a host can import at
+and type-only exports are not. `types.module` lists what a host can import at
 runtime.
 
 ## Authoring a remote (Vite)
@@ -131,7 +131,7 @@ export default defineConfig({
     mountlyHostPlugin({
       verticals: [{ fragment: "./checkout/dist/mountly.manifest.fragment.json" }],
       devOrigins: { checkout: "http://localhost:5001" }, // optional dev origin overrides
-      writeManifest: "./manifest.json", // optional — for plain HTML / CI
+      writeManifest: "./manifest.json", // optional, for plain HTML / CI
     }),
   ],
 });
@@ -151,7 +151,7 @@ mountlyHostPlugin({
 });
 ```
 
-This is the federation-style host config, but the host gets typed, discoverable exposes. `vite-plugin-federation` gives neither from a URL remote, and needs a hand-synced `shared` block on both sides. Use `verticals: [{ fragment }]` for remotes built in the same repo. Runnable reference: [vite-host-remotes-url live demo](<{exampleUrl("vite-host-remotes-url/")}>) · [source](https://github.com/jagreehal/mountly/tree/main/docs/examples/vite-host-remotes-url).
+This is the federation-style host config, but the host gets typed, discoverable exposes. `vite-plugin-federation` gives neither from a URL remote, and needs a hand-synced `shared` block on both sides. Use `verticals: [{ fragment }]` for remotes built in the same repo. Runnable reference: <a href={exampleUrl("vite-host-remotes-url/")}>vite-host-remotes-url live demo</a> · [source](https://github.com/jagreehal/mountly/tree/main/docs/examples/vite-host-remotes-url).
 
 For custom pipelines or plain HTML hosts, compose a static manifest:
 
@@ -160,7 +160,7 @@ npx mountly manifest compose ./checkout/dist/mountly.manifest.fragment.json --ou
 npx mountly manifest codegen ./manifest.json --out mountly-remotes.d.ts
 ```
 
-Runnable reference: [vite-host-import live demo](<{exampleUrl("vite-host-import/")}>) · [source](https://github.com/jagreehal/mountly/tree/main/docs/examples/vite-host-import).
+Runnable reference: <a href={exampleUrl("vite-host-import/")}>vite-host-import live demo</a> · [source](https://github.com/jagreehal/mountly/tree/main/docs/examples/vite-host-import).
 
 Plain HTML and CMS hosts should use `bootstrapMountly()` below. They do not need the Vite plugin.
 
@@ -285,7 +285,7 @@ Pin **immutable CDN URLs** per release (`@version` in path or content-addressed 
 
 ## Same-origin proxy (optional)
 
-When a framed vertical needs first-party cookies or relative asset URLs under the host origin, `createSameOriginProxy` from `mountly-manifest/server` forwards matching **GET/HEAD** requests to an upstream. It is never required for embed — CDN + CORS is the default path. See [Same-origin proxy](/mountly/concepts/same-origin-proxy/).
+When a framed vertical needs first-party cookies or relative asset URLs under the host origin, `createSameOriginProxy` from `mountly-manifest/server` forwards matching **GET/HEAD** requests to an upstream. Embedding never requires it; CDN plus CORS is the default path. See [Same-origin proxy](/mountly/concepts/same-origin-proxy/).
 
 ## Related
 

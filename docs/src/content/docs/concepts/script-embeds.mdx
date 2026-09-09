@@ -1,0 +1,390 @@
+---
+title: Script-tag component libraries
+description: Publish your existing React, Vue or Svelte components as custom elements. One script tag, real attributes, real events, generated types.
+---
+
+Write an ordinary React, Vue or Svelte component. Mountly reads its props type
+at build time and publishes it as a custom element. The consuming page needs no package install,
+no import map, and no initialization call:
+
+```html
+<script type="module" src="https://ui.acme.com/payments/1.2.0/embed.js"></script>
+<acme-payments-summary balance="1250" currency="GBP">Loading payments…</acme-payments-summary>
+```
+
+## Author: write the component
+
+Nothing here is Mountly-specific. Type the props, as you would anyway:
+
+```tsx
+// src/elements/PaymentsSummary.tsx
+export interface PaymentsSummaryProps {
+  balance: number;
+  currency: string;
+  compact?: boolean;
+  lineItems?: Array<{ label: string; amount: number }>;
+  onViewDetails?: (detail: { balance: number }) => void;
+}
+
+export default function PaymentsSummary({
+  balance,
+  currency,
+  onViewDetails,
+}: PaymentsSummaryProps) {
+  // …
+}
+```
+
+Point the build at the directory and give it a namespace:
+
+```ts
+// vite.config.ts
+import { defineElementsConfig } from "mountly-vite-plugin";
+
+export default defineElementsConfig({
+  prefix: "acme",
+  elements: "src/elements/*.tsx",
+});
+```
+
+`PaymentsSummary.tsx` becomes `<acme-payments-summary>`. `prefix` is the only
+value you have to choose, and it is not ceremony: custom element names must
+contain a dash, and the page you are embedding into is not yours to collide on.
+
+Run `vite build` and publish `dist/`.
+
+## A library of components
+
+A directory glob is the common case, but a library that exports everything from
+one module works too. Name the export per tag:
+
+```ts
+export default defineElementsConfig({
+  prefix: "acme",
+  elements: {
+    "payments-card": { component: "src/index.tsx", exportName: "PaymentsCard" },
+    "methods-panel": { component: "src/index.tsx", exportName: "MethodsPanel" },
+  },
+});
+```
+
+Each export gets its own tag, its own prop table and its own lazy chunk. `prefix`
+always applies, so both spellings above and below give `<acme-payments-card>`.
+Globs accept a list too: `["src/elements/*.tsx", "src/cards/*.vue"]`.
+
+## Overriding the build
+
+The return value is an ordinary Vite config. It sets a relative `base` for
+cross-origin hosting, CSS code splitting, `embed.js` as the entry, sourcemaps
+on, and `dist` as the output. Change any of it with Vite's own `mergeConfig`:
+
+```ts
+import { mergeConfig } from "vite";
+
+export default mergeConfig(
+  defineElementsConfig({ prefix: "acme", elements: "src/elements/*.vue" }),
+  { build: { outDir: "release" } },
+);
+```
+
+You do not add a framework compiler. The build reads the extensions it just
+globbed and brings `@vitejs/plugin-vue` or `@sveltejs/vite-plugin-svelte`
+itself. Install the one your components need; nothing else changes. Registering
+it by hand as well fails the build, because the second copy would receive the
+first one's output and break somewhere unhelpful.
+
+## What the build reads from your types
+
+The props type is the contract. Nothing is restated in configuration:
+
+| Prop type          | Consumer writes                                           | Component receives                   |
+| ------------------ | --------------------------------------------------------- | ------------------------------------ |
+| `number`           | `balance="1250"`                                          | `1250`                               |
+| `string`           | `currency="GBP"`                                          | `"GBP"`                              |
+| `boolean`          | `compact` (or omit it)                                    | `true` / `false`                     |
+| object or array    | `line-items='[{"label":"Subs"}]'` or `el.lineItems = […]` | the parsed value                     |
+| `(detail) => void` | `addEventListener("view-details", …)`                     | a function that dispatches the event |
+
+Because the build knows `currency` is a string, `currency="007"` stays `"007"`.
+Because it knows `balance` is a number, `balance="1250"` is not the string
+`"1250"`. Camel-case props take kebab-case attributes: `lineItems` →
+`line-items`. Callback props become bubbling, composed DOM events with the `on`
+dropped and the rest kebab-cased: `onViewDetails` → `view-details`, with the
+callback's first argument as `event.detail`.
+
+## Consumer: one script tag
+
+```html
+<script type="module" src="https://ui.acme.com/payments/1.2.0/embed.js"></script>
+<acme-payments-summary balance="1250" currency="GBP"></acme-payments-summary>
+
+<script>
+  const summary = document.querySelector("acme-payments-summary");
+  summary.lineItems = [{ label: "Subscription", amount: 1200 }];
+  summary.balance = 1500; // re-renders; the component keeps its own state
+  summary.addEventListener("view-details", (event) => console.log(event.detail));
+</script>
+```
+
+Assigning a valid value clears that prop's error, whether it arrives as a
+corrected attribute or an assigned property; an error on a _different_ prop
+still holds the element back until it too is fixed.
+
+A prop named `mount` keeps working as an attribute, but not as a property.
+`element.mount()` is the element's own method and nothing shadows it. The build
+warns when your component has one.
+
+Attributes and properties are both live. Properties assigned before the deferred
+script registers the tag are preserved, and an explicit property beats the
+attribute it shares a name with. Children stay on screen as fallback content
+until the component mounts, then return if the element is removed.
+
+### Types
+
+The build emits `dist/embed.d.ts`. Reference it and every tag is typed, in
+plain DOM code and in global-JSX frameworks such as Preact, Solid and Vue:
+
+```ts
+/// <reference path="./node_modules/@acme/payments/dist/embed.d.ts" />
+
+const summary = document.querySelector("acme-payments-summary"); // typed
+summary.balance = 1500; // number
+summary.currency = 1500; // Type error
+```
+
+React 19 resolves `JSX` from the `react` module rather than the global
+namespace, so a React host references `embed.react.d.ts` instead. That file
+pulls in `embed.d.ts` for you:
+
+```ts
+/// <reference path="./node_modules/@acme/payments/dist/embed.react.d.ts" />
+```
+
+Then the tag is written directly, with no wrapper:
+
+```tsx
+<acme-payments-summary balance={1250} currency="GBP" />
+```
+
+Object and array props are typed `unknown`. The manifest describes the wire
+format, so it cannot carry your domain model. Publish the component itself if a
+consumer wants its exact types.
+
+### Editor autocomplete without TypeScript
+
+`dist/custom-elements.json` is a [Custom Elements
+Manifest](https://github.com/webcomponents/custom-elements-manifest). VS Code and
+WebStorm read it for tag, attribute and event completion in plain HTML.
+
+## What loads when
+
+`embed.js` registers every tag and downloads nothing else. In the bundled
+example it is **4.4 KB gzipped** whatever the component count, and a page with no
+elements pays only that. A component, its framework and its CSS arrive when one
+of its elements connects, so a page with one `<acme-payment-methods>` never
+fetches the payments summary. Components in one distribution share a framework
+chunk, so you pay for React once (~60 KB gzipped) and each extra component costs
+its own code, under 1 KB gzipped for the two in the example.
+
+Those numbers come from two small components. Measure your own.
+
+Defer further with the core's trigger syntax:
+
+```html
+<acme-payments-summary data-mountly-trigger="viewport:200px"></acme-payments-summary>
+```
+
+`data-mountly-trigger="never"` holds the download until you call
+`element.mount()`. Mountly's own controls live under `data-mountly-*` so they cannot collide with one of your props. Your component is free to have
+its own `trigger` prop.
+
+## When the consuming page already runs your framework
+
+A distribution carries its own framework copy. Drop a React embed into a page
+that is itself a React app and the browser loads React twice, once for each.
+
+That works. Your elements mount their own roots inside their own tags, so the
+two trees never cross and no hook resolves against the wrong copy. A browser
+test in the repo drives a bundled React host and an embed on one page and
+asserts both stay interactive. The cost is bytes: around 60 KB gzipped, paid
+once for the distribution rather than once per component.
+
+If the consuming page can import from npm, skip the element:
+
+```tsx
+import PaymentsSummary from "@acme/payments/PaymentsSummary";
+```
+
+Your package already exports the component. Importing it registers no custom
+elements, pulls in none of the embed machinery, and reuses the React the page
+already has. Real props, real types, one framework copy. Use the import inside
+your own app and for any consumer with a build, and the script tag for everyone
+else.
+
+Mountly does not try to detect the host's React and reuse it. A bundled page
+exposes no global to find, and React 19 ships no UMD build, so on most pages
+there is nothing to detect. Binding to whatever it found would also tie your
+component to the host's version, which costs you the thing the embed is for.
+
+For many widgets from several teams on one page, stop paying per distribution
+and adopt the [runtime](/mountly/getting-started/embeds-or-runtime/): an import
+map pins one framework copy and widgets ship as peer builds.
+
+## When the props type lives elsewhere
+
+The build reads the component's own file. A real library often does not keep its
+types there. It keeps them in a shared `types.ts`, a generated file, or one
+`Props` interface that nine components import. Declare the table on the element
+entry instead of moving the type:
+
+```ts
+export default defineElementsConfig({
+  prefix: "acme",
+  elements: {
+    "payments-summary": {
+      component: "src/elements/PaymentsSummary.tsx",
+      props: [
+        { name: "balance", attribute: "balance", kind: "number" },
+        { name: "currency", attribute: "currency", kind: "string" },
+        { name: "compact", attribute: "compact", kind: "boolean" },
+        { name: "lineItems", attribute: "line-items", kind: "json" },
+        { name: "onViewDetails", event: "view-details", kind: "event" },
+      ],
+    },
+  },
+});
+```
+
+`kind` is one of `string`, `number`, `boolean`, `json`, `auto` or `event`. That
+table is the same shape the build would have derived, and it drives the
+attributes, the properties, the events, `embed.d.ts` and
+`custom-elements.json` the way an inferred one does.
+
+Reach for this whenever the build cannot read the contract from the one file.
+It beats reshaping your library around the extractor. The table is then yours to
+keep in step with the component, so move the type into the file instead when
+that is easy.
+
+The build tells you which case you are in. It refuses to publish an element
+whose props it could not read, rather than shipping one that ignores everything
+the consumer sets. Unreadable contracts: a props type imported from another
+module, Vue's runtime `defineProps({ … })`, an opaque wrapper, and Vue
+components that compose options with `mixins`, `extends` or a spread.
+
+## Tailwind, and the Preflight trap
+
+`defineElementsConfig` returns an ordinary Vite config, so Tailwind's plugin
+composes with it:
+
+```ts
+import tailwind from "@tailwindcss/vite";
+import { mergeConfig } from "vite";
+
+export default mergeConfig(
+  defineElementsConfig({ prefix: "acme", elements: "src/elements/*.tsx" }),
+  { plugins: [tailwind()] },
+);
+```
+
+In a light-DOM distribution, import the theme and utilities but leave Preflight
+out:
+
+```css
+@layer theme, components, utilities;
+
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+```
+
+Preflight is a global reset. Your CSS lands in the consumer's document, so a
+plain `@import "tailwindcss"` strips the margins off their headings, the bullets
+off their lists, and the borders off their form controls. They did not ask you
+to restyle their page. The utilities you use are scoped to your own class names
+and cause none of that.
+
+A `shadow: true` distribution has no such problem. Nothing it emits reaches the
+host document, so import all of `"tailwindcss"` and let Preflight normalise
+inside each root.
+
+The [`react-embed` example](https://github.com/jagreehal/mountly/tree/main/docs/examples/react-embed)
+is built this way: Tailwind utilities for the component, a CSS module for the
+container, and 3.6 KB of CSS for the distribution.
+
+## Light DOM by default. Shadow when the host is not yours
+
+Elements render in light DOM. That is a deliberate choice, not an oversight: the
+usual consumer is a page that wants its own design system to reach in: the CMS
+template setting your button radius from its own tokens, the partner site
+running your brand's CSS variables. Shadow DOM cuts that off.
+
+It is the wrong default when the host is not one you trust, so it is one flag:
+
+```ts
+export default defineElementsConfig({
+  prefix: "acme",
+  elements: "src/elements/*.tsx",
+  shadow: true,
+});
+```
+
+Every element in the distribution then renders into its own shadow root. The
+setting is distribution-wide because it describes the kind of host you ship to,
+not the component. What changes:
+
+|                                  | Light DOM (default)                 | `shadow: true`                                |
+| -------------------------------- | ----------------------------------- | --------------------------------------------- |
+| Host CSS reaching your component | Yes, which is the point             | No                                            |
+| Your CSS reaching the host page  | Yes, one `<style>` per component    | No, nothing is added to their document        |
+| Stylesheets                      | One per component, arriving with it | One for the distribution, adopted per element |
+| Host's design tokens             | Inherited                           | Only what you read through `var(--…)`         |
+
+Under `shadow: true` the build emits a single stylesheet that it injects into no
+document; each element adopts it into its own root through a constructable
+stylesheet shared across every instance on the page.
+
+Neither mode is a security boundary. The component still runs as script in the
+host's page, with its `window`, its cookies and its network. If the threat model
+is a host you need protection from, or one that needs protection from you, the
+browser gives you one answer: a cross-origin iframe. See
+[When to frame](/mountly/concepts/when-to-frame/).
+
+## Notes
+
+- Styles render in light DOM unless you set `shadow: true`. Use CSS Modules for
+  local class names and CSS custom properties for theme values.
+- CSS imports, CSS Modules and asset URLs go through Vite's normal build
+  pipeline, so relative assets work from any origin.
+- The framework comes from the file extension, so there is nothing to declare:
+  `.vue` uses the Vue adapter, `.svelte` the Svelte one, `.tsx`/`.jsx` React. One
+  distribution may mix them, and its compilers are added for you. Vue reads
+  `defineProps<T>()` and `defineEmits<T>()`; Svelte 5 reads
+  `let { … }: Props = $props()`.
+- `root` is only needed when the config is not loaded from the project root, as
+  in a monorepo running the build from elsewhere.
+- The props type is read from the component's own file. Local interfaces, type
+  aliases, `extends`, intersections, quoted names like `'aria-label'`, method
+  syntax like `onSave(v: string): void`, `memo`/`forwardRef` wrappers, Vue's
+  `withDefaults`, both `defineEmits` spellings and the Options API's
+  `props`/`emits` are all understood. See [When the props type lives
+  elsewhere](#when-the-props-type-lives-elsewhere) for the rest.
+- Invalid JSON in an attribute puts the element in `data-mountly-state="error"`
+  and fires `mountly:error` rather than mounting with a wrong value.
+
+## Agent Skills
+
+The [`publish-component-embed`](https://github.com/jagreehal/mountly/blob/main/plugins/mountly-embed/skills/publish-component-embed/SKILL.md)
+skill teaches a coding agent this path, failure modes included, so it reaches
+for `defineElementsConfig` instead of hand-writing a custom element class:
+
+```
+/plugin marketplace add jagreehal/mountly
+/plugin install mountly-embed@mountly
+```
+
+## Runnable examples
+
+- [`react-embed`](https://github.com/jagreehal/mountly/tree/main/docs/examples/react-embed):
+  one React component, one script tag. [Open it](/mountly/examples/react-embed/host.html).
+- [`mixed-embed`](https://github.com/jagreehal/mountly/tree/main/docs/examples/mixed-embed):
+  React, Vue and Svelte from one build with no compiler configured.
+  [Open it](/mountly/examples/mixed-embed/host.html).

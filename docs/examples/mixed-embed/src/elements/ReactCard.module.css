@@ -1,0 +1,5 @@
+.card {
+  color: var(--react-embed-color, rgb(11, 22, 33));
+  padding: 8px;
+  margin: 0;
+}

@@ -1,0 +1,68 @@
+---
+title: Embeds or runtime?
+description: Mountly ships two products on one core. Embeds publish a component as a tag anyone can drop in. The runtime hosts islands on a page that runs mountly. Pick before you read anything else.
+---
+
+Mountly does two jobs. They share adapters and a lifecycle underneath. Above
+that they share nothing: different APIs, different builds, and a different ask
+of the person on the other end. Pick your column and read only that one.
+
+|                         | **Embeds**                                            | **Runtime**                                                     |
+| ----------------------- | ----------------------------------------------------- | --------------------------------------------------------------- |
+| The question it answers | "Another team wants my component on their page"       | "My page should pay for JavaScript only when the user needs it" |
+| Who owns the page       | Someone else                                          | You                                                             |
+| The consumer does       | Adds one `<script>` and writes a tag                  | Runs mountly: an import map, or a bundler                       |
+| You write               | A component and a `prefix`                            | A component, a widget, a feature                                |
+| You build with          | `defineElementsConfig`                                | `defineMountlyWidgetConfig`, `mountlyRemote`                    |
+| The API                 | `embed.js`, generated `embed.d.ts`                    | `attach`, `installRuntime`, `<mountly-feature>`, `data-mountly` |
+| Framework copies        | One per distribution, bundled in                      | One per page, shared through the import map                     |
+| Start at                | [Script-tag embeds](/mountly/concepts/script-embeds/) | [Quick start](/mountly/getting-started/quick-start/)            |
+
+There is a third door: [**MCP Apps**](/mountly/mcp-apps/), where the host is
+Claude or ChatGPT rather than a web page. Same components, its own toolchain
+(`mountly-mcp`), and neither column above applies.
+
+## Start with embeds
+
+Most people arrive asking the first question. An embed asks less of the other
+team: no install, no import map to agree on, no framework version to coordinate,
+no runtime to adopt. You build a tag, they write it:
+
+```ts
+// vite.config.ts
+export default defineElementsConfig({ prefix: "acme", elements: "src/elements/*.tsx" });
+```
+
+```html
+<script type="module" src="https://ui.acme.com/payments/1.2.0/embed.js"></script>
+<acme-payments-summary balance="1250" currency="GBP"></acme-payments-summary>
+```
+
+That is the whole integration. The props type is the contract, and the other
+team installs nothing.
+
+## Move to the runtime when the host runs mountly
+
+The runtime covers what embeds cannot: one page, many widgets, one shared
+framework instance. Every embed distribution bundles its own copy of React. For
+one component on a foreign page you should pay that. For eight widgets from four
+teams on a page you control you should not, and the host adopts mountly instead:
+an import map pins one React, widgets ship as peer builds, and
+`<mountly-feature>` or `data-mountly` places them.
+
+That costs more to adopt, and [Choosing an
+architecture](/mountly/getting-started/choosing-an-architecture/) walks its
+stages. Do not start there.
+
+## Both at once is fine
+
+A component is a component. The same source can ship as an embed for outside
+teams and import directly into your own app, with no second authoring model and
+no flag:
+
+```tsx
+import PaymentsSummary from "@acme/payments/PaymentsSummary";
+```
+
+The embed build registers custom elements; the import registers nothing. Do not
+teach one consumer both. Pick the column that matches who owns their page.

@@ -1,74 +1,100 @@
 ---
 title: Live examples
-description: Runnable mountly hosts and widgets — open in the browser without cloning the repo.
+description: Runnable hosts and widgets, grouped by which half of mountly they use, with what to watch in DevTools.
 ---
 
 import { exampleUrl } from "../../../lib/example-urls.ts";
 import LiveExample from "../../../components/LiveExample.astro";
 
-Every example below is hosted on this site. Clone the [repo](https://github.com/jagreehal/mountly) and see [`docs/examples/`](https://github.com/jagreehal/mountly/tree/main/docs/examples) for source and local dev commands.
+Every demo below runs on this site. Open DevTools and watch the Network panel:
+the point of most of them is what does **not** download until you do something.
 
-## Quick try
+Source and local dev commands live in
+[`docs/examples/`](https://github.com/jagreehal/mountly/tree/main/docs/examples).
+
+## Embeds
+
+The consuming page adds one script tag and installs nothing.
+
+<LiveExample path="react-embed/host.html" title="Script-tag embed" height="380px" />
+
+Reload with the Network panel open. `embed.js` arrives at 4.4 KB gzipped, then
+the component chunk and React follow because an element is on the page. Open
+**View details**, then press **Add 250 to balance** a few times: the number
+changes and the panel stays open, so assigning the property patched props
+instead of remounting. The card is styled with Tailwind, built by the same
+config that produced the elements.
+
+| Demo                                                                    | What it shows                                                                                                                                                            |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| <a href={exampleUrl("react-embed/host.html")}>Script-tag embed</a>      | One React component as `<acme-payments-summary>`. `balance="1250"` arrives as a number because the props type says so, and `onViewDetails` fires a `view-details` event. |
+| <a href={exampleUrl("mixed-embed/host.html")}>Mixed-framework embed</a> | React, Vue and Svelte from one build, with no compiler named in the config. Each framework chunk downloads only when one of its elements connects.                       |
+
+Guide: [Script-tag embeds](/mountly/concepts/script-embeds/).
+
+## Runtime
+
+The host page runs mountly and mounts widgets on user intent.
 
 <LiveExample path="quickstart/host.html" title="Quickstart host" height="320px" />
 
-## All demos
+Hover the button before clicking it. The widget module is fetched on hover and
+mounted on click, so the click costs no network time.
 
-<ul>
-  <li>
-    <a href={exampleUrl("quickstart/host.html")}>Quickstart</a> — shortest import map + attach()
-  </li>
-  <li>
-    <a href={exampleUrl("plain-html/")}>Plain HTML (self-contained)</a> ·{" "}
-    <a href={exampleUrl("plain-html/shared-react.html")}>shared React</a>
-  </li>
-  <li>
-    <a href={exampleUrl("marketing-site/")}>Marketing site</a> — hover, click, viewport triggers
-  </li>
-  <li>
-    <a href={exampleUrl("shadcn-drop-in/")}>shadcn drop-in</a>
-  </li>
-  <li>
-    <a href={exampleUrl("demo/")}>Demo (Vite host)</a> — full feature kitchen sink
-  </li>
-  <li>
-    <a href={exampleUrl("cross-framework-bus/")}>Cross-framework bus</a>
-  </li>
-  <li>
-    <a href={exampleUrl("multi-vertical-host/")}>Multi-vertical host</a>
-  </li>
-  <li>
-    <a href={exampleUrl("multi-widget-bundle/")}>Multi-widget bundle</a>
-  </li>
-  <li>
-    <a href={exampleUrl("monorepo-component-library/")}>Monorepo component library</a>
-  </li>
-  <li>
-    <a href={exampleUrl("vite-host-import/")}>Vite host (import remotes)</a>
-  </li>
-  <li>
-    <a href={exampleUrl("vite-host-remotes-url/")}>Vite host (URL remotes)</a>
-  </li>
-  <li>
-    <a href={exampleUrl("pokemon-kitchen-sink/")}>Pokémon kitchen sink</a>
-  </li>
-  <li>
-    MCP app preview — <strong>local only</strong>. MCP Apps §8.4 requires the host and the sandbox
-    proxy to sit on <em>different</em> origins, and GitHub Pages serves everything from one. Run{" "}
-    <code>pnpm --filter mcp-app-demo verify</code>, which starts them on separate ports.
-  </li>
-  <li>
-    <a href={exampleUrl("mcp-generative-demo/preview/stream-dist/")}>Generative UI stream</a>
-  </li>
-</ul>
+### Start here
+
+| Demo                                                                                                                       | What it shows                                                                                                               |
+| -------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| <a href={exampleUrl("quickstart/host.html")}>Quickstart</a>                                                                | The shortest host that works: an import map and one `attach()`.                                                             |
+| <a href={exampleUrl("plain-html/")}>Plain HTML</a> · <a href={exampleUrl("plain-html/shared-react.html")}>shared React</a> | No bundler on the host. The two URLs are the same widgets on a self-contained build and on a peer build sharing one React.  |
+| <a href={exampleUrl("marketing-site/")}>Marketing site</a>                                                                 | A campaign page with hover, click and viewport triggers. Reload, then hover the hero button and scroll to the inline embed. |
+| <a href={exampleUrl("shadcn-drop-in/")}>shadcn drop-in</a>                                                                 | A shadcn-style React widget dropped into static HTML through an import map.                                                 |
+
+### Several widgets on one page
+
+| Demo                                                                               | What it shows                                                                                               |
+| ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| <a href={exampleUrl("cross-framework-bus/")}>Cross-framework bus</a>               | React 19, Vue and Svelte widgets on one page talking over a typed `mountly/bus`. No widget imports another. |
+| <a href={exampleUrl("multi-widget-bundle/")}>Multi-widget bundle</a>               | Three widgets sharing one bundle. One JS fetch and one stylesheet for all three.                            |
+| <a href={exampleUrl("monorepo-component-library/")}>Monorepo component library</a> | A shared UI library consumed by a widgets bundle, so third-party imports flow through one build.            |
+
+### Multi-team hosts
+
+| Demo                                                                      | What it shows                                                                                                        |
+| ------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| <a href={exampleUrl("multi-vertical-host/")}>Multi-vertical host</a>      | Manifest-driven composition: `installPlatformRuntime`, verticals pinned by a manifest, one React across all of them. |
+| <a href={exampleUrl("vite-host-import/")}>Vite host, import remotes</a>   | Federation-style `import("demo-widget")` with remote typings generated from the built fragment.                      |
+| <a href={exampleUrl("vite-host-remotes-url/")}>Vite host, URL remotes</a> | The same host declaring a remote by its published URL, then fetching the fragment to wire the import map.            |
+
+Read [Choosing an architecture](/mountly/getting-started/choosing-an-architecture/)
+before copying these three. They are the last stage, not the starting point.
+
+### Everything at once
+
+| Demo                                                                   | What it shows                                                                                    |
+| ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| <a href={exampleUrl("demo/")}>Demo (Vite host)</a>                     | `attach`, multi-instance mounting, custom elements, prefetch and the devtools panel in one page. |
+| <a href={exampleUrl("pokemon-kitchen-sink/")}>Pokémon kitchen sink</a> | Triggers, prefetch and analytics under load. A stress test, not an onboarding path.              |
+
+## MCP Apps
+
+| Demo                                                                                      | What it shows                                                              |
+| ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| <a href={exampleUrl("mcp-generative-demo/preview/stream-dist/")}>Generative UI stream</a> | A `@json-render` spec assembling element by element as a model streams it. |
+
+The MCP app preview runs **locally only**. MCP Apps §8.4 requires the host and
+the sandbox proxy to sit on different origins, and this site serves everything
+from one. Run `pnpm --filter mcp-app-demo verify`, which starts them on separate
+ports.
 
 ## Run locally
 
-From the repo root after `pnpm install && pnpm -r build`:
+From the repo root, after `pnpm install && pnpm -r build`:
 
 ```bash
 pnpm --filter mountly-docs run stage-examples
 pnpm --filter mountly-docs dev
 ```
 
-Per-example dev servers are documented in [`docs/examples/README.md`](https://github.com/jagreehal/mountly/blob/main/docs/examples/README.md).
+Each example also has its own dev server and port, listed in
+[`docs/examples/README.md`](https://github.com/jagreehal/mountly/blob/main/docs/examples/README.md).

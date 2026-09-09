@@ -287,3 +287,10 @@ export function defineMountlyWidgetConfig(
 
   return configs;
 }
+
+export {
+  defineElementsConfig,
+  type MountlyElementsConfigOptions,
+  type MountlyElementEntry,
+} from "./embed.js";
+export { extractProps, type PropSpec, type PropKind } from "./props.js";

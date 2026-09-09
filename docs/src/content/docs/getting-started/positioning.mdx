@@ -1,95 +1,68 @@
 ---
 title: Positioning
-description: How to think about mountly, where it fits, and what it is not.
+description: What Mountly is for, in work terms, and what it leaves alone.
 ---
 
-mountly is an **on-demand component runtime**.
+Mountly helps you put a React, Vue, or Svelte component on a page that does not
+use that framework.
 
-Short version:
+Most teams start by publishing the component as a custom element. You point a
+Vite build at the files and choose a tag prefix. The other team adds one script
+tag and writes the element. Attributes and events come from the component's
+props type. Their page does not install Mountly.
 
-> Framework components. Any page. On demand.
+```ts
+export default defineElementsConfig({ prefix: "acme", elements: "src/elements/*.tsx" });
+```
 
-Longer version:
+```html
+<script type="module" src="https://ui.acme.com/payments/1.2.0/embed.js"></script>
+<acme-payments-summary balance="1250" currency="GBP"></acme-payments-summary>
+```
 
-> mountly turns React, Vue, and Svelte components into lazy, HTML-addressable features (light DOM by default; `shadow: true` for isolation) that can be dropped into CMS pages, marketing sites, legacy apps, partner embeds, and framework migrations.
+If you run the page yourself and want many widgets to share one framework copy,
+use the runtime instead. Mountly loads each widget when a trigger fires (click,
+viewport, idle, and so on). That path asks more of the host: an import map or a
+bundler, and a shared React (or Vue, or Svelte) version.
 
-## The center
+Pick which half you need in
+[Embeds or runtime?](/mountly/getting-started/embeds-or-runtime/). A third host
+is an MCP client (Claude, ChatGPT); that path lives under
+[MCP Apps](/mountly/mcp-apps/).
 
-The core primitive is not an app, route, page, or microfrontend. It is a **feature**:
+## Who this is for
 
-- A normal framework component.
-- Wrapped as a mountable widget.
-- Addressed from HTML.
-- Loaded and mounted when a trigger says "now".
-- Exposed through a stable runtime contract (`mount` / `unmount`).
-- Mounted in light DOM by default, with opt-in isolation via `shadow: true`.
+Product teams that own a slice of the product and need that UI on a page someone
+else runs: a CMS template, a marketing site, a partner shell, a legacy app, or
+another team's platform. You keep the component, the deploy URL, and the
+contract. They keep the page.
 
-Teams use that primitive in several architectures.
+It also fits a page you do run, when you want HTML tags and intent-based loading
+without pulling every widget into the first paint.
 
-That primitive can form a lightweight microfrontend composition layer. A team-owned feature becomes a microfrontend when its team builds, tests, and deploys it on a release path separate from the host. mountly supplies the browser contract and loading machinery. Your CDN and release process supply the deployment boundary.
+## What you get
 
-## Use cases
+- A build that turns ordinary components into tags, with types and a custom
+  elements manifest for editors.
+- Lazy load by default: `embed.js` registers tags; component code and CSS arrive
+  when an element connects.
+- Light DOM so the host's design tokens can reach in; `shadow: true` when you
+  need style isolation. Neither is a security boundary. Untrusted hosts need an
+  iframe. See [When to frame](/mountly/concepts/when-to-frame/).
+- On the runtime track: triggers, a shared module cache, and `<mountly-feature>`
+  or `data-mountly` for hosts that already run Mountly.
 
-| Use case              | What mountly provides                                                                        |
-| --------------------- | -------------------------------------------------------------------------------------------- |
-| Marketing pages       | Product-owned components on fast campaign pages without copying UI code.                     |
-| CMS and static hosts  | Custom tags plus one host script instead of a full app shell.                                |
-| Legacy modernization  | Replace old UI one feature at a time while the host remains in place.                        |
-| Runtime islands       | Island-style activation for HTML hosts without adopting a site framework.                    |
-| Partner embeds        | Stable HTML tags that load interactive UI on demand, with optional `shadow: true` isolation. |
-| Multi-team sites      | Each team has a separate release path. The host manifest pins versions.                      |
-| Cross-framework pages | React, Vue, and Svelte widgets coexist on one page. Each team picks their framework.         |
-| MCP-hosted UI         | mountly components wrapped as MCP App Views. Same component, two activation contexts.        |
-| Performance work      | Heavy UI loads on intent, viewport, idle, media query, or URL change.                        |
+The trade on embeds is one framework copy per distribution. That is fine for one
+team's components on a foreign page. For eight widgets on a page you control,
+use the runtime.
 
-## What it is
+## What Mountly leaves alone
 
-- A component delivery runtime.
-- A progressive enhancement layer.
-- A framework bridge.
-- A declarative custom-element loader.
-- An on-demand activation and caching system.
-- A lightweight composition layer for widgets and regions with separate release paths.
+- Your app framework still owns the shell, routes, and SSR when you have one.
+- Your CDN and release process still own versions, rollouts, and traffic.
+- Components stay React, Vue, or Svelte. You write them the same way you do today.
 
-## Scope
-
-- Next, Nuxt, SvelteKit, Remix, or Astro can own the application shell and SSR.
-- The host application owns full-app routing and global state.
-- Your delivery platform coordinates staged rollouts, traffic, and runtime version policy.
-- Components keep their React, Vue, or Svelte authoring model.
-
-## Compared with nearby tools
-
-### Astro
-
-Astro is a site framework with compile-time island directives. mountly is runtime-first and host-agnostic. It works inside pages that already exist: CMS templates, static files, legacy apps, partner pages, and app shells from another framework.
-
-Use Astro when Astro owns the site. Use mountly when the page already exists and you need to drop in an interactive component.
-
-They can also work together: Astro can render the shell and content, while mountly handles a portable, interactive widget that should keep its own release path or framework lifecycle.
-
-### Web Components
-
-mountly uses custom elements as a delivery mechanism, not as the authoring model. You still write React, Vue, or Svelte components. The adapter exposes them as mountable widgets, and mountly gives the host a stable tag such as `<signup-card>`.
-
-### Import maps and shared modules
-
-Import maps pin shared modules across separately built applications. mountly adds manifest validation, on-demand mounting, and custom-element delivery on top of that model.
-
-### Framework lazy loading
-
-Framework lazy loading works well when one framework owns the app. mountly is for heterogeneous hosts, plain HTML, CMS pages, and migrations where the component team and host page may not share a bundler.
-
-It is also composable with framework apps. A Next, Astro, Remix, Vue, or SvelteKit app can own routing and SSR while mountly owns a specific embedded feature that needs custom-tag placement, trigger-based activation, or cross-framework portability.
-
-## The decision rule
-
-Use mountly when you can describe the work as:
-
-> We have a component, and we need to place it into a page that should not own the component's framework lifecycle.
-
-If the work is instead:
-
-> We are building a full application and one framework owns every route and surface.
-
-then mountly is usually not the right center of gravity. Use the framework's own routing, data, and lazy-loading model.
+[When not to use mountly](/mountly/concepts/when-not-to-use/) covers the cases
+where the framework's own lazy loading or hydration is enough. For release
+boundaries and multi-team shells, see
+[Choosing an architecture](/mountly/getting-started/choosing-an-architecture/).

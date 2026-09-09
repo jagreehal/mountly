@@ -79,6 +79,18 @@ Each widget mount is its own Vue app. **Providers do not cross widgets.** If two
 
 Multi-widget hosts should use the peer build to share one Vue copy. See [Distribution](/mountly/concepts/distribution/).
 
+## Publish as a script tag
+
+To hand a Vue component to a team that does not use Vue, point a build at it and give it a namespace. Mountly reads `defineProps<T>()` and `defineEmits<T>()` and publishes the component as a custom element:
+
+```ts title="vite.config.ts"
+import { defineElementsConfig } from "mountly-vite-plugin";
+
+export default defineElementsConfig({ prefix: "acme", elements: "src/elements/*.vue" });
+```
+
+`@vitejs/plugin-vue` is added for you. Install it and leave it out of your config. The consuming page needs one script tag and no package install. See [Script-tag component libraries](/mountly/concepts/script-embeds/).
+
 ## Common pitfalls
 
 ### Style leakage

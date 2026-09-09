@@ -73,7 +73,7 @@ These libraries inject `<style>` tags at runtime targeting `document.head`. In l
 shadcn pairs Tailwind tokens with Radix UI primitives, and it works out of the box on the default light-DOM mount. Ship one global Tailwind stylesheet through a `<link>` in the host's `<head>` and let Radix portal content to `document.body` the way it was designed.
 
 ```ts
-// Default light DOM — nothing extra to configure.
+// Default light DOM. Nothing extra to configure.
 export const hero = createWidget(Hero);
 export const pricing = createWidget(Pricing);
 export const newsletter = createWidget(Newsletter);
@@ -174,6 +174,18 @@ The custom element `<mountly-feature>` calls this for you when its `props` attri
 - `dist/peer.js`: externalises React. Pairs with the host's import map, one React for many widgets.
 
 You don't choose at build time. The build produces both, and the host's import map decides which to load. See [Distribution](/mountly/concepts/distribution/).
+
+## Publish as a script tag
+
+The two builds above are for hosts that run mountly. To hand the component to a team that does not use React, point a build at it and give it a namespace. Mountly reads the props type and publishes the component as a custom element:
+
+```ts title="vite.config.ts"
+import { defineElementsConfig } from "mountly-vite-plugin";
+
+export default defineElementsConfig({ prefix: "acme", elements: "src/elements/*.tsx" });
+```
+
+`<acme-payments-summary balance="1250">` then works behind one script tag, with no package install, import map or init call on the consumer's side. See [Script-tag component libraries](/mountly/concepts/script-embeds/).
 
 ## Server components
 
