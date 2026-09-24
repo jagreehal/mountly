@@ -4,8 +4,12 @@ import { parseAst } from "vite";
  * How an attribute string becomes a prop value. Derived from the component's
  * own TypeScript types, so `currency="GBP"` stays a string and `balance="1250"`
  * becomes a number without either side declaring anything.
+ *
+ * `event` is a callback the component calls out (`onSave`), dispatched as a DOM
+ * event. `function` is one the host passes in (`getToken`, `formatPrice`): a
+ * property only, never an attribute, and its return value reaches the component.
  */
-export type PropKind = "string" | "number" | "boolean" | "json" | "auto" | "event";
+export type PropKind = "string" | "number" | "boolean" | "json" | "auto" | "event" | "function";
 
 export interface PropSpec {
   /** Prop name the component reads. */
@@ -64,7 +68,7 @@ function kindOf(type: Node | undefined, types: Map<string, Node>, seen = 0): Pro
     case "TSBooleanKeyword":
       return "boolean";
     case "TSFunctionType":
-      return "event";
+      return "function";
     case "TSTypeReference": {
       // A generic like `Array<T>` or `Record<K, V>` is a container: JSON.
       if (resolved.typeArguments) return "json";
@@ -218,9 +222,9 @@ function takesProps(declaration: Node): boolean | "unknown" {
 }
 
 function toSpec(name: string, kind: PropKind): PropSpec {
-  if (kind === "event" || /^on[A-Z]/.test(name)) {
-    return { name, kind: "event", event: eventName(name) };
-  }
+  // The name decides the direction: `onSave` calls out, `getToken` is handed in.
+  if (/^on[A-Z]/.test(name)) return { name, kind: "event", event: eventName(name) };
+  if (kind === "event" || kind === "function") return { name, kind: "function" };
   return { name, attribute: kebab(name), kind };
 }
 
@@ -231,7 +235,7 @@ const VUE_CTOR: Record<string, PropKind> = {
   Boolean: "boolean",
   Array: "json",
   Object: "json",
-  Function: "event",
+  Function: "function",
 };
 
 /**
@@ -316,11 +320,11 @@ function specsFrom(members: Node[], types: Map<string, Node>): PropSpec[] {
     if (member.type !== "TSPropertySignature" && member.type !== "TSMethodSignature") continue;
     const name = keyOf(member);
     if (!name) continue;
-    // Method syntax declares a callback just as much as a function-typed
-    // property does; dropping it would lose the prop and its DOM event.
+    // Method syntax declares a function just as much as a function-typed
+    // property does; dropping it would lose the prop (and its DOM event).
     specs.push(
       member.type === "TSMethodSignature"
-        ? toSpec(name, "event")
+        ? toSpec(name, "function")
         : toSpec(name, kindOf(member.typeAnnotation?.typeAnnotation, types)),
     );
   }

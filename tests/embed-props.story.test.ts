@@ -228,6 +228,26 @@ describe("Prop table extraction", () => {
     ]);
   });
 
+  it("takes functions the host passes in as properties, not events", ({ task }) => {
+    story.init(task);
+    story.given("a token getter, a formatter method and an ordinary callback");
+
+    expect(
+      extractProps(`
+        interface Props {
+          getToken: () => Promise<string>;
+          format?(value: number): string;
+          onSave: (value: string) => void;
+        }
+        export default function C(p: Props) {}
+      `),
+    ).toEqual([
+      { name: "getToken", kind: "function" },
+      { name: "format", kind: "function" },
+      { name: "onSave", kind: "event", event: "save" },
+    ]);
+  });
+
   it("never lets a destructuring pattern stand in for a type it could not read", ({ task }) => {
     story.init(task);
     story.given("a component destructuring some props out of an unresolvable type");

@@ -92,10 +92,10 @@ The repo demonstrates this end-to-end:
 - `tests/fixtures/shadcn-light-dom-tokens.css`: stand-in for `app/globals.css` with `:root` tokens and utility classes.
 - `tests/multi-widget-bundles.spec.ts`: proves all three widgets pick up the same primary color from the global stylesheet.
 
-If you want shadow DOM with shadcn, expect two friction points and plan for them:
+Shadow DOM with shadcn takes two adjustments:
 
-1. **`:root` tokens don't apply.** `bg-background` resolves to `hsl(var(--background))`; `--background` is set on `:root` (the document `<html>`). Inside a shadow root, `:root` matches nothing, so every shadcn token comes out empty. Compile Tailwind targeting `:host` instead.
-2. **Radix portals target `document.body`.** Dialog, Popover, DropdownMenu, etc. portal their content outside the component tree. From inside a shadow root, that portal lands outside the shadow boundary. Wrap each Radix-using component to pass a `Portal container` from inside the shadow root via context.
+1. **Declare tokens on `:root, :host`.** `bg-background` resolves to `hsl(var(--background))`, and shadcn sets `--background` on `:root` (the document `<html>`). Inside a shadow root `:root` matches nothing, so add `:host` to the selector.
+2. **Portal into the shadow root.** Dialog, Popover and DropdownMenu portal to `document.body` by default, outside the root and its stylesheet. Pass `usePortalContainer()` from `mountly-react` as the portal's container: `<PopoverPrimitive.Portal container={usePortalContainer()}>`. It returns the root's own portal node under `shadow: true` and `null` in light DOM, which Radix reads as `document.body`.
 
 For most teams, the default light-DOM path is the right answer. For more on the choice, see [Multi-widget bundles](/mountly/concepts/multi-widget/).
 

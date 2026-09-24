@@ -10,13 +10,16 @@
 import type { WidgetModule } from "./adapter.js";
 import { mount, update, wire } from "./core.js";
 
-/** How an attribute string becomes a prop value. Emitted by the build. */
-export type PropKind = "string" | "number" | "boolean" | "json" | "auto" | "event";
+/**
+ * How an attribute string becomes a prop value. Emitted by the build. `event`
+ * calls out as a DOM event; `function` is a property the host assigns.
+ */
+export type PropKind = "string" | "number" | "boolean" | "json" | "auto" | "event" | "function";
 
 export interface PropSpec {
   /** Prop name the component reads. */
   name: string;
-  /** Attribute the consumer writes. Absent for callback props. */
+  /** Attribute the consumer writes. Absent for event and function props. */
   attribute?: string;
   kind: PropKind;
   /** DOM event dispatched when the component calls this prop. */
@@ -76,7 +79,12 @@ function defineElement(tag: string, definition: ElementDefinition): void {
   const specs = definition.props ?? [];
   const dataProps = specs.filter((spec) => spec.kind !== "event");
   const eventProps = specs.filter((spec) => spec.kind === "event");
-  const byAttribute = new Map(dataProps.map((spec) => [spec.attribute ?? spec.name, spec]));
+  // A function has no string form, so it is a property only.
+  const byAttribute = new Map(
+    dataProps
+      .filter((spec) => spec.kind !== "function")
+      .map((spec) => [spec.attribute ?? spec.name, spec]),
+  );
   const trigger = definition.trigger ?? "connected";
   // Mountly's own control surface lives under `data-mountly-*` so it can never
   // collide with a component prop. `trigger` in particular is a prop name real

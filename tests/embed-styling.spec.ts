@@ -47,10 +47,7 @@ async function serveHost(html: string) {
   return { host, hostUrl: await listen(host) };
 }
 
-async function buildElements(
-  options: Parameters<typeof defineElementsConfig>[0],
-  outDir: string,
-) {
+async function buildElements(options: Parameters<typeof defineElementsConfig>[0], outDir: string) {
   await rm(outDir, { recursive: true, force: true });
   const config = defineElementsConfig(options);
   await build({
@@ -116,9 +113,9 @@ test("light DOM CSS modules keep a host decoy .summary rule from winning", async
     await expect(section).toHaveCSS("color", "rgb(23, 37, 84)");
     await expect(section).toHaveCSS("padding-top", "16px");
     await expect(section).toHaveClass(/summary/i);
-    await expect.poll(async () => (await section.getAttribute("class"))?.trim()).not.toBe(
-      "summary",
-    );
+    await expect
+      .poll(async () => (await section.getAttribute("class"))?.trim())
+      .not.toBe("summary");
   } finally {
     await Promise.all([close(provider), close(host)]);
     await rm(dist, { recursive: true, force: true });
@@ -288,10 +285,12 @@ test("mixed-framework shadow build isolates each framework from host CSS", async
       )
       .toBe(true);
     await expect
-      .poll(
-        () =>
-          page.locator("link[rel=stylesheet]").evaluateAll((nodes) =>
-            nodes.filter((node) => /\.css($|\?)/.test(node.getAttribute("href") ?? "")).length,
+      .poll(() =>
+        page
+          .locator("link[rel=stylesheet]")
+          .evaluateAll(
+            (nodes) =>
+              nodes.filter((node) => /\.css($|\?)/.test(node.getAttribute("href") ?? "")).length,
           ),
       )
       .toBe(0);

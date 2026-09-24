@@ -71,18 +71,21 @@ distribution may mix them. Globs accept a list:
 
 ## What the props type becomes
 
-| Prop type          | Consumer writes                            | Component receives     |
-| ------------------ | ------------------------------------------ | ---------------------- |
-| `number`           | `balance="1250"`                           | `1250`                 |
-| `string`           | `currency="GBP"`                           | `"GBP"`                |
-| `boolean`          | `compact` (or omit)                        | `true` / `false`       |
-| object or array    | `line-items='[…]'` or `el.lineItems = […]` | the parsed value       |
-| `(detail) => void` | `addEventListener("view-details", …)`      | a dispatching function |
+| Prop type                         | Consumer writes                            | Component receives     |
+| --------------------------------- | ------------------------------------------ | ---------------------- |
+| `number`                          | `balance="1250"`                           | `1250`                 |
+| `string`                          | `currency="GBP"`                           | `"GBP"`                |
+| `boolean`                         | `compact` (or omit)                        | `true` / `false`       |
+| object or array                   | `line-items='[…]'` or `el.lineItems = […]` | the parsed value       |
+| `onViewDetails: (detail) => void` | `addEventListener("view-details", …)`      | a dispatching function |
+| `getToken: () => Promise<string>` | `el.getToken = () => auth.token()`         | the host's function    |
 
 Camel-case props take kebab-case attributes. `onViewDetails` becomes a
 bubbling, composed `view-details` event with the callback's first argument as
-`event.detail`. Attributes and properties are both live; an assigned property
-beats the attribute of the same name.
+`event.detail`. Any other function-typed prop is one the host hands in: a
+property only, never an attribute, so token getters and secrets stay out of the
+markup. Attributes and properties are both live; an assigned property beats the
+attribute of the same name.
 
 ## One explicit tag per export
 
@@ -147,13 +150,14 @@ export default defineElementsConfig({
         { name: "compact", attribute: "compact", kind: "boolean" },
         { name: "lineItems", attribute: "line-items", kind: "json" },
         { name: "onViewDetails", event: "view-details", kind: "event" },
+        { name: "getToken", kind: "function" },
       ],
     },
   },
 });
 ```
 
-`kind` is `string`, `number`, `boolean`, `json`, `auto` or `event`. The table is
+`kind` is `string`, `number`, `boolean`, `json`, `auto`, `event` or `function`. The table is
 then yours to keep in step with the component, so move the type into the file
 instead when that is easy.
 
@@ -174,7 +178,20 @@ export default defineElementsConfig({
 
 It is distribution-wide — it describes the host you ship to, not the component.
 Under it the build emits one stylesheet it injects into no document, and each
-element adopts it into its own root.
+element adopts it into its own root. Two adjustments inside a shadow root:
+
+- React popups (Radix, shadcn/ui) portal to `document.body` and lose the
+  stylesheet. Pass `usePortalContainer()` from `mountly-react` as the portal's
+  `container`; it returns `null` in light DOM, so one component serves both.
+- Theme tokens on `:root` match nothing in a shadow root. Declare them on
+  `:root, :host`.
+
+## Web Workers
+
+`new Worker(new URL("./work.ts", import.meta.url), { type: "module" })` works
+as written, including from a CDN on another origin: the build routes it
+through a same-origin `blob:` shim. The host needs CORS on the worker file and,
+if it sets a CSP, `blob:` in `worker-src`. `SharedWorker` is not rerouted.
 
 Neither mode is a security boundary: the component runs as script in the host's
 page, with its `window`, cookies and network. If the requirement is mutual
