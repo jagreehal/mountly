@@ -1,6 +1,6 @@
 import { globSync, readFileSync } from "node:fs";
 import { basename, dirname, extname, relative, resolve } from "node:path";
-import type { Plugin, Rollup, UserConfig } from "vite";
+import { parseAst, type Plugin, type Rollup, type UserConfig } from "vite";
 import type { MountlyWidgetFramework } from "./index.js";
 import { extractProps, kebab, type PropSpec } from "./props.js";
 
@@ -68,6 +68,7 @@ const TS_TYPE: Record<string, string> = {
   boolean: "boolean",
   json: "unknown",
   auto: "unknown",
+  function: "(...args: never[]) => unknown",
 };
 
 /** `src/PaymentsSummary.tsx` → `acme-payments-summary`. */
@@ -240,7 +241,7 @@ function manifest(elements: BuiltElement[]): string {
                 type: { text: TS_TYPE[spec.kind] ?? "unknown" },
               })),
             attributes: props
-              .filter((spec) => spec.kind !== "event")
+              .filter((spec) => spec.attribute)
               .map((spec) => ({
                 name: spec.attribute,
                 fieldName: spec.name,
@@ -358,6 +359,177 @@ function resolveCssToken(bundle: Rollup.OutputBundle): void {
 }
 
 /**
+ * `new Worker(url)` throws when `url` is on another origin, as it is for every
+ * worker in a distribution served from a CDN to someone else's page. A module
+ * or classic script on a blob: URL is same-origin by definition, so it can
+ * import the real worker (CORS on the assets is already required). Same-origin
+ * workers are constructed untouched. Declared on the chunk's first line so the
+ * sourcemap shifts only there.
+ */
+const WORKER_SHIM =
+  "function __mountlyWorker(u,o){var h=String(u);" +
+  "if(new URL(h,location.href).origin===location.origin)return new Worker(u,o);" +
+  'var s=o&&o.type==="module"?"import "+JSON.stringify(h)+";":"importScripts("+JSON.stringify(h)+");";' +
+  'return new Worker(URL.createObjectURL(new Blob([s],{type:"text/javascript"})),o)}';
+
+// oxc's ESTree nodes, loosely typed the same way props.ts reads them.
+type Node = Record<string, any>;
+
+const FUNCTIONS = new Set(["FunctionDeclaration", "FunctionExpression", "ArrowFunctionExpression"]);
+// Where a `var` stops hoisting: a function, or a class's `static { }` block.
+const VAR_SCOPES = new Set([...FUNCTIONS, "StaticBlock"]);
+
+/** The names a pattern binds: `{ Worker: W }` binds `W`, never the key `Worker`. */
+function patternNames(pattern: Node | null | undefined): string[] {
+  if (!pattern) return [];
+  switch (pattern.type) {
+    case "Identifier":
+      return [pattern.name];
+    case "ObjectPattern":
+      return pattern.properties.flatMap((p: Node) =>
+        patternNames(p.type === "RestElement" ? p.argument : p.value),
+      );
+    case "ArrayPattern":
+      return pattern.elements.flatMap(patternNames);
+    case "RestElement":
+      return patternNames(pattern.argument);
+    case "AssignmentPattern":
+      return patternNames(pattern.left);
+    default:
+      return [];
+  }
+}
+
+/** Child nodes, in source order. */
+function children(node: Node): Node[] {
+  const out: Node[] = [];
+  for (const key in node) {
+    if (key === "parent") continue;
+    const value = node[key];
+    if (Array.isArray(value)) {
+      for (const item of value) if (item && typeof item.type === "string") out.push(item);
+    } else if (value && typeof value.type === "string") out.push(value);
+  }
+  return out;
+}
+
+/** `var`s hoist to the nearest function or static block; collect without entering inner ones. */
+function varNames(node: Node): string[] {
+  if (VAR_SCOPES.has(node.type)) return [];
+  const own =
+    node.type === "VariableDeclaration" && node.kind === "var"
+      ? node.declarations.flatMap((d: Node) => patternNames(d.id))
+      : [];
+  return [...own, ...children(node).flatMap(varNames)];
+}
+
+/** What a statement list declares for its block: let, const, class, function, import. */
+function lexicalNames(statements: Node[]): string[] {
+  return statements.flatMap((statement: Node): string[] => {
+    const declared =
+      statement.type === "ExportNamedDeclaration" || statement.type === "ExportDefaultDeclaration"
+        ? statement.declaration
+        : statement;
+    if (!declared) return [];
+    switch (declared.type) {
+      case "VariableDeclaration":
+        return declared.kind === "var"
+          ? []
+          : declared.declarations.flatMap((d: Node) => patternNames(d.id));
+      case "FunctionDeclaration":
+      case "ClassDeclaration":
+        return declared.id ? [declared.id.name] : [];
+      case "ImportDeclaration":
+        return declared.specifiers.map((spec: Node) => spec.local.name);
+      default:
+        return [];
+    }
+  });
+}
+
+/** The bindings a node introduces for its own subtree, or null if it opens no scope. */
+function scopeOf(node: Node, parent: Node | undefined): string[] | null {
+  switch (node.type) {
+    case "Program":
+      return [...lexicalNames(node.body), ...varNames({ type: "Block", body: node.body })];
+    case "FunctionDeclaration":
+    case "FunctionExpression":
+    case "ArrowFunctionExpression":
+      // Parameters only. Their defaults run in this scope, before the body's
+      // declarations exist, so `(w = new Worker(u)) => { const Worker = … }`
+      // still means the platform's Worker in the default.
+      return [
+        ...node.params.flatMap(patternNames),
+        // A named function expression sees its own name.
+        ...(node.type === "FunctionExpression" && node.id ? [node.id.name] : []),
+      ];
+    case "BlockStatement":
+      // A function's body block also holds that function's hoisted vars.
+      return FUNCTIONS.has(parent?.type) && parent?.body === node
+        ? [...lexicalNames(node.body), ...node.body.flatMap(varNames)]
+        : lexicalNames(node.body);
+    case "StaticBlock":
+      return [...lexicalNames(node.body), ...node.body.flatMap(varNames)];
+    case "SwitchStatement":
+      // The cases' scope. The discriminant is outside it: see `walk`.
+      return lexicalNames(node.cases.flatMap((c: Node) => c.consequent));
+    case "ForStatement":
+    case "ForInStatement":
+    case "ForOfStatement": {
+      const head = node.type === "ForStatement" ? node.init : node.left;
+      return head?.type === "VariableDeclaration" && head.kind !== "var"
+        ? head.declarations.flatMap((d: Node) => patternNames(d.id))
+        : [];
+    }
+    case "CatchClause":
+      return patternNames(node.param);
+    case "ClassExpression":
+      return node.id ? [node.id.name] : [];
+    default:
+      return null;
+  }
+}
+
+/**
+ * Route each `new Worker(…)` that means the platform's Worker through the
+ * cross-origin shim. Parsed, not pattern-matched: the same characters in a
+ * string, template or comment are content, and an inline worker's source is one
+ * of those strings. A call is left alone when any enclosing scope binds
+ * `Worker` (a parameter, a catch, a var, a let, a class, an import), since that
+ * call constructs the author's Worker.
+ */
+export function shimWorkers(code: string): string | null {
+  if (!code.includes("Worker")) return null;
+  const callees: Array<{ start: number; end: number }> = [];
+  const walk = (node: Node, parent: Node | undefined, shadowed: boolean) => {
+    const scope = scopeOf(node, parent);
+    const hidden = shadowed || Boolean(scope?.includes("Worker"));
+    if (
+      !hidden &&
+      node.type === "NewExpression" &&
+      node.callee.type === "Identifier" &&
+      node.callee.name === "Worker"
+    ) {
+      callees.push(node.callee);
+    }
+    for (const child of children(node)) {
+      // `switch (x)` evaluates x before its cases' block exists, so a
+      // `const Worker` in a case cannot shadow a Worker in the discriminant.
+      const outside = node.type === "SwitchStatement" && child === node.discriminant;
+      walk(child, node, outside ? shadowed : hidden);
+    }
+  };
+  walk(parseAst(code, { lang: "js" }), undefined, false);
+  if (!callees.length) return null;
+  let out = code;
+  // Right to left, so earlier offsets stay valid.
+  for (const { start, end } of callees.sort((a, b) => b.start - a.start)) {
+    out = out.slice(0, start) + "__mountlyWorker" + out.slice(end);
+  }
+  return WORKER_SHIM + out;
+}
+
+/**
  * An element whose props could not be read would ignore everything the consumer
  * sets, and say so nowhere. Fail the build instead, and name the way out.
  */
@@ -441,6 +613,12 @@ import { createWidget } from ${JSON.stringify(`mountly-${element.framework}`)};
 export default createWidget(component[${JSON.stringify(element.entry.exportName ?? "default")}]${widgetOptions});`;
       }
     },
+    // Vite has already rewritten `new Worker(new URL(…))` to the emitted file by
+    // now, so only the constructor call needs rerouting.
+    renderChunk(code) {
+      const shimmed = shimWorkers(code);
+      return shimmed ? { code: shimmed, map: null } : null;
+    },
     // Vite writes the stylesheet from its own `generateBundle`, so the name to
     // point at only exists once every other plugin has had its turn.
     generateBundle: {
@@ -479,6 +657,10 @@ export default createWidget(component[${JSON.stringify(element.entry.exportName 
     // try to parse a `.vue` or `.svelte` file before its compiler sees it.
     oxc: frameworks.has("react") ? { jsx: { runtime: "automatic" } } : undefined,
     plugins: [plugin, frameworkPlugins(frameworks)],
+    // ES workers keep their own `import.meta.url` when the shim imports them
+    // from a blob:, so their relative URLs still resolve against the provider.
+    // Classic (iife) workers would see the blob's URL instead.
+    worker: { format: "es" },
     build: {
       sourcemap: true,
       // Light DOM wants Vite's per-chunk stylesheets, which arrive with the

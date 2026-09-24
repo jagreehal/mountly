@@ -58,6 +58,33 @@ test("coerces attributes by their declared type and keeps registration lazy", as
   });
 });
 
+test("hands a host function to the component, with its return value", async () => {
+  const name = tag();
+  let received: Record<string, unknown> = {};
+  const capture = (_el: Element, props: unknown) => {
+    received = props as Record<string, unknown>;
+  };
+  defineElements({
+    [name]: {
+      load: async () => ({ mount: capture, update: capture, unmount: () => {} }),
+      props: [{ name: "getToken", kind: "function" }],
+      trigger: "never",
+    },
+  });
+  const el = document.createElement(name) as MountlyElement<{ getToken: () => string }>;
+  el.getToken = () => "secret";
+  document.body.append(el);
+  await el.mount();
+
+  expect((received.getToken as () => string)()).toBe("secret");
+  // A function has no string form, and a secret must not land in the markup.
+  expect(el.hasAttribute("get-token")).toBe(false);
+  expect(el.outerHTML).not.toContain("secret");
+
+  el.getToken = () => "rotated";
+  await expect.poll(() => (received.getToken as () => string)()).toBe("rotated");
+});
+
 test("treats boolean props the way HTML does", async () => {
   const name = tag();
   defineElements({ [name]: { load: async () => widget(), props: PAYMENTS, trigger: "never" } });

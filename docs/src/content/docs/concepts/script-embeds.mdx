@@ -97,13 +97,14 @@ first one's output and break somewhere unhelpful.
 
 The props type is the contract. Nothing is restated in configuration:
 
-| Prop type          | Consumer writes                                           | Component receives                   |
-| ------------------ | --------------------------------------------------------- | ------------------------------------ |
-| `number`           | `balance="1250"`                                          | `1250`                               |
-| `string`           | `currency="GBP"`                                          | `"GBP"`                              |
-| `boolean`          | `compact` (or omit it)                                    | `true` / `false`                     |
-| object or array    | `line-items='[{"label":"Subs"}]'` or `el.lineItems = […]` | the parsed value                     |
-| `(detail) => void` | `addEventListener("view-details", …)`                     | a function that dispatches the event |
+| Prop type                         | Consumer writes                                           | Component receives                   |
+| --------------------------------- | --------------------------------------------------------- | ------------------------------------ |
+| `number`                          | `balance="1250"`                                          | `1250`                               |
+| `string`                          | `currency="GBP"`                                          | `"GBP"`                              |
+| `boolean`                         | `compact` (or omit it)                                    | `true` / `false`                     |
+| object or array                   | `line-items='[{"label":"Subs"}]'` or `el.lineItems = […]` | the parsed value                     |
+| `onViewDetails: (detail) => void` | `addEventListener("view-details", …)`                     | a function that dispatches the event |
+| `getToken: () => Promise<string>` | `el.getToken = () => auth.token()`                        | the host's function                  |
 
 Because the build knows `currency` is a string, `currency="007"` stays `"007"`.
 Because it knows `balance` is a number, `balance="1250"` is not the string
@@ -111,6 +112,13 @@ Because it knows `balance` is a number, `balance="1250"` is not the string
 `line-items`. Callback props become bubbling, composed DOM events with the `on`
 dropped and the rest kebab-cased: `onViewDetails` → `view-details`, with the
 callback's first argument as `event.detail`.
+
+The name decides which way a function goes. `on*` props call out, as events.
+Every other function-typed prop is handed in by the host: a property only, never
+an attribute, and its return value reaches the component. That is the way to
+give a widget a token getter, a formatter or its own `fetch`. It is also where a
+secret belongs: an attribute is in the page's markup for anything to read, while
+`el.getToken = …` is not.
 
 ## Consumer: one script tag
 
@@ -341,6 +349,32 @@ not the component. What changes:
 Under `shadow: true` the build emits a single stylesheet that it injects into no
 document; each element adopts it into its own root through a constructable
 stylesheet shared across every instance on the page.
+
+Two things written for a whole page need a small change inside a shadow root:
+
+- **Portals.** Dialogs, popovers and menus that portal to `document.body` leave
+  the root, and its stylesheet, behind. React widgets get the root's own portal
+  node from `usePortalContainer()` in `mountly-react`; pass it to the portal,
+  as in `<PopoverPrimitive.Portal container={usePortalContainer()}>` for Radix
+  or shadcn/ui. It is `null` in light DOM, which Radix reads as `document.body`,
+  so the same component works in both.
+  Radix's development check for a `DialogTitle` uses `document.getElementById`,
+  which cannot see into a shadow root, so it logs a warning even when the title
+  is present. Screen readers announce the title, since `aria-labelledby`
+  resolves inside the root.
+- **`:root` variables.** Theme tokens declared on `:root` (shadcn/ui puts them
+  there) match nothing inside a shadow root. Declare them on `:root, :host`.
+
+## Web Workers
+
+`new Worker(new URL("./work.ts", import.meta.url), { type: "module" })` works
+unchanged. Browsers refuse to start a worker from another origin, so the build
+routes the constructor through a same-origin `blob:` URL that imports the real
+script from your provider. Same-origin workers are constructed as written. Two
+things the host must allow: CORS on the worker file, which the rest of the
+distribution already needs, and `blob:` in its `worker-src` if it sets a
+Content Security Policy. `SharedWorker` is not rerouted, because a `blob:` URL
+would give every page its own instance and defeat the sharing.
 
 Neither mode is a security boundary. The component still runs as script in the
 host's page, with its `window`, its cookies and its network. If the threat model

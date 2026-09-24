@@ -1,5 +1,5 @@
 import type { ComponentType } from "react";
-import React, { createElement } from "react";
+import React, { createContext, createElement, useContext } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { attachShadow } from "mountly/shadow";
 import { loadCssText, resolveCssUrl } from "mountly/assets";
@@ -22,11 +22,26 @@ interface ReactWidgetOptions extends AdapterOptions {
   cssUrl?: string;
 }
 
+const PortalContainerContext = createContext<HTMLElement | null>(null);
+
+/**
+ * Where portalled UI (dialogs, popovers, menus) should render. Inside a shadow
+ * root this is a node in that root, so the adopted stylesheet still applies;
+ * portalling to `document.body` would leave the popup unstyled. `null` outside
+ * shadow mode, which Radix and most portal APIs read as "use document.body".
+ *
+ *   <PopoverPrimitive.Portal container={usePortalContainer()}>
+ */
+export function usePortalContainer(): HTMLElement | null {
+  return useContext(PortalContainerContext);
+}
+
 export function createWidget<P>(
   Component: ComponentType<P>,
   options: ReactWidgetOptions = {},
 ): WidgetModule {
   const roots = new WeakMap<Element, Root>();
+  const portals = new WeakMap<Element, HTMLElement | null>();
   const { moduleUrl, cssUrl } = options;
 
   function unmount(container: Element): void {
@@ -45,16 +60,21 @@ export function createWidget<P>(
     if (options.reserveSize) {
       (container as HTMLElement).style.cssText += `;${options.reserveSize}`;
     }
-    const existing = roots.get(container);
-    if (isUpdate && existing) {
-      existing.render(
+    const element = () =>
+      createElement(
+        PortalContainerContext.Provider,
+        { value: portals.get(container) ?? null },
         createElement(Component as React.ComponentType, props as unknown as P & object),
       );
+    const existing = roots.get(container);
+    if (isUpdate && existing) {
+      existing.render(element());
       return;
     }
     const target = attachShadow(container, fetched ? { ...options, styles: fetched } : options);
+    if (!portals.has(container)) portals.set(container, portalFor(target));
     const root = createRoot(target);
-    root.render(createElement(Component as React.ComponentType, props as unknown as P & object));
+    root.render(element());
     roots.set(container, root);
   }
 
@@ -92,4 +112,18 @@ export function createWidget<P>(
     },
     unmount,
   };
+}
+
+/**
+ * A sibling of the React root inside the shadow root, so React never clears it
+ * and portalled content shares the root's adopted stylesheet. Light DOM needs
+ * none: `document.body` already sees the page's styles.
+ */
+function portalFor(target: HTMLElement): HTMLElement | null {
+  const root = target.getRootNode();
+  if (typeof ShadowRoot === "undefined" || !(root instanceof ShadowRoot)) return null;
+  const portal = document.createElement("div");
+  portal.setAttribute("data-mountly-portal", "");
+  root.append(portal);
+  return portal;
 }
