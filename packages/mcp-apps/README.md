@@ -155,6 +155,40 @@ npx mountly-mcp add settings --framework react
 
 [GLOSSARY.md](./GLOSSARY.md). Protocol: [`@modelcontextprotocol/ext-apps`](https://www.npmjs.com/package/@modelcontextprotocol/ext-apps).
 
+## Compose from teams' elements
+
+`mountly-mcp/compose` lets the agent build a page from many teams' custom
+elements, using a [`mountly-compose`](../mountly-compose/README.md) catalog read
+from their `custom-elements.json`:
+
+```ts
+import { loadCatalog } from "mountly-compose";
+import { registerComposeApp } from "mountly-mcp/compose";
+
+registerComposeApp(server, {
+  catalog: await loadCatalog("https://cdn.acme.com/registry.json", { actions }),
+  imports: {
+    "mountly-compose": "https://cdn.acme.com/mountly-compose.js",
+    "@modelcontextprotocol/ext-apps": "https://cdn.acme.com/ext-apps/app-with-deps.js",
+    react: "…",
+    "react/jsx-runtime": "…",
+    "react-dom/client": "…",
+    "mountly-react": "…",
+    "mountly/embed": "…",
+  },
+});
+```
+
+The catalog becomes `show_page`'s description, and the agent composes the page.
+The handler validates the page and repairs small mistakes. When a page needs
+more than a repair, the handler returns the reasons as a tool error for the
+agent to fix. The `ui://` view renders with `mountly-compose` and loads each
+team's embed on first use. Its CSP allows the origins in `imports` and the
+teams' embed origins. The view runs at a `null` origin, so the servers behind
+those URLs send `Access-Control-Allow-Origin`. When the user acts in a widget,
+the view sends the agent its next turn with the current page. The
+[`ai-compose`](../../docs/examples/ai-compose) example runs this in `mcp/`.
+
 ## Advanced: json-render
 
 `mountly-mcp/json-render` is optional catalog-driven UI. Start with `create` /
@@ -162,18 +196,19 @@ npx mountly-mcp add settings --framework react
 
 ## Exports
 
-| Entry                     | Contents                             |
-| ------------------------- | ------------------------------------ |
-| `mountly-mcp`             | `runBridge`, `publishMcpView`, types |
-| `mountly-mcp/react`       | `createMcpView` + hooks              |
-| `mountly-mcp/vue`         | `createMcpView` + composables        |
-| `mountly-mcp/svelte`      | `createMcpView` (props)              |
-| `mountly-mcp/vite`        | `mountlyMcpViews()`                  |
-| `mountly-mcp/artifact`    | Manifest APIs                        |
-| `mountly-mcp/server`      | `registerMcpApps`                    |
-| `mountly-mcp/dev`         | Local host helpers                   |
-| `mountly-mcp/testing`     | `verifyMcpApps`                      |
-| `mountly-mcp/json-render` | Generative path                      |
+| Entry                     | Contents                                |
+| ------------------------- | --------------------------------------- |
+| `mountly-mcp`             | `runBridge`, `publishMcpView`, types    |
+| `mountly-mcp/react`       | `createMcpView` + hooks                 |
+| `mountly-mcp/vue`         | `createMcpView` + composables           |
+| `mountly-mcp/svelte`      | `createMcpView` (props)                 |
+| `mountly-mcp/vite`        | `mountlyMcpViews()`                     |
+| `mountly-mcp/artifact`    | Manifest APIs                           |
+| `mountly-mcp/server`      | `registerMcpApps`                       |
+| `mountly-mcp/dev`         | Local host helpers                      |
+| `mountly-mcp/testing`     | `verifyMcpApps`                         |
+| `mountly-mcp/json-render` | Generative path                         |
+| `mountly-mcp/compose`     | `registerComposeApp`, `composeViewHtml` |
 
 ## See also
 

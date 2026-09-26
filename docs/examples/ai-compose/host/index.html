@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Composed from four teams</title>
+    <link rel="stylesheet" href="./design-system.css" />
+    <!-- Teams build with `peer: true`, so every team's widgets share this one React. -->
+    <script type="importmap">
+      {
+        "imports": {
+          "react": "https://esm.sh/react@19.2.8",
+          "react/jsx-runtime": "https://esm.sh/react@19.2.8/jsx-runtime",
+          "react-dom/client": "https://esm.sh/react-dom@19.2.8/client?deps=react@19.2.8",
+          "mountly-react": "/node_modules/mountly-react/dist/index.js",
+          "mountly/embed": "/node_modules/mountly/dist/embed.js",
+          "mountly-compose": "/node_modules/mountly-compose/dist/index.js"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <form id="ask">
+      <input
+        id="prompt"
+        name="prompt"
+        autocomplete="off"
+        placeholder="What do you need?"
+        value="I was charged twice this month and I'm fed up."
+      />
+      <select id="strategy" aria-label="Strategy">
+        <option value="shortlist">shortlist → constrained</option>
+        <option value="constrained">constrained JSON</option>
+        <option value="html">HTML</option>
+        <option value="spec">json-render spec</option>
+        <option value="choose">json-render choose</option>
+      </select>
+      <button>Compose</button>
+      <button type="button" id="reset">Start over</button>
+    </form>
+    <p id="status" aria-live="polite"></p>
+    <main id="page"></main>
+    <pre id="log" aria-label="Log"></pre>
+    <script type="module">
+      import { parsePartialTree } from "mountly-compose";
+      import { EVENTS, catalog, log, render } from "./compose.js";
+
+      const page = document.querySelector("#page");
+      const status = document.querySelector("#status");
+      // The page on screen. Every turn sends it, so the model edits rather than starts over.
+      let current;
+
+      async function compose(turn) {
+        status.textContent = "Composing…";
+        const started = performance.now();
+        let first = 0;
+        const res = await fetch("/api/compose", {
+          method: "POST",
+          body: JSON.stringify({
+            ...turn,
+            current,
+            stream: true,
+            strategy: document.querySelector("#strategy").value,
+          }),
+        });
+        // Each line is an event; `text` grows the page as the model writes it.
+        let text = "";
+        let frame = 0;
+        const paint = () => {
+          frame = 0;
+          const partial = catalog.repair(parsePartialTree(text)).tree;
+          if (!partial?.children?.length) return;
+          render(partial, page);
+          first ||= Math.round(performance.now() - started);
+        };
+        const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
+        let buffer = "";
+        for (;;) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buffer += value;
+          let end;
+          while ((end = buffer.indexOf("\n")) !== -1) {
+            const event = JSON.parse(buffer.slice(0, end));
+            buffer = buffer.slice(end + 1);
+            if (event.type === "text") {
+              text += event.text;
+              frame ||= requestAnimationFrame(paint);
+            } else if (event.type === "reset") {
+              text = "";
+            } else if (event.type === "error") {
+              status.textContent = event.error;
+            } else if (event.type === "done") {
+              cancelAnimationFrame(frame);
+              render(event.tree, page);
+              current = event.tree;
+              log(`tree: ${JSON.stringify(event.tree)}`);
+              status.textContent =
+                `${event.strategy} · ${event.model} · ${event.ms}ms` +
+                (first ? ` · first widget at ${first}ms` : "");
+            }
+          }
+        }
+      }
+
+      document.querySelector("#ask").addEventListener("submit", (event) => {
+        event.preventDefault();
+        compose({ prompt: document.querySelector("#prompt").value });
+      });
+
+      document.querySelector("#reset").addEventListener("click", () => {
+        current = undefined;
+        page.replaceChildren();
+        status.textContent = "";
+      });
+
+      // The agent loop: what a user does in a widget becomes the next turn.
+      for (const name of EVENTS) {
+        page.addEventListener(name, (event) => {
+          const turn = {
+            event: { name, tag: event.target.tagName.toLowerCase(), detail: event.detail },
+          };
+          const action = catalog.action(turn.event);
+          if (!action) return;
+          log(`action ${action.name} ${JSON.stringify(action.params)}`);
+          compose(turn);
+        });
+      }
+    </script>
+  </body>
+</html>

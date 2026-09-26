@@ -1,7 +1,8 @@
 import { globSync, readFileSync } from "node:fs";
 import { basename, dirname, extname, relative, resolve } from "node:path";
 import { parseAst, type Plugin, type Rollup, type UserConfig } from "vite";
-import type { MountlyWidgetFramework } from "./index.js";
+import { getFrameworkPeerExternals, type MountlyWidgetFramework } from "./externals.js";
+import { type ComponentDocs, extractDocs } from "./docs.js";
 import { extractProps, kebab, type PropSpec } from "./props.js";
 
 export interface MountlyElementEntry {
@@ -46,6 +47,17 @@ export interface MountlyElementsConfigOptions {
    * of host you ship to, not the component.
    */
   shadow?: boolean;
+  /**
+   * Leave the framework (React, Vue or Svelte), its mountly adapter and
+   * mountly's runtime as bare imports, for the page's import map to resolve.
+   *
+   * Off by default, because then one script tag works on any page. Turn it on
+   * when one page loads several distributions — widgets from several teams,
+   * say — so they share one copy of React instead of each bringing its own.
+   * The page must map every bare specifier the build leaves behind (`react`,
+   * `react-dom/client`, `mountly-react`, `mountly/embed`, …).
+   */
+  peer?: boolean;
 }
 
 interface BuiltElement {
@@ -53,6 +65,7 @@ interface BuiltElement {
   entry: MountlyElementEntry;
   props: PropSpec[];
   framework: MountlyWidgetFramework;
+  docs: ComponentDocs;
 }
 
 /** The file says which framework it is, so nobody has to repeat it in config. */
@@ -224,42 +237,63 @@ function manifest(elements: BuiltElement[]): string {
     {
       schemaVersion: "1.0.0",
       readme: "",
-      modules: elements.map(({ tag, entry, props }) => ({
-        kind: "javascript-module",
-        path: entry.component,
-        declarations: [
-          {
-            kind: "class",
-            name: name(tag),
-            customElement: true,
-            tagName: tag,
-            members: props
-              .filter((spec) => spec.kind !== "event")
-              .map((spec) => ({
-                kind: "field",
-                name: spec.name,
-                type: { text: TS_TYPE[spec.kind] ?? "unknown" },
-              })),
-            attributes: props
-              .filter((spec) => spec.attribute)
-              .map((spec) => ({
-                name: spec.attribute,
-                fieldName: spec.name,
-                type: { text: TS_TYPE[spec.kind] ?? "unknown" },
-              })),
-            events: props
-              .filter((spec) => spec.kind === "event")
-              .map((spec) => ({ name: spec.event, type: { text: "CustomEvent" } })),
-          },
-        ],
-        exports: [
-          {
-            kind: "custom-element-definition",
-            name: tag,
-            declaration: { name: name(tag), module: entry.component },
-          },
-        ],
-      })),
+      modules: elements.map(({ tag, entry, props, docs }) => {
+        // The type as the author wrote it (`"paid" | "overdue"`) beats the wire
+        // kind (`string`) for anyone choosing a value, person or model.
+        const cemType = (spec: PropSpec) => ({
+          text: docs.props[spec.name]?.type ?? TS_TYPE[spec.kind] ?? "unknown",
+        });
+        // `schema` is not part of the Custom Elements Manifest standard; tools
+        // that do not know it ignore it, and a model catalog validates with it.
+        const described = (spec: PropSpec) => {
+          const { description, schema } = docs.props[spec.name] ?? {};
+          return { ...(description ? { description } : {}), ...(schema ? { schema } : {}) };
+        };
+        return {
+          kind: "javascript-module",
+          path: entry.component,
+          declarations: [
+            {
+              kind: "class",
+              name: name(tag),
+              ...(docs.description ? { description: docs.description } : {}),
+              ...(docs.slots ? { slots: docs.slots } : {}),
+              customElement: true,
+              tagName: tag,
+              members: props
+                .filter((spec) => spec.kind !== "event")
+                .map((spec) => ({
+                  kind: "field",
+                  name: spec.name,
+                  type: cemType(spec),
+                  ...described(spec),
+                })),
+              attributes: props
+                .filter((spec) => spec.attribute)
+                .map((spec) => ({
+                  name: spec.attribute,
+                  fieldName: spec.name,
+                  type: cemType(spec),
+                  ...described(spec),
+                })),
+              events: props
+                .filter((spec) => spec.kind === "event")
+                .map((spec) => ({
+                  name: spec.event,
+                  type: { text: "CustomEvent" },
+                  ...described(spec),
+                })),
+            },
+          ],
+          exports: [
+            {
+              kind: "custom-element-definition",
+              name: tag,
+              declaration: { name: name(tag), module: entry.component },
+            },
+          ],
+        };
+      }),
     },
     null,
     2,
@@ -530,22 +564,67 @@ export function shimWorkers(code: string): string | null {
 }
 
 /**
+ * Native events that bubble out of a component's own DOM. A prop that becomes
+ * one of these (`onSubmit` → `submit`) reaches the host twice: once as the
+ * widget's CustomEvent and once as the browser's event from the inner `<form>`,
+ * which has no `detail`.
+ */
+const NATIVE_BUBBLING = new Set([
+  "click",
+  "dblclick",
+  "input",
+  "change",
+  "submit",
+  "reset",
+  "select",
+  "keydown",
+  "keyup",
+  "focusin",
+  "focusout",
+  "pointerdown",
+  "pointerup",
+  "mousedown",
+  "mouseup",
+  "contextmenu",
+  "wheel",
+  "beforeinput",
+  "invalid",
+]);
+
+function warnNativeEvents(elements: BuiltElement[], warn: (message: string) => void): void {
+  for (const { tag, props } of elements) {
+    for (const spec of props) {
+      if (spec.kind === "event" && spec.event && NATIVE_BUBBLING.has(spec.event)) {
+        warn(
+          `[mountly] <${tag}> ${spec.name} dispatches "${spec.event}", which is also a native ` +
+            `event bubbling out of the component. Listeners will get both. Rename the prop ` +
+            `(e.g. ${spec.name}Item) so its event is unambiguous.`,
+        );
+      }
+    }
+  }
+}
+
+/**
  * An element whose props could not be read would ignore everything the consumer
  * sets, and say so nowhere. Fail the build instead, and name the way out.
+ * Docs are best-effort and never fail the build. One read feeds both extractors.
  */
-function readPropTable(entry: MountlyElementEntry, tag: string, root: string): PropSpec[] {
-  const file = resolve(root, entry.component);
-  const props = extractProps(readFileSync(file, "utf8"), {
-    file,
-    exportName: entry.exportName,
-  });
+function readElementSource(
+  entry: MountlyElementEntry,
+  tag: string,
+  root: string,
+): { props: PropSpec[]; docs: ComponentDocs } {
+  const source = readFileSync(resolve(root, entry.component), "utf8");
+  const opts = { file: entry.component, exportName: entry.exportName };
+  const props = entry.props ?? extractProps(source, opts);
   if (!props) {
     throw new Error(
       `[mountly] cannot read the props of ${entry.component} for <${tag}>. ` +
         `Declare the props type in that file, or pass \`props\` on the element entry.`,
     );
   }
-  return props;
+  return { props, docs: extractDocs(source, opts) };
 }
 
 /**
@@ -574,12 +653,27 @@ export function defineElementsConfig(options: MountlyElementsConfigOptions): Use
     configResolved(config) {
       root = config.root;
       assertSingleCompiler(config.plugins);
-      elements = normalize(options, root).map(([tag, entry]) => ({
-        tag,
-        entry,
-        props: entry.props ?? readPropTable(entry, tag, root),
-        framework: entry.framework ?? frameworkFor(entry.component),
-      }));
+      elements = normalize(options, root).map(([tag, entry]) => {
+        const { props, docs } = readElementSource(entry, tag, root);
+        return {
+          tag,
+          entry,
+          props,
+          framework: entry.framework ?? frameworkFor(entry.component),
+          docs,
+        };
+      });
+      const warn = config.logger?.warn.bind(config.logger) ?? console.warn;
+      warnNativeEvents(elements, warn);
+      if (!shadow) {
+        for (const { tag } of elements.filter((element) => element.docs.slots)) {
+          warn(
+            `[mountly] <${tag}> declares @slot, but slots project only in a shadow root. ` +
+              `Build the distribution with \`shadow: true\`, or the page's children render ` +
+              `after the component instead of inside it.`,
+          );
+        }
+      }
     },
     resolveId(id) {
       if (id === entryId || id.startsWith(widgetPrefix)) return `\0${id}`;
@@ -587,10 +681,12 @@ export function defineElementsConfig(options: MountlyElementsConfigOptions): Use
     load(id) {
       if (id === `\0${entryId}`) {
         const definitions = elements.map(
-          ({ tag, entry, props }) => `${JSON.stringify(tag)}: {
+          ({ tag, entry, props, docs }) => `${JSON.stringify(tag)}: {
     load: () => import(${JSON.stringify(widgetPrefix + tag)}),
     props: ${JSON.stringify(props)},
-    trigger: ${JSON.stringify(entry.trigger ?? "connected")}
+    trigger: ${JSON.stringify(entry.trigger ?? "connected")}${
+      docs.slots ? `,\n    slots: ${JSON.stringify(docs.slots.map((slot) => slot.name))}` : ""
+    }
   }`,
         );
         return `import { defineElements } from "mountly/embed";
@@ -668,6 +764,20 @@ export default createWidget(component[${JSON.stringify(element.entry.exportName 
       // stylesheet nothing injects, which each element adopts for itself.
       cssCodeSplit: !shadow,
       rollupOptions: {
+        ...(options.peer
+          ? {
+              external: [
+                ...new Set(
+                  [...frameworks].flatMap((framework) => [
+                    ...getFrameworkPeerExternals(framework),
+                    // Compiled Svelte imports `svelte/internal/client`; bundling it
+                    // beside an external `svelte` would mean two runtimes.
+                    ...(framework === "svelte" ? [/^svelte\//] : []),
+                  ]),
+                ),
+              ],
+            }
+          : {}),
         input: entryId,
         output: { entryFileNames: "embed.js", chunkFileNames: "assets/[name]-[hash].js" },
       },

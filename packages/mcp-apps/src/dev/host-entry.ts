@@ -55,6 +55,8 @@ function theme(): "light" | "dark" {
 const capabilities = {
   openLinks: {},
   logging: {},
+  // A view's `sendMessage` asks the host to post the user's next turn to the agent.
+  message: { text: {} },
   ...(config.hasServer ? { serverTools: {} } : {}),
 };
 const bridge = new AppBridge(null, { name: "mountly-mcp-dev", version: "1.0.0" }, capabilities, {
@@ -68,6 +70,12 @@ const bridge = new AppBridge(null, { name: "mountly-mcp-dev", version: "1.0.0" }
 });
 
 bridge.onloggingmessage = (params) => log("in", `notifications/message ${params.level}`);
+// No agent here: show what a real host would post as the user's next turn.
+bridge.onmessage = async ({ content }) => {
+  const text = content.map((block) => ("text" in block ? block.text : `[${block.type}]`)).join(" ");
+  log("in", `ui/message ${text}`);
+  return {};
+};
 bridge.onopenlink = async ({ url }) => {
   window.open(url, "_blank", "noopener,noreferrer");
   return {};

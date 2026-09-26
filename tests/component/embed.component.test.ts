@@ -453,3 +453,52 @@ test("never shadows a built-in element property, but still feeds the prop", asyn
   expect(warn).toHaveBeenCalledWith(expect.stringContaining("collides with an element property"));
   warn.mockRestore();
 });
+
+test("projects the page's children into the component's slots, and keeps them across moves", async () => {
+  const name = tag();
+  // Like a shadow distribution: the component's own DOM lives in a shadow root.
+  const panel: WidgetModule = {
+    mount(el) {
+      const root = el.shadowRoot ?? el.attachShadow({ mode: "open" });
+      root.innerHTML = `<h2>Case</h2><slot></slot><footer><slot name="actions"></slot></footer>`;
+    },
+    update() {},
+    unmount(el) {
+      if (el.shadowRoot) el.shadowRoot.innerHTML = "";
+    },
+  };
+  defineElements({ [name]: { load: async () => panel, slots: ["", "actions"] } });
+
+  const el = document.createElement(name);
+  el.append("Loading…");
+  const body = document.createElement("p");
+  body.textContent = "Invoice INV-0998";
+  const button = document.createElement("button");
+  button.slot = "actions";
+  button.textContent = "Dispute";
+  el.append(body, button);
+  document.body.append(el);
+  await vi.waitFor(() => expect(el.dataset.mountlyState).toBe("mounted"));
+
+  // Each child is assigned to the slot the component rendered for it.
+  expect(body.assignedSlot?.name).toBe("");
+  expect(button.assignedSlot?.name).toBe("actions");
+  // Loading text is still fallback: it leaves when the widget arrives.
+  expect(el.textContent).not.toContain("Loading…");
+
+  // A child added after mounting — a streamed page — is projected too.
+  const late = document.createElement("p");
+  late.textContent = "Arrived later";
+  el.append(late);
+  await vi.waitFor(() => expect(late.assignedSlot?.name).toBe(""));
+
+  // One the page removes while mounted does not come back on the next mount.
+  late.remove();
+  el.remove();
+  expect(body.parentElement).toBe(el);
+  expect(late.parentElement).toBeNull();
+  document.body.append(el);
+  await vi.waitFor(() => expect(button.assignedSlot?.name).toBe("actions"));
+  expect(body.assignedSlot?.name).toBe("");
+  expect(late.isConnected).toBe(false);
+});

@@ -30,7 +30,7 @@ export function eventName(prop: string): string {
   return kebab(prop.replace(/^on(?=[A-Z])/, ""));
 }
 
-type Node = Record<string, any>;
+export type Node = Record<string, any>;
 
 /** Unwrap `T | undefined` and `T | null`, which say nothing about the wire format. */
 function unwrapUnion(type: Node): Node {
@@ -85,7 +85,7 @@ function kindOf(type: Node | undefined, types: Map<string, Node>, seen = 0): Pro
 }
 
 /** Local `interface`/`type` declarations, so a `Props` reference can be resolved. */
-function localTypes(body: Node[]): Map<string, Node> {
+export function localTypes(body: Node[]): Map<string, Node> {
   const types = new Map<string, Node>();
   for (const raw of body) {
     const node = raw.type === "ExportNamedDeclaration" && raw.declaration ? raw.declaration : raw;
@@ -96,7 +96,11 @@ function localTypes(body: Node[]): Map<string, Node> {
 }
 
 /** The members of a type literal, an interface (with its bases), or a reference. */
-function membersOf(type: Node | undefined, types: Map<string, Node>, seen = 0): Node[] | null {
+export function membersOf(
+  type: Node | undefined,
+  types: Map<string, Node>,
+  seen = 0,
+): Node[] | null {
   if (!type || seen > 4) return null;
   if (type.type === "TSTypeLiteral" || type.type === "TSInterfaceBody") {
     return type.body ?? type.members;
@@ -136,7 +140,7 @@ function isComponent(node: Node): boolean {
 }
 
 /** Find the declaration a build entry points at: `default`, or a named export. */
-function findExport(body: Node[], exportName: string): Node | null {
+export function findExport(body: Node[], exportName: string): Node | null {
   if (exportName === "default") {
     const node = body.find((n) => n.type === "ExportDefaultDeclaration");
     if (!node) return null;
@@ -189,7 +193,7 @@ function componentFn(declaration: Node): Node | undefined {
   return undefined;
 }
 
-function propsType(declaration: Node): Node | undefined {
+export function propsType(declaration: Node): Node | undefined {
   const annotation = componentFn(declaration)?.params?.[0]?.typeAnnotation?.typeAnnotation;
   if (annotation) return annotation;
   // `const C: FC<Props> = …` and `const C = memo<Props>(…)`.
@@ -302,13 +306,13 @@ function onProp(event: string): string {
 }
 
 /** The `<script>` halves of an SFC, which is where all the types live. */
-function scriptOf(code: string): string {
+export function scriptOf(code: string): string {
   const blocks = [...code.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g)].map((m) => m[1]);
   return blocks.join("\n");
 }
 
 /** `label` or `'aria-label'` — both name a prop. */
-function keyOf(node: Node): string | null {
+export function keyOf(node: Node): string | null {
   if (node.key?.type === "Identifier") return node.key.name;
   if (node.key?.type === "Literal" && typeof node.key.value === "string") return node.key.value;
   return null;
@@ -336,7 +340,7 @@ function specsFrom(members: Node[], types: Map<string, Node>): PropSpec[] {
  * `withDefaults(defineProps<T>(), { … })`, which is how a Vue component with
  * default values is normally written.
  */
-function macroCall(body: Node[], macro: string): Node | undefined {
+export function macroCall(body: Node[], macro: string): Node | undefined {
   const find = (node: Node | undefined, depth = 0): Node | undefined => {
     if (!node || node.type !== "CallExpression" || depth > 3) return undefined;
     if (node.callee?.name === macro) return node;
@@ -391,7 +395,7 @@ function vueEvents(body: Node[], types: Map<string, Node>): PropSpec[] | null {
 }
 
 /** Svelte 5: `let { … }: Props = $props()`. */
-function svelteProps(body: Node[]): Node | null {
+export function svelteProps(body: Node[]): Node | null {
   for (const raw of body) {
     if (raw.type !== "VariableDeclaration") continue;
     for (const declarator of raw.declarations) {

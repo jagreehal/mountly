@@ -1,0 +1,38 @@
+{
+  "name": "mountly-compose",
+  "version": "0.0.0",
+  "description": "Compose one page from many teams' custom elements: a model-ready catalog from custom-elements.json, validation, edit turns and lazy rendering",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jagreehal/mountly",
+    "directory": "packages/mountly-compose"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup && tsc -p tsconfig.json --noEmit false --declaration --emitDeclarationOnly --declarationMap false --outDir dist",
+    "typecheck": "tsc --noEmit",
+    "dev": "tsup --watch",
+    "prepack": "rm -f LICENSE && cp ../../LICENSE LICENSE",
+    "postpack": "rm -f LICENSE && ln -s ../../LICENSE LICENSE"
+  },
+  "devDependencies": {
+    "@types/node": "^26.2.0",
+    "tsup": "^8.5.1",
+    "typescript": "^7.0.2"
+  }
+}

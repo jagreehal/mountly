@@ -48,31 +48,34 @@ Widget source packages live alongside hosts: **`payment-breakdown`**, **`image-l
 
 19. **`mixed-embed/`** — The same build with React, Vue and Svelte components side by side and **no compiler plugin configured**; each framework loads only when one of its elements connects. See [mixed-embed/README.md](mixed-embed/README.md).
 
+20. **`ai-compose/`**: a model composes one page from four teams' custom elements, using the `custom-elements.json` each team's embed build publishes (JSDoc, prop schemas and slots). The page streams, edits in place, and runs inside an MCP host. Needs Ollama or a hosted model. See [ai-compose/README.md](ai-compose/README.md).
+
 ## Run commands and ports
 
 Each example has its own dedicated port, so they all run side-by-side without collisions.
 
-| Example                               | Port     | Run command                                                               | URL                                                                 |
-| ------------------------------------- | -------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| `demo` (Vite)                         | **5174** | `pnpm --filter mountly-demo dev`                                          | <http://localhost:5174/>                                            |
-| `plain-html` (static)                 | **5175** | `cd docs/examples/plain-html && pnpm dev`                                 | <http://localhost:5175/docs/examples/plain-html/>                   |
-| `quickstart/host.html`                | **5175** | (served by `plain-html`'s static server)                                  | <http://localhost:5175/docs/examples/quickstart/host.html>          |
-| `marketing-site` (static)             | **5176** | `cd docs/examples/marketing-site && pnpm dev`                             | <http://localhost:5175/docs/examples/marketing-site/>               |
-| `shadcn-drop-in` (static)             | **5177** | `cd docs/examples/shadcn-drop-in && pnpm dev`                             | <http://localhost:5177/docs/examples/shadcn-drop-in/>               |
-| `pokemon-kitchen-sink` (Vite)         | **5178** | `pnpm --filter pokemon-kitchen-sink dev`                                  | <http://localhost:5178/>                                            |
-| `mcp-app-demo` (CLI verify)           | N/A      | `pnpm --filter mcp-app-demo verify`                                       | CLI output                                                          |
-| `mcp-generative-demo` (CLI verify)    | N/A      | `pnpm --filter mcp-generative-demo verify`                                | CLI output                                                          |
-| `json-render-mcp` (CLI verify)        | N/A      | `pnpm --filter json-render-mcp-example verify`                            | CLI output                                                          |
-| `mcp-release-readiness` (CLI verify)  | N/A      | `pnpm --filter mcp-release-readiness verify`                              | CLI output                                                          |
-| `multi-vertical-host` (static)        | **5182** | `cd docs/examples/multi-vertical-host && pnpm dev`                        | <http://localhost:5182/docs/examples/multi-vertical-host/>          |
-| `platform-embed` (static)             | **5184** | `cd docs/examples/platform-embed/platform-host && pnpm dev`               | <http://localhost:5184/docs/examples/platform-embed/platform-host/> |
-| `vite-host-import` (Vite host)        | **5190** | `cd docs/examples/vite-host-import && pnpm run build:remote && pnpm dev`  | <http://localhost:5190>                                             |
-| `vite-host-remotes-url` (Vite host)   | **5192** | needs a served remote — see [its README](vite-host-remotes-url/README.md) | <http://localhost:5192>                                             |
-| `multi-widget-bundle` (static)        | **5175** | (served by `plain-html`'s static server)                                  | <http://localhost:5175/docs/examples/multi-widget-bundle/>          |
-| `monorepo-component-library` (static) | **5175** | (served by `plain-html`'s static server)                                  | <http://localhost:5175/docs/examples/monorepo-component-library/>   |
-| `cross-framework-bus` (Vite)          | **5183** | `cd docs/examples/cross-framework-bus && pnpm dev`                        | <http://localhost:5183>                                             |
-| `react-embed` (static)                | **5197** | `pnpm --filter react-embed-example build && pnpm exec serve . -l 5197`    | <http://localhost:5197/docs/examples/react-embed/host.html>         |
-| `mixed-embed` (static)                | **5198** | `pnpm --filter mixed-embed-example build && pnpm exec serve . -l 5198`    | <http://localhost:5198/docs/examples/mixed-embed/host.html>         |
+| Example                               | Port     | Run command                                                                        | URL                                                                 |
+| ------------------------------------- | -------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| `demo` (Vite)                         | **5174** | `pnpm --filter mountly-demo dev`                                                   | <http://localhost:5174/>                                            |
+| `plain-html` (static)                 | **5175** | `cd docs/examples/plain-html && pnpm dev`                                          | <http://localhost:5175/docs/examples/plain-html/>                   |
+| `quickstart/host.html`                | **5175** | (served by `plain-html`'s static server)                                           | <http://localhost:5175/docs/examples/quickstart/host.html>          |
+| `marketing-site` (static)             | **5176** | `cd docs/examples/marketing-site && pnpm dev`                                      | <http://localhost:5175/docs/examples/marketing-site/>               |
+| `shadcn-drop-in` (static)             | **5177** | `cd docs/examples/shadcn-drop-in && pnpm dev`                                      | <http://localhost:5177/docs/examples/shadcn-drop-in/>               |
+| `pokemon-kitchen-sink` (Vite)         | **5178** | `pnpm --filter pokemon-kitchen-sink dev`                                           | <http://localhost:5178/>                                            |
+| `mcp-app-demo` (CLI verify)           | N/A      | `pnpm --filter mcp-app-demo verify`                                                | CLI output                                                          |
+| `mcp-generative-demo` (CLI verify)    | N/A      | `pnpm --filter mcp-generative-demo verify`                                         | CLI output                                                          |
+| `json-render-mcp` (CLI verify)        | N/A      | `pnpm --filter json-render-mcp-example verify`                                     | CLI output                                                          |
+| `mcp-release-readiness` (CLI verify)  | N/A      | `pnpm --filter mcp-release-readiness verify`                                       | CLI output                                                          |
+| `multi-vertical-host` (static)        | **5182** | `cd docs/examples/multi-vertical-host && pnpm dev`                                 | <http://localhost:5182/docs/examples/multi-vertical-host/>          |
+| `platform-embed` (static)             | **5184** | `cd docs/examples/platform-embed/platform-host && pnpm dev`                        | <http://localhost:5184/docs/examples/platform-embed/platform-host/> |
+| `vite-host-import` (Vite host)        | **5190** | `cd docs/examples/vite-host-import && pnpm run build:remote && pnpm dev`           | <http://localhost:5190>                                             |
+| `vite-host-remotes-url` (Vite host)   | **5192** | needs a served remote — see [its README](vite-host-remotes-url/README.md)          | <http://localhost:5192>                                             |
+| `multi-widget-bundle` (static)        | **5175** | (served by `plain-html`'s static server)                                           | <http://localhost:5175/docs/examples/multi-widget-bundle/>          |
+| `monorepo-component-library` (static) | **5175** | (served by `plain-html`'s static server)                                           | <http://localhost:5175/docs/examples/monorepo-component-library/>   |
+| `cross-framework-bus` (Vite)          | **5183** | `cd docs/examples/cross-framework-bus && pnpm dev`                                 | <http://localhost:5183>                                             |
+| `react-embed` (static)                | **5197** | `pnpm --filter react-embed-example build && pnpm exec serve . -l 5197`             | <http://localhost:5197/docs/examples/react-embed/host.html>         |
+| `mixed-embed` (static)                | **5198** | `pnpm --filter mixed-embed-example build && pnpm exec serve . -l 5198`             | <http://localhost:5198/docs/examples/mixed-embed/host.html>         |
+| `ai-compose` (compose host)           | **5199** | `pnpm --filter ai-compose-example build && pnpm --filter ai-compose-example serve` | <http://localhost:5199/host/>                                       |
 
 All Vite servers use `strictPort: true`: they fail loudly if the port is already taken instead of picking another. Playwright reuses ports 5174 (demo) and 5175 (repo-root static server); `marketing-site` uses 5176 in its own webServer entry by design.
 

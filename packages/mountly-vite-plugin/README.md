@@ -89,6 +89,19 @@ Pass `shadow: true` when the host is not one you trust: every element in the
 distribution then renders into its own shadow root, and the build emits one
 stylesheet that it injects into no document.
 
+Pass `peer: true` when one page loads several distributions, such as widgets
+from several teams. The build leaves the framework, its mountly adapter and
+mountly's runtime as bare imports (`react`, `mountly-react`, `mountly/embed`),
+and the page maps them once in an import map, so every distribution shares one
+React. Without it, each `embed.js` works alone on any page.
+
+`custom-elements.json` carries each component's JSDoc as its description, and
+each prop's JSDoc, its type as written (`"paid" | "overdue"`) and a JSON Schema
+derived from that type. JSDoc tags add constraints: `@minimum`, `@maximum`,
+`@minLength`, `@maxLength`, `@pattern` and `@format`. `@slot` tags declare the
+slots a component renders, and the element fills them from the page's children.
+Slots need a `shadow: true` distribution, and the build warns without one.
+
 See the [complete guide](https://mountly.dev/concepts/script-embeds/) and the
 [React](../../docs/examples/react-embed) and
 [mixed-framework](../../docs/examples/mixed-embed) examples.

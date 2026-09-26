@@ -1,5 +1,5 @@
 import { story } from "executable-stories-vitest";
-import { describe, expect, it } from "vite-plus/test";
+import { describe, expect, it, vi } from "vite-plus/test";
 import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { tmpdir } from "node:os";
@@ -676,6 +676,28 @@ describe("Element discovery", () => {
     });
   });
 
+  it("leaves the framework to the page's import map when built as a peer", ({ task }) => {
+    story.init(task);
+    story.given("one page loading several teams' distributions");
+
+    const external = (peer?: boolean) =>
+      defineElementsConfig({ prefix: "acme", elements: { card: "src/a.tsx" }, peer }).build
+        ?.rollupOptions?.external;
+
+    story.then("a default build bundles everything, so one script tag still works anywhere");
+    expect(external()).toBeUndefined();
+
+    story.then("a peer build leaves React, its adapter and mountly as bare imports");
+    expect(external(true)).toEqual(
+      expect.arrayContaining(["react", "react/jsx-runtime", "react-dom/client", "mountly-react"]),
+    );
+    expect(
+      (external(true) as Array<string | RegExp>).some(
+        (id) => id instanceof RegExp && id.test("mountly/embed"),
+      ),
+    ).toBe(true);
+  });
+
   it("refuses to publish an element whose props it cannot read", ({ task }) => {
     story.init(task);
     story.given("a component whose props type lives in another module");
@@ -766,6 +788,61 @@ describe("Element discovery", () => {
       },
     };
     expect(widgetModule(dir, options, "acme-card")).toContain('from "mountly-vue"');
+  });
+
+  it("passes a component's slots to its element, and warns when they cannot project", ({
+    task,
+  }) => {
+    story.init(task);
+    story.given("a panel component that documents a default slot and an actions slot");
+
+    const dir = fixture({
+      "src/elements/CasePanel.tsx": `
+        /**
+         * A titled panel.
+         * @slot - What the case is about.
+         * @slot actions - Buttons along the bottom.
+         */
+        export default function CasePanel(props: { title: string }) { return null; }
+      `,
+    });
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    try {
+      story.then("the element definition lists the slot names");
+      const light = resolve(dir, { prefix: "acme", elements: "src/elements/*.tsx" });
+      expect(light).toContain('slots: ["","actions"]');
+
+      story.then("a light-DOM build warns; a shadow build does not");
+      expect(warn.mock.calls.map((call) => call[0])).toEqual([
+        expect.stringContaining("<acme-case-panel> declares @slot"),
+      ]);
+      warn.mockClear();
+      resolve(dir, { prefix: "acme", elements: "src/elements/*.tsx", shadow: true });
+      expect(warn).not.toHaveBeenCalled();
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
+  it("warns when a callback prop would share its name with a native event", ({ task }) => {
+    story.init(task);
+    story.given("a form component whose onSubmit becomes a `submit` event");
+
+    const dir = fixture({
+      "src/elements/ReturnForm.tsx": `
+        interface Props { onSubmit?: (d: { id: string }) => void; onStartReturn?: () => void }
+        export default function ReturnForm(props: Props) { return null; }
+      `,
+    });
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    try {
+      resolve(dir, { prefix: "acme", elements: "src/elements/*.tsx" });
+      story.then("the build names the clash, and only that one");
+      expect(warn).toHaveBeenCalledTimes(1);
+      expect(warn.mock.calls[0]![0]).toMatch(/<acme-return-form> onSubmit dispatches "submit"/);
+    } finally {
+      warn.mockRestore();
+    }
   });
 
   it("catches collisions and empty globs before the browser does", ({ task }) => {

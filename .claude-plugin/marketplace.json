@@ -14,7 +14,7 @@
     {
       "name": "mountly-embed",
       "source": "./plugins/mountly-embed",
-      "description": "Skill for publishing React, Vue and Svelte components as script-tag custom elements with mountly-vite-plugin"
+      "description": "Skills for publishing React, Vue and Svelte components as script-tag custom elements, and letting a model compose pages from them"
     }
   ]
 }

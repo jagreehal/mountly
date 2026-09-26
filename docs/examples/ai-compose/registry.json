@@ -1,0 +1,24 @@
+{
+  "teams": [
+    {
+      "id": "billing",
+      "embed": "teams/billing/dist/embed.js",
+      "elements": "teams/billing/dist/custom-elements.json"
+    },
+    {
+      "id": "shipping",
+      "embed": "teams/shipping/dist/embed.js",
+      "elements": "teams/shipping/dist/custom-elements.json"
+    },
+    {
+      "id": "support",
+      "embed": "teams/support/dist/embed.js",
+      "elements": "teams/support/dist/custom-elements.json"
+    },
+    {
+      "id": "cases",
+      "embed": "teams/cases/dist/embed.js",
+      "elements": "teams/cases/dist/custom-elements.json"
+    }
+  ]
+}

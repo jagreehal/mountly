@@ -5,40 +5,13 @@ import { mountlyManifestFragmentPlugin } from "./fragment.js";
 export { mountlyHostPlugin, type MountlyHostPluginOptions } from "./host.js";
 export { mountlyManifestFragmentPlugin, type ManifestFragmentPluginOptions } from "./fragment.js";
 
-export type MountlyWidgetFramework = "react" | "vue" | "svelte";
+import {
+  getFrameworkPeerExternals,
+  getSelfContainedExternals,
+  type MountlyWidgetFramework,
+} from "./externals.js";
 
-const PLATFORM_EXTERNALS = ["mountly", /^mountly\//];
-
-const FRAMEWORK_EXTERNALS: Record<MountlyWidgetFramework, string[]> = {
-  react: ["react", "react/jsx-runtime", "react-dom", "react-dom/client", "mountly-react"],
-  vue: ["vue", "mountly-vue"],
-  svelte: ["svelte", "mountly-svelte"],
-};
-
-const FRAMEWORK_BUNDLE: Record<MountlyWidgetFramework, string[]> = {
-  react: ["react", "react/jsx-runtime", "react-dom", "react-dom/client"],
-  vue: ["vue"],
-  svelte: ["svelte"],
-};
-
-export function getFrameworkPeerExternals(
-  framework: MountlyWidgetFramework,
-): Array<string | RegExp> {
-  return [...PLATFORM_EXTERNALS, ...FRAMEWORK_EXTERNALS[framework]];
-}
-
-/**
- * The self-contained build's whole promise is "drop this file in a page and it
- * works", so mountly's own runtime helpers are bundled in rather than
- * externalised: the host then needs no import map at all. The peer build still
- * externalises them, because sharing through the host's import map is the point
- * of that build.
- */
-export function getSelfContainedExternals(
-  framework: MountlyWidgetFramework,
-): Array<string | RegExp> {
-  return FRAMEWORK_EXTERNALS[framework].filter((id) => !FRAMEWORK_BUNDLE[framework].includes(id));
-}
+export { getFrameworkPeerExternals, getSelfContainedExternals, type MountlyWidgetFramework };
 
 export interface MountlyCssAsTextOptions {
   include?: string | RegExp | (string | RegExp)[];
@@ -293,4 +266,5 @@ export {
   type MountlyElementsConfigOptions,
   type MountlyElementEntry,
 } from "./embed.js";
+export { extractDocs, type ComponentDocs, type PropSchema } from "./docs.js";
 export { extractProps, type PropSpec, type PropKind } from "./props.js";
