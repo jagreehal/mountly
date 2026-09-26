@@ -54,6 +54,7 @@ export default defineConfig({
       "docs/dist/**",
       "pnpm-lock.yaml",
       ".playwright-mcp/**",
+      "docs/examples/**/vendor/**",
     ],
   },
   // The Svelte adapter has a `.svelte.js` rune module; without the compiler it

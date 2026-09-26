@@ -32,6 +32,13 @@ export interface ElementDefinition {
   props?: PropSpec[];
   /** Core trigger syntax. Defaults to mounting when connected. */
   trigger?: string;
+  /**
+   * Slot names the component renders (`""` is the default slot). Children the
+   * page puts inside the element for these slots are kept, and moved into the
+   * widget's root where its shadow DOM `<slot>`s project them, instead of being
+   * treated as loading fallback.
+   */
+  slots?: string[];
 }
 
 export type MountlyElement<Props = Record<string, unknown>> = HTMLElement &
@@ -77,6 +84,7 @@ function defineElement(tag: string, definition: ElementDefinition): void {
   }
 
   const specs = definition.props ?? [];
+  const slots = definition.slots ?? [];
   const dataProps = specs.filter((spec) => spec.kind !== "event");
   const eventProps = specs.filter((spec) => spec.kind === "event");
   // A function has no string form, so it is a property only.
@@ -150,6 +158,9 @@ function defineElement(tag: string, definition: ElementDefinition): void {
     #stop?: () => void;
     #slot?: HTMLDivElement;
     #fallback = document.createDocumentFragment();
+    /** Children the page slotted in: they live inside the widget's root while mounted. */
+    #slotted: Element[] = [];
+    #observer?: MutationObserver;
     #queued = false;
 
     constructor() {
@@ -157,9 +168,27 @@ function defineElement(tag: string, definition: ElementDefinition): void {
       this.addEventListener("mountly:mount", (event) => {
         if (event.target !== this) return;
         for (const child of Array.from(this.childNodes)) {
-          if (child !== this.#slot) this.#fallback.append(child);
+          if (child === this.#slot) continue;
+          if (this.#isSlotted(child)) this.#slotted.push(child as Element);
+          else this.#fallback.append(child);
         }
+        this.#slot?.append(...this.#slotted);
         if (this.#slot) this.#slot.hidden = false;
+        // A host may add children after the component has mounted — a page
+        // that streams in, say. They belong in the slots just the same.
+        if (slots.length) {
+          this.#observer ??= new MutationObserver((records) => {
+            for (const record of records) {
+              for (const node of record.addedNodes) {
+                if (node.parentNode !== this || node === this.#slot || !this.#isSlotted(node))
+                  continue;
+                this.#slotted.push(node as Element);
+                this.#slot?.append(node);
+              }
+            }
+          });
+          this.#observer.observe(this, { childList: true });
+        }
       });
     }
 
@@ -177,8 +206,30 @@ function defineElement(tag: string, definition: ElementDefinition): void {
     }
 
     disconnectedCallback() {
+      this.#rescue();
       this.#stop?.();
       this.#stop = undefined;
+      this.#restore();
+    }
+
+    /** A child the component renders through a `<slot>`, rather than loading text. */
+    #isSlotted(child: Node): boolean {
+      if (!slots.length || !(child instanceof Element)) return false;
+      return slots.includes(child.getAttribute("slot") ?? "");
+    }
+
+    /**
+     * Bring slotted children back out of the widget's root before the widget
+     * unmounts and clears it. One the host removed while mounted stays removed.
+     */
+    #rescue() {
+      this.#observer?.disconnect();
+      this.append(...this.#slotted.filter((child) => child.parentNode === this.#slot));
+      this.#slotted = [];
+    }
+
+    /** Take the widget's root out and put the fallback back, ready for the next mount. */
+    #restore() {
       this.#slot?.remove();
       this.#slot = undefined;
       this.append(this.#fallback);
@@ -263,11 +314,10 @@ function defineElement(tag: string, definition: ElementDefinition): void {
 
     #fail(prop: string, error: unknown) {
       this.#errors.set(prop, error);
+      this.#rescue();
       this.#stop?.();
       this.#stop = undefined;
-      this.#slot?.remove();
-      this.#slot = undefined;
-      this.append(this.#fallback);
+      this.#restore();
       this.dataset.mountlyState = "error";
       this.dispatchEvent(
         new CustomEvent("mountly:error", { detail: { error, prop }, bubbles: true }),

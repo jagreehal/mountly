@@ -102,6 +102,7 @@ Before mountly:                    After mountly:
 | [`mountly-tailwind`](https://npmjs.com/package/mountly-tailwind) | Tailwind v4 design preset (opt-in)                                                                                                                         |
 | [`mountly-vite-plugin`](packages/mountly-vite-plugin)            | Vite lib build plugin, dual `index.js` / `peer.js` widget output                                                                                           |
 | [`mountly-manifest`](packages/mountly-manifest)                  | Vertical registry schema, import map + host helpers                                                                                                        |
+| [`mountly-compose`](packages/mountly-compose)                    | Let a model compose pages from many teams' custom elements: catalog from `custom-elements.json`, validation, edit turns, host actions, lazy rendering      |
 | [`mountly-mcp`](packages/mcp-apps/README.md)                     | **MCP Apps (SEP-1865)**: build views from React, Vue or Svelte components. Subpaths: `./react`, `./vue`, `./svelte`, `./vite`, `./server`, `./json-render` |
 
 ## Build with Agent Skills
@@ -116,9 +117,10 @@ Let your coding agent do it. Install the Mountly skills once:
 
 Or `npx skills add jagreehal/mountly`. Then ask:
 
-| Skill                                                                                      | What it does                                  | Try it                                    |
-| ------------------------------------------------------------------------------------------ | --------------------------------------------- | ----------------------------------------- |
-| [`publish-component-embed`](plugins/mountly-embed/skills/publish-component-embed/SKILL.md) | Publishes a component as a script-tag element | _"Let another team embed this component"_ |
+| Skill                                                                                      | What it does                                    | Try it                                                |
+| ------------------------------------------------------------------------------------------ | ----------------------------------------------- | ----------------------------------------------------- |
+| [`publish-component-embed`](plugins/mountly-embed/skills/publish-component-embed/SKILL.md) | Publishes a component as a script-tag element   | _"Let another team embed this component"_             |
+| [`compose-from-embeds`](plugins/mountly-embed/skills/compose-from-embeds/SKILL.md)         | Lets a model compose pages from teams' elements | _"Let the agent build pages from our teams' widgets"_ |
 
 For MCP Apps:
 

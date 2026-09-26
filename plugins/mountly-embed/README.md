@@ -4,9 +4,10 @@ An Agent Skill for publishing an existing React, Vue or Svelte component as a
 script-tag custom element with
 [`mountly-vite-plugin`](../../packages/mountly-vite-plugin/README.md).
 
-| Skill                                                                  | Ask for                                 |
-| ---------------------------------------------------------------------- | --------------------------------------- |
-| [`publish-component-embed`](./skills/publish-component-embed/SKILL.md) | "Let another team embed this component" |
+| Skill                                                                  | Ask for                                             |
+| ---------------------------------------------------------------------- | --------------------------------------------------- |
+| [`publish-component-embed`](./skills/publish-component-embed/SKILL.md) | "Let another team embed this component"             |
+| [`compose-from-embeds`](./skills/compose-from-embeds/SKILL.md)         | "Let the agent build pages from our teams' widgets" |
 
 Install:
 

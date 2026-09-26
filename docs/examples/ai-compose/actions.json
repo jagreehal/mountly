@@ -1,0 +1,25 @@
+{
+  "show-invoice": {
+    "description": "Show that invoice in full next to the list, so the user can check what was charged.",
+    "on": ["billing-invoice-list:pick-invoice"],
+    "params": ["invoiceId"],
+    "show": ["billing-invoice-detail"]
+  },
+  "dispute-charge": {
+    "description": "The user disputes a charge on that invoice. Keep the invoice, and offer a person to talk to and their open tickets.",
+    "on": ["billing-invoice-detail:dispute"],
+    "params": ["invoiceId"],
+    "show": ["support-contact-card", "support-ticket-list"]
+  },
+  "confirm-return": {
+    "description": "The host has started the return. Replace the form with the order's tracker and confirm it in a note.",
+    "on": ["shipping-return-form:start-return"],
+    "params": ["orderId", "reason"],
+    "show": ["shipping-order-tracker", "ui-note"]
+  },
+  "confirm-callback": {
+    "description": "The host has booked a callback. Confirm it in one note and keep the rest of the page.",
+    "on": ["support-contact-card:callback"],
+    "show": ["ui-note"]
+  }
+}

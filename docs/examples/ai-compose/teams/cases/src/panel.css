@@ -1,0 +1,23 @@
+.panel {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 2px solid oklch(0.55 0.16 255 / 0.35);
+  border-radius: 14px;
+  background: oklch(0.97 0.02 255);
+  font:
+    15px/1.45 system-ui,
+    sans-serif;
+}
+h2 {
+  margin: 0;
+  font-size: 16px;
+}
+.body {
+  display: grid;
+  gap: 12px;
+}
+footer {
+  display: flex;
+  gap: 8px;
+}
