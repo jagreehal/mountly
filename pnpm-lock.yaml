@@ -16,8 +16,8 @@ importers:
         specifier: ^3.0.0
         version: 3.0.0
       '@json-render/core':
-        specifier: 0.20.0
-        version: 0.20.0(zod@4.4.3)
+        specifier: 0.21.0
+        version: 0.21.0(zod@4.4.3)
       '@json-render/react':
         specifier: 0.20.0
         version: 0.20.0(react@19.2.8)(zod@4.4.3)
@@ -121,8 +121,8 @@ importers:
   docs/examples/ai-compose:
     dependencies:
       '@json-render/core':
-        specifier: 0.20.0
-        version: 0.20.0(zod@4.4.3)
+        specifier: 0.21.0
+        version: 0.21.0(zod@4.4.3)
       '@modelcontextprotocol/ext-apps':
         specifier: ^1.7.5
         version: 1.7.5(@modelcontextprotocol/sdk@1.30.0(zod@4.4.3))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(zod@4.4.3)
@@ -293,8 +293,8 @@ importers:
   docs/examples/json-render-mcp:
     dependencies:
       '@json-render/core':
-        specifier: 0.20.0
-        version: 0.20.0(zod@4.4.3)
+        specifier: 0.21.0
+        version: 0.21.0(zod@4.4.3)
       '@json-render/react':
         specifier: 0.20.0
         version: 0.20.0(react@19.2.8)(zod@4.4.3)
@@ -382,8 +382,8 @@ importers:
         specifier: 4.0.28
         version: 4.0.28(zod@4.4.3)
       '@json-render/core':
-        specifier: 0.20.0
-        version: 0.20.0(zod@4.4.3)
+        specifier: 0.21.0
+        version: 0.21.0(zod@4.4.3)
       '@json-render/react':
         specifier: 0.20.0
         version: 0.20.0(react@19.2.8)(zod@4.4.3)
@@ -828,8 +828,8 @@ importers:
         version: 4.4.3
     devDependencies:
       '@json-render/core':
-        specifier: 0.20.0
-        version: 0.20.0(zod@4.4.3)
+        specifier: 0.21.0
+        version: 0.21.0(zod@4.4.3)
       '@json-render/react':
         specifier: 0.20.0
         version: 0.20.0(react@19.2.8)(zod@4.4.3)
@@ -1903,6 +1903,11 @@ packages:
 
   '@json-render/core@0.20.0':
     resolution: {integrity: sha512-cXAXn7h3QaylefQgh85AEGPuVq4C8SJ3k9JqigWLJhaBSozF1Fmsrm43DP16RmkqNiVgj5pBRdmB48lEO5qlow==}
+    peerDependencies:
+      zod: ^4.0.0
+
+  '@json-render/core@0.21.0':
+    resolution: {integrity: sha512-vysEbTjO1y8mEgAsp0tztRyaWCkNsBrG8MhAqbndGK3qmMXjMRdCNtk21+AQRNKdRelFGVAwBgtUNW8tfjQlsw==}
     peerDependencies:
       zod: ^4.0.0
 
@@ -7620,6 +7625,10 @@ snapshots:
       '@jridgewell/sourcemap-codec': 1.5.5
 
   '@json-render/core@0.20.0(zod@4.4.3)':
+    dependencies:
+      zod: 4.4.3
+
+  '@json-render/core@0.21.0(zod@4.4.3)':
     dependencies:
       zod: 4.4.3
 

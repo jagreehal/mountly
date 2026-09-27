@@ -9,7 +9,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@json-render/core": "0.20.0",
+    "@json-render/core": "0.21.0",
     "@json-render/react": "0.20.0",
     "@modelcontextprotocol/sdk": "^1.30.0",
     "mountly-mcp": "workspace:*",
