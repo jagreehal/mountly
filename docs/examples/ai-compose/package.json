@@ -18,14 +18,14 @@
     "mountly-compose": "workspace:*",
     "mountly-mcp": "workspace:*",
     "mountly-react": "workspace:*",
-    "react": "^19.2.8",
+    "react": "^19.3.0",
     "react-dom": "^19.2.8",
     "zod": "^4.4.3"
   },
   "devDependencies": {
     "@ai-sdk/typesafe-ai": "3.0.4",
     "@types/node": "^26.2.0",
-    "@types/react": "^19.2.18",
+    "@types/react": "^19.3.0",
     "ai": "7.0.103",
     "esbuild": "^0.28.2",
     "mountly-vite-plugin": "workspace:*",
