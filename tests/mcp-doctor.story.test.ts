@@ -46,6 +46,32 @@ describe("mountly-mcp doctor", () => {
       rmSync(root, { recursive: true, force: true });
     }
   });
+
+  it("fails openai-extensions when sources use openaiUi without the peer", () => {
+    const root = mkdtempSync(join(tmpdir(), "mountly-mcp-doctor-openai-"));
+    try {
+      writeFileSync(join(root, "package.json"), JSON.stringify({ name: "tmp", private: true }));
+      writeFileSync(
+        join(root, "vite.config.ts"),
+        `import { mountlyMcpViews } from "mountly-mcp/vite";
+export default {
+  plugins: [
+    mountlyMcpViews({
+      apps: [{ entry: "src/view.tsx", uri: "ui://x/y", name: "x", openaiUi: { preferredDisplayMode: "fullscreen" } }],
+    }),
+  ],
+};
+`,
+      );
+      const report = runDoctor(root);
+      const openai = report.checks.find((c) => c.id === "openai-extensions");
+      expect(openai?.ok).toBe(false);
+      expect(openai?.detail).toMatch(/@openai\/mcp-extensions/);
+      expect(report.ok).toBe(false);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
 });
 
 describe("mountly-mcp CLI errors", () => {

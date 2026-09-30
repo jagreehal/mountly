@@ -6,6 +6,7 @@ import type {
   McpUiResourceCsp,
   McpUiResourcePermissions,
 } from "@modelcontextprotocol/ext-apps";
+import type { OpenAIUiResourceMetadata } from "@openai/mcp-extensions/server";
 import type { McpResourceDeclaration } from "../types.js";
 import type { McpAppArtifact } from "../artifact/index.js";
 import { emitHtml } from "./emit-html.js";
@@ -52,6 +53,8 @@ export interface BuildSelfContainedOptions {
   domain?: string;
   /** Whether the view requests the host to show a visible border + background. */
   prefersBorder?: boolean;
+  /** ChatGPT resource display metadata (`_meta["openai/ui"]`). */
+  openaiUi?: OpenAIUiResourceMetadata;
   cssEntry?: string;
   bridgeRuntimePath?: string;
 }
@@ -122,6 +125,7 @@ async function writeResource(options: WriteResourceOptions): Promise<BuildResult
     permissions: options.permissions,
     domain: options.domain,
     prefersBorder: options.prefersBorder,
+    openaiUi: options.openaiUi,
   });
 
   // Same values the sidecar declares, so the view's `ui/initialize` matches it.

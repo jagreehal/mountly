@@ -75,6 +75,17 @@ const data = result?.structuredContent; // React; Vue: result.value?.structuredC
 
 App-initiated calls: `useMcpApp().callServerTool({ name, arguments })`.
 
+## ChatGPT
+
+```bash
+pnpm add @openai/mcp-extensions
+```
+
+- View build: `openaiUi: { preferredDisplayMode, availableDisplayModes }`
+- Tools: `_meta: { ...openaiUiToolMeta({ entrypoints: [{ type: "global" }] }) }` from `mountly-mcp/openai/server`
+- View: `import { useOpenAIExtensions } from "mountly-mcp/react/openai"`
+- Host: HTTPS Streamable HTTP at `/mcp`, ChatGPT Developer mode connector
+
 ## Greenfield instead?
 
 If there is no server yet, use the `create-mcp-app` skill / `npx mountly-mcp create`.

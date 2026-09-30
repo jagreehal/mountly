@@ -269,15 +269,19 @@ goose session
 
 Same drill: invoke the tool, check the View renders.
 
-### Step 4: ChatGPT via OpenAI Apps SDK (OpenAI dev account required)
+### Step 4: ChatGPT (Developer mode)
 
-ChatGPT's Apps SDK builds on MCP Apps and accepts the same `_meta.ui.resourceUri` linkage:
+ChatGPT loads the same MCP Apps Views. For sidebar entrypoints and other ChatGPT
+extensions, add `@openai/mcp-extensions` and the Mountly helpers
+(`mountly-mcp/openai/server`, `mountly-mcp/react/openai`).
 
-1. Sign up for the OpenAI Apps SDK developer program
-2. Register your MCP server endpoint
-3. Test from your ChatGPT account
+1. Expose Streamable HTTP at `https://…/mcp` (tunnel or deploy)
+2. Confirm tools in MCP Inspector
+3. ChatGPT → Settings → Security and login → Developer mode
+4. Plugins → + → paste the `/mcp` URL → Create
+5. New chat, enable the connector, call a tool; on Desktop, open a `global` entrypoint from the sidebar
 
-The Apps SDK adds some ChatGPT-specific extensions (e.g. display-mode constraints). If something works in Claude Desktop but not ChatGPT, it's likely one of those. See `developers.openai.com/apps-sdk/mcp-apps-in-chatgpt`.
+Refresh the connector after you change tool or resource `_meta`.
 
 ---
 
@@ -422,6 +426,6 @@ If any of these matter for your use case, they need their own test layer.
 | Every protocol primitive works against fakes | `pnpm test:unit`                                              |
 | The bridge works inside a real browser       | `pnpm test:mcp:verify` (after `pnpm exec playwright install`) |
 | Claude renders the View                      | Real-host smoke test step 1 (manual, no key)                  |
-| ChatGPT renders the View                     | Real-host smoke test step 4 (manual, OpenAI dev account)      |
+| ChatGPT renders the View                     | Real-host smoke test step 4 (manual, Developer mode)          |
 
 The free, no-key path takes you through Claude Desktop + VS Code + Goose. That's the most useful single thing to do before declaring victory.

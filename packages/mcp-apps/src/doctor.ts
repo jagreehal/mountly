@@ -1,6 +1,6 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { createRequire } from "node:module";
-import { resolve } from "node:path";
+import { join, resolve } from "node:path";
 import { CLI_ERROR_CODES, cliError } from "./errors.js";
 
 export interface DoctorCheck {
@@ -25,6 +25,38 @@ function tryResolve(specifier: string, fromDir: string): string | null {
   } catch {
     return null;
   }
+}
+
+const OPENAI_USAGE =
+  /openai\/ui|useOpenAIExtensions|mountly-mcp\/openai|mountly-mcp\/react\/openai|@openai\/mcp-extensions|openaiUi\b|openaiUiToolMeta|enableOpenAiExtensions/;
+
+function projectSourcesMentionOpenAi(cwd: string, viteConfig?: string): boolean {
+  const candidates: string[] = [];
+  if (viteConfig) candidates.push(viteConfig);
+  for (const name of ["server.ts", "server.mjs", "server.js", "src/server.ts", "src/view.tsx"]) {
+    const path = resolve(cwd, name);
+    if (existsSync(path)) candidates.push(path);
+  }
+  const srcDir = resolve(cwd, "src");
+  if (existsSync(srcDir)) {
+    try {
+      for (const entry of readdirSync(srcDir, { withFileTypes: true })) {
+        if (entry.isFile() && /\.(tsx?|jsx?|mjs|cjs)$/.test(entry.name)) {
+          candidates.push(join(srcDir, entry.name));
+        }
+      }
+    } catch {
+      // ignore unreadable src
+    }
+  }
+  for (const path of candidates) {
+    try {
+      if (OPENAI_USAGE.test(readFileSync(path, "utf8"))) return true;
+    } catch {
+      // skip
+    }
+  }
+  return false;
 }
 
 /**
@@ -127,6 +159,17 @@ export function runDoctor(cwd = process.cwd()): DoctorReport {
         });
       }
     }
+  }
+
+  if (projectSourcesMentionOpenAi(cwd, viteConfig)) {
+    const openai = tryResolve("@openai/mcp-extensions/package.json", cwd);
+    checks.push({
+      id: "openai-extensions",
+      ok: Boolean(openai),
+      detail: openai
+        ? `@openai/mcp-extensions resolvable (${openai})`
+        : 'Project references OpenAI MCP extensions but @openai/mcp-extensions is not installed. Run: pnpm add @openai/mcp-extensions',
+    });
   }
 
   // Manifest missing is advisory for a brand-new scaffold before first build.

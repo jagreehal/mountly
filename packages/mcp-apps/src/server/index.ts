@@ -214,15 +214,20 @@ export async function registerMcpApps(
     extensions: { [EXTENSION_ID]: { mimeTypes: [RESOURCE_MIME_TYPE] } },
   } as never);
 
-  const resources = views.map(({ artifact, html }) =>
-    registerAppResource(
+  const resources = views.map(({ artifact, html }) => {
+    const resourceMeta: Record<string, unknown> = {
+      ui: artifact.declaration._meta.ui,
+    };
+    const openaiUi = artifact.declaration._meta["openai/ui"];
+    if (openaiUi !== undefined) resourceMeta["openai/ui"] = openaiUi;
+    return registerAppResource(
       server,
       artifact.name,
       artifact.uri,
       {
         mimeType: artifact.declaration.mimeType,
         description: artifact.declaration.description,
-        _meta: { ui: artifact.declaration._meta.ui },
+        _meta: resourceMeta,
       },
       async () => ({
         contents: [
@@ -230,12 +235,12 @@ export async function registerMcpApps(
             uri: artifact.uri,
             mimeType: artifact.declaration.mimeType,
             text: html,
-            _meta: { ui: artifact.declaration._meta.ui },
+            _meta: resourceMeta,
           },
         ],
       }),
-    ),
-  );
+    );
+  });
 
   const tools: InstalledTool[] = (options.tools ?? []).map((registration) => {
     const { meta, withoutUi, visibility } = mergedToolMetadata(registration);
