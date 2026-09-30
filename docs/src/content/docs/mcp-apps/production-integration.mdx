@@ -43,6 +43,26 @@ const apps = await registerMcpApps(server, {
 Call this before `server.connect()`. You keep auth, transport, prompts,
 ordinary tools, shutdown, telemetry, scaling, and deploy.
 
+## ChatGPT extensions
+
+```bash
+pnpm add @openai/mcp-extensions
+```
+
+```ts
+import {
+  enableOpenAiExtensions,
+  openaiUiToolMeta,
+} from "mountly-mcp/openai/server";
+
+enableOpenAiExtensions(server);
+// tool config._meta: { ...openaiUiToolMeta({ entrypoints: [{ type: "global" }] }) }
+```
+
+Pass `openaiUi` on the Vite View. In the View:
+`import { useOpenAIExtensions } from "mountly-mcp/react/openai"`.
+Serve HTTPS Streamable HTTP at `/mcp` for ChatGPT Developer mode.
+
 ## Existing server (beside-package)
 
 Keep the server package. Add a View app beside it (or under `views/`):

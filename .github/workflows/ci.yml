@@ -57,6 +57,11 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: pnpm exec playwright install chromium firefox webkit --with-deps
 
+      # The cache holds browser binaries only; OS libs must be installed every run.
+      - name: Install Playwright system deps
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: pnpm exec playwright install-deps chromium firefox webkit
+
       - name: Build packages
         run: pnpm build
 

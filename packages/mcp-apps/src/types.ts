@@ -35,6 +35,7 @@ import type {
   McpUiToolInputPartialNotification,
   McpUiToolResultNotification,
 } from "@modelcontextprotocol/ext-apps";
+import type { OpenAIUiResourceMetadata } from "@openai/mcp-extensions/server";
 import type { MCP_APPS_MIME, MCP_APPS_PROTOCOL_VERSION } from "./schema.js";
 
 /**
@@ -78,6 +79,8 @@ export interface McpResourceDeclaration {
   displayModes: ReadonlyArray<McpUiDisplayMode>;
   _meta: {
     ui: McpUiResourceMeta;
+    /** ChatGPT resource display metadata (`_meta["openai/ui"]`). */
+    "openai/ui"?: OpenAIUiResourceMetadata;
   };
 }
 

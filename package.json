@@ -39,6 +39,7 @@
     "@changesets/cli": "^3.0.0",
     "@json-render/core": "0.20.0",
     "@json-render/react": "0.20.0",
+    "@openai/mcp-extensions": "^0.1.0",
     "@playwright/test": "^1.62.1",
     "@sveltejs/vite-plugin-svelte": "7.3.0",
     "@testing-library/react": "^16.3.2",

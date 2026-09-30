@@ -64,6 +64,8 @@ createMcpView(Dashboard);
 ```
 
 Hooks: `useMcpApp()`, `useToolResult<T>()`, `useHostContext()`.
+ChatGPT: `useOpenAIExtensions()` from `mountly-mcp/react/openai` after
+`pnpm add @openai/mcp-extensions`.
 
 ### 3. Vite + build
 
@@ -120,6 +122,7 @@ export default async function createServer() {
 - Log to stderr in a stdio server (stdout is JSON-RPC)
 - App-only tools: `visibility: ["app"]` (string or array)
 - Second View: `npx mountly-mcp add settings --framework react`
+- ChatGPT: `openaiUi` on the View, `openaiUiToolMeta` / `enableOpenAiExtensions` from `mountly-mcp/openai/server`, HTTPS Streamable HTTP at `/mcp`
 
 ## Verify
 

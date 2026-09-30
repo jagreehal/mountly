@@ -13,6 +13,7 @@ docs must use these names.
 | **`registerMcpApps`**    | Install Views and UI-linked tools on an unconnected `McpServer`.                             |
 | **`readMcpAppManifest`** | Load `dist/mountly-mcp.manifest.json` from `mountly-mcp/artifact`.                           |
 | **`mcp.fixtures.json`**  | Named samples for `mountly-mcp dev` (tool args with `--server`, else `structuredContent`).   |
+| **OpenAI extensions**    | ChatGPT-only extras via `@openai/mcp-extensions`. Helpers: `mountly-mcp/openai/server`, `mountly-mcp/react/openai`. |
 | **`create`**             | `mountly-mcp create`: scaffold a greenfield App.                                             |
 | **`add`**                | `mountly-mcp add`: add a second View to an existing Mountly Vite project.                    |
 | **`build`**              | `mountly-mcp build`: build Views via Vite.                                                   |

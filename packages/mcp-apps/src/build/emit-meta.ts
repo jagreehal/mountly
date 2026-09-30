@@ -4,6 +4,7 @@ import type {
   McpUiResourceCsp,
   McpUiResourcePermissions,
 } from "@modelcontextprotocol/ext-apps";
+import type { OpenAIUiResourceMetadata } from "@openai/mcp-extensions/server";
 import type { McpResourceDeclaration } from "../types.js";
 
 export interface EmitMetaInput {
@@ -19,6 +20,8 @@ export interface EmitMetaInput {
   domain?: string;
   /** Whether the view requests the host to show a visible border + background. */
   prefersBorder?: boolean;
+  /** ChatGPT resource display metadata written to `_meta["openai/ui"]`. */
+  openaiUi?: OpenAIUiResourceMetadata;
 }
 
 function assertUiUri(uri: string): void {
@@ -45,6 +48,7 @@ export function emitMeta(input: EmitMetaInput): McpResourceDeclaration {
     displayModes: input.displayModes ?? ["inline"],
     _meta: { ui },
   };
+  if (input.openaiUi !== undefined) decl._meta["openai/ui"] = input.openaiUi;
   if (input.description !== undefined) decl.description = input.description;
   return decl;
 }

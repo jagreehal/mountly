@@ -22,7 +22,7 @@ Open the App once in Claude or VS Code before you call it done.
 | `mountly-mcp dev`    | Supported         | Built-in AppBridge + sandbox proxy                        |
 | Claude Desktop       | Supported (stdio) | `claude_desktop_config.json` → `node` + `serve-stdio.mjs` |
 | VS Code MCP          | Supported (stdio) | `.vscode/mcp.json` → same stdio entry                     |
-| ChatGPT              | Partial           | Custom connector or hosted HTTP MCP; you own OAuth        |
+| ChatGPT              | Supported (HTTP)  | Developer mode connector → HTTPS `/mcp`; OpenAI extensions via `@openai/mcp-extensions` |
 | Other SEP-1865 hosts | Untested here     | Same manifest if the host implements `ui://`              |
 
 "Untested" means this repo has no CI against that host. Do not assume coverage.
@@ -74,8 +74,16 @@ Log to stderr. stdout is the JSON-RPC channel.
 
 ### ChatGPT
 
-Point your connector at the same stdio process or at an HTTP transport you
-deploy. Mountly does not ship OAuth or hosting.
+Serve Streamable HTTP (typically `/mcp`) over HTTPS. Tunnel locally or deploy.
+
+1. `pnpm add @openai/mcp-extensions`
+2. Pass `openaiUi` on the View and `openaiUiToolMeta({ entrypoints: [...] })` on tools via `mountly-mcp/openai/server`
+3. In the View, `import { useOpenAIExtensions } from "mountly-mcp/react/openai"`
+4. ChatGPT → Settings → Security and login → Developer mode
+5. Plugins → + → paste `https://…/mcp` → Create
+6. New chat, enable the connector, prompt a tool, or open a `global` entrypoint from Desktop sidebar
+
+Mountly leaves OAuth and hosting to you. Refresh the connector after metadata changes.
 
 ## Before host smoke
 

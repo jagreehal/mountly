@@ -137,6 +137,80 @@ await registerMcpApps(server, {
 
 Call `registerMcpApps` before `connect`. You keep auth, transport, and deploy.
 
+## ChatGPT / OpenAI extensions
+
+Install the optional peer [`@openai/mcp-extensions`](https://www.npmjs.com/package/@openai/mcp-extensions)
+for ChatGPT entrypoints, mentions, forms, and settings. Mountly helpers import that SDK.
+
+```bash
+pnpm add @openai/mcp-extensions
+```
+
+**Resource metadata** — pass `openaiUi` on the Vite View (or `buildMcpResource`).
+`registerMcpApps` writes it to `_meta["openai/ui"]` on the `ui://` resource:
+
+```ts
+mountlyMcpViews({
+  apps: [
+    {
+      entry: "src/view.tsx",
+      uri: "ui://parts/library",
+      name: "parts_library",
+      openaiUi: {
+        preferredDisplayMode: "fullscreen",
+        availableDisplayModes: ["inline", "fullscreen"],
+      },
+    },
+  ],
+});
+```
+
+**Tool entrypoints** — merge typed `openai/ui` into the tool `_meta`:
+
+```ts
+import {
+  enableOpenAiExtensions,
+  openaiUiToolMeta,
+} from "mountly-mcp/openai/server";
+
+const openai = enableOpenAiExtensions(server); // mentions, settings, elicitInput
+
+await registerMcpApps(server, {
+  views: artifacts.map((artifact) => ({ artifact })),
+  tools: [
+    {
+      name: "parts.library",
+      resourceUri: "ui://parts/library",
+      config: {
+        title: "Parts Library",
+        inputSchema: {},
+        _meta: {
+          ...openaiUiToolMeta({
+            entrypoints: [{ type: "global" }],
+          }),
+        },
+      },
+      handler: async () => ({ structuredContent: {} }),
+    },
+  ],
+});
+```
+
+**View-side** — import from the OpenAI React entry:
+
+```ts
+import { useOpenAIExtensions } from "mountly-mcp/react/openai";
+
+function Library() {
+  const openai = useOpenAIExtensions();
+  // openai.message, openai.deepLink, openai.files, …
+}
+```
+
+Smoke in ChatGPT: serve Streamable HTTP at `/mcp`, enable Developer mode, add the
+connector, then open a `global` entrypoint from the Desktop sidebar. See the
+[host matrix](https://mountly.dev/mcp-apps/host-matrix/).
+
 ## Verify
 
 ```bash
@@ -200,11 +274,13 @@ the view sends the agent its next turn with the current page. The
 | ------------------------- | --------------------------------------- |
 | `mountly-mcp`             | `runBridge`, `publishMcpView`, types    |
 | `mountly-mcp/react`       | `createMcpView` + hooks                 |
+| `mountly-mcp/react/openai` | `useOpenAIExtensions` (ChatGPT peer)   |
 | `mountly-mcp/vue`         | `createMcpView` + composables           |
 | `mountly-mcp/svelte`      | `createMcpView` (props)                 |
 | `mountly-mcp/vite`        | `mountlyMcpViews()`                     |
 | `mountly-mcp/artifact`    | Manifest APIs                           |
 | `mountly-mcp/server`      | `registerMcpApps`                       |
+| `mountly-mcp/openai/server` | ChatGPT helpers (`enableOpenAiExtensions`, `openaiUiToolMeta`) |
 | `mountly-mcp/dev`         | Local host helpers                      |
 | `mountly-mcp/testing`     | `verifyMcpApps`                         |
 | `mountly-mcp/json-render` | Generative path                         |
