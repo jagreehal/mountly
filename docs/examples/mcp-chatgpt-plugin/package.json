@@ -1,26 +1,30 @@
 {
-  "name": "{{name}}",
+  "name": "mcp-chatgpt-plugin",
   "version": "0.0.1",
   "private": true,
   "type": "module",
   "scripts": {
     "build": "vite build",
     "dev": "mountly-mcp dev --server ./server.mjs",
-    "verify": "mountly-mcp verify",
-    "verify:strict": "mountly-mcp verify --strict",
-    "verify:render": "mountly-mcp verify --strict --render",
+    "serve:http": "pnpm run build && node ./serve-http.mjs",
+    "serve:events": "node ./events-server.mjs",
+    "verify": "pnpm run build && node ./verify.mjs",
     "doctor": "mountly-mcp doctor",
     "typecheck": "tsc --noEmit",
     "lint": "oxlint --type-aware"
   },
   "dependencies": {
+    "@modelcontextprotocol/ext-apps": "^1.7.5",
     "@modelcontextprotocol/sdk": "^1.30.0",
-    "mountly-mcp": "^{{mcpVersion}}",
+    "@modelcontextprotocol/server": "^2.2.0",
+    "@openai/mcp-extensions": "^0.1.0",
+    "mountly-mcp": "workspace:*",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@types/node": "^26.2.0",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
     "@vitejs/plugin-react": "^6.1.1",

@@ -10,7 +10,8 @@
     "verify:strict": "mountly-mcp verify --strict",
     "verify:render": "mountly-mcp verify --strict --render",
     "doctor": "mountly-mcp doctor",
-    "typecheck": "vue-tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint --type-aware"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.30.0",
@@ -21,8 +22,9 @@
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^6.0.8",
-    "typescript": "^5.9.0",
-    "vite": "^8.2.1",
-    "vue-tsc": "^2.2.0"
+    "oxlint": "^1.86.0",
+    "oxlint-tsgolint": "^7.0.2003",
+    "typescript": "^7.0.2",
+    "vite": "^8.2.1"
   }
 }

@@ -9,6 +9,8 @@ pnpm install
 pnpm dev                 # sandboxed AppBridge host on :5179 (uses --server ./server.mjs)
 pnpm verify              # static conformance
 pnpm verify:render       # + Chromium mount check (needs Playwright)
+pnpm typecheck           # TypeScript 7 (native tsc, a.k.a. tsgo)
+pnpm lint                # oxlint, type-aware via tsgolint
 ```
 
 | File | Role |
@@ -78,6 +80,7 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: pnpm }
       - run: pnpm install
+      - run: pnpm typecheck && pnpm lint
       - run: pnpm exec mountly-mcp build
       - run: pnpm exec playwright install chromium
       - run: pnpm exec mountly-mcp verify --strict --render

@@ -207,9 +207,97 @@ function Library() {
 }
 ```
 
+**Entrypoint types** place one View on several ChatGPT surfaces. Other hosts
+ignore `openai/ui` and render the View inline:
+
+| `type`     | ChatGPT surface                                 | Extra fields                     |
+| ---------- | ----------------------------------------------- | -------------------------------- |
+| `global`   | Persistent sidebar panel                        | `quickAction` (sidebar shortcut) |
+| `thread`   | Conversation panel beside the chat              | none                             |
+| `file`     | File viewer/editor for matching extensions      | `extensions`                     |
+| `settings` | Plugin settings page                            | `searchTerms`                    |
+
+A file viewer receives the opened file as tool input. Parse it with the SDK schema:
+
+```ts
+import { OpenAIFileEntrypointInputSchema } from "@openai/mcp-extensions/server";
+
+{
+  name: "parts.open_cad",
+  resourceUri: "ui://parts/cad-viewer",
+  config: {
+    inputSchema: OpenAIFileEntrypointInputSchema.shape,
+    _meta: openaiUiToolMeta({
+      entrypoints: [{ type: "file", extensions: [".step", ".stl"] }],
+    }),
+  },
+  handler: async ({ file }) => ({ structuredContent: { name: file.name, uri: file.resourceUri } }),
+}
+```
+
 Smoke in ChatGPT: serve Streamable HTTP at `/mcp`, enable Developer mode, add the
 connector, then open a `global` entrypoint from the Desktop sidebar. See the
 [host matrix](https://mountly.dev/mcp-apps/host-matrix/).
+
+## MCP Events (experimental)
+
+`mountly-mcp/events` lets your server wake a ChatGPT conversation when something
+changes, such as a finished deploy or a new comment. It implements webhook
+delivery from the draft MCP Events spec: Standard Webhooks signing, callback
+challenge verification, retries with backoff, and `410` cleanup. The API follows
+the draft spec.
+
+You need an **MCP 2.0** server (`@modelcontextprotocol/server` v2, protocol
+`2026-07-28`). Register the helpers as custom methods:
+
+```ts
+import { McpServer, createMcpHandler } from "@modelcontextprotocol/server";
+import { defineEvents } from "mountly-mcp/events";
+import { z } from "zod";
+
+const events = defineEvents({
+  events: {
+    "deploy.finished": {
+      description: "A deploy for the app finished.",
+      input: z.object({ app: z.string() }),
+      payload: z.object({ app: z.string(), id: z.string(), status: z.enum(["ok", "failed"]) }),
+    },
+  },
+  store: subscriptionsTable, // get/set/delete/values; a Map is fine for dev
+  authorize: ({ arguments: args, authInfo }) => canSeeApp(authInfo, args.app),
+});
+
+const handler = createMcpHandler(() => {
+  const server = new McpServer({ name: "deploys", version: "1.0.0" });
+  server.server.registerCapabilities({ events: {} });
+  const params = z.looseObject({});
+  server.server.setRequestHandler("events/list", { params }, () => events.list());
+  server.server.setRequestHandler("events/subscribe", { params }, (p, ctx) =>
+    events.subscribe(p, { authInfo: ctx.http?.authInfo }));
+  server.server.setRequestHandler("events/unsubscribe", { params }, (p, ctx) =>
+    events.unsubscribe(p, { authInfo: ctx.http?.authInfo }));
+  return server;
+});
+
+// Later, when it happens:
+await events.emit(
+  "deploy.finished",
+  { app: "web", id: "d_42", status: "ok" },
+  (args) => args.app === "web",
+);
+```
+
+Give the events server at least one tool. ChatGPT creates a connector once
+`tools/list` succeeds.
+
+`authorize` runs on subscribe and again before each delivery, using the principal
+stored at subscribe time, so revoking access stops delivery. Callback URLs use
+`https:`; pass `allowCallbackUrl` to restrict them further. Keep `authInfo`
+serializable when your store persists subscriptions.
+
+ChatGPT subscribes from Work chats and processes events asynchronously. See the
+[`mcp-chatgpt-plugin` example](https://github.com/jagreehal/mountly/tree/main/docs/examples/mcp-chatgpt-plugin) for a
+full walkthrough.
 
 ## Verify
 
@@ -281,6 +369,7 @@ the view sends the agent its next turn with the current page. The
 | `mountly-mcp/artifact`    | Manifest APIs                           |
 | `mountly-mcp/server`      | `registerMcpApps`                       |
 | `mountly-mcp/openai/server` | ChatGPT helpers (`enableOpenAiExtensions`, `openaiUiToolMeta`) |
+| `mountly-mcp/events`      | Experimental MCP Events (`defineEvents`, `signWebhook`) |
 | `mountly-mcp/dev`         | Local host helpers                      |
 | `mountly-mcp/testing`     | `verifyMcpApps`                         |
 | `mountly-mcp/json-render` | Generative path                         |

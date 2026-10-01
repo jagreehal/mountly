@@ -1,6 +1,6 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { createRequire } from "node:module";
-import { join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { CLI_ERROR_CODES, cliError } from "./errors.js";
 
 export interface DoctorCheck {
@@ -24,6 +24,18 @@ function tryResolve(specifier: string, fromDir: string): string | null {
     return require.resolve(specifier);
   } catch {
     return null;
+  }
+}
+
+/**
+ * Path to `pkg` in the project's node_modules, walking up from `fromDir`. Reads the
+ * filesystem, so packages whose `exports` omit `./package.json` resolve too.
+ */
+function findInstalled(pkg: string, fromDir: string): string | null {
+  for (let dir = resolve(fromDir); ; dir = dirname(dir)) {
+    const path = join(dir, "node_modules", pkg, "package.json");
+    if (existsSync(path)) return path;
+    if (dirname(dir) === dir) return null;
   }
 }
 
@@ -162,7 +174,7 @@ export function runDoctor(cwd = process.cwd()): DoctorReport {
   }
 
   if (projectSourcesMentionOpenAi(cwd, viteConfig)) {
-    const openai = tryResolve("@openai/mcp-extensions/package.json", cwd);
+    const openai = findInstalled("@openai/mcp-extensions", cwd);
     checks.push({
       id: "openai-extensions",
       ok: Boolean(openai),

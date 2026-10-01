@@ -30,7 +30,7 @@
     "test:e2e:critical": "env -u NO_COLOR PLAYWRIGHT_HTML_OPEN=never playwright test \"tests/svelte-adapter.spec.ts\" \"tests/vue-adapter.spec.ts\" \"tests/island.spec.ts\" \"tests/loader-css.spec.ts\" \"tests/host-bootstrap.spec.ts\"",
     "test:mcp:unit": "turbo run build --filter=mountly-mcp && vp test run tests/mcp-*.story.test.ts",
     "test:mcp:e2e": "turbo run build --filter=mountly-mcp && env -u NO_COLOR PLAYWRIGHT_HTML_OPEN=never playwright test \"tests/bridge-pure-ui-libraries.spec.ts\" \"tests/mcp-demo-preview.story.spec.ts\" \"tests/mcp-dev-host.story.spec.ts\"",
-    "test:mcp:verify": "pnpm run test:mcp:unit && pnpm run test:component && pnpm run test:mcp:e2e && pnpm --filter mcp-app-demo verify:stdio && pnpm --filter mcp-release-readiness verify",
+    "test:mcp:verify": "pnpm run test:mcp:unit && pnpm run test:component && pnpm run test:mcp:e2e && pnpm --filter mcp-app-demo verify:stdio && pnpm --filter mcp-release-readiness verify && pnpm --filter mcp-chatgpt-plugin verify",
     "test:mcp:demo": "pnpm --filter mcp-app-demo verify",
     "test:component": "vitest run --config vitest.component.config.ts",
     "test:component:watch": "vitest --config vitest.component.config.ts"
