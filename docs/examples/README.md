@@ -28,27 +28,28 @@ Build output must exist under `packages/mountly/dist/` and each example widget�
 8. **`mcp-generative-demo/`** — **Advanced** generative UI (`mountly-mcp/json-render`). Not the MCP Apps happy path. See [mcp-generative-demo/README.md](mcp-generative-demo/README.md).
 9. **`json-render-mcp/`** — **Advanced** minimal `createJsonRenderMcpApp` example. See [json-render-mcp/README.md](json-render-mcp/README.md).
 10. **`mcp-release-readiness/`** — Production-shaped Vue MCP App (canonical Vite + View path): a reusable component, Mountly's Vite resource build, and an app-only decision action. Closest in-repo match to `mountly-mcp create`. See [mcp-release-readiness/README.md](mcp-release-readiness/README.md).
-11. **`multi-vertical-host/`** — Manifest-driven multi-team host: `installPlatformRuntime`, `defineMountlyFeatureFromManifest`, `mountly/contracts` bus. See [multi-vertical-host/README.md](multi-vertical-host/README.md) and [docs/micro-frontends.md](../docs/micro-frontends.md). Read [Choosing an architecture](https://jagreehal.github.io/mountly/getting-started/choosing-an-architecture/) first — this is Stage 3, not the default starting point.
+11. **`mcp-chatgpt-plugin/`**: ChatGPT Plugin Extensions (sidebar and `.log` file viewer entrypoints on one View) plus an MCP 2.0 **Events** server built on `mountly-mcp/events`. See [mcp-chatgpt-plugin/README.md](mcp-chatgpt-plugin/README.md).
+12. **`multi-vertical-host/`** — Manifest-driven multi-team host: `installPlatformRuntime`, `defineMountlyFeatureFromManifest`, `mountly/contracts` bus. See [multi-vertical-host/README.md](multi-vertical-host/README.md) and [docs/micro-frontends.md](../docs/micro-frontends.md). Read [Choosing an architecture](https://jagreehal.github.io/mountly/getting-started/choosing-an-architecture/) first — this is Stage 3, not the default starting point.
 
-12. **`platform-embed/`** — Product A widget embedded in another team's platform shell (Stage 2). No Module Federation. See [platform-embed/README.md](platform-embed/README.md).
+13. **`platform-embed/`** — Product A widget embedded in another team's platform shell (Stage 2). No Module Federation. See [platform-embed/README.md](platform-embed/README.md).
 
-13. **`vite-host-import/`** — Vite React host with federation-style `import("demo-widget")` via `mountlyHostPlugin`, plus auto-generated remote typings from built vertical fragments. See [vite-host-import/README.md](vite-host-import/README.md).
+14. **`vite-host-import/`** — Vite React host with federation-style `import("demo-widget")` via `mountlyHostPlugin`, plus auto-generated remote typings from built vertical fragments. See [vite-host-import/README.md](vite-host-import/README.md).
 
-14. **`vite-host-remotes-url/`** — Vite host that declares a remote by **published URL** (`remotes: { "demo-widget": url }`); the host fetches the remote's fragment from that URL to auto-wire the import map + types. See [vite-host-remotes-url/README.md](vite-host-remotes-url/README.md). Proven by [`tests/vite-host-remotes-url.spec.ts`](../tests/vite-host-remotes-url.spec.ts).
+15. **`vite-host-remotes-url/`** — Vite host that declares a remote by **published URL** (`remotes: { "demo-widget": url }`); the host fetches the remote's fragment from that URL to auto-wire the import map + types. See [vite-host-remotes-url/README.md](vite-host-remotes-url/README.md). Proven by [`tests/vite-host-remotes-url.spec.ts`](../tests/vite-host-remotes-url.spec.ts).
 
 Widget source packages live alongside hosts: **`payment-breakdown`**, **`image-lightbox`**, **`signup-card`**, **`product-a-widget`** under `docs/examples/<name>/`.
 
-15. **`multi-widget-bundle/`** — Three widgets sharing code in one bundle via `createWidgetBundle`. One JS fetch, one shared CSS stylesheet. No build step for the host. Open via the `plain-html` static server. See [multi-widget-bundle/README.md](multi-widget-bundle/README.md).
+16. **`multi-widget-bundle/`** — Three widgets sharing code in one bundle via `createWidgetBundle`. One JS fetch, one shared CSS stylesheet. No build step for the host. Open via the `plain-html` static server. See [multi-widget-bundle/README.md](multi-widget-bundle/README.md).
 
-16. **`monorepo-component-library/`** — Simulates a monorepo: a shared UI library (`ui-lib.js`) consumed by a widgets bundle, loaded via `createWidgetBundle`. Demonstrates third-party imports flowing through a bundle. Open via the `plain-html` static server. See [monorepo-component-library/README.md](monorepo-component-library/README.md).
+17. **`monorepo-component-library/`** — Simulates a monorepo: a shared UI library (`ui-lib.js`) consumed by a widgets bundle, loaded via `createWidgetBundle`. Demonstrates third-party imports flowing through a bundle. Open via the `plain-html` static server. See [monorepo-component-library/README.md](monorepo-component-library/README.md).
 
-17. **`cross-framework-bus/`** — React 19 + Vue + Svelte widgets on one page, communicating through a typed `mountly/bus` event bus. No framework imports another. See [cross-framework-bus/README.md](cross-framework-bus/README.md).
+18. **`cross-framework-bus/`** — React 19 + Vue + Svelte widgets on one page, communicating through a typed `mountly/bus` event bus. No framework imports another. See [cross-framework-bus/README.md](cross-framework-bus/README.md).
 
-18. **`react-embed/`** — An ordinary React component published as a **script-tag custom element**: `defineElementsConfig` reads its props type and emits `embed.js`, `embed.d.ts` and `custom-elements.json`. The consuming page installs nothing. See [react-embed/README.md](react-embed/README.md) and [Script-tag component libraries](https://mountly.dev/concepts/script-embeds/).
+19. **`react-embed/`** — An ordinary React component published as a **script-tag custom element**: `defineElementsConfig` reads its props type and emits `embed.js`, `embed.d.ts` and `custom-elements.json`. The consuming page installs nothing. See [react-embed/README.md](react-embed/README.md) and [Script-tag component libraries](https://mountly.dev/concepts/script-embeds/).
 
-19. **`mixed-embed/`** — The same build with React, Vue and Svelte components side by side and **no compiler plugin configured**; each framework loads only when one of its elements connects. See [mixed-embed/README.md](mixed-embed/README.md).
+20. **`mixed-embed/`** — The same build with React, Vue and Svelte components side by side and **no compiler plugin configured**; each framework loads only when one of its elements connects. See [mixed-embed/README.md](mixed-embed/README.md).
 
-20. **`ai-compose/`**: a model composes one page from four teams' custom elements, using the `custom-elements.json` each team's embed build publishes (JSDoc, prop schemas and slots). The page streams, edits in place, and runs inside an MCP host. Needs Ollama or a hosted model. See [ai-compose/README.md](ai-compose/README.md).
+21. **`ai-compose/`**: a model composes one page from four teams' custom elements, using the `custom-elements.json` each team's embed build publishes (JSDoc, prop schemas and slots). The page streams, edits in place, and runs inside an MCP host. Needs Ollama or a hosted model. See [ai-compose/README.md](ai-compose/README.md).
 
 ## Run commands and ports
 
@@ -66,6 +67,7 @@ Each example has its own dedicated port, so they all run side-by-side without co
 | `mcp-generative-demo` (CLI verify)    | N/A      | `pnpm --filter mcp-generative-demo verify`                                         | CLI output                                                          |
 | `json-render-mcp` (CLI verify)        | N/A      | `pnpm --filter json-render-mcp-example verify`                                     | CLI output                                                          |
 | `mcp-release-readiness` (CLI verify)  | N/A      | `pnpm --filter mcp-release-readiness verify`                                       | CLI output                                                          |
+| `mcp-chatgpt-plugin` (CLI verify)     | N/A      | `pnpm --filter mcp-chatgpt-plugin verify`                                          | CLI output                                                          |
 | `multi-vertical-host` (static)        | **5182** | `cd docs/examples/multi-vertical-host && pnpm dev`                                 | <http://localhost:5182/docs/examples/multi-vertical-host/>          |
 | `platform-embed` (static)             | **5184** | `cd docs/examples/platform-embed/platform-host && pnpm dev`                        | <http://localhost:5184/docs/examples/platform-embed/platform-host/> |
 | `vite-host-import` (Vite host)        | **5190** | `cd docs/examples/vite-host-import && pnpm run build:remote && pnpm dev`           | <http://localhost:5190>                                             |

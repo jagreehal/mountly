@@ -85,6 +85,22 @@ Serve Streamable HTTP (typically `/mcp`) over HTTPS. Tunnel locally or deploy.
 
 Mountly leaves OAuth and hosting to you. Refresh the connector after metadata changes.
 
+#### ChatGPT-only surfaces
+
+Plugin Extensions place the same View on extra ChatGPT surfaces via tool
+`openai/ui` entrypoints. Every other host ignores them and renders the View inline.
+
+| Entrypoint `type` | Surface                             |
+| ----------------- | ----------------------------------- |
+| `global`          | Sidebar panel (+ `quickAction`)     |
+| `thread`          | Conversation panel                  |
+| `file`            | File viewer/editor by `extensions`  |
+| `settings`        | Plugin settings                     |
+
+MCP Events let your server notify ChatGPT through webhooks. They need an MCP 2.0
+server (`2026-07-28`). `mountly-mcp/events` implements the draft spec; the package
+README shows the wiring.
+
 ## Before host smoke
 
 ```bash

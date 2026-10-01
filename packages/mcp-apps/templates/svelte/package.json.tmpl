@@ -10,7 +10,8 @@
     "verify:strict": "mountly-mcp verify --strict",
     "verify:render": "mountly-mcp verify --strict --render",
     "doctor": "mountly-mcp doctor",
-    "typecheck": "svelte-check --tsconfig ./tsconfig.json"
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint --type-aware"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.30.0",
@@ -21,8 +22,9 @@
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^7.3.0",
-    "svelte-check": "^4.0.0",
-    "typescript": "^5.9.0",
+    "oxlint": "^1.86.0",
+    "oxlint-tsgolint": "^7.0.2003",
+    "typescript": "^7.0.2",
     "vite": "^8.2.1"
   }
 }

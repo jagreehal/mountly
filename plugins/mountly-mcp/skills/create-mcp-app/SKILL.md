@@ -123,6 +123,7 @@ export default async function createServer() {
 - App-only tools: `visibility: ["app"]` (string or array)
 - Second View: `npx mountly-mcp add settings --framework react`
 - ChatGPT: `openaiUi` on the View, `openaiUiToolMeta` / `enableOpenAiExtensions` from `mountly-mcp/openai/server`, HTTPS Streamable HTTP at `/mcp`
+- ChatGPT events (notify on change): `mountly-mcp/events` on an MCP 2.0 server; see the `add-app-to-server` skill
 
 ## Verify
 
@@ -130,4 +131,6 @@ export default async function createServer() {
 npx mountly-mcp doctor
 npx mountly-mcp verify
 npx mountly-mcp verify --render --strict
+pnpm typecheck   # TypeScript 7
+pnpm lint        # oxlint --type-aware
 ```

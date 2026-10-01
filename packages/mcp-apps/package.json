@@ -69,6 +69,10 @@
       "types": "./dist/openai/server.d.ts",
       "import": "./dist/openai/server.js"
     },
+    "./events": {
+      "types": "./dist/events/index.d.ts",
+      "import": "./dist/events/index.js"
+    },
     "./json-render": {
       "types": "./dist/json-render/index.d.ts",
       "import": "./dist/json-render/index.js"

@@ -1,0 +1,7 @@
+{
+  "board": {
+    "kind": "board",
+    "deploys": [{ "id": "d_1", "app": "web", "status": "ok", "at": "2026-10-01T09:00:00Z" }]
+  },
+  "log": { "kind": "log", "name": "web-d_1.log", "uri": "file://web-d_1.log" }
+}

@@ -72,6 +72,29 @@ export default {
       rmSync(root, { recursive: true, force: true });
     }
   });
+
+  it("passes openai-extensions when the ESM-only peer is installed", () => {
+    const root = mkdtempSync(join(tmpdir(), "mountly-mcp-doctor-openai-ok-"));
+    try {
+      writeFileSync(join(root, "package.json"), JSON.stringify({ name: "tmp", private: true }));
+      writeFileSync(join(root, "server.mjs"), `import "mountly-mcp/openai/server";\n`);
+      const pkg = join(root, "node_modules/@openai/mcp-extensions");
+      mkdirSync(pkg, { recursive: true });
+      // Matches the published package: `exports` omits ./package.json.
+      writeFileSync(
+        join(pkg, "package.json"),
+        JSON.stringify({
+          name: "@openai/mcp-extensions",
+          type: "module",
+          exports: { "./server": "./server.js" },
+        }),
+      );
+      const openai = runDoctor(root).checks.find((c) => c.id === "openai-extensions");
+      expect(openai?.ok).toBe(true);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
 });
 
 describe("mountly-mcp CLI errors", () => {

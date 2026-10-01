@@ -83,8 +83,21 @@ pnpm add @openai/mcp-extensions
 
 - View build: `openaiUi: { preferredDisplayMode, availableDisplayModes }`
 - Tools: `_meta: { ...openaiUiToolMeta({ entrypoints: [{ type: "global" }] }) }` from `mountly-mcp/openai/server`
+- Entrypoint types: `global` (sidebar, optional `quickAction`), `thread` (conversation panel), `file` (viewer for `extensions`; parse input with `OpenAIFileEntrypointInputSchema`), `settings`
 - View: `import { useOpenAIExtensions } from "mountly-mcp/react/openai"`
 - Host: HTTPS Streamable HTTP at `/mcp`, ChatGPT Developer mode connector
+
+## MCP Events (ChatGPT webhooks)
+
+Use for "notify me when X happens". Needs an MCP 2.0 server (`@modelcontextprotocol/server` v2):
+
+- `defineEvents({ events: { name: { input, payload } }, store, authorize })` from `mountly-mcp/events`
+- `server.server.registerCapabilities({ events: {} })`, then route `events/list`, `events/subscribe`, `events/unsubscribe` to the returned handlers
+- Call `events.emit(name, data, (args) => matches)` when the change happens
+- Register at least one tool on the server
+- Users subscribe from a ChatGPT Work chat
+
+Reference: `docs/examples/mcp-chatgpt-plugin/events-server.mjs`.
 
 ## Greenfield instead?
 
