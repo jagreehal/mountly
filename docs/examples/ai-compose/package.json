@@ -23,7 +23,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@ai-sdk/typesafe-ai": "3.0.4",
+    "@ai-sdk/typesafe-ai": "3.0.12",
     "@types/node": "^26.2.0",
     "@types/react": "^19.2.18",
     "ai": "7.0.103",
