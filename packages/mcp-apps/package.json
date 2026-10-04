@@ -144,7 +144,7 @@
     "@types/react-dom": "^19.2.4",
     "ai": "6.0.208",
     "axe-core": "4.13.0",
-    "jsdom": "^30.0.1",
+    "jsdom": "^30.1.1",
     "mountly-compose": "workspace:*",
     "mountly-svelte": "workspace:^",
     "mountly-vue": "workspace:^",
