@@ -1,12 +1,14 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { createRequire } from "node:module";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join, relative, resolve } from "node:path";
 import { CLI_ERROR_CODES, cliError } from "./errors.js";
 
 export interface DoctorCheck {
   id: string;
   ok: boolean;
   detail: string;
+  /** Worth fixing, but never fails the run: printed as `warn`, not `FAIL`. */
+  advisory?: boolean;
 }
 
 export interface DoctorReport {
@@ -72,6 +74,115 @@ function projectSourcesMentionOpenAi(cwd: string, viteConfig?: string): boolean 
 }
 
 /**
+ * Habits of an ordinary web app that break once it runs as a View, inside a
+ * host's sandboxed iframe with no origin of its own. Text patterns, not
+ * analysis: each hit marks a line to check.
+ */
+const SANDBOX_HAZARDS: ReadonlyArray<{ id: string; pattern: RegExp; fix: string }> = [
+  {
+    id: "storage",
+    pattern: /\b(?:localStorage|sessionStorage|indexedDB)\b/,
+    fix: "throws in a sandbox without allow-same-origin. Wrap each access in try/catch, or keep the state in memory or on the server.",
+  },
+  {
+    id: "router",
+    pattern: /\b(?:BrowserRouter|createBrowserRouter)\b/,
+    fix: "a ui:// View has no URL to route on. Render the page directly, or use a MemoryRouter.",
+  },
+  {
+    id: "download",
+    pattern: /\.download\s*=|\bdownload=|\bsaveAs\s*\(|\bXLSX\.writeFile(?:XLSX)?\s*\(/,
+    fix: "hosts block <a download>. Use useDownload() from mountly-mcp/react, or downloadFile() from mountly-mcp.",
+  },
+  {
+    id: "worker",
+    pattern: /new\s+(?:Shared)?Worker\s*\((?!\s*new\s+URL\s*\()/,
+    fix: 'only new Worker(new URL("./w.ts", import.meta.url)) is bundled into the View. Start the worker that way.',
+  },
+  {
+    id: "remote-import",
+    pattern: /(?:import\s*\(|\bfrom)\s*["'`]https?:\/\//,
+    fix: "remote modules load only from origins in csp.resourceDomains. Install and bundle the package instead.",
+  },
+  {
+    id: "hostname",
+    pattern: /\blocation\.(?:hostname|host|origin)\b/,
+    fix: "in a host iframe this is the sandbox's origin, not your site. Pass configuration in through the tool result.",
+  },
+  {
+    id: "relative-fetch",
+    pattern: /\bfetch\s*\(\s*[`'"]\/(?!\/)/,
+    fix: "a View has no origin to resolve /api against. Call an app-only server tool with callServerTool(), or fetch an absolute URL listed in csp.connectDomains.",
+  },
+  {
+    id: "window-open",
+    pattern: /\bwindow\.open\s*\(/,
+    fix: "popups are blocked. Use app.openLink({ url }) from useMcpApp().",
+  },
+];
+
+function sourceFiles(dir: string): string[] {
+  const out: string[] = [];
+  let entries;
+  try {
+    entries = readdirSync(dir, { withFileTypes: true });
+  } catch {
+    return out;
+  }
+  for (const entry of entries) {
+    if (entry.name === "node_modules" || entry.name === "dist" || entry.name.startsWith(".")) {
+      continue;
+    }
+    const path = join(dir, entry.name);
+    if (entry.isDirectory()) out.push(...sourceFiles(path));
+    else if (
+      /\.(?:[cm]?[jt]sx?|vue|svelte)$/.test(entry.name) &&
+      !/\.(?:test|spec)\./.test(entry.name)
+    ) {
+      out.push(path);
+    }
+  }
+  return out;
+}
+
+/** One advisory check per hazard found under `src/`, naming where to look. */
+export function scanSandboxHazards(cwd: string): DoctorCheck[] {
+  const hits = new Map<string, string[]>();
+  for (const file of sourceFiles(resolve(cwd, "src"))) {
+    let text: string;
+    try {
+      text = readFileSync(file, "utf8");
+    } catch {
+      continue;
+    }
+    // Whole-file, not per line: `new Worker(\n  new URL(…)` is one call.
+    for (const hazard of SANDBOX_HAZARDS) {
+      for (const match of text.matchAll(new RegExp(hazard.pattern.source, "g"))) {
+        const line = text.slice(0, match.index).split("\n").length;
+        const at = hits.get(hazard.id) ?? [];
+        at.push(`${relative(cwd, file)}:${line}`);
+        hits.set(hazard.id, at);
+      }
+    }
+  }
+  if (hits.size === 0) {
+    return [
+      { id: "sandbox", ok: true, detail: "no sandbox hazards found in src/", advisory: true },
+    ];
+  }
+  return SANDBOX_HAZARDS.filter((hazard) => hits.has(hazard.id)).map((hazard) => {
+    const at = hits.get(hazard.id) ?? [];
+    const more = at.length > 3 ? ` (+${at.length - 3} more)` : "";
+    return {
+      id: `sandbox/${hazard.id}`,
+      ok: false,
+      advisory: true,
+      detail: `${at.slice(0, 3).join(", ")}${more}: ${hazard.fix}`,
+    };
+  });
+}
+
+/**
  * Check the local project for Mountly MCP readiness. Exits nonzero via the
  * CLI when `ok` is false.
  */
@@ -119,6 +230,8 @@ export function runDoctor(cwd = process.cwd()): DoctorReport {
   checks.push({
     id: "manifest",
     ok: existsSync(manifest),
+    // A brand-new scaffold has not built yet.
+    advisory: true,
     detail: existsSync(manifest)
       ? `Found ${manifest}`
       : "No dist/mountly-mcp.manifest.json yet. Run: npx mountly-mcp build",
@@ -128,6 +241,8 @@ export function runDoctor(cwd = process.cwd()): DoctorReport {
   checks.push({
     id: "playwright",
     ok: Boolean(playwright),
+    // Only `verify --render` needs it.
+    advisory: true,
     detail: playwright
       ? `Playwright resolvable for verify --render (${playwright})`
       : "Playwright not installed. For CI render checks: pnpm add -D playwright && npx playwright install chromium",
@@ -148,11 +263,11 @@ export function runDoctor(cwd = process.cwd()): DoctorReport {
         const reactMajor = Number((reactPkg.version ?? "0").split(".")[0]);
         checks.push({
           id: "react",
-          ok: reactMajor >= 19,
+          ok: reactMajor >= 18,
           detail:
-            reactMajor >= 19
+            reactMajor >= 18
               ? `React ${reactPkg.version} (ok)`
-              : `React ${reactPkg.version} is below 19. mountly-mcp/react and mountly-react require React 19.`,
+              : `React ${reactPkg.version} is below 18. mountly-mcp/react and mountly-react need createRoot, from React 18.`,
         });
       }
     }
@@ -180,13 +295,13 @@ export function runDoctor(cwd = process.cwd()): DoctorReport {
       ok: Boolean(openai),
       detail: openai
         ? `@openai/mcp-extensions resolvable (${openai})`
-        : 'Project references OpenAI MCP extensions but @openai/mcp-extensions is not installed. Run: pnpm add @openai/mcp-extensions',
+        : "Project references OpenAI MCP extensions but @openai/mcp-extensions is not installed. Run: pnpm add @openai/mcp-extensions",
     });
   }
 
-  // Manifest missing is advisory for a brand-new scaffold before first build.
-  const hard = checks.filter((c) => c.id !== "manifest" && c.id !== "playwright");
-  const ok = hard.every((c) => c.ok);
+  checks.push(...scanSandboxHazards(cwd));
+
+  const ok = checks.every((c) => c.ok || c.advisory);
 
   return { ok, checks };
 }
@@ -194,7 +309,8 @@ export function runDoctor(cwd = process.cwd()): DoctorReport {
 export function formatDoctorReport(report: DoctorReport): string {
   const lines = ["mountly-mcp doctor", ""];
   for (const check of report.checks) {
-    lines.push(`${check.ok ? "ok" : "FAIL"}  ${check.id.padEnd(14)} ${check.detail}`);
+    const status = check.ok ? "ok" : check.advisory ? "warn" : "FAIL";
+    lines.push(`${status.padEnd(4)}  ${check.id.padEnd(22)} ${check.detail}`);
   }
   lines.push("");
   lines.push(report.ok ? "Ready for mountly-mcp build / dev / verify." : "Fix FAIL items above.");

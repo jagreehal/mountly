@@ -54,6 +54,8 @@ function theme(): "light" | "dark" {
 
 const capabilities = {
   openLinks: {},
+  // The host side of `downloadFile()`, so a View exercises the real path in dev.
+  downloadFile: {},
   logging: {},
   // A view's `sendMessage` asks the host to post the user's next turn to the agent.
   message: { text: {} },
@@ -78,6 +80,30 @@ bridge.onmessage = async ({ content }) => {
 };
 bridge.onopenlink = async ({ url }) => {
   window.open(url, "_blank", "noopener,noreferrer");
+  return {};
+};
+bridge.ondownloadfile = async ({ contents }) => {
+  for (const item of contents) {
+    if (item.type === "resource_link") {
+      log("in", `ui/download-file ${item.uri}`);
+      window.open(item.uri, "_blank", "noopener,noreferrer");
+      continue;
+    }
+    const resource = item.resource;
+    const name = decodeURIComponent(resource.uri.split("/").pop() || "download");
+    log("in", `ui/download-file ${name}`);
+    const blob =
+      "blob" in resource
+        ? new Blob([Uint8Array.from(atob(resource.blob), (c) => c.charCodeAt(0))], {
+            type: resource.mimeType,
+          })
+        : new Blob([resource.text], { type: resource.mimeType });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = name;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+  }
   return {};
 };
 bridge.onsizechange = ({ height }) => {

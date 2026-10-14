@@ -158,7 +158,15 @@ plain DOM code and in global-JSX frameworks such as Preact, Solid and Vue:
 const summary = document.querySelector("acme-payments-summary"); // typed
 summary.balance = 1500; // number
 summary.currency = 1500; // Type error
+summary.addEventListener("view-details", (event) => event.detail.balance); // typed detail
 ```
+
+Each prop keeps the type you wrote, its JSDoc included. Interfaces and type
+aliases it names, from the component's file or a file it imports by relative path,
+are copied in under the element's name (`AcmePaymentsSummary_LineItem`). An
+event's `detail` is the callback's first argument. A type that cannot come
+along, such as `React.ReactNode`, a package import, an enum or a class, falls
+back to its wire type: `string`, `number`, `boolean` or `unknown`.
 
 React 19 resolves `JSX` from the `react` module rather than the global
 namespace, so a React host references `embed.react.d.ts` instead. That file

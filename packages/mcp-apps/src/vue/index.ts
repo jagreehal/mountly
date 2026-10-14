@@ -27,6 +27,7 @@ import type { AdapterOptions } from "mountly/adapter";
 import type { App, McpUiDisplayMode, McpUiHostContext } from "@modelcontextprotocol/ext-apps";
 import type { McpView, McpViewProps } from "../types.js";
 import { publishMcpView } from "../publish.js";
+import { downloadFile, type DownloadableFile } from "../download.js";
 
 /** What {@link createMcpView} provides to descendants. */
 export interface McpVueContext {
@@ -82,6 +83,15 @@ function useEnsuredContext(): ComputedRef<McpVueContext> {
 /** The view-side ext-apps App: call server tools, send messages, open links. */
 export function useMcpApp(): App {
   return useEnsuredContext().value.app;
+}
+
+/**
+ * Return a function that hands the user a file: through the host's
+ * `ui/download-file` where it has one, else an ordinary `<a download>`.
+ */
+export function useDownload(): (file: DownloadableFile) => Promise<boolean> {
+  const context = useEnsuredContext();
+  return (file) => downloadFile(context.value.app, file);
 }
 
 /** Complete notification params; read the tool arguments from `.arguments`. */

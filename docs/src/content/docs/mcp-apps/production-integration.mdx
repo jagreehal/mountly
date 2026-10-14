@@ -134,6 +134,55 @@ apps.remove();
 This removes every View resource and tool from the registration, which is
 useful in tests and controlled reconfiguration.
 
+## Cloudflare Workers
+
+A Worker has no filesystem, so register the Views from the
+[views module](/mountly/mcp-apps/build-and-artifacts/#views-as-a-module)
+instead of from paths. `mountly-mcp/server` resolves to a Workers build through
+the `workerd` and `worker` export conditions, so it needs no `nodejs_compat`.
+Pair it with the MCP SDK's web-standard transport:
+
+```ts
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
+import { registerMcpApps } from "mountly-mcp/server";
+import views from "./dist/mountly-mcp.views.js";
+
+export default {
+  async fetch(request: Request): Promise<Response> {
+    const server = new McpServer({ name: "tools", version: "1.0.0" });
+    await registerMcpApps(server, {
+      views: views.map((artifact) => ({ artifact })),
+      tools: [{ name: "lookup", resourceUri: "ui://tools/lookup", handler: lookup }],
+    });
+    const transport = new WebStandardStreamableHTTPServerTransport({
+      sessionIdGenerator: undefined,
+    });
+    await server.connect(transport);
+    return transport.handleRequest(request);
+  },
+};
+```
+
+The Workers build has no `serveStdio`. Registering a View by path there throws,
+and the error says to use the views module.
+
+## Downloads
+
+Most hosts block `<a download>` inside a View. `useDownload()` (React and Vue)
+and `downloadFile(app, file)` from `mountly-mcp` ask a host that supports
+`ui/download-file` to save the file, which the host confirms with the user.
+Anywhere else they fall back to `<a download>`:
+
+```tsx
+const download = useDownload();
+await download({ name: "matches.csv", data: csv, mimeType: "text/csv" });
+```
+
+`data` is a string or a `Blob`. The promise resolves `false` when the host
+declined or the user cancelled. `mountly-mcp dev` implements
+`ui/download-file`, so the host path runs locally too.
+
 ## Convenience server adapters
 
 `createMcpAppServer()` and `serveStdio()` declare Views and tools with exactly

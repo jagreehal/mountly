@@ -108,7 +108,10 @@ prop table), `trigger` (core trigger syntax; defaults to `connected`).
 ## What ships
 
 - `embed.js` — registers every tag, downloads nothing else
-- `embed.d.ts` — typed tags for plain DOM and global-JSX frameworks
+- `embed.d.ts` — typed tags for plain DOM and global-JSX frameworks. Props keep
+  their written types and JSDoc, local and relative-import interfaces come
+  along as `<Tag>_<Name>`, and each event's `detail` is the callback's first
+  argument
 - `embed.react.d.ts` — React 19 resolves `JSX` from the `react` module, so a
   React host references this one instead; it pulls in `embed.d.ts`
 - `custom-elements.json` — Custom Elements Manifest, for editor autocomplete

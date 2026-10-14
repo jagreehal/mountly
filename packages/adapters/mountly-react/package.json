@@ -45,7 +45,7 @@
   },
   "peerDependencies": {
     "mountly": "^1.2.0",
-    "react": "^19",
-    "react-dom": "^19"
+    "react": "^18 || ^19",
+    "react-dom": "^18 || ^19"
   }
 }

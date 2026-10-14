@@ -268,7 +268,7 @@ test("packed npm packages install into a clean Vite consumer and render all adap
     ).toContain('"name": "mountly"');
     expect(
       readFileSync(join(consumerDir, "node_modules", "mountly-react", "package.json"), "utf8"),
-    ).toContain('"react": "^19"');
+    ).toContain('"react": "^18 || ^19"');
 
     const port = 5317 + Math.floor(Math.random() * 1000);
     server = await startVite(consumerDir, port);

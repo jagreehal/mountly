@@ -12,6 +12,7 @@ import type {
   McpUiHostContext,
   McpUiUpdateModelContextRequest,
 } from "@modelcontextprotocol/ext-apps";
+import { downloadFile, type DownloadableFile } from "../download.js";
 import { McpContext } from "./context.js";
 
 function useEnsuredContext() {
@@ -116,6 +117,16 @@ export function useUpdateModelContext(): (
   return async (params) => {
     await app.updateModelContext(params);
   };
+}
+
+/**
+ * Return a function that hands the user a file: through the host's
+ * `ui/download-file` where it has one, else an ordinary `<a download>`.
+ * Resolves `false` when the host declined or the user cancelled.
+ */
+export function useDownload(): (file: DownloadableFile) => Promise<boolean> {
+  const { app } = useEnsuredContext();
+  return (file) => downloadFile(app, file);
 }
 
 /** Manually control auto-resize (rarely needed — the bridge calls setupSizeChangedNotifications by default). */

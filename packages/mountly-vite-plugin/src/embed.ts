@@ -3,6 +3,7 @@ import { basename, dirname, extname, relative, resolve } from "node:path";
 import { parseAst, type Plugin, type Rollup, type UserConfig } from "vite";
 import { getFrameworkPeerExternals, type MountlyWidgetFramework } from "./externals.js";
 import { type ComponentDocs, extractDocs } from "./docs.js";
+import { type EmbedTypes, embedTypes } from "./types.js";
 import { extractProps, kebab, type PropSpec } from "./props.js";
 
 export interface MountlyElementEntry {
@@ -66,6 +67,8 @@ interface BuiltElement {
   props: PropSpec[];
   framework: MountlyWidgetFramework;
   docs: ComponentDocs;
+  /** Prop and event types as written, where `embed.d.ts` can carry them. */
+  types: EmbedTypes;
 }
 
 /** The file says which framework it is, so nobody has to repeat it in config. */
@@ -127,24 +130,30 @@ function normalize(
 
 /** Types the consumer gets for free: typed tags in JSX and in plain DOM code. */
 function declarations(elements: BuiltElement[]): string {
-  const blocks = elements.map(({ tag, props }) => {
+  const blocks = elements.map(({ tag, props, types, docs }) => {
     const id = name(tag);
     const members = props
       .filter((spec) => spec.kind !== "event")
       // `aria-label` is a valid prop name but not a valid identifier.
-      .map((spec) => `  ${member(spec.name)}?: ${TS_TYPE[spec.kind] ?? "unknown"};`);
+      .map(
+        (spec) =>
+          `${jsdoc(docs.props[spec.name]?.description, "  ")}  ${member(spec.name)}?: ${types.props[spec.name] ?? TS_TYPE[spec.kind] ?? "unknown"};`,
+      );
     const events = props
       .filter((spec) => spec.kind === "event")
-      .map((spec) => `  ${JSON.stringify(spec.event)}: CustomEvent;`);
+      .map((spec) => {
+        const detail = spec.event && types.events[spec.event];
+        return `${jsdoc(docs.props[spec.name]?.description, "  ")}  ${JSON.stringify(spec.event)}: CustomEvent${detail ? `<${detail}>` : ""};`;
+      });
     const block = (kind: string, lines: string[]) =>
       lines.length
         ? `export interface ${id}${kind} {\n${lines.join("\n")}\n}`
         : `export interface ${id}${kind} {}`;
-    return `${block("Props", members)}
+    return `${types.declarations.map((text) => `${text}\n\n`).join("")}${block("Props", members)}
 
 ${block("EventMap", events)}
 
-export interface ${id}Element extends MountlyElement<${id}Props> {
+${jsdoc(docs.description, "")}export interface ${id}Element extends MountlyElement<${id}Props> {
   addEventListener<K extends keyof ${id}EventMap>(
     type: K,
     listener: (this: ${id}Element, event: ${id}EventMap[K]) => unknown,
@@ -220,6 +229,14 @@ ${jsx.join("\n")}
   }
 }
 `;
+}
+
+/** The author's JSDoc, so a consumer's editor shows it on hover. */
+function jsdoc(text: string | undefined, indent: string): string {
+  if (!text) return "";
+  const lines = text.replace(/\*\//g, "*\\/").split("\n");
+  if (lines.length === 1) return `${indent}/** ${lines[0]} */\n`;
+  return `${indent}/**\n${lines.map((line) => `${indent} *${line ? ` ${line}` : ""}`).join("\n")}\n${indent} */\n`;
 }
 
 /** A TypeScript member name, quoted when it is not a bare identifier. */
@@ -614,7 +631,7 @@ function readElementSource(
   entry: MountlyElementEntry,
   tag: string,
   root: string,
-): { props: PropSpec[]; docs: ComponentDocs } {
+): { props: PropSpec[]; docs: ComponentDocs; types: EmbedTypes } {
   const source = readFileSync(resolve(root, entry.component), "utf8");
   const opts = { file: entry.component, exportName: entry.exportName };
   const props = entry.props ?? extractProps(source, opts);
@@ -624,7 +641,23 @@ function readElementSource(
         `Declare the props type in that file, or pass \`props\` on the element entry.`,
     );
   }
-  return { props, docs: extractDocs(source, opts) };
+  const docs = extractDocs(source, opts);
+  // An explicit prop table means the source types live elsewhere: trust none of them.
+  const types = entry.props
+    ? { props: {}, events: {}, declarations: [] }
+    : embedTypes(source, {
+        ...opts,
+        file: resolve(root, entry.component),
+        scope: name(tag),
+        load: (file) => {
+          try {
+            return readFileSync(file, "utf8");
+          } catch {
+            return undefined;
+          }
+        },
+      });
+  return { props, docs, types };
 }
 
 /**
@@ -654,13 +687,14 @@ export function defineElementsConfig(options: MountlyElementsConfigOptions): Use
       root = config.root;
       assertSingleCompiler(config.plugins);
       elements = normalize(options, root).map(([tag, entry]) => {
-        const { props, docs } = readElementSource(entry, tag, root);
+        const { props, docs, types } = readElementSource(entry, tag, root);
         return {
           tag,
           entry,
           props,
           framework: entry.framework ?? frameworkFor(entry.component),
           docs,
+          types,
         };
       });
       const warn = config.logger?.warn.bind(config.logger) ?? console.warn;

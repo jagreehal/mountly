@@ -1,0 +1,368 @@
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
+import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
+import {
+  EXTENSION_ID,
+  RESOURCE_MIME_TYPE,
+  getUiCapability,
+  registerAppResource,
+  registerAppTool,
+  type McpUiAppToolConfig,
+} from "@modelcontextprotocol/ext-apps/server";
+import type { McpUiToolMeta, McpUiToolVisibility } from "@modelcontextprotocol/ext-apps";
+import { z } from "zod";
+import {
+  parseMcpAppSource,
+  type McpAppArtifact,
+  type McpAppSource,
+} from "../artifact/declaration.js";
+
+export interface McpAppToolResult {
+  structuredContent?: unknown;
+  content?: ReadonlyArray<{ type: string; [key: string]: unknown }>;
+  isError?: boolean;
+}
+
+/** Complete official tool configuration, plus JSON Schema support at Mountly's seam. */
+export interface McpAppToolConfig extends Omit<
+  McpUiAppToolConfig,
+  "_meta" | "inputSchema" | "outputSchema"
+> {
+  inputSchema?: object;
+  outputSchema?: object;
+  /** Additional metadata is preserved; Mountly only merges `_meta.ui`. */
+  _meta?: Record<string, unknown>;
+}
+
+/** A View is independent of the tools that reference it. */
+export interface McpAppViewRegistration {
+  /**
+   * Built artifact or the path to its self-contained HTML — or, on a runtime
+   * with no filesystem such as Cloudflare Workers, the View itself, as
+   * `mountly-mcp.views.js` exports it.
+   */
+  artifact: McpAppArtifact | McpAppSource | string;
+  /** Optional assertion used by migration adapters; artifacts already own identity. */
+  uri?: string;
+}
+
+/** A tool links to a separately declared View through the protocol resource URI. */
+export interface McpAppToolRegistration<Args = unknown> {
+  name: string;
+  resourceUri: string;
+  config?: McpAppToolConfig;
+  /** Convenience override for `_meta.ui.visibility`. */
+  visibility?: McpUiToolVisibility | ReadonlyArray<McpUiToolVisibility>;
+  handler: (args: Args, extra?: unknown) => Promise<McpAppToolResult>;
+}
+
+export interface RegisterMcpAppsOptions {
+  views: ReadonlyArray<McpAppViewRegistration>;
+  tools?: ReadonlyArray<McpAppToolRegistration>;
+}
+
+/**
+ * `createMcpAppServer` declares Views and tools exactly as `registerMcpApps`
+ * does; it only owns the `McpServer` for you. One vocabulary, two entry points.
+ */
+export interface CreateMcpAppServerOptions extends RegisterMcpAppsOptions {
+  name: string;
+  version: string;
+}
+
+interface LoadedView {
+  artifact: McpAppArtifact | McpAppSource;
+  html: string;
+}
+
+interface InstalledTool {
+  registration: McpAppToolRegistration;
+  registered: { remove(): void; update(u: { _meta?: object }): void };
+  metadataWithoutUi: Record<string, unknown>;
+  visibility: ReadonlyArray<McpUiToolVisibility>;
+}
+
+export interface RegisteredMcpApps {
+  /** File-backed Views carry `htmlPath`; in-memory ones carry `html`. */
+  artifacts: ReadonlyArray<McpAppArtifact | McpAppSource>;
+  /** Remove every resource and tool installed by this registration. */
+  remove(): void;
+}
+
+function normalizeVisibility(
+  visibility: McpAppToolRegistration["visibility"],
+): McpUiToolVisibility[] | undefined {
+  if (visibility === undefined) return undefined;
+  return typeof visibility === "string" ? [visibility] : [...visibility];
+}
+
+function isSchemaLibraryValue(value: unknown): boolean {
+  return typeof value === "object" && value !== null && ("~standard" in value || "_def" in value);
+}
+
+/** Convert documented JSON Schema while preserving Zod and Standard Schema values. */
+function normalizeToolSchema(schema: object | undefined): object | undefined {
+  if (!schema || Object.keys(schema).length === 0) return schema;
+  const candidate = schema as Record<string, unknown>;
+  if (isSchemaLibraryValue(candidate) || Object.values(candidate).some(isSchemaLibraryValue)) {
+    return schema;
+  }
+  const jsonSchemaKeys = [
+    "$schema",
+    "$ref",
+    "$defs",
+    "type",
+    "properties",
+    "required",
+    "additionalProperties",
+    "allOf",
+    "anyOf",
+    "oneOf",
+  ];
+  return jsonSchemaKeys.some((key) => key in candidate)
+    ? z.fromJSONSchema(schema as never)
+    : schema;
+}
+
+function withTextFallback(result: McpAppToolResult): McpAppToolResult {
+  if (result.content && result.content.length > 0) return result;
+  if (result.structuredContent === undefined) return result;
+  return {
+    ...result,
+    content: [{ type: "text", text: JSON.stringify(result.structuredContent) }],
+  };
+}
+
+function withoutUiMetadata(meta: Record<string, unknown>): Record<string, unknown> {
+  const copy = { ...meta };
+  delete copy.ui;
+  delete copy["ui/resourceUri"];
+  return copy;
+}
+
+function mergedToolMetadata(tool: McpAppToolRegistration): {
+  meta: Record<string, unknown> & { ui: McpUiToolMeta };
+  withoutUi: Record<string, unknown>;
+  visibility: McpUiToolVisibility[];
+} {
+  const base = { ...(tool.config?._meta ?? {}) };
+  const existingUi =
+    typeof base.ui === "object" && base.ui !== null ? (base.ui as Partial<McpUiToolMeta>) : {};
+  const visibility = normalizeVisibility(tool.visibility) ?? [
+    ...(existingUi.visibility ?? ["model", "app"]),
+  ];
+  const meta = {
+    ...base,
+    ui: { ...existingUi, resourceUri: tool.resourceUri, visibility },
+  };
+  return { meta, withoutUi: withoutUiMetadata(base), visibility };
+}
+
+async function loadViews(
+  registrations: ReadonlyArray<McpAppViewRegistration>,
+): Promise<ReadonlyArray<LoadedView>> {
+  const loaded: LoadedView[] = [];
+  const names = new Set<string>();
+  const uris = new Set<string>();
+  for (const registration of registrations) {
+    if (registration.uri !== undefined && !registration.uri.startsWith("ui://")) {
+      throw new Error(
+        `mountly-mcp/server: registration uri must use the 'ui://' scheme (received '${registration.uri}')`,
+      );
+    }
+    const view = await loadView(registration);
+    const artifact = view.artifact;
+    if (names.has(artifact.name))
+      throw new Error(`mountly-mcp: duplicate app name '${artifact.name}'`);
+    if (uris.has(artifact.uri)) throw new Error(`mountly-mcp: duplicate app uri '${artifact.uri}'`);
+    names.add(artifact.name);
+    uris.add(artifact.uri);
+    loaded.push(view);
+  }
+  return loaded;
+}
+
+/** Reads a View from disk. Only the Node entry installs one; a Worker has no disk. */
+export type DiskViewLoader = (
+  artifact: McpAppArtifact | string,
+  uri: string | undefined,
+) => Promise<{ artifact: McpAppArtifact; html: string }>;
+
+let diskLoader: DiskViewLoader | undefined;
+
+/** @internal Called once by the Node entry. */
+export function installDiskViewLoader(loader: DiskViewLoader): void {
+  diskLoader = loader;
+}
+
+async function loadView(registration: McpAppViewRegistration): Promise<LoadedView> {
+  const supplied = registration.artifact;
+  if (typeof supplied !== "string" && "html" in supplied) {
+    const source = parseMcpAppSource(supplied, registration.uri);
+    return { artifact: source, html: source.html };
+  }
+  if (!diskLoader) {
+    throw new Error(
+      "mountly-mcp/server: this runtime has no filesystem to read Views from. Build with " +
+        "mountlyMcpViews({ module: true, … }) and register the Views it exports: " +
+        "views.map((artifact) => ({ artifact })).",
+    );
+  }
+  return diskLoader(supplied, registration.uri);
+}
+
+/**
+ * Install Mountly Views and their independently declared tools into an existing,
+ * unconnected MCP server. The caller retains ownership of identity, auth,
+ * transports, prompts, ordinary tools, and deployment.
+ */
+export async function registerMcpApps(
+  server: McpServer,
+  options: RegisterMcpAppsOptions,
+): Promise<RegisteredMcpApps> {
+  if (server.isConnected()) {
+    throw new Error("mountly-mcp: registerMcpApps() must run before the server connects");
+  }
+  if (options.views.length === 0) {
+    throw new Error("mountly-mcp: registerMcpApps() requires at least one View");
+  }
+  const views = await loadViews(options.views);
+  const byUri = new Map(views.map((view) => [view.artifact.uri, view]));
+  for (const tool of options.tools ?? []) {
+    if (!byUri.has(tool.resourceUri)) {
+      throw new Error(
+        `mountly-mcp: tool '${tool.name}' references undeclared View '${tool.resourceUri}'`,
+      );
+    }
+  }
+
+  server.server.registerCapabilities({
+    extensions: { [EXTENSION_ID]: { mimeTypes: [RESOURCE_MIME_TYPE] } },
+  } as never);
+
+  const resources = views.map(({ artifact, html }) => {
+    const resourceMeta: Record<string, unknown> = {
+      ui: artifact.declaration._meta.ui,
+    };
+    const openaiUi = artifact.declaration._meta["openai/ui"];
+    if (openaiUi !== undefined) resourceMeta["openai/ui"] = openaiUi;
+    return registerAppResource(
+      server,
+      artifact.name,
+      artifact.uri,
+      {
+        mimeType: artifact.declaration.mimeType,
+        description: artifact.declaration.description,
+        _meta: resourceMeta,
+      },
+      async () => ({
+        contents: [
+          {
+            uri: artifact.uri,
+            mimeType: artifact.declaration.mimeType,
+            text: html,
+            _meta: resourceMeta,
+          },
+        ],
+      }),
+    );
+  });
+
+  const tools: InstalledTool[] = (options.tools ?? []).map((registration) => {
+    const { meta, withoutUi, visibility } = mergedToolMetadata(registration);
+    const config = registration.config ?? {};
+    const registered = registerAppTool(
+      server,
+      registration.name,
+      {
+        ...config,
+        inputSchema: normalizeToolSchema(config.inputSchema) as never,
+        outputSchema: normalizeToolSchema(config.outputSchema) as never,
+        _meta: meta,
+      },
+      (async (args: unknown, extra: unknown) =>
+        withTextFallback(await registration.handler(args, extra))) as never,
+    );
+    return { registration, registered, metadataWithoutUi: withoutUi, visibility };
+  });
+
+  const previousInitialized = server.server.oninitialized;
+  const handleInitialized = () => {
+    previousInitialized?.();
+    const ui = getUiCapability(server.server.getClientCapabilities());
+    if (ui?.mimeTypes?.includes(RESOURCE_MIME_TYPE)) return;
+    for (const resource of resources) resource.remove();
+    for (const tool of tools) {
+      if (tool.visibility.includes("model")) {
+        tool.registered.update({ _meta: tool.metadataWithoutUi });
+      } else {
+        tool.registered.remove();
+      }
+    }
+  };
+  server.server.oninitialized = handleInitialized;
+
+  return {
+    artifacts: views.map((view) => view.artifact),
+    remove() {
+      for (const resource of resources) resource.remove();
+      for (const tool of tools) tool.registered.remove();
+      if (server.server.oninitialized === handleInitialized) {
+        server.server.oninitialized = previousInitialized;
+      }
+    },
+  };
+}
+
+export interface RunningMcpAppServer {
+  connectInProcess(options?: { ui?: boolean }): Promise<{ client: Client }>;
+  listen(transport: Transport): Promise<void>;
+  close(): Promise<void>;
+}
+
+function createConfiguredServer(options: CreateMcpAppServerOptions): McpServer {
+  return new McpServer(
+    { name: options.name, version: options.version },
+    { capabilities: { resources: {}, tools: {} } },
+  );
+}
+
+/** Convenience adapter that retains the original one-call server experience. */
+export function createMcpAppServer(options: CreateMcpAppServerOptions): RunningMcpAppServer {
+  let server: McpServer | undefined;
+  async function build(): Promise<McpServer> {
+    const next = createConfiguredServer(options);
+    await registerMcpApps(next, { views: options.views, tools: options.tools });
+    server = next;
+    return next;
+  }
+  return {
+    async connectInProcess(connectOptions) {
+      const next = await build();
+      const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+      await next.connect(serverTransport);
+      const client = new Client(
+        { name: `${options.name}-inprocess-client`, version: options.version },
+        (connectOptions?.ui ?? true)
+          ? ({
+              capabilities: {
+                extensions: { [EXTENSION_ID]: { mimeTypes: [RESOURCE_MIME_TYPE] } },
+              },
+            } as never)
+          : undefined,
+      );
+      await client.connect(clientTransport);
+      return { client };
+    },
+    async listen(transport) {
+      const next = await build();
+      await next.connect(transport);
+    },
+    async close() {
+      await server?.close();
+    },
+  };
+}
+
+export { EXTENSION_ID, RESOURCE_MIME_TYPE };

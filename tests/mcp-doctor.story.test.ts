@@ -47,6 +47,58 @@ describe("mountly-mcp doctor", () => {
     }
   });
 
+  it("warns, without failing, about web-app habits that break inside a host sandbox", () => {
+    const root = mkdtempSync(join(tmpdir(), "mountly-mcp-doctor-sandbox-"));
+    try {
+      writeFileSync(join(root, "package.json"), JSON.stringify({ name: "tmp", private: true }));
+      writeFileSync(
+        join(root, "vite.config.ts"),
+        `import { mountlyMcpViews } from "mountly-mcp/vite";\nexport default { plugins: [mountlyMcpViews({ apps: [] })] };\n`,
+      );
+      mkdirSync(join(root, "src/lib"), { recursive: true });
+      writeFileSync(
+        join(root, "src/App.tsx"),
+        [
+          `import { BrowserRouter } from "react-router-dom";`,
+          `const theme = localStorage.getItem("theme");`,
+          `const ok = new Worker(`,
+          `  new URL("./w.ts", import.meta.url),`,
+          `);`,
+          `const bad = new Worker("/workers/split.js");`,
+          `a.download = "out.csv";`,
+        ].join("\n"),
+      );
+      writeFileSync(
+        join(root, "src/lib/api.ts"),
+        `const base = window.location.hostname === "x" ? "/api" : "https://x";\nfetch("/api/lookup");\n`,
+      );
+      writeFileSync(join(root, "src/App.test.tsx"), `localStorage.clear();`);
+
+      const report = runDoctor(root);
+      const sandbox = Object.fromEntries(
+        report.checks.filter((c) => c.id.startsWith("sandbox")).map((c) => [c.id, c.detail]),
+      );
+      expect(Object.keys(sandbox)).toEqual([
+        "sandbox/storage",
+        "sandbox/router",
+        "sandbox/download",
+        "sandbox/worker",
+        "sandbox/hostname",
+        "sandbox/relative-fetch",
+      ]);
+      // The location to look at, and what to do there. Test files are not the View.
+      expect(sandbox["sandbox/storage"]).toMatch(/^src\/App\.tsx:2: .*try\/catch/);
+      // A call split over lines is still one call: only the string-URL worker is flagged.
+      expect(sandbox["sandbox/worker"]).toMatch(/^src\/App\.tsx:6: /);
+      expect(sandbox["sandbox/download"]).toContain("useDownload()");
+      // Advisory: the readiness verdict is still the hard checks'.
+      expect(report.ok).toBe(true);
+      expect(formatDoctorReport(report)).toContain("warn  sandbox/storage");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   it("fails openai-extensions when sources use openaiUi without the peer", () => {
     const root = mkdtempSync(join(tmpdir(), "mountly-mcp-doctor-openai-"));
     try {
