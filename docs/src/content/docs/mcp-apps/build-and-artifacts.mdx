@@ -82,6 +82,41 @@ Set an individual `output` to override a View's HTML path. Set `manifest: false`
 only when another system owns the artifact collection; it disables the
 canonical contract used by the Mountly CLI.
 
+## Web Workers
+
+A View is one HTML document, so a worker cannot be a separate file. Start
+workers the standard Vite way and the build bundles each one into the View:
+
+```ts
+const worker = new Worker(new URL("./match.worker.ts", import.meta.url), {
+  type: "module",
+});
+```
+
+The worker's own imports come with it, and it starts from a `blob:` URL, so the
+host's CSP must allow `worker-src blob:`. Workers created any other way, such as
+`new Worker("/workers/split.js")` or a hand-built Blob, are left as they are.
+`mountly-mcp doctor` lists them.
+
+## Views as a module
+
+Set `module: true` to also write every View, HTML included, as an ES module.
+This is for a server that cannot read files, such as a Cloudflare Worker:
+
+```ts
+mountlyMcpViews({ module: true, apps: [/* … */] });
+```
+
+```text
+dist/
+├── mountly-mcp.views.js     # export default [{ name, uri, declaration, html }]
+└── mountly-mcp.views.d.ts
+```
+
+A string names a different path. See
+[Cloudflare Workers](/mountly/mcp-apps/production-integration/#cloudflare-workers)
+for the server side.
+
 ## Single-View compatibility
 
 Existing projects can keep the original options and `vite build`:

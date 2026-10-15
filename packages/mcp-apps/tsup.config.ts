@@ -22,6 +22,7 @@ export default defineConfig([
       "src/cli.ts",
       "src/create.ts",
       "src/server/index.ts",
+      "src/server/workers.ts",
       "src/openai/server.ts",
       "src/events/index.ts",
       "src/json-render/index.ts",

@@ -2,11 +2,17 @@ import { useState } from "react";
 import "../styles.css";
 import styles from "./PaymentsSummary.module.css";
 
+interface LineItem {
+  label: string;
+  amount: number;
+}
+
 export interface PaymentsSummaryProps {
+  /** Outstanding balance, in the currency's major unit. */
   balance: number;
   currency: string;
   compact?: boolean;
-  lineItems?: Array<{ label: string; amount: number }>;
+  lineItems?: LineItem[];
   onViewDetails?: (detail: { balance: number }) => void;
 }
 

@@ -75,6 +75,20 @@ const data = result?.structuredContent; // React; Vue: result.value?.structuredC
 
 App-initiated calls: `useMcpApp().callServerTool({ name, arguments })`.
 
+## Cloudflare Workers
+
+A Worker has no filesystem. Build with `mountlyMcpViews({ module: true, apps })`,
+then register the Views it exports:
+
+```ts
+import views from "./dist/mountly-mcp.views.js";
+await registerMcpApps(server, { views: views.map((artifact) => ({ artifact })), tools });
+```
+
+`mountly-mcp/server` resolves to its Workers build on its own (`workerd`
+condition), so you need no `nodejs_compat`. Use the SDK's
+`WebStandardStreamableHTTPServerTransport`.
+
 ## ChatGPT
 
 ```bash

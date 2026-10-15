@@ -224,8 +224,13 @@ test("the build emits consumer types and a custom elements manifest", async () =
   expect(types).toContain("balance?: number;");
   expect(types).toContain("currency?: string;");
   expect(types).toContain("compact?: boolean;");
-  expect(types).toContain("lineItems?: unknown;");
-  expect(types).toContain(`"view-details": CustomEvent;`);
+  // A local type comes along under the element's name, and the JSDoc with the prop.
+  expect(types).toContain("lineItems?: AcmePaymentsSummary_LineItem[];");
+  expect(types).toContain("export interface AcmePaymentsSummary_LineItem {");
+  expect(types).toContain(
+    "/** Outstanding balance, in the currency's major unit. */\n  balance?: number;",
+  );
+  expect(types).toContain(`"view-details": CustomEvent<{ balance: number }>;`);
   // Typed addEventListener is the point of the event map.
   expect(types).toContain("keyof AcmePaymentsSummaryEventMap");
   expect(types).toContain("namespace JSX");
@@ -348,9 +353,10 @@ test("consumer code type-checks against the generated declarations", async () =>
     summary.balance = 1500;
     summary.currency = "GBP";
     summary.compact = true;
+    summary.lineItems = [{ label: "Subscription", amount: 1200 }];
     summary.addEventListener("view-details", (event) => {
-      const detail: unknown = event.detail;
-      void detail;
+      const balance: number = event.detail.balance;
+      void balance;
     });
     summary.addEventListener("click", (event) => void event.offsetX);
     void summary.mount();
@@ -362,9 +368,14 @@ test("consumer code type-checks against the generated declarations", async () =>
   const bad = await tsc(`
     const summary = document.querySelector("acme-payments-summary")!;
     summary.currency = 1500;
+    summary.lineItems = [{ label: "Subscription" }];
+    summary.addEventListener("view-details", (event) => void event.detail.total);
   `);
   expect(bad.code).not.toBe(0);
   expect(bad.out).toContain("not assignable");
+  // The copied local type and the event detail are enforced too.
+  expect(bad.out).toContain("'amount' is missing");
+  expect(bad.out).toContain("Property 'total' does not exist");
 
   await rm(dir, { recursive: true, force: true });
 });

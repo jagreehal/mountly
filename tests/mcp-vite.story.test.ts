@@ -1,4 +1,4 @@
-import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -6,7 +6,7 @@ import { pathToFileURL } from "node:url";
 import { story } from "executable-stories-vitest";
 import { build } from "vite-plus";
 import { describe, expect, it } from "vite-plus/test";
-import { mountlyMcpViews } from "../packages/mcp-apps/src/vite/index";
+import { inlineWorkers, mountlyMcpViews } from "../packages/mcp-apps/src/vite/index";
 
 function makeProject(): string {
   const dir = mkdtempSync(join(tmpdir(), "mountly-mcp-vite-"));
@@ -185,6 +185,127 @@ describe("mountly-mcp/vite", () => {
     rmSync(dir, { recursive: true });
     // Runs a real Vite build; the 5s default trips under load.
   }, 30_000);
+
+  it("inlines new Worker(new URL(…)) workers, since a ui:// View is one document", async ({
+    task,
+  }) => {
+    story.init(task, { tags: ["mcp", "vite", "build", "worker"] });
+    const dir = makeProject();
+
+    story.given("a TypeScript View that starts a module worker the standard Vite way");
+    writeFileSync(
+      join(dir, "src/worker.ts"),
+      `const tag: string = "worker-ran";\nself.onmessage = () => self.postMessage(tag);`,
+      "utf8",
+    );
+    writeFileSync(
+      join(dir, "src/view.ts"),
+      `const worker: Worker = new Worker(new URL("./worker.ts", import.meta.url), { type: "module" });
+       globalThis.__mountlyMcpView__ = {
+         mount(container){ worker.onmessage = (e) => { container.textContent = e.data; }; worker.postMessage(1); },
+         unmount(){ worker.terminate(); },
+       };`,
+      "utf8",
+    );
+    await build({
+      root: dir,
+      logLevel: "silent",
+      plugins: [
+        mountlyMcpViews({
+          entry: join(dir, "src/view.ts"),
+          uri: "ui://w/view",
+          name: "w",
+          bridgeRuntimePath: join(dir, "bridge.js"),
+        }),
+      ],
+    } as never);
+
+    story.then("the worker's code is inside the View HTML and no worker file is left to serve");
+    const html = readFileSync(join(dir, "dist/w.html"), "utf8");
+    expect(html).toContain("worker-ran");
+    expect(html).not.toContain("worker.ts");
+    expect(readdirSync(join(dir, "dist")).sort()).toEqual([
+      "mountly-mcp.manifest.json",
+      "w.html",
+      "w.html.meta.json",
+    ]);
+    rmSync(dir, { recursive: true });
+  }, 30_000);
+
+  it("rewrites the worker calls Vite would emit as files, and nothing else", ({ task }) => {
+    story.init(task, { tags: ["mcp", "vite", "worker"] });
+    const source = [
+      `const a = new Worker(`,
+      `  new URL("../workers/split.worker.ts", import.meta.url),`,
+      `  { type: "module" },`,
+      `);`,
+      // Prettier's own shape for a long call: a trailing comma and no options.
+      `const b = new SharedWorker(`,
+      `  new URL('./shared.ts', import.meta.url),`,
+      `);`,
+      `const c = new Worker("/public/legacy.js");`,
+    ].join("\n");
+    const out = inlineWorkers(source);
+    expect(out).toBe(
+      [
+        `import __mountlyMcpWorker0 from "../workers/split.worker.ts?worker&inline";` +
+          `import __mountlyMcpWorker1 from "./shared.ts?sharedworker&inline";const a = new __mountlyMcpWorker0(`,
+        ``,
+        `{ type: "module" },`,
+        `);`,
+        `const b = new __mountlyMcpWorker1()`,
+        ``,
+        `;`,
+        `const c = new Worker("/public/legacy.js");`,
+      ].join("\n"),
+    );
+    story.then("every line keeps its number, so the module's source map stays line-accurate");
+    expect(out?.split("\n").length).toBe(source.split("\n").length);
+    expect(inlineWorkers(`const u = new URL("./x", import.meta.url);`)).toBeNull();
+
+    story.then("a call in a comment or a string is content, not a call");
+    expect(
+      inlineWorkers(
+        [
+          `// new Worker(new URL("./gone.ts", import.meta.url));`,
+          `const s = "new Worker(new URL('./gone.ts', import.meta.url))";`,
+          `const t: string = import.meta.url;`,
+        ].join("\n"),
+      ),
+    ).toBeNull();
+  });
+
+  it("puts a component's worker imports inside its own <script> block", ({ task }) => {
+    story.init(task, { tags: ["mcp", "vite", "worker", "vue", "svelte"] });
+    const vue = `<template><p>{{ x }}</p></template>
+<script setup lang="ts">
+const w: Worker = new Worker(new URL("./w.ts", import.meta.url));
+</script>`;
+    expect(inlineWorkers(vue, "/src/Panel.vue")).toBe(`<template><p>{{ x }}</p></template>
+<script setup lang="ts">import __mountlyMcpWorker0 from "./w.ts?worker&inline";
+const w: Worker = new __mountlyMcpWorker0();
+</script>`);
+
+    const svelte = `<script lang="ts">
+  const w = new Worker(new URL("./w.ts", import.meta.url), { type: "module" });
+</script>
+<p>new Worker(new URL("./not-script.ts", import.meta.url))</p>`;
+    expect(inlineWorkers(svelte, "/src/List.svelte"))
+      .toBe(`<script lang="ts">import __mountlyMcpWorker0 from "./w.ts?worker&inline";
+  const w = new __mountlyMcpWorker0({ type: "module" });
+</script>
+<p>new Worker(new URL("./not-script.ts", import.meta.url))</p>`);
+  });
+
+  it("rejects a views module path TypeScript could not pair with its declaration", ({ task }) => {
+    story.init(task, { tags: ["mcp", "vite"] });
+    expect(() =>
+      mountlyMcpViews({
+        module: "dist/views",
+        apps: [{ entry: "src/view.ts", uri: "ui://x/y", name: "x" }],
+      }),
+    ).toThrow(/\.js or \.mjs/);
+  });
 
   it("rejects a non-ui:// scheme at config time, before any build runs", ({ task }) => {
     story.init(task, { tags: ["mcp", "vite"] });
